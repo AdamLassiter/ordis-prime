@@ -70,8 +70,9 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
 - A public discovery atlas searches canonical quest, enemy, boss, mechanic and
   secret kinds. WFCD currently populates quests and enemies; cited discovery
   YAML can add curated entities and typed links to nodes, rewards, or other
-  topics. Progress, richer boss classification, conditional relations, and
-  graph summaries on atlas cards remain.
+  topics. Players can privately mark topics unseen, discovered, or completed
+  and filter the atlas by that state. Richer boss classification, quest-step
+  progress, conditional relations, and graph summaries on atlas cards remain.
 
 ## Deliberate compromises
 

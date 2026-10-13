@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { findPlayerInventoryEntry, listPlayerGoals } from "@ordis-prime/db";
+import { DISCOVERY_KINDS, findPlayerInventoryEntry, getDiscoveryProgress, listPlayerGoals } from "@ordis-prime/db";
 import { findItem } from "@/lib/catalog";
 import { getDatabase } from "@/lib/database";
 import { getCurrentSession } from "@/lib/session";
 import { InventoryForm } from "./inventory-form";
 import { GoalForm } from "@/app/planner/goal-form";
+import { DiscoveryProgressForm } from "@/app/discovery/progress-form";
 
 export default async function ItemPage({ params }: { params: Promise<{ kind: string; slug: string }> }) {
   const { kind, slug } = await params;
@@ -14,6 +15,8 @@ export default async function ItemPage({ params }: { params: Promise<{ kind: str
   const session = await getCurrentSession();
   const inventory = session ? findPlayerInventoryEntry(getDatabase(), session.user.id, kind, slug) : undefined;
   const goal = session ? listPlayerGoals(getDatabase(), session.user.id).find((entry) => entry.entityId === inventory?.entityId) : undefined;
+  const isDiscovery = (DISCOVERY_KINDS as readonly string[]).includes(kind);
+  const discoveryProgress = session && isDiscovery ? getDiscoveryProgress(getDatabase(), session.user.id, { kind, slug }) : undefined;
   return <>
     <p className="eyebrow">{item.kind}</p>
     <h1>{item.name}</h1>
@@ -39,6 +42,7 @@ export default async function ItemPage({ params }: { params: Promise<{ kind: str
         {evidence.citationUrl && <> · <a href={evidence.citationUrl}>citation</a></>}
       </div>) : "No active provenance recorded"}</dd>
     </dl>
+    {discoveryProgress && <section className="card"><h2>Your discovery progress</h2><DiscoveryProgressForm kind={kind} slug={slug} state={discoveryProgress} /></section>}
     {inventory ? <><InventoryForm item={inventory} /><section className="card goal-editor"><h2>Acquisition goal</h2><p className="muted">Set the total number you want to own or build. The planner subtracts your recorded inventory.</p><GoalForm kind={kind} slug={slug} targetQuantity={goal?.targetQuantity ?? 0} /></section></> : <p className="notice"><Link href="/sign-in">Sign in</Link> to track ownership and add acquisition goals.</p>}
   </>;
 }

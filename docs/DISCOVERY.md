@@ -13,9 +13,15 @@ source can add curated topics and typed `requires`, `unlocks`, `occurs-at`,
 relationships are source-run scoped and disappear from reads when that source
 is superseded. Catalog pages show incoming and outgoing links with attribution.
 
+Signed-in players can independently mark a topic unseen, discovered or
+completed. The absence of a row means unseen, keeping default state compact.
+The atlas can filter by this private state, while guests see the same public
+catalog without progress controls.
+
 ## Current gaps
 
-- Player discovery and quest completion tracking are not modeled.
+- Progress is one state per topic; quest steps and repeat completion are not
+  modeled.
 - WFCD classifies its broad enemy collection as enemies; a separate attributed
   fact is needed before promoting particular entries to boss.
 - Conditional requirements, ordered quest steps, and relation confidence are

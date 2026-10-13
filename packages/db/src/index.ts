@@ -1,5 +1,6 @@
 export * from "./client.ts";
 export * from "./catalog.ts";
+export * from "./discovery-progress.ts";
 export * from "./builds.ts";
 export * from "./migrate.ts";
 export * from "./jobs.ts";

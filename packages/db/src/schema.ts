@@ -197,5 +197,10 @@ export const buildShareSnapshots = sqliteTable("build_share_snapshots", {
   snapshotJson: text("snapshot_json").notNull(),
   createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
 }, (table) => [uniqueIndex("build_share_key").on(table.shareKey), index("build_share_source").on(table.sourceBuildId)]);
-export const nodeProgress = sqliteTable("player_node_progress", { userId: text("user_id").notNull().references(() => users.id), nodeId: text("node_id").notNull().references(() => entities.id), state: text({ enum: ["unknown", "locked", "available", "completed"] }).notNull(), updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull() }, (table) => [primaryKey({ columns: [table.userId, table.nodeId] })]);
+export const discoveryProgress = sqliteTable("player_discovery_progress", {
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  entityId: text("entity_id").notNull().references(() => entities.id),
+  state: text({ enum: ["discovered", "completed"] }).notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
+}, (table) => [primaryKey({ columns: [table.userId, table.entityId] }), index("player_discovery_progress_state").on(table.userId, table.state)]);
 export const jobs = sqliteTable("jobs", { id: text().primaryKey(), kind: text().notNull(), status: text({ enum: ["queued", "running", "succeeded", "failed"] }).notNull(), payloadJson: text("payload_json").notNull(), runAfter: integer("run_after", { mode: "timestamp_ms" }).notNull(), leaseOwner: text("lease_owner"), leaseUntil: integer("lease_until", { mode: "timestamp_ms" }), error: text() });

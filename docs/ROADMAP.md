@@ -43,4 +43,5 @@ and relations, not a second data model.
 
 Composed node metadata, a planet-grouped chart with inventory-aware filtering,
 a searchable canonical discovery atlas, and cited typed discovery relations are
-implemented. Star-chart connection edges and player discovery progress remain.
+implemented. Private discovery progress and filtering are also implemented.
+Star-chart connection edges and richer quest-step progress remain.

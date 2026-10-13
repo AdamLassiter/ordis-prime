@@ -8,6 +8,7 @@ export interface CatalogSummary {
 }
 export const DISCOVERY_KINDS = ["quest", "mechanic", "secret", "enemy", "boss"] as const;
 export type DiscoveryKind = typeof DISCOVERY_KINDS[number];
+export interface DiscoveryCatalogEntry extends CatalogSummary { progressState?: "unseen" | "discovered" | "completed" }
 
 export interface CatalogItem extends CatalogSummary {
   components: Array<{ kind: string; slug: string; name: string; quantity: number }>;
@@ -71,18 +72,23 @@ export function searchCatalog(sqlite: Database.Database, query = "", limit = 100
   `).all(pattern, query.trim(), normalizedLimit) as CatalogSummary[];
 }
 
-export function searchDiscoveryCatalog(sqlite: Database.Database, input: { query?: string; kind?: DiscoveryKind; limit?: number } = {}): CatalogSummary[] {
+export function searchDiscoveryCatalog(sqlite: Database.Database, input: { query?: string; kind?: DiscoveryKind; progress?: "unseen" | "discovered" | "completed"; userId?: string; limit?: number } = {}): DiscoveryCatalogEntry[] {
   if (input.kind && !(DISCOVERY_KINDS as readonly string[]).includes(input.kind)) throw new Error("Discovery kind is invalid");
+  if (input.progress && !input.userId) throw new Error("Discovery progress filters require a user");
   const normalizedLimit = Math.max(1, Math.min(500, Math.trunc(input.limit ?? 200)));
   const pattern = `%${escapeLike(input.query?.trim() ?? "")}%`;
   const kindPlaceholders = DISCOVERY_KINDS.map(() => "?").join(", ");
+  const progressJoin = input.userId ? "left join player_discovery_progress progress on progress.entity_id = entity.id and progress.user_id = ?" : "";
+  const progressColumn = input.userId ? "coalesce(progress.state, 'unseen') as progressState" : "null as progressState";
+  const progressWhere = input.progress ? "and coalesce(progress.state, 'unseen') = ?" : "";
   return sqlite.prepare(`
-    select kind, slug, name, description from entities
-    where retired = 0 and kind in (${kindPlaceholders})
-      and (? is null or kind = ?) and name like ? escape '\\'
-    order by case kind when 'quest' then 0 when 'mechanic' then 1 when 'secret' then 2 when 'boss' then 3 else 4 end,
-      name collate nocase limit ?
-  `).all(...DISCOVERY_KINDS, input.kind ?? null, input.kind ?? null, pattern, normalizedLimit) as CatalogSummary[];
+    select entity.kind, entity.slug, entity.name, entity.description, ${progressColumn} from entities entity
+    ${progressJoin}
+    where entity.retired = 0 and entity.kind in (${kindPlaceholders})
+      and (? is null or entity.kind = ?) and entity.name like ? escape '\\' ${progressWhere}
+    order by case entity.kind when 'quest' then 0 when 'mechanic' then 1 when 'secret' then 2 when 'boss' then 3 else 4 end,
+      entity.name collate nocase limit ?
+  `).all(...(input.userId ? [input.userId] : []), ...DISCOVERY_KINDS, input.kind ?? null, input.kind ?? null, pattern, ...(input.progress ? [input.progress] : []), normalizedLimit) as DiscoveryCatalogEntry[];
 }
 
 export function findCatalogItem(sqlite: Database.Database, kind: string, slug: string): CatalogItem | undefined {

@@ -116,3 +116,6 @@ input,select,textarea { width:100%; max-width:36rem; padding:.8rem 1rem; border-
 .star-node:hover { border-color:var(--cyan); }
 .star-node span { color:var(--muted); font-size:.82rem; }
 .discovery-card .muted { display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden; }
+.discovery-card > .tag + .tag { margin-left:.4rem; }
+.discovery-progress { margin-top:auto; align-items:end; }
+.progress-completed { border-color:var(--accent); }
