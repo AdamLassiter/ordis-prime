@@ -41,14 +41,16 @@ Failed calls retain the previous active snapshot and retry after one minute.
 
 The public `/world-state` route reads the currently promoted snapshots and shows
 countdowns that advance in the browser. It labels future windows separately and
-keeps the provider observation time visible so users can judge freshness.
+shows per-source observation time and current/total window counts. A source older
+than 15 minutes is visibly stale (configurable with
+`ORDIS_WORLD_STATE_STALE_MS`); stale data remains available rather than silently
+disappearing.
 
 ## Current limits
 
 - Only the PC English endpoint is configured; platform and language settings are
   not yet exposed.
-- A stale-data warning policy, player todo rules and notifications do not yet
-  exist. Completed job history is not pruned or exposed in the administration UI.
+- Completed job history is not pruned or exposed in the administration UI.
 - Windows use provider node labels until dynamic nodes can be reconciled safely
   with canonical catalog node identities.
 - Arbitrations between multiple live world-state providers are not implemented.

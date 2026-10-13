@@ -19,7 +19,7 @@ entities and player goals, not provider-specific payloads.
 
 Provider-neutral snapshots, current availability reads, automatic polling, the
 public timer view, static todos, dynamic watches and in-app alerts are
-implemented. Stale-data policy and optional external delivery channels remain.
+implemented. Optional external delivery channels remain.
 
 ## 3. Builds and opinions
 

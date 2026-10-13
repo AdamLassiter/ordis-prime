@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { listCurrentWorldState, migrateDatabase, openSqliteDatabase } from "@ordis-prime/db";
+import { listCurrentWorldState, listWorldStateSourceStatuses, migrateDatabase, openSqliteDatabase } from "@ordis-prime/db";
 import { createSnapshot, refreshWorldState, SnapshotStore, WfcdWorldStateAdapter, type Snapshot, type WorldStateAdapter } from "../src/index.ts";
 
 test("WFCD world state normalizes availability windows and promotes one active snapshot", async (context) => {
@@ -32,6 +32,7 @@ test("WFCD world state normalizes availability windows and promotes one active s
   assert.equal((database.prepare("select count(*) as count from world_state_snapshots where active = 1").get() as { count: number }).count, 1);
   assert.equal((database.prepare("select count(*) as count from world_state_snapshots").get() as { count: number }).count, 2);
   assert.equal((database.prepare("select count(*) as count from source_refreshes where world_state_snapshot_id is not null and status = 'succeeded'").get() as { count: number }).count, 2);
+  assert.deepEqual(listWorldStateSourceStatuses(database, Date.parse("2026-10-13T21:00:00.000Z")).map(({ sourceId, windowCount, currentWindowCount }) => ({ sourceId, windowCount, currentWindowCount })), [{ sourceId: "wfcd-worldstate", windowCount: 5, currentWindowCount: 5 }]);
 });
 
 function fixtureSnapshot(version: number): Snapshot {

@@ -29,6 +29,15 @@ export interface CurrentWorldStateWindow {
   sourcePath?: string;
 }
 
+export interface WorldStateSourceStatus {
+  sourceId: string;
+  sourceName: string;
+  snapshotVersion: string;
+  observedAt: number;
+  windowCount: number;
+  currentWindowCount: number;
+}
+
 export function promoteWorldState(sqlite: Database.Database, input: PromoteWorldStateInput): { snapshotId: string; windowCount: number } {
   validateWorldState(input);
   return sqlite.transaction(() => {
@@ -90,6 +99,20 @@ export function listCurrentWorldState(sqlite: Database.Database, now = Date.now(
     metadata: parseMetadata(metadataJson),
     sourcePath: sourcePath ?? undefined,
   }));
+}
+
+export function listWorldStateSourceStatuses(sqlite: Database.Database, now = Date.now()): WorldStateSourceStatus[] {
+  return sqlite.prepare(`
+    select source.id as sourceId, source.name as sourceName, snapshot.version as snapshotVersion,
+      snapshot.observed_at as observedAt, count(window.external_id) as windowCount,
+      sum(case when window.external_id is not null and (window.expiry is null or window.expiry > ?) then 1 else 0 end) as currentWindowCount
+    from world_state_snapshots snapshot
+    join sources source on source.id = snapshot.source_id
+    left join world_state_windows window on window.snapshot_id = snapshot.id
+    where snapshot.active = 1
+    group by snapshot.id, source.id, source.name, snapshot.version, snapshot.observed_at
+    order by source.name collate nocase
+  `).all(now) as WorldStateSourceStatus[];
 }
 
 function validateWorldState(input: PromoteWorldStateInput): void {

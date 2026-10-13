@@ -28,8 +28,8 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   A public timer view exposes active and upcoming windows with client-updating
   countdowns and visible snapshot freshness. A database-leased production worker
   polls it every five minutes and retries failures without replacing active data.
-  Job-history pruning, stale-data policy, canonical node reconciliation, todo
-  rules and notifications remain.
+  Snapshots older than a configurable threshold are visibly marked stale without
+  hiding their data. Job-history pruning and canonical node reconciliation remain.
 - The web explorer reads the canonical SQLite catalog and links active recipes,
   drops, nodes, record-level provenance, and editorial rankings. Newly imported
   entity fields and typed relations retain exact source record keys, paths, and
