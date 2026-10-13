@@ -33,3 +33,6 @@ input,select,textarea { width:100%; max-width:36rem; padding:.8rem 1rem; border-
 .filters { display:flex; gap:.5rem; margin:1.25rem 0; }
 .tag.active { color:var(--bg); background:var(--cyan); border-color:var(--cyan); }
 .status-needed { color:var(--gold); }
+.profile-transfer { margin-top:2rem; }
+.profile-transfer:hover { transform:none; border-color:var(--line); }
+.success { color:#86efac; margin:0; }

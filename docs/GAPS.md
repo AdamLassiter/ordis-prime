@@ -31,7 +31,7 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   implemented yet.
 - Validated inventory persistence, authenticated catalog editing, an inventory
   summary, node reward ownership filtering, and portable profile import/export
-  exist. Profile transfer UI and planner persistence are pending.
+  with transfer UI exist. Planner persistence is pending.
 - The visual star chart, notifications, builds, editorial comparisons and
   discovery atlas are intentional later milestones.
 

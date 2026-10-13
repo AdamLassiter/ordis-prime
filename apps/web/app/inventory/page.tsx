@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { listPlayerInventory } from "@ordis-prime/db";
 import { getDatabase } from "@/lib/database";
 import { getCurrentSession } from "@/lib/session";
+import { ProfileTransfer } from "./profile-transfer";
 
 export const dynamic = "force-dynamic";
 
@@ -19,5 +20,6 @@ export default async function InventoryPage() {
       <p>{entry.ownedCount} owned · {entry.builtCount} built · {entry.wantedCount} wanted</p>
       {(entry.mastered !== undefined || entry.subsumed !== undefined) && <p className="muted">{entry.mastered === true ? "Mastered" : entry.mastered === false ? "Not mastered" : "Mastery unknown"}{entry.subsumed === true ? " · Subsumed" : entry.subsumed === false ? " · Not subsumed" : ""}</p>}
     </Link>)}</section> : <p className="notice">Nothing is recorded yet. Find an item in the catalog to start tracking it.</p>}
+    <ProfileTransfer />
   </>;
 }

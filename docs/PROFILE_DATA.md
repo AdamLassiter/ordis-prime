@@ -24,3 +24,8 @@ The parser treats profile files as untrusted input and rejects invalid counts,
 flags, identifiers, and oversized notes before changing player state. Version 1
 may be replaced before stable release; there is no pre-release compatibility
 promise.
+
+Signed-in players can export from the inventory screen or import in merge or
+replace mode. The HTTP import boundary limits files to 5 MB. Replace mode clears
+the current inventory and writes all resolvable entries in one transaction;
+unresolved entries are reported and are not guessed.
