@@ -4,8 +4,9 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 
 interface ImportResult {
-  imported: number;
-  unresolved: Array<{ index: number; name: string; reason: "missing" | "ambiguous" }>;
+  inventoryImported: number;
+  goalsImported: number;
+  unresolved: Array<{ section: "inventory" | "goals"; index: number; name: string; reason: "missing" | "ambiguous" }>;
 }
 
 export function ProfileTransfer() {
@@ -30,7 +31,7 @@ export function ProfileTransfer() {
     if (!response.ok) {
       setError(true); setMessage(result.message ?? "Import failed."); setPending(false); return;
     }
-    setMessage(`Imported ${result.imported} entr${result.imported === 1 ? "y" : "ies"}.${result.unresolved.length ? ` ${result.unresolved.length} could not be matched: ${result.unresolved.map((entry) => entry.name).join(", ")}.` : ""}`);
+    setMessage(`Imported ${result.inventoryImported} inventory entr${result.inventoryImported === 1 ? "y" : "ies"} and ${result.goalsImported} goal${result.goalsImported === 1 ? "" : "s"}.${result.unresolved.length ? ` ${result.unresolved.length} could not be matched: ${result.unresolved.map((entry) => entry.name).join(", ")}.` : ""}`);
     setPending(false);
     router.refresh();
   }

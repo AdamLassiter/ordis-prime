@@ -5,7 +5,7 @@ canonical entity IDs inside one installation, while exported profiles use
 provider identifiers so they can be restored into another installation whose
 canonical UUIDs differ.
 
-## Version 1 export
+## Version 2 export
 
 Each inventory entry includes:
 
@@ -13,6 +13,10 @@ Each inventory entry includes:
 - kind, slug, and display name as a fallback and for human inspection;
 - owned, built, and wanted counts;
 - optional mastered, subsumed, and note values.
+
+Goals use the same portable entity reference and include their desired final
+quantity. Inventory and goals are validated and resolved before either section
+is changed.
 
 Imports resolve external identifiers first and only fall back to the kind/slug
 pair when no identifier is present in the destination catalog. Ambiguous or
@@ -23,7 +27,7 @@ that writes resolved entries.
 The parser treats profile files as untrusted input and rejects invalid counts,
 flags, identifiers, and oversized notes before changing player state. Version 1
 may be replaced before stable release; there is no pre-release compatibility
-promise.
+promise. Version 1 was replaced rather than migrated because it omitted goals.
 
 Signed-in players can export from the inventory screen or import in merge or
 replace mode. The HTTP import boundary limits files to 5 MB. Replace mode clears

@@ -65,14 +65,16 @@ export interface PortableEntityReference {
 }
 
 export interface ProfileExport {
-  schemaVersion: 1;
+  schemaVersion: 2;
   exportedAt: string;
   inventory: Array<InventoryValues & { entity: PortableEntityReference }>;
+  goals: Array<{ entity: PortableEntityReference; targetQuantity: number }>;
 }
 
 export interface ProfileImportResult {
-  imported: number;
-  unresolved: Array<{ index: number; name: string; reason: "missing" | "ambiguous" }>;
+  inventoryImported: number;
+  goalsImported: number;
+  unresolved: Array<{ section: "inventory" | "goals"; index: number; name: string; reason: "missing" | "ambiguous" }>;
 }
 
 export function createLocalUser(
@@ -142,11 +144,19 @@ export function exportPlayerProfile(sqlite: Database.Database, userId: string): 
              source_id, namespace, value
   `);
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     exportedAt: new Date().toISOString(),
     inventory: inventory.map(({ entityId, kind, slug, name, ...values }) => ({
       entity: { externalIds: identifiers.all(entityId) as PortableEntityReference["externalIds"], kind, slug, name },
       ...values,
+    })),
+    goals: (sqlite.prepare(`
+      select goal.entity_id as entityId, entity.kind, entity.slug, entity.name, goal.target_quantity as targetQuantity
+      from player_goals goal join entities entity on entity.id = goal.entity_id
+      where goal.user_id = ? order by entity.name collate nocase, entity.kind
+    `).all(userId) as Array<{ entityId: string; kind: string; slug: string; name: string; targetQuantity: number }>).map(({ entityId, kind, slug, name, targetQuantity }) => ({
+      entity: { externalIds: identifiers.all(entityId) as PortableEntityReference["externalIds"], kind, slug, name },
+      targetQuantity,
     })),
   };
 }
@@ -159,50 +169,83 @@ export function importPlayerProfile(
 ): ProfileImportResult {
   assertUser(sqlite, userId);
   const profile = parseProfile(value);
-  const resolved: Array<{ entityId: string; values: InventoryValues }> = [];
+  const resolvedInventory: Array<{ entityId: string; values: InventoryValues }> = [];
+  const resolvedGoals: Array<{ entityId: string; targetQuantity: number }> = [];
   const unresolved: ProfileImportResult["unresolved"] = [];
 
   for (const [index, entry] of profile.inventory.entries()) {
-    const candidates = new Set<string>();
-    const byExternalId = sqlite.prepare("select entity_id as entityId from external_ids where source_id = ? and namespace = ? and value = ?");
-    for (const identifier of entry.entity.externalIds) {
-      const match = byExternalId.get(identifier.sourceId, identifier.namespace, identifier.value) as { entityId: string } | undefined;
-      if (match) candidates.add(match.entityId);
-    }
-    if (!candidates.size) {
-      const fallback = sqlite.prepare("select id from entities where kind = ? and slug = ? and retired = 0")
-        .get(entry.entity.kind, entry.entity.slug) as { id: string } | undefined;
-      if (fallback) candidates.add(fallback.id);
-    }
-    if (candidates.size !== 1) {
-      unresolved.push({ index, name: entry.entity.name, reason: candidates.size ? "ambiguous" : "missing" });
+    const resolution = resolvePortableEntity(sqlite, entry.entity);
+    if (resolution.reason) {
+      unresolved.push({ section: "inventory", index, name: entry.entity.name, reason: resolution.reason });
       continue;
     }
-    resolved.push({ entityId: [...candidates][0]!, values: validateInventoryValues(entry) });
+    resolvedInventory.push({ entityId: resolution.entityId!, values: validateInventoryValues(entry) });
+  }
+  for (const [index, goal] of profile.goals.entries()) {
+    const resolution = resolvePortableEntity(sqlite, goal.entity);
+    if (resolution.reason) {
+      unresolved.push({ section: "goals", index, name: goal.entity.name, reason: resolution.reason });
+      continue;
+    }
+    resolvedGoals.push({ entityId: resolution.entityId!, targetQuantity: goal.targetQuantity });
   }
 
   sqlite.transaction(() => {
-    if (options.mode === "replace") sqlite.prepare("delete from player_inventory where user_id = ?").run(userId);
-    for (const entry of resolved) setInventoryEntry(sqlite, userId, entry.entityId, entry.values);
+    if (options.mode === "replace") {
+      sqlite.prepare("delete from player_inventory where user_id = ?").run(userId);
+      sqlite.prepare("delete from player_goals where user_id = ?").run(userId);
+    }
+    for (const entry of resolvedInventory) setInventoryEntry(sqlite, userId, entry.entityId, entry.values);
+    const writeGoal = sqlite.prepare(`
+      insert into player_goals (user_id, entity_id, target_quantity, created_at, updated_at)
+      values (?, ?, ?, ?, ?)
+      on conflict(user_id, entity_id) do update set target_quantity = excluded.target_quantity, updated_at = excluded.updated_at
+    `);
+    for (const goal of resolvedGoals) {
+      const now = Date.now();
+      writeGoal.run(userId, goal.entityId, goal.targetQuantity, now, now);
+    }
   })();
-  return { imported: resolved.length, unresolved };
+  return { inventoryImported: resolvedInventory.length, goalsImported: resolvedGoals.length, unresolved };
 }
 
 function parseProfile(value: unknown): ProfileExport {
-  if (!isRecord(value) || value.schemaVersion !== 1 || !Array.isArray(value.inventory)) throw new Error("Profile must use schemaVersion 1 and contain an inventory array");
+  if (!isRecord(value) || value.schemaVersion !== 2 || !Array.isArray(value.inventory) || !Array.isArray(value.goals)) throw new Error("Profile must use schemaVersion 2 and contain inventory and goals arrays");
   const inventory = value.inventory.map((entry, index) => {
-    if (!isRecord(entry) || !isRecord(entry.entity) || !Array.isArray(entry.entity.externalIds)) throw new Error(`Profile inventory entry ${index} is invalid`);
-    const entity = entry.entity;
-    for (const field of ["kind", "slug", "name"] as const) if (typeof entity[field] !== "string" || !entity[field]) throw new Error(`Profile inventory entry ${index} has invalid entity.${field}`);
-    const externalIdValues = entity.externalIds as unknown[];
-    const externalIds = externalIdValues.map((identifier) => {
-      if (!isRecord(identifier) || typeof identifier.sourceId !== "string" || !identifier.sourceId || typeof identifier.namespace !== "string" || !identifier.namespace || typeof identifier.value !== "string" || !identifier.value) throw new Error(`Profile inventory entry ${index} has an invalid external ID`);
-      return { sourceId: identifier.sourceId, namespace: identifier.namespace, value: identifier.value };
-    });
+    if (!isRecord(entry)) throw new Error(`Profile inventory entry ${index} is invalid`);
+    const entity = parsePortableEntity(entry.entity, `inventory entry ${index}`);
     const values = validateInventoryValues(entry);
-    return { ...values, entity: { externalIds, kind: entity.kind as string, slug: entity.slug as string, name: entity.name as string } };
+    return { ...values, entity };
   });
-  return { schemaVersion: 1, exportedAt: typeof value.exportedAt === "string" ? value.exportedAt : "", inventory };
+  const goals = value.goals.map((entry, index) => {
+    if (!isRecord(entry) || !Number.isSafeInteger(entry.targetQuantity) || (entry.targetQuantity as number) <= 0) throw new Error(`Profile goal entry ${index} has an invalid targetQuantity`);
+    return { entity: parsePortableEntity(entry.entity, `goal entry ${index}`), targetQuantity: entry.targetQuantity as number };
+  });
+  return { schemaVersion: 2, exportedAt: typeof value.exportedAt === "string" ? value.exportedAt : "", inventory, goals };
+}
+
+function parsePortableEntity(value: unknown, label: string): PortableEntityReference {
+  if (!isRecord(value) || !Array.isArray(value.externalIds)) throw new Error(`Profile ${label} has an invalid entity`);
+  for (const field of ["kind", "slug", "name"] as const) if (typeof value[field] !== "string" || !value[field]) throw new Error(`Profile ${label} has invalid entity.${field}`);
+  const externalIds = value.externalIds.map((identifier) => {
+    if (!isRecord(identifier) || typeof identifier.sourceId !== "string" || !identifier.sourceId || typeof identifier.namespace !== "string" || !identifier.namespace || typeof identifier.value !== "string" || !identifier.value) throw new Error(`Profile ${label} has an invalid external ID`);
+    return { sourceId: identifier.sourceId, namespace: identifier.namespace, value: identifier.value };
+  });
+  return { externalIds, kind: value.kind as string, slug: value.slug as string, name: value.name as string };
+}
+
+function resolvePortableEntity(sqlite: Database.Database, entity: PortableEntityReference): { entityId?: string; reason?: "missing" | "ambiguous" } {
+  const candidates = new Set<string>();
+  const byExternalId = sqlite.prepare("select entity_id as entityId from external_ids where source_id = ? and namespace = ? and value = ?");
+  for (const identifier of entity.externalIds) {
+    const match = byExternalId.get(identifier.sourceId, identifier.namespace, identifier.value) as { entityId: string } | undefined;
+    if (match) candidates.add(match.entityId);
+  }
+  if (!candidates.size) {
+    const fallback = sqlite.prepare("select id from entities where kind = ? and slug = ? and retired = 0").get(entity.kind, entity.slug) as { id: string } | undefined;
+    if (fallback) candidates.add(fallback.id);
+  }
+  return candidates.size === 1 ? { entityId: [...candidates][0]! } : { reason: candidates.size ? "ambiguous" : "missing" };
 }
 
 function validateInventoryValues(value: unknown): InventoryValues {
