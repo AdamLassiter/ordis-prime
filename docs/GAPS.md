@@ -12,8 +12,9 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   staging/promotion and the SQLite job runner are not implemented yet. The web
   process does not yet run migrations at startup.
 - WFCD item and mission-drop adapters exist and emit entities, recipes,
-  components, nodes, and drops. Manual YAML, snapshot storage, canonical
-  persistence, and live world state remain to be implemented.
+  components, nodes, and drops. Fetched payloads can be retained in an
+  immutable, hash-verified snapshot store. Manual YAML, canonical persistence,
+  refresh orchestration, and live world state remain to be implemented.
 - The web explorer currently uses a small development catalog through the same
   query interface the SQLite repository will implement. It is not production
   data, and the health endpoint does not yet probe SQLite.

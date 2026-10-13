@@ -1,5 +1,5 @@
 import type { Observation } from "@ordis-prime/domain";
-import type { Snapshot, SourceAdapter } from "../adapter.ts";
+import { createSnapshot, type Snapshot, type SourceAdapter } from "../adapter.ts";
 
 interface Reward { _id?: string; itemName?: string; chance?: number; rotation?: string }
 interface Mission { gameMode?: string; rewards?: Record<string, Reward[]> }
@@ -13,7 +13,7 @@ export class WfcdDropsAdapter implements SourceAdapter {
     const response = await fetch(this.url, { signal: context.signal, headers: { "User-Agent": "OrdisPrime/0.1 (+https://github.com/adamlassiter/ordis-prime)" } });
     if (!response.ok) throw new Error(`WFCD drops fetch failed: ${response.status}`);
     const bytes = new Uint8Array(await response.arrayBuffer());
-    return { sourceId: this.source.id, version: response.headers.get("etag") ?? new Date().toISOString(), retrievedAt: new Date().toISOString(), contentHash: response.headers.get("etag") ?? `bytes:${bytes.length}`, mediaType: "application/json", bytes };
+    return createSnapshot({ sourceId: this.source.id, version: response.headers.get("etag") ?? new Date().toISOString(), retrievedAt: new Date().toISOString(), mediaType: "application/json", bytes });
   }
   async *parse(snapshot: Snapshot): AsyncIterable<Observation> {
     const payload = JSON.parse(new TextDecoder().decode(snapshot.bytes)) as DropsPayload;

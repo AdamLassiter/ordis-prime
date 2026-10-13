@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import type { Observation } from "@ordis-prime/domain";
 
 export interface SourceDescriptor { id: string; name: string; homepage: string; license?: string; priority: number }
@@ -7,6 +8,14 @@ export interface SourceAdapter {
   readonly source: SourceDescriptor;
   fetch(context: FetchContext): Promise<Snapshot>;
   parse(snapshot: Snapshot): AsyncIterable<Observation>;
+}
+
+export function contentHash(bytes: Uint8Array): string {
+  return `sha256:${createHash("sha256").update(bytes).digest("hex")}`;
+}
+
+export function createSnapshot(input: Omit<Snapshot, "contentHash">): Snapshot {
+  return { ...input, contentHash: contentHash(input.bytes) };
 }
 
 export async function collect(adapter: SourceAdapter, snapshot: Snapshot): Promise<Observation[]> {
