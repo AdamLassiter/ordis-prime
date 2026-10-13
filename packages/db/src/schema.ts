@@ -69,7 +69,7 @@ export const entityRelations = sqliteTable("entity_relations", {
   id: text().primaryKey(),
   fromEntityId: text("from_entity_id").notNull().references(() => entities.id),
   toEntityId: text("to_entity_id").notNull().references(() => entities.id),
-  kind: text({ enum: ["requires", "unlocks", "occurs-at", "involves", "rewards"] }).notNull(),
+  kind: text({ enum: ["requires", "unlocks", "occurs-at", "involves", "rewards", "connects-to"] }).notNull(),
   notes: text(),
   sourceRunId: text("source_run_id").notNull().references(() => sourceRuns.id),
   sourceRecordKey: text("source_record_key").notNull(),

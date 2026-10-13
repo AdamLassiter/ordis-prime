@@ -31,6 +31,7 @@ export interface CatalogNode {
   maximumEnemyLevel?: number;
   masteryRequirement?: number;
   detailEvidence: Array<{ sourceName: string; version: string; recordKey: string; sourcePath?: string; citationUrl?: string }>;
+  connections: Array<{ slug: string; name: string; planet?: string }>;
   drops: Array<{
     kind: string;
     slug: string;
@@ -43,6 +44,7 @@ export interface CatalogNode {
 
 export interface StarChartNode extends Omit<CatalogNode, "drops" | "id"> {
   rewardCount: number;
+  connectionCount: number;
   neededRewardCount?: number;
 }
 
@@ -223,8 +225,9 @@ export function findCatalogNode(sqlite: Database.Database, slug: string, userId?
     } } : {}),
   }));
   const details = loadNodeDetails(sqlite, [node.id]).get(node.id);
+  const connections = loadNodeConnections(sqlite, [node.id]).get(node.id) ?? [];
   const { id: _id, ...summary } = node;
-  return { ...summary, ...details, detailEvidence: details?.detailEvidence ?? [], drops };
+  return { ...summary, ...details, detailEvidence: details?.detailEvidence ?? [], connections, drops };
 }
 
 export function listCatalogNodes(sqlite: Database.Database, limit = 500): CatalogNode[] {
@@ -232,13 +235,15 @@ export function listCatalogNodes(sqlite: Database.Database, limit = 500): Catalo
   const nodes = sqlite.prepare("select id, slug, name, description from entities where kind = 'node' and retired = 0 order by name collate nocase limit ?")
     .all(normalizedLimit) as Array<{ id: string; slug: string; name: string; description?: string }>;
   const details = loadNodeDetails(sqlite, nodes.map(({ id }) => id));
-  return nodes.map(({ id, ...node }) => ({ ...node, ...details.get(id), detailEvidence: details.get(id)?.detailEvidence ?? [], drops: [] }));
+  const connections = loadNodeConnections(sqlite, nodes.map(({ id }) => id));
+  return nodes.map(({ id, ...node }) => ({ ...node, ...details.get(id), detailEvidence: details.get(id)?.detailEvidence ?? [], connections: connections.get(id) ?? [], drops: [] }));
 }
 
 export function listStarChartNodes(sqlite: Database.Database, userId?: string): StarChartNode[] {
   const nodes = sqlite.prepare("select id, slug, name, description from entities where kind = 'node' and retired = 0 order by name collate nocase")
     .all() as Array<{ id: string; slug: string; name: string; description?: string }>;
   const details = loadNodeDetails(sqlite, nodes.map(({ id }) => id));
+  const connections = loadNodeConnections(sqlite, nodes.map(({ id }) => id));
   const inventoryColumns = userId ? `coalesce(inventory.owned_count, 0) as ownedCount,
       coalesce(inventory.built_count, 0) as builtCount,
       coalesce(inventory.wanted_count, 0) as wantedCount` : "0 as ownedCount, 0 as builtCount, 0 as wantedCount";
@@ -256,7 +261,7 @@ export function listStarChartNodes(sqlite: Database.Database, userId?: string): 
     if (userId && (reward.ownedCount + reward.builtCount === 0 || reward.wantedCount > 0)) count.neededRewardCount += 1;
     counts.set(reward.nodeId, count);
   }
-  return nodes.map(({ id, ...node }) => ({ ...node, ...details.get(id), detailEvidence: details.get(id)?.detailEvidence ?? [], rewardCount: counts.get(id)?.rewardCount ?? 0, ...(userId ? { neededRewardCount: counts.get(id)?.neededRewardCount ?? 0 } : {}) }));
+  return nodes.map(({ id, ...node }) => ({ ...node, ...details.get(id), detailEvidence: details.get(id)?.detailEvidence ?? [], connections: connections.get(id) ?? [], connectionCount: connections.get(id)?.length ?? 0, rewardCount: counts.get(id)?.rewardCount ?? 0, ...(userId ? { neededRewardCount: counts.get(id)?.neededRewardCount ?? 0 } : {}) }));
 }
 
 export function listSourceStatuses(sqlite: Database.Database): SourceStatus[] {
@@ -310,6 +315,31 @@ function loadNodeDetails(sqlite: Database.Database, entityIds: string[]): Map<st
     current.masteryRequirement ??= row.masteryRequirement ?? undefined;
     current.detailEvidence.push({ sourceName: row.sourceName, version: row.version, recordKey: row.recordKey, sourcePath: row.sourcePath ?? undefined, citationUrl: row.citationUrl ?? undefined });
     result.set(row.entityId, current);
+  }
+  return result;
+}
+
+function loadNodeConnections(sqlite: Database.Database, entityIds: string[]): Map<string, CatalogNode["connections"]> {
+  if (!entityIds.length) return new Map();
+  const placeholders = entityIds.map(() => "?").join(", ");
+  const rows = sqlite.prepare(`
+    select relation.from_entity_id as entityId, target.id as targetId, target.slug, target.name
+    from entity_relations relation
+    join source_runs run on run.id = relation.source_run_id and run.status = 'active'
+    join entities target on target.id = relation.to_entity_id and target.kind = 'node' and target.retired = 0
+    where relation.kind = 'connects-to' and relation.from_entity_id in (${placeholders})
+    union
+    select relation.to_entity_id, origin.id, origin.slug, origin.name
+    from entity_relations relation
+    join source_runs run on run.id = relation.source_run_id and run.status = 'active'
+    join entities origin on origin.id = relation.from_entity_id and origin.kind = 'node' and origin.retired = 0
+    where relation.kind = 'connects-to' and relation.to_entity_id in (${placeholders})
+    order by name collate nocase
+  `).all(...entityIds, ...entityIds) as Array<{ entityId: string; targetId: string; slug: string; name: string }>;
+  const targetDetails = loadNodeDetails(sqlite, [...new Set(rows.map(({ targetId }) => targetId))]);
+  const result = new Map<string, CatalogNode["connections"]>();
+  for (const row of rows) {
+    result.set(row.entityId, [...(result.get(row.entityId) ?? []), { slug: row.slug, name: row.name, planet: targetDetails.get(row.targetId)?.planet }]);
   }
   return result;
 }

@@ -72,7 +72,7 @@ export interface NodeDetailObservation {
   evidence: Evidence;
 }
 
-export const RELATION_KINDS = ["requires", "unlocks", "occurs-at", "involves", "rewards"] as const;
+export const RELATION_KINDS = ["requires", "unlocks", "occurs-at", "involves", "rewards", "connects-to"] as const;
 export type RelationKind = typeof RELATION_KINDS[number];
 
 export interface EntityRelationObservation {

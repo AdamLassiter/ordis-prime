@@ -65,9 +65,10 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   and transparent derived summaries are not implemented.
 - WFCD item and drop observations compose planet, mission and level metadata in
   a public planet-grouped star-chart explorer with a player-needed overlay. The
-  imported sources do not provide connection edges or coordinates, so it is not
-  yet an interactive graph. Quest prerequisites, mechanics, secrets and richer
-  enemy/boss facts still need typed discovery relations.
+  imported WFCD sources do not provide connection edges or coordinates, so it is
+  not yet an interactive graph. Cited `connects-to` observations are supported
+  and shown symmetrically when another source supplies them, but a complete
+  attributed edge dataset and stable positions are still missing.
 - A public discovery atlas searches canonical quest, enemy, boss, mechanic and
   secret kinds. WFCD currently populates quests and enemies; cited discovery
   YAML can add curated entities and typed links to nodes, rewards, or other

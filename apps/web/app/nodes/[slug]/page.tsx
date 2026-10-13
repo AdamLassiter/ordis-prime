@@ -22,6 +22,7 @@ export default async function NodePage({ params, searchParams }: { params: Promi
       <dt>Enemy level</dt><dd>{node.minimumEnemyLevel === undefined ? "Not recorded" : `${node.minimumEnemyLevel}–${node.maximumEnemyLevel ?? node.minimumEnemyLevel}`}</dd>
       <dt>Mastery requirement</dt><dd>{node.masteryRequirement ?? "Not recorded"}</dd>
     </dl>
+    <section><h2>Connections</h2>{node.connections.length ? <div className="filters">{node.connections.map((connection) => <Link className="tag" href={`/nodes/${connection.slug}`} key={connection.slug}>{connection.name}{connection.planet ? `, ${connection.planet}` : ""}</Link>)}</div> : <p className="notice">No active cited navigation edges are recorded for this node.</p>}</section>
     <p>Rewards documented for this node, joined to your private inventory when signed in.</p>
     {session ? <div className="filters"><Link className={!neededOnly ? "tag active" : "tag"} href={`/nodes/${slug}`}>All rewards</Link><Link className={neededOnly ? "tag active" : "tag"} href={`/nodes/${slug}?needed=1`}>Needed only</Link></div> : <p className="notice"><Link href="/sign-in">Sign in</Link> to show rewards you do not own or still want.</p>}
     {drops.length

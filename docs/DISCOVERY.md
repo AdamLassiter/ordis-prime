@@ -9,7 +9,7 @@ by inventory, builds and drops.
 The public `/discovery` route searches and filters those entity kinds. WFCD item
 data provides quest and enemy identities and descriptions. A cited manual YAML
 source can add curated topics and typed `requires`, `unlocks`, `occurs-at`,
-`involves` and `rewards` links. Both ends resolve through external identifiers;
+`involves`, `rewards` and node `connects-to` links. Both ends resolve through external identifiers;
 relationships are source-run scoped and disappear from reads when that source
 is superseded. Catalog pages show incoming and outgoing links with attribution.
 

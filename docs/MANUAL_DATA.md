@@ -42,8 +42,8 @@ promise.
 Discovery YAML is a separate format because factual entities and relationships
 have different validation and review needs from editorial rankings. It defines
 cited quests, mechanics, secrets, enemies, bosses or nodes under stable local
-keys, then joins them with typed `requires`, `unlocks`, `occurs-at`, `involves`
-or `rewards` relationships. A relationship endpoint may be a local key or an
+keys, then joins them with typed `requires`, `unlocks`, `occurs-at`, `involves`,
+`rewards` or `connects-to` relationships. A relationship endpoint may be a local key or an
 explicit `{ sourceId, namespace, value }` reference to an entity imported by
 another source. See `data/manual/discovery.example.yaml`.
 

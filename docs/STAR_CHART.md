@@ -14,16 +14,18 @@ and payload path remain attached to every metadata row.
 The public `/star-chart` view groups nodes by planet and filters by node, mission
 or faction text. Signed-in players can restrict it to nodes with at least one
 reward their inventory marks as unowned or still wanted. Node detail pages show
-the same metadata beside their full reward lists.
+the same metadata beside their full reward lists. Active cited `connects-to`
+relations are treated as undirected navigation edges: either endpoint lists the
+other, even though a source only needs to state the edge once.
 
 ## Current compromise
 
 Neither imported WFCD dataset contains navigation edges or stable visual
 coordinates. The current chart is therefore a planet-grouped spatial index, not
-a claim to reproduce the in-game map. Connection prerequisites and positions
-need another attributed source or curated manual dataset before an interactive
+a claim to reproduce the in-game map. The ingestion and read models accept cited
+manual or provider-supplied edges, but the application does not ship an
+unattributed map. Positions still need another attributed source before a visual
 graph is honest.
 
-Quest prerequisites, mechanics and secrets do not yet have typed relations to
-nodes. Enemy and quest identities are imported, but their domain-specific facts
-and discovery links remain future work.
+Enemy and quest identities are imported, but richer domain-specific facts and
+complete curated discovery links remain future work.

@@ -12,7 +12,8 @@ questions such as “what unlocks this?” or “where does this occur?” relia
 ## Decision
 
 Represent discovery links as directed observations with one of five initial
-kinds: `requires`, `unlocks`, `occurs-at`, `involves`, or `rewards`. Resolve both
+kinds: `requires`, `unlocks`, `occurs-at`, `involves`, `rewards`, or
+`connects-to`. Resolve both
 endpoints through the same external-ID identity layer as drops and recipes.
 Persist the source run and record-level evidence on every link, and only expose
 links belonging to active source runs.
@@ -27,5 +28,7 @@ entity by display name.
 - Unresolved external endpoints become reviewable conflicts; invalid local keys
   fail before database promotion.
 - Catalog pages can render links in either direction and retain attribution.
+- Star-chart reads interpret `connects-to` symmetrically while retaining the
+  single cited observation.
 - Conditional edges, ordering, confidence and player progress remain separate
   future concepts rather than fields hidden in free-form notes.
