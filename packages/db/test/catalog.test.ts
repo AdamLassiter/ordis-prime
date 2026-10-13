@@ -37,7 +37,7 @@ test("catalog read models join active recipes, drops, provenance, and rankings",
 
   assert.deepEqual(searchCatalog(sqlite, "brat").map(({ name }) => name), ["Braton"]);
   assert.deepEqual(searchCatalog(sqlite, "%"), []);
-  assert.deepEqual(searchDiscoveryCatalog(sqlite, { kind: "quest" }).map(({ name }) => name), ["Awakening"]);
+  assert.deepEqual(searchDiscoveryCatalog(sqlite, { kind: "quest" }).map(({ name, relationCount }) => ({ name, relationCount })), [{ name: "Awakening", relationCount: 1 }]);
   assert.deepEqual(searchDiscoveryCatalog(sqlite, { query: "%" }), []);
   const item = findCatalogItem(sqlite, "weapon", "braton");
   assert.equal(item?.components[0]?.quantity, 200);

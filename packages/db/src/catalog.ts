@@ -8,7 +8,7 @@ export interface CatalogSummary {
 }
 export const DISCOVERY_KINDS = ["quest", "mechanic", "secret", "enemy", "boss"] as const;
 export type DiscoveryKind = typeof DISCOVERY_KINDS[number];
-export interface DiscoveryCatalogEntry extends CatalogSummary { progressState?: "unseen" | "discovered" | "completed" }
+export interface DiscoveryCatalogEntry extends CatalogSummary { progressState?: "unseen" | "discovered" | "completed"; relationCount: number }
 
 export interface CatalogItem extends CatalogSummary {
   components: Array<{ kind: string; slug: string; name: string; quantity: number }>;
@@ -82,7 +82,10 @@ export function searchDiscoveryCatalog(sqlite: Database.Database, input: { query
   const progressColumn = input.userId ? "coalesce(progress.state, 'unseen') as progressState" : "null as progressState";
   const progressWhere = input.progress ? "and coalesce(progress.state, 'unseen') = ?" : "";
   return sqlite.prepare(`
-    select entity.kind, entity.slug, entity.name, entity.description, ${progressColumn} from entities entity
+    select entity.kind, entity.slug, entity.name, entity.description, ${progressColumn},
+      (select count(*) from entity_relations relation join source_runs relation_run on relation_run.id = relation.source_run_id and relation_run.status = 'active'
+       where relation.from_entity_id = entity.id or relation.to_entity_id = entity.id) as relationCount
+    from entities entity
     ${progressJoin}
     where entity.retired = 0 and entity.kind in (${kindPlaceholders})
       and (? is null or entity.kind = ?) and entity.name like ? escape '\\' ${progressWhere}

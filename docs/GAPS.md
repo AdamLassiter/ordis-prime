@@ -73,7 +73,8 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   YAML can add curated entities and typed links to nodes, rewards, or other
   topics. Players can privately mark topics unseen, discovered, or completed
   and filter the atlas by that state. Richer boss classification, quest-step
-  progress, conditional relations, and graph summaries on atlas cards remain.
+  progress, conditional relations, and graph-neighbor previews remain. Atlas
+  cards currently expose only the number of active cited links.
 
 ## Deliberate compromises
 
