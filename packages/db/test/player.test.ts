@@ -5,7 +5,7 @@ import path from "node:path";
 import test from "node:test";
 import type Database from "better-sqlite3";
 import type { Observation } from "@ordis-prime/domain";
-import { createLocalUser, exportPlayerProfile, importPlayerProfile, listPlayerInventory, migrateDatabase, openSqliteDatabase, promoteSource, setInventoryEntry } from "../src/index.ts";
+import { createLocalUser, exportPlayerProfile, findPlayerInventoryEntry, importPlayerProfile, listPlayerInventory, migrateDatabase, openSqliteDatabase, promoteSource, setInventoryEntry, setInventoryEntryByReference } from "../src/index.ts";
 
 test("profiles resolve stable source IDs across installations with different canonical UUIDs", async (context) => {
   const roots = await Promise.all(["a", "b"].map((name) => fs.mkdtemp(path.join(os.tmpdir(), `ordis-profile-${name}-`))));
@@ -16,6 +16,10 @@ test("profiles resolve stable source IDs across installations with different can
   assert.notEqual(first.entityId, second.entityId);
 
   const firstUser = createLocalUser(first.sqlite, { username: "Exporter" });
+  assert.deepEqual(findPlayerInventoryEntry(first.sqlite, firstUser, "weapon", "braton"), {
+    entityId: first.entityId, kind: "weapon", slug: "braton", name: "Braton",
+    ownedCount: 0, builtCount: 0, wantedCount: 0, mastered: undefined, subsumed: undefined, note: undefined,
+  });
   setInventoryEntry(first.sqlite, firstUser, first.entityId, { ownedCount: 2, builtCount: 1, wantedCount: 3, mastered: true, note: "Keep one unranked." });
   const profile = exportPlayerProfile(first.sqlite, firstUser);
   const secondUser = createLocalUser(second.sqlite, { username: "Importer" });
@@ -34,6 +38,18 @@ test("profiles resolve stable source IDs across installations with different can
     subsumed: undefined,
     note: "Keep one unranked.",
   }]);
+});
+
+test("inventory writes can resolve an active canonical entity without accepting its ID", async (context) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-inventory-reference-"));
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const catalog = createCatalog(path.join(root, "catalog.sqlite"));
+  context.after(() => catalog.sqlite.close());
+  const userId = createLocalUser(catalog.sqlite, { username: "Player" });
+
+  setInventoryEntryByReference(catalog.sqlite, userId, { kind: "weapon", slug: "braton" }, { ownedCount: 1, builtCount: 1, wantedCount: 0 });
+  assert.equal(findPlayerInventoryEntry(catalog.sqlite, userId, "weapon", "braton")?.builtCount, 1);
+  assert.throws(() => setInventoryEntryByReference(catalog.sqlite, userId, { kind: "weapon", slug: "missing" }, { ownedCount: 1, builtCount: 0, wantedCount: 0 }), /Unknown active entity/);
 });
 
 test("profile replacement is transactional and reports missing entities", async (context) => {

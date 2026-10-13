@@ -1,11 +1,17 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { findPlayerInventoryEntry } from "@ordis-prime/db";
 import { findItem } from "@/lib/catalog";
+import { getDatabase } from "@/lib/database";
+import { getCurrentSession } from "@/lib/session";
+import { InventoryForm } from "./inventory-form";
 
 export default async function ItemPage({ params }: { params: Promise<{ kind: string; slug: string }> }) {
   const { kind, slug } = await params;
   const item = await findItem(kind, slug);
   if (!item) notFound();
+  const session = await getCurrentSession();
+  const inventory = session ? findPlayerInventoryEntry(getDatabase(), session.user.id, kind, slug) : undefined;
   return <>
     <p className="eyebrow">{item.kind}</p>
     <h1>{item.name}</h1>
@@ -20,7 +26,7 @@ export default async function ItemPage({ params }: { params: Promise<{ kind: str
       <dt>Evidence</dt>
       <dd>{item.sources.length ? item.sources.map((source) => <a className="tag" href={source.homepage} key={source.name}>{source.name}</a>) : "No active provenance recorded"}</dd>
     </dl>
-    <Link className="button" href="/planner">Add to planner</Link>
+    {inventory ? <InventoryForm item={inventory} /> : <p className="notice"><Link href="/sign-in">Sign in</Link> to track ownership, mastery, and wanted copies.</p>}
   </>;
 }
 

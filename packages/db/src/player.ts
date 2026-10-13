@@ -17,6 +17,46 @@ export interface PlayerInventoryEntry extends InventoryValues {
   name: string;
 }
 
+export function findPlayerInventoryEntry(
+  sqlite: Database.Database,
+  userId: string,
+  kind: string,
+  slug: string,
+): PlayerInventoryEntry | undefined {
+  assertUser(sqlite, userId);
+  const row = sqlite.prepare(`
+    select entity.id as entityId, entity.kind, entity.slug, entity.name,
+           inventory.owned_count as ownedCount, inventory.built_count as builtCount,
+           inventory.wanted_count as wantedCount, inventory.mastered, inventory.subsumed,
+           inventory.note
+    from entities entity
+    left join player_inventory inventory on inventory.entity_id = entity.id and inventory.user_id = ?
+    where entity.kind = ? and entity.slug = ? and entity.retired = 0
+  `).get(userId, kind, slug) as (Omit<PlayerInventoryEntry, "mastered" | "subsumed" | "note"> & { mastered: number | null; subsumed: number | null; note: string | null }) | undefined;
+  if (!row) return undefined;
+  return {
+    ...row,
+    ownedCount: row.ownedCount ?? 0,
+    builtCount: row.builtCount ?? 0,
+    wantedCount: row.wantedCount ?? 0,
+    mastered: sqlToBoolean(row.mastered),
+    subsumed: sqlToBoolean(row.subsumed),
+    note: row.note ?? undefined,
+  };
+}
+
+export function setInventoryEntryByReference(
+  sqlite: Database.Database,
+  userId: string,
+  reference: { kind: string; slug: string },
+  values: InventoryValues,
+): void {
+  const entity = sqlite.prepare("select id from entities where kind = ? and slug = ? and retired = 0")
+    .get(reference.kind, reference.slug) as { id: string } | undefined;
+  if (!entity) throw new Error(`Unknown active entity ${reference.kind}:${reference.slug}`);
+  setInventoryEntry(sqlite, userId, entity.id, values);
+}
+
 export interface PortableEntityReference {
   externalIds: Array<{ sourceId: string; namespace: string; value: string }>;
   kind: string;

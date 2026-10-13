@@ -29,9 +29,9 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   API, with first-run, sign-in, and sign-out UI. Account administration,
   password recovery, and authorization checks on player-state mutations are not
   implemented yet.
-- Validated inventory persistence and portable profile import/export exist in
-  the data layer. Authenticated editing routes, UI, and planner persistence are
-  pending.
+- Validated inventory persistence, authenticated catalog editing, an inventory
+  summary, and portable profile import/export exist. Profile transfer UI, node
+  ownership overlays, and planner persistence are pending.
 - The visual star chart, notifications, builds, editorial comparisons and
   discovery atlas are intentional later milestones.
 
