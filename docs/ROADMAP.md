@@ -30,8 +30,9 @@ editorial rankings as independent observations and show disagreement before any
 derived consensus.
 
 Build drafts, editor/search workflow, immutable public snapshots and a
-source-faithful editorial ranking comparison are implemented. Advanced build
-mechanics and optional ranking summaries remain documented follow-up work.
+source-faithful editorial ranking comparison are implemented. Builds retain
+configuration labels, Forma counts and capacity-upgrade state. Calculated
+capacity/polarities, arcanes, shards and optional ranking summaries remain.
 
 ## 4. Discovery and spatial navigation
 

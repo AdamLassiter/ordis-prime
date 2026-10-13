@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { createBuildShare, createPlayerBuild, deletePlayerBuild, removeBuildEquipment, removeBuildMod, setBuildEquipment, setBuildMod, updatePlayerBuild, type BuildSlot } from "@ordis-prime/db";
+import { configureBuildEquipment, createBuildShare, createPlayerBuild, deletePlayerBuild, removeBuildEquipment, removeBuildMod, setBuildEquipment, setBuildMod, updatePlayerBuild, type BuildSlot } from "@ordis-prime/db";
 import { getDatabase } from "@/lib/database";
 import { requireCurrentSession } from "@/lib/session";
 
@@ -28,6 +28,18 @@ export async function assignEquipment(buildId: string, slot: BuildSlot, kind: st
 export async function saveEquipmentNotes(buildId: string, slot: BuildSlot, kind: string, slug: string, form: FormData) {
   const session = await requireCurrentSession();
   setBuildEquipment(getDatabase(), session.user.id, buildId, slot, { kind, slug }, String(form.get("notes") ?? ""));
+  revalidatePath(`/builds/${buildId}`);
+}
+
+export async function saveEquipmentConfiguration(buildId: string, slot: BuildSlot, form: FormData) {
+  const session = await requireCurrentSession();
+  const rawFormaCount = String(form.get("formaCount") ?? "");
+  if (!/^\d+$/.test(rawFormaCount)) throw new Error("Forma count must be a non-negative integer");
+  configureBuildEquipment(getDatabase(), session.user.id, buildId, slot, {
+    configuration: String(form.get("configuration") ?? ""),
+    formaCount: Number(rawFormaCount),
+    capacityUpgrade: form.get("capacityUpgrade") === "yes",
+  });
   revalidatePath(`/builds/${buildId}`);
 }
 

@@ -16,6 +16,7 @@ export default async function SharedBuildPage({ params }: { params: Promise<{ sh
     <p className="muted">Immutable snapshot published {formatInstant(build.sharedAt)}</p>
     <section className="planner-section"><h2>Loadout</h2><div className="build-slots">{build.equipment.map((equipment) => <article className="card build-slot" key={equipment.slot}>
       <span className="tag">{equipment.slot}</span><h3><Link href={`/catalog/${equipment.entity.kind}/${equipment.entity.slug}`}>{equipment.entity.name}</Link></h3>
+      <p className="muted">{equipment.configuration ? `${equipment.configuration} · ` : ""}{equipment.formaCount} Forma{equipment.capacityUpgrade ? " · capacity upgraded" : ""}</p>
       {equipment.notes && <p className="muted build-notes">{equipment.notes}</p>}
       {equipment.mods.length > 0 && <ol className="mod-list">{equipment.mods.map((mod) => <li key={mod.position}><Link href={`/catalog/${mod.entity.kind}/${mod.entity.slug}`}>{mod.entity.name}</Link>{mod.rank === undefined ? "" : ` · rank ${mod.rank}`}</li>)}</ol>}
     </article>)}</div></section>

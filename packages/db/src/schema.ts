@@ -180,6 +180,9 @@ export const buildEquipment = sqliteTable("build_equipment", {
   slot: text().notNull(),
   entityId: text("entity_id").notNull().references(() => entities.id),
   notes: text(),
+  configuration: text(),
+  formaCount: integer("forma_count").notNull().default(0),
+  capacityUpgrade: integer("capacity_upgrade", { mode: "boolean" }).notNull().default(false),
 }, (table) => [uniqueIndex("build_equipment_slot").on(table.buildId, table.slot)]);
 export const buildMods = sqliteTable("build_mods", {
   id: text().primaryKey(),

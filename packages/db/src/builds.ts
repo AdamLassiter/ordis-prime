@@ -6,7 +6,7 @@ export type BuildSlot = typeof BUILD_SLOTS[number];
 
 export interface BuildEntityReference { kind: string; slug: string; name: string }
 export interface BuildMod { position: number; entity: BuildEntityReference; rank?: number }
-export interface BuildEquipmentEntry { id: string; slot: BuildSlot; entity: BuildEntityReference; notes?: string; mods: BuildMod[] }
+export interface BuildEquipmentEntry { id: string; slot: BuildSlot; entity: BuildEntityReference; notes?: string; configuration?: string; formaCount: number; capacityUpgrade: boolean; mods: BuildMod[] }
 export interface PlayerBuild {
   id: string;
   title: string;
@@ -80,8 +80,12 @@ export function setBuildEquipment(sqlite: Database.Database, userId: string, bui
     if (entity.kind !== expectedKind) throw new Error(`${slot} requires a ${expectedKind}, not ${entity.kind}`);
     const existing = sqlite.prepare("select id, entity_id as entityId from build_equipment where build_id = ? and slot = ?").get(buildId, slot) as { id: string; entityId: string } | undefined;
     if (existing) {
-      if (existing.entityId !== entity.id) sqlite.prepare("delete from build_mods where equipment_id = ?").run(existing.id);
-      sqlite.prepare("update build_equipment set entity_id = ?, notes = ? where id = ?").run(entity.id, normalizedNotes ?? null, existing.id);
+      if (existing.entityId !== entity.id) {
+        sqlite.prepare("delete from build_mods where equipment_id = ?").run(existing.id);
+        sqlite.prepare("update build_equipment set entity_id = ?, notes = ?, configuration = null, forma_count = 0, capacity_upgrade = 0 where id = ?").run(entity.id, normalizedNotes ?? null, existing.id);
+      } else {
+        sqlite.prepare("update build_equipment set notes = ? where id = ?").run(normalizedNotes ?? null, existing.id);
+      }
     } else {
       sqlite.prepare("insert into build_equipment (id, build_id, slot, entity_id, notes) values (?, ?, ?, ?, ?)").run(randomUUID(), buildId, slot, entity.id, normalizedNotes ?? null);
     }
@@ -93,6 +97,20 @@ export function removeBuildEquipment(sqlite: Database.Database, userId: string, 
   sqlite.transaction(() => {
     assertBuildOwner(sqlite, userId, buildId);
     const result = sqlite.prepare("delete from build_equipment where build_id = ? and slot = ?").run(buildId, slot);
+    if (result.changes !== 1) throw new Error("Build equipment not found");
+    touchBuild(sqlite, buildId);
+  })();
+}
+
+export function configureBuildEquipment(sqlite: Database.Database, userId: string, buildId: string, slot: BuildSlot, input: { configuration?: string; formaCount: number; capacityUpgrade: boolean }): void {
+  if (!(BUILD_SLOTS as readonly string[]).includes(slot)) throw new Error("Build slot is invalid");
+  const configuration = normalizeText(input.configuration, 120, "Configuration");
+  if (!Number.isSafeInteger(input.formaCount) || input.formaCount < 0 || input.formaCount > 100) throw new Error("Forma count must be between 0 and 100");
+  if (typeof input.capacityUpgrade !== "boolean") throw new Error("Capacity upgrade must be boolean");
+  sqlite.transaction(() => {
+    assertBuildOwner(sqlite, userId, buildId);
+    const result = sqlite.prepare("update build_equipment set configuration = ?, forma_count = ?, capacity_upgrade = ? where build_id = ? and slot = ?")
+      .run(configuration ?? null, input.formaCount, input.capacityUpgrade ? 1 : 0, buildId, slot);
     if (result.changes !== 1) throw new Error("Build equipment not found");
     touchBuild(sqlite, buildId);
   })();
@@ -143,10 +161,12 @@ export function findSharedBuild(sqlite: Database.Database, shareKey: string): Sh
 
 function hydrateBuild(sqlite: Database.Database, build: { id: string; title: string; category: string | null; notes: string | null; revision: number; createdAt: number; updatedAt: number }): PlayerBuild {
   const equipmentRows = sqlite.prepare(`
-    select equipment.id, equipment.slot, equipment.notes, entity.kind, entity.slug, entity.name
+    select equipment.id, equipment.slot, equipment.notes, equipment.configuration,
+      equipment.forma_count as formaCount, equipment.capacity_upgrade as capacityUpgrade,
+      entity.kind, entity.slug, entity.name
     from build_equipment equipment join entities entity on entity.id = equipment.entity_id
     where equipment.build_id = ? order by equipment.slot
-  `).all(build.id) as Array<{ id: string; slot: BuildSlot; notes: string | null; kind: string; slug: string; name: string }>;
+  `).all(build.id) as Array<{ id: string; slot: BuildSlot; notes: string | null; configuration: string | null; formaCount: number; capacityUpgrade: number; kind: string; slug: string; name: string }>;
   const modsQuery = sqlite.prepare(`
     select mod.position, mod.rank, entity.kind, entity.slug, entity.name
     from build_mods mod join entities entity on entity.id = mod.entity_id
@@ -155,7 +175,7 @@ function hydrateBuild(sqlite: Database.Database, build: { id: string; title: str
   return {
     id: build.id, title: build.title, category: build.category ?? undefined, notes: build.notes ?? undefined,
     revision: build.revision, createdAt: build.createdAt, updatedAt: build.updatedAt,
-    equipment: equipmentRows.map((entry) => ({ id: entry.id, slot: entry.slot, entity: { kind: entry.kind, slug: entry.slug, name: entry.name }, notes: entry.notes ?? undefined, mods: (modsQuery.all(entry.id) as Array<{ position: number; rank: number | null; kind: string; slug: string; name: string }>).map(({ position, rank, kind, slug, name }) => ({ position, rank: rank ?? undefined, entity: { kind, slug, name } })) })),
+    equipment: equipmentRows.map((entry) => ({ id: entry.id, slot: entry.slot, entity: { kind: entry.kind, slug: entry.slug, name: entry.name }, notes: entry.notes ?? undefined, configuration: entry.configuration ?? undefined, formaCount: entry.formaCount, capacityUpgrade: Boolean(entry.capacityUpgrade), mods: (modsQuery.all(entry.id) as Array<{ position: number; rank: number | null; kind: string; slug: string; name: string }>).map(({ position, rank, kind, slug, name }) => ({ position, rank: rank ?? undefined, entity: { kind, slug, name } })) })),
   };
 }
 

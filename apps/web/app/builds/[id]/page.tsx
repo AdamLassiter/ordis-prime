@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { BUILD_SLOTS, getPlayerBuild, searchBuildCandidates, type BuildSlot } from "@ordis-prime/db";
 import { getDatabase } from "@/lib/database";
 import { getCurrentSession } from "@/lib/session";
-import { assignEquipment, assignMod, clearEquipment, clearMod, removeBuild, saveBuildDetails, saveEquipmentNotes, shareBuild } from "../actions";
+import { assignEquipment, assignMod, clearEquipment, clearMod, removeBuild, saveBuildDetails, saveEquipmentConfiguration, saveEquipmentNotes, shareBuild } from "../actions";
 
 export const dynamic = "force-dynamic";
 
@@ -34,6 +34,7 @@ export default async function BuildEditor({ params, searchParams }: { params: Pr
         const equipment = build.equipment.find((entry) => entry.slot === slot);
         return <article className="card build-slot" key={slot}><span className="tag">{slot}</span>{equipment ? <>
           <h3><Link href={`/catalog/${equipment.entity.kind}/${equipment.entity.slug}`}>{equipment.entity.name}</Link></h3>
+          <form className="form-stack compact-form" action={saveEquipmentConfiguration.bind(null, id, slot)}><label>Configuration<input name="configuration" maxLength={120} defaultValue={equipment.configuration} placeholder="e.g. Config A, Incarnon" /></label><div className="count-grid"><label>Forma<input name="formaCount" type="number" min="0" max="100" step="1" required defaultValue={equipment.formaCount} /></label><label className="check-label"><input name="capacityUpgrade" type="checkbox" value="yes" defaultChecked={equipment.capacityUpgrade} /> Orokin capacity upgrade</label></div><button className="nav-button">Save configuration</button></form>
           <form className="form-stack compact-form" action={saveEquipmentNotes.bind(null, id, slot, equipment.entity.kind, equipment.entity.slug)}><label>Slot notes<textarea name="notes" rows={2} maxLength={2000} defaultValue={equipment.notes} /></label><button className="nav-button">Save notes</button></form>
           {equipment.mods.length > 0 && <ol className="mod-list">{equipment.mods.map((mod) => <li key={mod.position}><Link href={`/catalog/${mod.entity.kind}/${mod.entity.slug}`}>{mod.entity.name}</Link>{mod.rank === undefined ? "" : ` · rank ${mod.rank}`}<form action={clearMod.bind(null, id, slot, mod.position)}><button className="nav-button danger-text">Remove</button></form></li>)}</ol>}
           <form action={clearEquipment.bind(null, id, slot)}><button className="nav-button danger-text">Clear slot</button></form>
