@@ -145,5 +145,38 @@ export const playerNotifications = sqliteTable("player_notifications", {
   createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
   readAt: integer("read_at", { mode: "timestamp_ms" }),
 }, (table) => [uniqueIndex("player_notification_occurrence").on(table.watchId, table.occurrenceKey), index("player_notifications_user_read").on(table.userId, table.readAt)]);
+export const playerBuilds = sqliteTable("player_builds", {
+  id: text().primaryKey(),
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  title: text().notNull(),
+  category: text(),
+  notes: text(),
+  revision: integer().notNull().default(1),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
+}, (table) => [index("player_builds_user_updated").on(table.userId, table.updatedAt)]);
+export const buildEquipment = sqliteTable("build_equipment", {
+  id: text().primaryKey(),
+  buildId: text("build_id").notNull().references(() => playerBuilds.id, { onDelete: "cascade" }),
+  slot: text().notNull(),
+  entityId: text("entity_id").notNull().references(() => entities.id),
+  notes: text(),
+}, (table) => [uniqueIndex("build_equipment_slot").on(table.buildId, table.slot)]);
+export const buildMods = sqliteTable("build_mods", {
+  id: text().primaryKey(),
+  equipmentId: text("equipment_id").notNull().references(() => buildEquipment.id, { onDelete: "cascade" }),
+  position: integer().notNull(),
+  entityId: text("entity_id").notNull().references(() => entities.id),
+  rank: integer(),
+}, (table) => [uniqueIndex("build_mod_position").on(table.equipmentId, table.position)]);
+export const buildShareSnapshots = sqliteTable("build_share_snapshots", {
+  id: text().primaryKey(),
+  shareKey: text("share_key").notNull(),
+  sourceBuildId: text("source_build_id").references(() => playerBuilds.id, { onDelete: "set null" }),
+  revision: integer().notNull(),
+  title: text().notNull(),
+  snapshotJson: text("snapshot_json").notNull(),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+}, (table) => [uniqueIndex("build_share_key").on(table.shareKey), index("build_share_source").on(table.sourceBuildId)]);
 export const nodeProgress = sqliteTable("player_node_progress", { userId: text("user_id").notNull().references(() => users.id), nodeId: text("node_id").notNull().references(() => entities.id), state: text({ enum: ["unknown", "locked", "available", "completed"] }).notNull(), updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull() }, (table) => [primaryKey({ columns: [table.userId, table.nodeId] })]);
 export const jobs = sqliteTable("jobs", { id: text().primaryKey(), kind: text().notNull(), status: text({ enum: ["queued", "running", "succeeded", "failed"] }).notNull(), payloadJson: text("payload_json").notNull(), runAfter: integer("run_after", { mode: "timestamp_ms" }).notNull(), leaseOwner: text("lease_owner"), leaseUntil: integer("lease_until", { mode: "timestamp_ms" }), error: text() });

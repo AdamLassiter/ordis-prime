@@ -1,0 +1,33 @@
+# Builds and sharing
+
+Builds are private player-owned drafts composed from canonical catalog entities.
+They can be partial: a player may record only a Warframe, one weapon, or any
+subset of the supported loadout slots. Each equipment entry can carry notes and
+up to twenty positioned mods with optional ranks.
+
+Changing an equipment item clears that slot's mods because those assignments are
+usually item-specific. Every edit increments the build revision. Slot validation
+currently requires Warframe, companion and weapon entity kinds as appropriate;
+mod positions require canonical mod entities.
+
+## Share semantics
+
+Sharing creates an immutable, unlisted snapshot with a random 144-bit key. The
+snapshot embeds names, kinds and slugs at that revision, so later draft edits or
+catalog changes cannot rewrite what a recipient saw. Deleting a source build
+does not delete its snapshots. A new share action creates a new URL rather than
+mutating an old one.
+
+This is intentional: an editable public build would make discussion links and
+cited recommendations unstable. Authentication is required to edit a draft but
+not to view a snapshot.
+
+## Current limits
+
+- The persistence and snapshot model exists; build list/editor and public share
+  routes are the next implementation slice.
+- Forma, polarities, capacities, arcanes, shards, abilities, schools and weapon
+  configuration variants are not modeled yet.
+- Builds are not included in portable profile export and have no import format.
+- Share keys are unlisted capabilities, not access-controlled invitations, and
+  cannot yet be revoked.
