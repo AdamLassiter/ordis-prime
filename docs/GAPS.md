@@ -30,8 +30,8 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   password recovery, and authorization checks on player-state mutations are not
   implemented yet.
 - Validated inventory persistence, authenticated catalog editing, an inventory
-  summary, and portable profile import/export exist. Profile transfer UI, node
-  ownership overlays, and planner persistence are pending.
+  summary, node reward ownership filtering, and portable profile import/export
+  exist. Profile transfer UI and planner persistence are pending.
 - The visual star chart, notifications, builds, editorial comparisons and
   discovery atlas are intentional later milestones.
 

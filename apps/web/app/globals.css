@@ -30,3 +30,6 @@ input,select,textarea { width:100%; max-width:36rem; padding:.8rem 1rem; border-
 .inventory-editor { margin-top:2rem; }
 .inventory-editor:hover { transform:none; border-color:var(--line); }
 .count-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(9rem,1fr)); gap:1rem; }
+.filters { display:flex; gap:.5rem; margin:1.25rem 0; }
+.tag.active { color:var(--bg); background:var(--cyan); border-color:var(--cyan); }
+.status-needed { color:var(--gold); }

@@ -18,7 +18,14 @@ export interface CatalogNode {
   slug: string;
   name: string;
   description?: string;
-  drops: Array<{ kind: string; slug: string; name: string; chance?: number; rotation?: string }>;
+  drops: Array<{
+    kind: string;
+    slug: string;
+    name: string;
+    chance?: number;
+    rotation?: string;
+    inventory?: { ownedCount: number; builtCount: number; wantedCount: number; needed: boolean };
+  }>;
 }
 
 export interface SourceStatus {
@@ -88,18 +95,32 @@ export function findCatalogItem(sqlite: Database.Database, kind: string, slug: s
   return { ...summary, components, drops, sources, rankings };
 }
 
-export function findCatalogNode(sqlite: Database.Database, slug: string): CatalogNode | undefined {
+export function findCatalogNode(sqlite: Database.Database, slug: string, userId?: string): CatalogNode | undefined {
   const node = sqlite.prepare("select id, slug, name, description from entities where kind = 'node' and slug = ? and retired = 0")
     .get(slug) as ({ id: string; slug: string; name: string; description?: string }) | undefined;
   if (!node) return undefined;
-  const drops = sqlite.prepare(`
-    select reward.kind, reward.slug, reward.name, d.chance, d.rotation
+  const inventoryJoin = userId ? "left join player_inventory inventory on inventory.entity_id = reward.id and inventory.user_id = ?" : "";
+  const inventoryColumns = userId
+    ? ", coalesce(inventory.owned_count, 0) as ownedCount, coalesce(inventory.built_count, 0) as builtCount, coalesce(inventory.wanted_count, 0) as wantedCount"
+    : "";
+  const rows = sqlite.prepare(`
+    select reward.kind, reward.slug, reward.name, d.chance, d.rotation${inventoryColumns}
     from drops d
     join source_runs run on run.id = d.source_run_id and run.status = 'active'
     join entities reward on reward.id = d.reward_id and reward.retired = 0
+    ${inventoryJoin}
     where d.node_id = ?
     order by reward.name collate nocase, d.rotation
-  `).all(node.id) as CatalogNode["drops"];
+  `).all(...(userId ? [userId, node.id] : [node.id])) as Array<Omit<CatalogNode["drops"][number], "inventory"> & { ownedCount?: number; builtCount?: number; wantedCount?: number }>;
+  const drops = rows.map(({ ownedCount, builtCount, wantedCount, ...drop }) => ({
+    ...drop,
+    ...(userId ? { inventory: {
+      ownedCount: ownedCount ?? 0,
+      builtCount: builtCount ?? 0,
+      wantedCount: wantedCount ?? 0,
+      needed: (ownedCount ?? 0) + (builtCount ?? 0) === 0 || (wantedCount ?? 0) > 0,
+    } } : {}),
+  }));
   const { id: _id, ...summary } = node;
   return { ...summary, drops };
 }

@@ -4,7 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import type { Observation } from "@ordis-prime/domain";
-import { findCatalogItem, findCatalogNode, listSourceStatuses, migrateDatabase, openSqliteDatabase, promoteSource, searchCatalog } from "../src/index.ts";
+import { createLocalUser, findCatalogItem, findCatalogNode, listSourceStatuses, migrateDatabase, openSqliteDatabase, promoteSource, searchCatalog, setInventoryEntryByReference } from "../src/index.ts";
 
 test("catalog read models join active recipes, drops, provenance, and rankings", async (context) => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-catalog-"));
@@ -40,6 +40,10 @@ test("catalog read models join active recipes, drops, provenance, and rankings",
   assert.equal(item?.sources[0]?.name, "Items");
   assert.deepEqual(item?.rankings[0], { title: "Creator list", author: "Creator", tier: "A", timestampSeconds: 42, sourceUrl: "https://example.test/ranking" });
   assert.equal(findCatalogNode(sqlite, "mercury-caloris")?.drops[0]?.name, "Braton");
+  const userId = createLocalUser(sqlite, { username: "Player" });
+  assert.deepEqual(findCatalogNode(sqlite, "mercury-caloris", userId)?.drops[0]?.inventory, { ownedCount: 0, builtCount: 0, wantedCount: 0, needed: true });
+  setInventoryEntryByReference(sqlite, userId, { kind: "weapon", slug: "braton" }, { ownedCount: 1, builtCount: 0, wantedCount: 0 });
+  assert.deepEqual(findCatalogNode(sqlite, "mercury-caloris", userId)?.drops[0]?.inventory, { ownedCount: 1, builtCount: 0, wantedCount: 0, needed: false });
   assert.deepEqual(listSourceStatuses(sqlite).map(({ id, conflictCount }) => ({ id, conflictCount })), [
     { id: "ranking", conflictCount: 0 },
     { id: "items", conflictCount: 0 },
