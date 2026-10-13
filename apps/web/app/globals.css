@@ -101,3 +101,10 @@ input,select,textarea { width:100%; max-width:36rem; padding:.8rem 1rem; border-
 .candidate-list input { width:6rem; }
 .build-publish { display:flex; align-items:center; gap:1.5rem; margin-top:3rem; }
 .build-notes { white-space:pre-wrap; }
+.ranking-sources { margin-bottom:2rem; }
+.ranking-table-wrap { overflow-x:auto; border:1px solid var(--line); border-radius:12px; }
+.ranking-table { width:100%; border-collapse:collapse; background:#0d131e; }
+.ranking-table th,.ranking-table td { padding:.9rem; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; min-width:9rem; }
+.ranking-table thead th { color:var(--gold); background:#111827; }
+.ranking-table tbody th { position:sticky; left:0; background:#111827; }
+.ranking-note { margin:.35rem 0 0; white-space:pre-wrap; }

@@ -6,6 +6,7 @@ export * from "./jobs.ts";
 export * from "./player.ts";
 export * from "./planner.ts";
 export * from "./promotion.ts";
+export * from "./rankings.ts";
 export * from "./schema.ts";
 export * from "./source-operations.ts";
 export * from "./todos.ts";

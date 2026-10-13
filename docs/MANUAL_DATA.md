@@ -22,9 +22,16 @@ The original YAML is stored as an immutable snapshot. Ranking sets and their
 entries are versioned by source run, so different authors and dates remain
 independently queryable rather than being collapsed into a consensus score.
 
+The public `/rankings` view shows each active source's declared scale, scope,
+game version and citation beside a matrix of its entries. Values remain verbatim
+and blank cells remain blank; the application does not pretend unlike scales are
+numerically equivalent. The table can be filtered by canonical item name and
+currently shows at most 200 matching items.
+
 ## Current compromise
 
-The v1 format handles editorial tier sets only. Curated factual corrections
+The v1 format handles editorial tier sets only. The comparison UI does not yet
+select subsets of sources or compute transparent per-scale summaries. Curated factual corrections
 need a separate explicit schema because corrections require field-level
 precedence and review semantics. Before stable release, `schemaVersion: 1` may
 be replaced rather than migrated; there is no pre-release compatibility

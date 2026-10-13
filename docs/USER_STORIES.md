@@ -13,10 +13,18 @@
 - As an administrator, I can see dataset freshness, import failures, conflicts
   and the exact upstream record behind a fact.
 
+## Time-aware planning and builds
+
+- As a player, I can keep static todos and create live-state watches that emit
+  one private alert per matching occurrence.
+- As a player, I can save partial or complete loadouts with item-specific mods
+  and notes, then share an immutable revision without exposing my draft.
+- As a guest, I can compare independently cited tier lists without hidden scale
+  conversion or a synthetic consensus.
+
 ## Later consumers of the same graph
 
 - Live events intersect with goals to create expiring todo suggestions.
 - Builds link missing equipment and mods directly into acquisition goals.
-- Published tier snapshots remain independently cited and comparable.
 - Quest and mechanic prerequisites surface systems a player has not discovered.
 - A visual star chart uses the same node IDs, edges, filters and planner queries.

@@ -58,8 +58,10 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   editor and public snapshot routes use canonical catalog links. Advanced
   configuration fields, profile portability, cloning, share-history management
   and revocation remain to be implemented.
-- The visual star chart, notifications, builds, editorial comparisons and
-  discovery atlas are intentional later milestones.
+- Active cited editorial ranking sets have a public source-and-item comparison
+  matrix that preserves unlike scales and disagreement. Source subset controls
+  and transparent derived summaries are not implemented.
+- The visual star chart and discovery atlas are intentional later milestones.
 
 ## Deliberate compromises
 

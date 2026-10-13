@@ -14,6 +14,8 @@ from.
 - public linked item/node explorer with authenticated inventory overlays
 - persisted acquisition goals and explainable node recommendations
 - live world-state timers with database-leased automatic polling
+- private todos, dynamic watches, and deduplicated in-app alerts
+- editable loadouts, immutable share links, and cited tier-list comparison
 - portable profile export and merge/replace import
 - two-service Docker Compose deployment over one durable data volume
 - deterministic domain and adapter tests

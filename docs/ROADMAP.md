@@ -11,7 +11,7 @@ separate while still producing useful joined answers.
 
 ## 2. Time-aware planning
 
-Status: in progress
+Status: baseline implemented
 
 Add world-state polling, availability windows, dynamic todos, in-app alerts,
 then optional web-push and webhook delivery. Alerts are rules over canonical
@@ -29,8 +29,9 @@ Add partial/full versioned loadouts and immutable share snapshots. Import cited
 editorial rankings as independent observations and show disagreement before any
 derived consensus.
 
-Build drafts, editor/search workflow and immutable public snapshots are
-implemented; cross-source ranking comparison remains.
+Build drafts, editor/search workflow, immutable public snapshots and a
+source-faithful editorial ranking comparison are implemented. Advanced build
+mechanics and optional ranking summaries remain documented follow-up work.
 
 ## 4. Discovery and spatial navigation
 
