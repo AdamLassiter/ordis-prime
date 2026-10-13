@@ -20,6 +20,7 @@ test("concurrent processes serialize migrations for one SQLite database", async 
   const sqlite = openSqliteDatabase(databasePath);
   context.after(() => sqlite.close());
   const migrations = sqlite.prepare("select count(*) as count from __drizzle_migrations").get() as { count: number };
-  assert.equal(migrations.count, 5);
+  const journal = JSON.parse(await fs.readFile(path.resolve(import.meta.dirname, "../migrations/meta/_journal.json"), "utf8")) as { entries: unknown[] };
+  assert.equal(migrations.count, journal.entries.length);
   assert.equal(await fs.stat(`${databasePath}.migration-lock`).then(() => true, () => false), false);
 });

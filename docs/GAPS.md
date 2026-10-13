@@ -24,9 +24,12 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   fact corrections, scheduled refresh jobs, conflict resolution actions, and
   live world state remain to be implemented.
 - The web explorer reads the canonical SQLite catalog and links active recipes,
-  drops, nodes, provenance, and editorial rankings. Docker deployments do not
-  yet expose an administrative refresh trigger, so their first-run catalog is
-  empty until ingestion is run against the mounted data directory.
+  drops, nodes, record-level provenance, and editorial rankings. Newly imported
+  entity fields and typed relations retain exact source record keys, paths, and
+  citations when supplied. Older pre-provenance relation rows display without
+  those optional details. Docker deployments do not yet expose an administrative
+  refresh trigger, so their first-run catalog is empty until ingestion is run
+  against the mounted data directory.
 - Local email/password accounts, persisted sessions, closed registration, and
   first-administrator bootstrap enforcement are wired at the authentication
   API, with first-run, sign-in, and sign-out UI. Account administration,

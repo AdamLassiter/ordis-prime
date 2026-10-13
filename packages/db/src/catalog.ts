@@ -12,6 +12,7 @@ export interface CatalogItem extends CatalogSummary {
   drops: Array<{ nodeSlug?: string; node: string; chance?: number; rotation?: string }>;
   sources: Array<{ name: string; homepage: string }>;
   rankings: Array<{ title: string; author: string; tier: string; timestampSeconds?: number; sourceUrl: string }>;
+  evidence: Array<{ fact: string; sourceName: string; version: string; recordKey?: string; citationUrl?: string; sourcePath?: string; snapshotPath?: string }>;
 }
 
 export interface CatalogNode {
@@ -94,8 +95,40 @@ export function findCatalogItem(sqlite: Database.Database, kind: string, slug: s
     where ranking.entity_id = ?
     order by ranking_set.published_at desc, ranking_set.title
   `).all(item.id) as CatalogItem["rankings"];
+  const evidence = sqlite.prepare(`
+    select 'entity.' || provenance.field as fact, source.name as sourceName, run.version,
+           provenance.source_record_key as recordKey, provenance.citation_url as citationUrl,
+           provenance.source_path as sourcePath, run.snapshot_path as snapshotPath
+    from fact_provenance provenance
+    join source_runs run on run.id = provenance.source_run_id and run.status = 'active'
+    join sources source on source.id = run.source_id
+    where provenance.entity_id = ?
+    union all
+    select 'recipe' as fact, source.name, run.version, recipe.source_record_key,
+           recipe.citation_url, recipe.source_path, run.snapshot_path
+    from recipes recipe
+    join source_runs run on run.id = recipe.source_run_id and run.status = 'active'
+    join sources source on source.id = run.source_id
+    where recipe.output_id = ?
+    union all
+    select 'drop' as fact, source.name, run.version, item_drop.source_record_key,
+           item_drop.citation_url, item_drop.source_path, run.snapshot_path
+    from drops item_drop
+    join source_runs run on run.id = item_drop.source_run_id and run.status = 'active'
+    join sources source on source.id = run.source_id
+    where item_drop.reward_id = ?
+    union all
+    select 'editorial-ranking' as fact, source.name, run.version, ranking.source_record_key,
+           ranking.citation_url, ranking.source_path, run.snapshot_path
+    from editorial_rankings ranking
+    join ranking_sets ranking_set on ranking_set.id = ranking.set_id
+    join source_runs run on run.id = ranking_set.source_run_id and run.status = 'active'
+    join sources source on source.id = run.source_id
+    where ranking.entity_id = ?
+    order by sourceName, fact, recordKey
+  `).all(item.id, item.id, item.id, item.id) as Array<{ fact: string; sourceName: string; version: string; recordKey?: string; citationUrl?: string; sourcePath?: string; snapshotPath?: string }>;
   const { id: _id, ...summary } = item;
-  return { ...summary, components, drops, sources, rankings };
+  return { ...summary, components, drops, sources, rankings, evidence };
 }
 
 export function findCatalogNode(sqlite: Database.Database, slug: string, userId?: string): CatalogNode | undefined {

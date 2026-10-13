@@ -26,7 +26,12 @@ export default async function ItemPage({ params }: { params: Promise<{ kind: str
       <dt>Editorial rankings</dt>
       <dd>{item.rankings.length ? item.rankings.map((ranking) => <div key={`${ranking.title}:${ranking.author}`}><a href={ranking.sourceUrl}>{ranking.title}</a> by {ranking.author}: <strong>{ranking.tier}</strong>{ranking.timestampSeconds === undefined ? "" : ` at ${formatTimestamp(ranking.timestampSeconds)}`}</div>) : "No cited rankings recorded"}</dd>
       <dt>Evidence</dt>
-      <dd>{item.sources.length ? item.sources.map((source) => <a className="tag" href={source.homepage} key={source.name}>{source.name}</a>) : "No active provenance recorded"}</dd>
+      <dd>{item.evidence.length ? item.evidence.map((evidence, index) => <div className="evidence" key={`${evidence.fact}:${evidence.sourceName}:${evidence.recordKey ?? index}`}>
+        <span className="tag">{evidence.fact}</span> {evidence.sourceName} <code>{evidence.version}</code>
+        {evidence.recordKey && <> · record <code>{evidence.recordKey}</code></>}
+        {evidence.sourcePath && <> · path <code>{evidence.sourcePath}</code></>}
+        {evidence.citationUrl && <> · <a href={evidence.citationUrl}>citation</a></>}
+      </div>) : "No active provenance recorded"}</dd>
     </dl>
     {inventory ? <><InventoryForm item={inventory} /><section className="card goal-editor"><h2>Acquisition goal</h2><p className="muted">Set the total number you want to own or build. The planner subtracts your recorded inventory.</p><GoalForm kind={kind} slug={slug} targetQuantity={goal?.targetQuantity ?? 0} /></section></> : <p className="notice"><Link href="/sign-in">Sign in</Link> to track ownership and add acquisition goals.</p>}
   </>;

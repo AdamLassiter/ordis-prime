@@ -39,6 +39,8 @@ test("catalog read models join active recipes, drops, provenance, and rankings",
   assert.equal(item?.drops[0]?.nodeSlug, "mercury-caloris");
   assert.equal(item?.sources[0]?.name, "Items");
   assert.deepEqual(item?.rankings[0], { title: "Creator list", author: "Creator", tier: "A", timestampSeconds: 42, sourceUrl: "https://example.test/ranking" });
+  assert.equal(item?.evidence.some((entry) => entry.fact === "recipe" && entry.recordKey === "braton"), true);
+  assert.equal(item?.evidence.some((entry) => entry.fact === "drop" && entry.recordKey === "braton"), true);
   assert.equal(findCatalogNode(sqlite, "mercury-caloris")?.drops[0]?.name, "Braton");
   const userId = createLocalUser(sqlite, { username: "Player" });
   assert.deepEqual(findCatalogNode(sqlite, "mercury-caloris", userId)?.drops[0]?.inventory, { ownedCount: 0, builtCount: 0, wantedCount: 0, needed: true });

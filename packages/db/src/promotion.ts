@@ -95,9 +95,9 @@ function promoteInTransaction(sqlite: Database.Database, input: PromoteSourceInp
     if (observation.type !== "ranking-set") continue;
     const id = randomUUID();
     sqlite.prepare(`
-      insert into ranking_sets (id, source_run_id, set_key, title, author, published_at, game_version, scope, scale_json, license_note)
-      values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(id, sourceRunId, observation.key, observation.title, observation.author, new Date(observation.publishedAt).getTime(), observation.gameVersion ?? null, observation.scope, JSON.stringify(observation.scale), observation.licenseNote);
+      insert into ranking_sets (id, source_run_id, set_key, title, author, published_at, game_version, scope, scale_json, license_note, source_record_key, citation_url, source_path)
+      values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(id, sourceRunId, observation.key, observation.title, observation.author, new Date(observation.publishedAt).getTime(), observation.gameVersion ?? null, observation.scope, JSON.stringify(observation.scale), observation.licenseNote, observation.evidence.sourceRecordKey, observation.evidence.citationUrl ?? null, observation.evidence.path ?? null);
     rankingSets.set(observation.key, { id, scale: new Set(observation.scale) });
     counts.rankingSetsCreated += 1;
   }
@@ -116,9 +116,9 @@ function promoteInTransaction(sqlite: Database.Database, input: PromoteSourceInp
       continue;
     }
     sqlite.prepare(`
-      insert into editorial_rankings (id, set_id, entity_id, tier, position, timestamp_seconds, notes)
-      values (?, ?, ?, ?, ?, ?, ?)
-    `).run(randomUUID(), set.id, entityId, observation.tier, observation.position ?? null, observation.timestampSeconds ?? null, observation.notes ?? null);
+      insert into editorial_rankings (id, set_id, entity_id, tier, position, timestamp_seconds, notes, source_record_key, citation_url, source_path)
+      values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(randomUUID(), set.id, entityId, observation.tier, observation.position ?? null, observation.timestampSeconds ?? null, observation.notes ?? null, observation.evidence.sourceRecordKey, observation.evidence.citationUrl ?? null, observation.evidence.path ?? null);
     counts.rankingsCreated += 1;
   }
 
@@ -133,9 +133,9 @@ function promoteInTransaction(sqlite: Database.Database, input: PromoteSourceInp
         continue;
       }
       sqlite.prepare(`
-        insert into drops (id, reward_id, node_id, location_label, chance, rotation, quantity, source_run_id)
-        values (?, ?, ?, ?, ?, ?, ?, ?)
-      `).run(randomUUID(), rewardId, nodeId ?? null, observation.locationLabel, observation.chance ?? null, observation.rotation ?? null, observation.quantity ?? 1, sourceRunId);
+        insert into drops (id, reward_id, node_id, location_label, chance, rotation, quantity, source_run_id, source_record_key, citation_url, source_path)
+        values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(randomUUID(), rewardId, nodeId ?? null, observation.locationLabel, observation.chance ?? null, observation.rotation ?? null, observation.quantity ?? 1, sourceRunId, observation.evidence.sourceRecordKey, observation.evidence.citationUrl ?? null, observation.evidence.path ?? null);
       counts.dropsCreated += 1;
     }
 
@@ -150,8 +150,8 @@ function promoteInTransaction(sqlite: Database.Database, input: PromoteSourceInp
         continue;
       }
       const recipeId = randomUUID();
-      sqlite.prepare("insert into recipes (id, output_id, output_quantity, source_run_id) values (?, ?, ?, ?)")
-        .run(recipeId, outputId, observation.outputQuantity ?? 1, sourceRunId);
+      sqlite.prepare("insert into recipes (id, output_id, output_quantity, source_run_id, source_record_key, citation_url, source_path) values (?, ?, ?, ?, ?, ?, ?)")
+        .run(recipeId, outputId, observation.outputQuantity ?? 1, sourceRunId, observation.evidence.sourceRecordKey, observation.evidence.citationUrl ?? null, observation.evidence.path ?? null);
       const quantities = new Map<EntityId, number>();
       for (const ingredient of ingredients) {
         const entityId = ingredient.entityId!;

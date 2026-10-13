@@ -2,6 +2,8 @@
 
 ## 1. Acquisition proof
 
+Status: baseline implemented
+
 Complete source snapshots, canonical promotion, linked item/node pages, local
 accounts, inventory counts, goals, explainable node recommendations, and profile
 export/import. This milestone proves that source data and personal state remain

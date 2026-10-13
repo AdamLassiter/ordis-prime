@@ -31,6 +31,7 @@ test("promotion atomically replaces the active source run while preserving entit
   ]);
   assert.equal((sqlite.prepare("select count(*) as count from catalog_releases where active = 1").get() as { count: number }).count, 1);
   assert.equal((sqlite.prepare("select count(*) as count from drops d join source_runs r on r.id = d.source_run_id where r.status = 'active'").get() as { count: number }).count, 1);
+  assert.deepEqual(sqlite.prepare("select source_record_key as recordKey from drops d join source_runs r on r.id = d.source_run_id where r.status = 'active'").get(), { recordKey: "record" });
 
   assert.throws(() => promoteSource(sqlite, input("v3", [entity("reward", "Broken", "component", "v3"), { ...drop("v3", 2), chance: 2 }])), /outside/);
   assert.equal((sqlite.prepare("select count(*) as count from source_runs").get() as { count: number }).count, 2);
@@ -128,6 +129,7 @@ test("editorial rankings link cited sets to canonical entities", async (context)
   assert.equal(result.rankingSetsCreated, 1);
   assert.equal(result.rankingsCreated, 1);
   assert.deepEqual(sqlite.prepare("select rs.title, er.tier, e.name from editorial_rankings er join ranking_sets rs on rs.id = er.set_id join entities e on e.id = er.entity_id").get(), { title: "Primary ranking", tier: "A", name: "Braton" });
+  assert.deepEqual(sqlite.prepare("select rs.source_record_key as setRecord, er.source_record_key as rankingRecord from editorial_rankings er join ranking_sets rs on rs.id = er.set_id").get(), { setRecord: "ranking", rankingRecord: "ranking" });
 });
 
 function input(version: string, observations: Observation[]) {
