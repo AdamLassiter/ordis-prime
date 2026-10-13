@@ -26,7 +26,9 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   empty until ingestion is run against the mounted data directory.
 - Authentication tables are modeled, but local-account setup, sessions and
   authorization are not yet wired into routes.
-- Inventory editing, profile import/export and planner persistence are pending.
+- Validated inventory persistence and portable profile import/export exist in
+  the data layer. Authenticated editing routes, UI, and planner persistence are
+  pending.
 - The visual star chart, notifications, builds, editorial comparisons and
   discovery atlas are intentional later milestones.
 

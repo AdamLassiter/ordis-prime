@@ -7,6 +7,7 @@ the compromises between that target and the current implementation.
 - [User stories](USER_STORIES.md) defines player and administrator outcomes.
 - [Sources](SOURCES.md) records provider and licence policy.
 - [Manual data](MANUAL_DATA.md) defines the cited editorial import format.
+- [Profile data](PROFILE_DATA.md) defines portable player-state identity and import behavior.
 - [Roadmap](ROADMAP.md) orders capabilities around end-to-end value.
 - [Known gaps](GAPS.md) is the authoritative implementation delta.
 - [Architecture decisions](decisions/) records decisions that should remain
