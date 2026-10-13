@@ -7,7 +7,8 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
 
 - The workspace installs from a frozen lockfile and has been verified with its
   type checks, tests, production build, SQLite migration, and production
-  container smoke test. Automated CI is not configured yet.
+  container smoke test. GitHub Actions runs those build gates, but the workflow
+  has not yet been observed on the remote repository.
 - The canonical schema, initial migration, and transactional per-source
   promotion exist. Cross-source full-catalog candidate releases, pruning of
   superseded relation rows, and the SQLite job runner are not implemented yet.
