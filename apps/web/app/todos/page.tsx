@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
-import { listPlayerTodos, type PlayerTodo } from "@ordis-prime/db";
+import { listPlayerNotifications, listPlayerTodos, listWorldStateWatches, type PlayerNotification, type PlayerTodo } from "@ordis-prime/db";
 import { getDatabase } from "@/lib/database";
 import { getCurrentSession } from "@/lib/session";
-import { addTodo, changeTodoStatus, removeTodo } from "./actions";
+import { addTodo, addWatch, changeTodoStatus, readNotification, removeTodo, removeWatch } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -10,12 +10,33 @@ export default async function TodosPage() {
   const session = await getCurrentSession();
   if (!session) redirect("/sign-in");
   const todos = listPlayerTodos(getDatabase(), session.user.id);
+  const watches = listWorldStateWatches(getDatabase(), session.user.id);
+  const notifications = listPlayerNotifications(getDatabase(), session.user.id);
   const open = todos.filter(({ status }) => status === "open");
   const completed = todos.filter(({ status }) => status === "completed");
   return <>
     <p className="eyebrow">Private workspace</p>
     <h1>Todo list</h1>
-    <p className="lede">Keep the loose ends from your tabs, farming plans and weekly routine together. Dynamic world-state watches will appear alongside these tasks.</p>
+    <p className="lede">Keep the loose ends from your tabs, farming plans and weekly routine together. World-state watches turn matching live windows into private, deduplicated alerts.</p>
+    {notifications.length > 0 && <NotificationSection notifications={notifications} />}
+    <section className="planner-section">
+      <h2>World-state watches</h2>
+      <form className="card form-stack todo-create" action={addWatch}>
+        <p className="muted">Filters are case-insensitive. Leave text filters blank to watch every window of that kind.</p>
+        <label>Kind<select name="kind" defaultValue="cycle"><option value="cycle">Cycle</option><option value="event">Event</option><option value="alert">Alert</option><option value="fissure">Void Fissure</option><option value="trader">Trader</option></select></label>
+        <label>Label contains<input name="labelContains" maxLength={120} placeholder="Cetus or Lith" /></label>
+        <label>State equals<input name="stateEquals" maxLength={120} placeholder="night" /></label>
+        <label>Node contains<input name="nodeContains" maxLength={120} placeholder="Mercury" /></label>
+        <label>Notify when<select name="trigger" defaultValue="ending"><option value="active">Matching window is active</option><option value="starting">Window starts within lead time</option><option value="ending">Window ends within lead time</option></select></label>
+        <label>Lead time (minutes)<input name="leadMinutes" type="number" min="0" max="10080" step="1" defaultValue="10" required /></label>
+        <button className="button">Add watch</button>
+      </form>
+      {watches.length > 0 && <div className="watch-list">{watches.map((watch) => <article className="card watch-card" key={watch.id}>
+        <div><span className="tag">{watch.kind}</span><h3>{watch.labelContains ? `Label contains “${watch.labelContains}”` : `All ${watch.kind} windows`}</h3>
+          <p className="muted">{watch.trigger}{watch.trigger === "active" ? "" : ` · ${watch.leadMinutes} minute lead`}{watch.stateEquals ? ` · state ${watch.stateEquals}` : ""}{watch.nodeContains ? ` · node contains ${watch.nodeContains}` : ""}</p></div>
+        <form action={removeWatch.bind(null, watch.id)}><button className="nav-button danger-text">Delete watch and its alerts</button></form>
+      </article>)}</div>}
+    </section>
     <form className="card form-stack todo-create" action={addTodo}>
       <h2>Add a task</h2>
       <label>Task<input name="title" required maxLength={160} placeholder="Farm the last Necramech part" /></label>
@@ -26,6 +47,16 @@ export default async function TodosPage() {
     <TodoSection title="Open" todos={open} />
     {completed.length > 0 && <TodoSection title="Completed" todos={completed} />}
   </>;
+}
+
+function NotificationSection({ notifications }: { notifications: PlayerNotification[] }) {
+  return <section className="planner-section">
+    <h2>Alerts</h2>
+    <div className="notification-list">{notifications.map((notification) => <article className={`card notification-card${notification.readAt === undefined ? " unread" : ""}`} key={notification.id}>
+      <div><h3>{notification.title}</h3><p>{notification.body}</p><p className="muted">Created {formatInstant(notification.createdAt)}{notification.expiresAt !== undefined ? ` · ends ${formatInstant(notification.expiresAt)}` : ""}</p></div>
+      {notification.readAt === undefined && <form action={readNotification.bind(null, notification.id)}><button className="button">Mark read</button></form>}
+    </article>)}</div>
+  </section>;
 }
 
 function TodoSection({ title, todos }: { title: string; todos: PlayerTodo[] }) {
@@ -47,4 +78,8 @@ function TodoSection({ title, todos }: { title: string; todos: PlayerTodo[] }) {
 
 function formatDate(timestamp: number): string {
   return new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeZone: "UTC" }).format(timestamp);
+}
+
+function formatInstant(timestamp: number): string {
+  return `${new Date(timestamp).toISOString().slice(0, 16).replace("T", " ")} UTC`;
 }

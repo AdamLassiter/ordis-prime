@@ -12,17 +12,24 @@ at UTC midnight in SQLite; they are not notification instants. Every database
 mutation includes the owning user ID so guessing another todo UUID cannot expose
 or modify it.
 
-## Intended dynamic behavior
+## Dynamic watches and alerts
 
-World-state watches will be rules over normalized window kinds and fields, not
-raw WFCD JSON. A worker will evaluate enabled rules after snapshot promotion and
-create deduplicated in-app notifications. Completing a notification should not
-silently complete a static todo: the two express different intent.
+World-state watches are rules over normalized window kind, label, state and node
+fields, not raw WFCD JSON. A watch triggers when a matching window is active,
+approaching activation, or approaching expiry. Lead time is configurable from
+zero to seven days.
+
+The worker evaluates enabled rules after every successful snapshot promotion.
+It hashes the normalized occurrence fields and creates at most one notification
+per watch and occurrence, even when polling observes it repeatedly. Watch
+creation also evaluates the current snapshot immediately. Notifications are
+private, can be marked read, and do not silently complete static todos. Deleting
+a watch deletes its generated alerts.
 
 ## Current limits
 
 - Static todos are not included in portable profile exports yet.
 - There are no recurring schedules, subtasks, tags, ordering controls or links
   from a todo to canonical catalog entities.
-- Dynamic watches and in-app notification delivery are the next implementation
-  slice; web push and webhooks remain later opt-in delivery channels.
+- Watches cannot yet be paused or edited, and notification retention is not
+  configurable. Web push and webhooks remain later opt-in delivery channels.

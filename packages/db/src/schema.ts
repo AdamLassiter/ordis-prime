@@ -121,5 +121,29 @@ export const playerTodos = sqliteTable("player_todos", {
   createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
 }, (table) => [index("player_todos_user_status").on(table.userId, table.status), index("player_todos_due").on(table.dueAt)]);
+export const worldStateWatches = sqliteTable("world_state_watches", {
+  id: text().primaryKey(),
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  kind: text({ enum: ["cycle", "alert", "fissure", "event", "trader"] }).notNull(),
+  labelContains: text("label_contains"),
+  stateEquals: text("state_equals"),
+  nodeContains: text("node_contains"),
+  trigger: text({ enum: ["active", "starting", "ending"] }).notNull(),
+  leadMinutes: integer("lead_minutes").notNull().default(0),
+  enabled: integer({ mode: "boolean" }).notNull().default(true),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+}, (table) => [index("world_state_watches_user").on(table.userId, table.enabled)]);
+export const playerNotifications = sqliteTable("player_notifications", {
+  id: text().primaryKey(),
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  watchId: text("watch_id").notNull().references(() => worldStateWatches.id, { onDelete: "cascade" }),
+  occurrenceKey: text("occurrence_key").notNull(),
+  title: text().notNull(),
+  body: text().notNull(),
+  startsAt: integer("starts_at", { mode: "timestamp_ms" }),
+  expiresAt: integer("expires_at", { mode: "timestamp_ms" }),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+  readAt: integer("read_at", { mode: "timestamp_ms" }),
+}, (table) => [uniqueIndex("player_notification_occurrence").on(table.watchId, table.occurrenceKey), index("player_notifications_user_read").on(table.userId, table.readAt)]);
 export const nodeProgress = sqliteTable("player_node_progress", { userId: text("user_id").notNull().references(() => users.id), nodeId: text("node_id").notNull().references(() => entities.id), state: text({ enum: ["unknown", "locked", "available", "completed"] }).notNull(), updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull() }, (table) => [primaryKey({ columns: [table.userId, table.nodeId] })]);
 export const jobs = sqliteTable("jobs", { id: text().primaryKey(), kind: text().notNull(), status: text({ enum: ["queued", "running", "succeeded", "failed"] }).notNull(), payloadJson: text("payload_json").notNull(), runAfter: integer("run_after", { mode: "timestamp_ms" }).notNull(), leaseOwner: text("lease_owner"), leaseUntil: integer("lease_until", { mode: "timestamp_ms" }), error: text() });

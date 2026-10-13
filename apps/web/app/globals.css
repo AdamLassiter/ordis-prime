@@ -77,3 +77,9 @@ input,select,textarea { width:100%; max-width:36rem; padding:.8rem 1rem; border-
 .todo-actions { display:flex; align-items:center; gap:1rem; flex-shrink:0; }
 .danger-text { color:#fca5a5; }
 @media (max-width:600px) { .todo-card { align-items:flex-start; flex-direction:column; } }
+.watch-list,.notification-list { display:grid; gap:.75rem; margin-top:1rem; }
+.watch-card,.notification-card { display:flex; justify-content:space-between; align-items:center; gap:1.5rem; }
+.watch-card:hover,.notification-card:hover { transform:none; border-color:var(--line); }
+.watch-card h3,.notification-card h3 { margin:.75rem 0 .25rem; }
+.notification-card.unread { border-color:#3b7182; box-shadow:inset 3px 0 var(--cyan); }
+@media (max-width:600px) { .watch-card,.notification-card { align-items:flex-start; flex-direction:column; } }

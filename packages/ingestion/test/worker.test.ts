@@ -25,13 +25,13 @@ test("worker refreshes once, waits for its interval, and retries failures sooner
   };
   const options = { database, snapshotStore: new SnapshotStore(path.join(root, "sources")), worldStateAdapter: adapter, owner: "worker-test", refreshIntervalMilliseconds: 300, retryIntervalMilliseconds: 50 };
 
-  assert.deepEqual(await runWorkerCycle({ ...options, now: 100 }), { status: "succeeded" });
+  assert.deepEqual(await runWorkerCycle({ ...options, now: 100 }), { status: "succeeded", notificationsCreated: 0 });
   assert.deepEqual(await runWorkerCycle({ ...options, now: 399 }), { status: "idle" });
   shouldFail = true;
   assert.deepEqual(await runWorkerCycle({ ...options, now: 400 }), { status: "failed", error: "provider unavailable" });
   assert.deepEqual(await runWorkerCycle({ ...options, now: 449 }), { status: "idle" });
   shouldFail = false;
-  assert.deepEqual(await runWorkerCycle({ ...options, now: 450 }), { status: "succeeded" });
+  assert.deepEqual(await runWorkerCycle({ ...options, now: 450 }), { status: "succeeded", notificationsCreated: 0 });
   assert.equal((database.prepare("select count(*) as count from jobs where status = 'running'").get() as { count: number }).count, 0);
 });
 

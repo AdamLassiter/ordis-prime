@@ -1,4 +1,4 @@
-import { claimDueJob, ensurePendingJob, finishAndRescheduleJob } from "@ordis-prime/db";
+import { claimDueJob, ensurePendingJob, evaluateWorldStateWatches, finishAndRescheduleJob } from "@ordis-prime/db";
 import { SnapshotStore } from "./snapshot-store.ts";
 import { refreshWorldState, type WorldStateAdapter } from "./world-state.ts";
 
@@ -14,7 +14,7 @@ export async function runWorkerCycle(options: {
   refreshIntervalMilliseconds?: number;
   retryIntervalMilliseconds?: number;
   requestTimeoutMilliseconds?: number;
-}): Promise<{ status: "idle" | "succeeded" | "failed"; error?: string }> {
+}): Promise<{ status: "idle" | "succeeded" | "failed"; notificationsCreated?: number; error?: string }> {
   const now = options.now ?? Date.now();
   const refreshInterval = options.refreshIntervalMilliseconds ?? 5 * 60_000;
   const retryInterval = options.retryIntervalMilliseconds ?? 60_000;
@@ -26,8 +26,9 @@ export async function runWorkerCycle(options: {
   try {
     if (job.payload.source !== options.worldStateAdapter.source.id) throw new Error(`Unsupported world-state source ${String(job.payload.source)}`);
     await refreshWorldState({ adapter: options.worldStateAdapter, database: options.database, snapshotStore: options.snapshotStore, signal: AbortSignal.timeout(requestTimeout) });
+    const notificationsCreated = evaluateWorldStateWatches(options.database, now);
     finishAndRescheduleJob(options.database, { id: job.id, owner: options.owner, succeeded: true, kind: job.kind, payload: job.payload, nextRunAfter: now + refreshInterval });
-    return { status: "succeeded" };
+    return { status: "succeeded", notificationsCreated };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     finishAndRescheduleJob(options.database, { id: job.id, owner: options.owner, succeeded: false, error: message, kind: job.kind, payload: job.payload, nextRunAfter: now + retryInterval });

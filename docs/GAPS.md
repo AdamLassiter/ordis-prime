@@ -49,8 +49,10 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   candidate nodes with visible reasons. Planning does not yet account for node
   access, alternative recipes, markets, relic refinement, or mission duration.
 - Authenticated players can keep private static todos with optional notes and due
-  dates. Todos are not yet portable, linked to canonical entities, recurring, or
-  generated from dynamic watch rules.
+  dates. Source-neutral world-state watches match current window fields and
+  create deduplicated private in-app alerts. Todos and watches are not yet
+  portable or linked to canonical entities; todos cannot recur, watches cannot
+  be edited or paused, and there are no web-push or webhook delivery channels.
 - The visual star chart, notifications, builds, editorial comparisons and
   discovery atlas are intentional later milestones.
 
