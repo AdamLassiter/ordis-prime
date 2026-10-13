@@ -12,6 +12,7 @@ from.
 - SQLite/Drizzle persistence for catalog, sources, accounts and player progress
 - local account bootstrap and database-backed sessions
 - public linked item/node explorer with authenticated inventory overlays
+- persisted acquisition goals and explainable node recommendations
 - portable profile export and merge/replace import
 - single-container Docker Compose deployment
 - deterministic domain and adapter tests

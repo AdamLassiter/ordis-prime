@@ -31,10 +31,10 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   implemented yet.
 - Validated inventory persistence, authenticated catalog editing, an inventory
   summary, node reward ownership filtering, and portable profile import/export
-  with transfer UI exist. Goals and their acquisition-plan read model persist,
-  but planner editing and recommendation UI are pending. Planning does not yet
-  account for node access, alternative recipes, markets, relic refinement, or
-  mission duration.
+  with transfer UI exist. Authenticated goals feed a planner that subtracts
+  inventory, expands active recipes, lists missing requirements, and links to
+  candidate nodes with visible reasons. Planning does not yet account for node
+  access, alternative recipes, markets, relic refinement, or mission duration.
 - The visual star chart, notifications, builds, editorial comparisons and
   discovery atlas are intentional later milestones.
 

@@ -36,3 +36,12 @@ input,select,textarea { width:100%; max-width:36rem; padding:.8rem 1rem; border-
 .profile-transfer { margin-top:2rem; }
 .profile-transfer:hover { transform:none; border-color:var(--line); }
 .success { color:#86efac; margin:0; }
+.goal-editor,.planner-section { margin-top:2rem; }
+.goal-editor:hover { transform:none; border-color:var(--line); }
+.inline-form { display:flex; align-items:end; flex-wrap:wrap; gap:.75rem; }
+.inline-form label { display:grid; gap:.35rem; color:var(--muted); }
+.inline-form input { width:8rem; }
+.requirement-list { max-width:42rem; padding:0; list-style:none; }
+.requirement-list li { display:flex; justify-content:space-between; gap:1rem; padding:.75rem 0; border-bottom:1px solid var(--line); }
+.planner-section h3 { font-size:1.25rem; }
+.planner-section li { line-height:1.5; }
