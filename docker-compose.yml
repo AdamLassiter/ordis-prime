@@ -9,6 +9,7 @@ services:
       ORDIS_DATA_DIR: /data
       ORDIS_SETUP_TOKEN: ${ORDIS_SETUP_TOKEN:?set ORDIS_SETUP_TOKEN}
       ORDIS_AUTH_SECRET: ${ORDIS_AUTH_SECRET:?set ORDIS_AUTH_SECRET}
+      ORDIS_BASE_URL: ${ORDIS_BASE_URL:-http://localhost:3000}
       ORDIS_ALLOW_REGISTRATION: "false"
     volumes:
       - ordis-prime-data:/data
