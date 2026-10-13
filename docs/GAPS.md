@@ -10,8 +10,9 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   container smoke test. GitHub Actions runs those build gates, but the workflow
   has not yet been observed on the remote repository.
 - The canonical schema, initial migration, and transactional per-source
-  promotion exist. Cross-source full-catalog candidate releases, pruning of
-  superseded relation rows, and the SQLite job runner are not implemented yet.
+  promotion exist. Cross-source full-catalog candidate releases and pruning of
+  superseded inactive-source rows are not implemented yet; a SQLite-leased job
+  runner handles the current recurring world-state job.
   Migrations run lazily when the web process first opens SQLite.
 - WFCD item and mission-drop adapters exist and emit entities, recipes,
   components, nodes, and drops. Fetched payloads can be retained in an
@@ -67,9 +68,10 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   yet an interactive graph. Quest prerequisites, mechanics, secrets and richer
   enemy/boss facts still need typed discovery relations.
 - A public discovery atlas searches canonical quest, enemy, boss, mechanic and
-  secret kinds. WFCD currently populates quests and enemies; prerequisites,
-  progress, richer boss classification, manual mechanics/secrets and typed links
-  to nodes or rewards remain.
+  secret kinds. WFCD currently populates quests and enemies; cited discovery
+  YAML can add curated entities and typed links to nodes, rewards, or other
+  topics. Progress, richer boss classification, conditional relations, and
+  graph summaries on atlas cards remain.
 
 ## Deliberate compromises
 

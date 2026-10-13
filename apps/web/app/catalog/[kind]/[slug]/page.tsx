@@ -25,6 +25,12 @@ export default async function ItemPage({ params }: { params: Promise<{ kind: str
       <dd>{item.drops.length ? item.drops.map((drop, index) => <div key={`${drop.nodeSlug ?? drop.node}:${drop.rotation ?? "none"}:${index}`}>{drop.nodeSlug ? <Link href={`/nodes/${drop.nodeSlug}`}>{drop.node}</Link> : drop.node}{drop.chance === undefined ? "" : ` — ${(drop.chance * 100).toFixed(2)}%`}{drop.rotation ? `, rotation ${drop.rotation}` : ""}</div>) : "No node drop recorded"}</dd>
       <dt>Editorial rankings</dt>
       <dd>{item.rankings.length ? item.rankings.map((ranking) => <div key={`${ranking.title}:${ranking.author}`}><a href={ranking.sourceUrl}>{ranking.title}</a> by {ranking.author}: <strong>{ranking.tier}</strong>{ranking.timestampSeconds === undefined ? "" : ` at ${formatTimestamp(ranking.timestampSeconds)}`}</div>) : "No cited rankings recorded"}</dd>
+      <dt>Related discoveries</dt>
+      <dd>{item.relations.length ? item.relations.map((relation, index) => <div key={`${relation.direction}:${relation.kind}:${relation.subject.kind}:${relation.subject.slug}:${index}`}>
+        <span className="tag">{relation.direction === "outgoing" ? relation.kind : `is ${relation.kind} by`}</span>{" "}
+        <Link href={`/catalog/${relation.subject.kind}/${relation.subject.slug}`}>{relation.subject.name}</Link>
+        {relation.notes ? ` — ${relation.notes}` : ""} <span className="muted">({relation.citationUrl ? <a href={relation.citationUrl}>{relation.sourceName}</a> : relation.sourceName})</span>
+      </div>) : "No explicit relationships recorded"}</dd>
       <dt>Evidence</dt>
       <dd>{item.evidence.length ? item.evidence.map((evidence, index) => <div className="evidence" key={`${evidence.fact}:${evidence.sourceName}:${evidence.recordKey ?? index}`}>
         <span className="tag">{evidence.fact}</span> {evidence.sourceName} <code>{evidence.version}</code>

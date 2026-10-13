@@ -14,6 +14,7 @@ export interface CatalogItem extends CatalogSummary {
   drops: Array<{ nodeSlug?: string; node: string; chance?: number; rotation?: string }>;
   sources: Array<{ name: string; homepage: string }>;
   rankings: Array<{ title: string; author: string; tier: string; timestampSeconds?: number; sourceUrl: string }>;
+  relations: Array<{ direction: "outgoing" | "incoming"; kind: string; subject: CatalogSummary; notes?: string; sourceName: string; citationUrl?: string }>;
   evidence: Array<{ fact: string; sourceName: string; version: string; recordKey?: string; citationUrl?: string; sourcePath?: string; snapshotPath?: string }>;
 }
 
@@ -124,6 +125,25 @@ export function findCatalogItem(sqlite: Database.Database, kind: string, slug: s
     where ranking.entity_id = ?
     order by ranking_set.published_at desc, ranking_set.title
   `).all(item.id) as CatalogItem["rankings"];
+  const relations = sqlite.prepare(`
+    select 'outgoing' as direction, relation.kind, target.kind as subjectKind, target.slug as subjectSlug,
+      target.name as subjectName, target.description as subjectDescription, relation.notes,
+      source.name as sourceName, relation.citation_url as citationUrl
+    from entity_relations relation
+    join source_runs run on run.id = relation.source_run_id and run.status = 'active'
+    join sources source on source.id = run.source_id
+    join entities target on target.id = relation.to_entity_id and target.retired = 0
+    where relation.from_entity_id = ?
+    union all
+    select 'incoming', relation.kind, origin.kind, origin.slug, origin.name, origin.description,
+      relation.notes, source.name, relation.citation_url
+    from entity_relations relation
+    join source_runs run on run.id = relation.source_run_id and run.status = 'active'
+    join sources source on source.id = run.source_id
+    join entities origin on origin.id = relation.from_entity_id and origin.retired = 0
+    where relation.to_entity_id = ?
+    order by 1 desc, 2, 5 collate nocase
+  `).all(item.id, item.id) as Array<{ direction: "outgoing" | "incoming"; kind: string; subjectKind: string; subjectSlug: string; subjectName: string; subjectDescription?: string; notes?: string; sourceName: string; citationUrl?: string }>;
   const evidence = sqlite.prepare(`
     select 'entity.' || provenance.field as fact, source.name as sourceName, run.version,
            provenance.source_record_key as recordKey, provenance.citation_url as citationUrl,
@@ -154,10 +174,17 @@ export function findCatalogItem(sqlite: Database.Database, kind: string, slug: s
     join source_runs run on run.id = ranking_set.source_run_id and run.status = 'active'
     join sources source on source.id = run.source_id
     where ranking.entity_id = ?
+    union all
+    select 'relation.' || relation.kind as fact, source.name, run.version, relation.source_record_key,
+           relation.citation_url, relation.source_path, run.snapshot_path
+    from entity_relations relation
+    join source_runs run on run.id = relation.source_run_id and run.status = 'active'
+    join sources source on source.id = run.source_id
+    where relation.from_entity_id = ? or relation.to_entity_id = ?
     order by sourceName, fact, recordKey
-  `).all(item.id, item.id, item.id, item.id) as Array<{ fact: string; sourceName: string; version: string; recordKey?: string; citationUrl?: string; sourcePath?: string; snapshotPath?: string }>;
+  `).all(item.id, item.id, item.id, item.id, item.id, item.id) as Array<{ fact: string; sourceName: string; version: string; recordKey?: string; citationUrl?: string; sourcePath?: string; snapshotPath?: string }>;
   const { id: _id, ...summary } = item;
-  return { ...summary, components, drops, sources, rankings, evidence };
+  return { ...summary, components, drops, sources, rankings, relations: relations.map(({ subjectKind, subjectSlug, subjectName, subjectDescription, ...relation }) => ({ ...relation, subject: { kind: subjectKind, slug: subjectSlug, name: subjectName, description: subjectDescription } })), evidence };
 }
 
 export function findCatalogNode(sqlite: Database.Database, slug: string, userId?: string): CatalogNode | undefined {

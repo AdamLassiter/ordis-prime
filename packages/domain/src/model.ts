@@ -72,6 +72,18 @@ export interface NodeDetailObservation {
   evidence: Evidence;
 }
 
+export const RELATION_KINDS = ["requires", "unlocks", "occurs-at", "involves", "rewards"] as const;
+export type RelationKind = typeof RELATION_KINDS[number];
+
+export interface EntityRelationObservation {
+  type: "entity-relation";
+  fromExternalId: ExternalIdentifier;
+  toExternalId: ExternalIdentifier;
+  kind: RelationKind;
+  notes?: string;
+  evidence: Evidence;
+}
+
 export interface RankingSetObservation {
   type: "ranking-set";
   key: string;
@@ -96,7 +108,7 @@ export interface RankingObservation {
   evidence: Evidence;
 }
 
-export type Observation = EntityObservation | DropObservation | RecipeObservation | NodeDetailObservation | RankingSetObservation | RankingObservation;
+export type Observation = EntityObservation | DropObservation | RecipeObservation | NodeDetailObservation | EntityRelationObservation | RankingSetObservation | RankingObservation;
 
 export interface InventoryEntry {
   entityId: EntityId;

@@ -23,6 +23,7 @@ test("catalog read models join active recipes, drops, provenance, and rankings",
     { type: "node-detail", nodeExternalId: external("caloris"), planet: "Mercury", missionType: "Rescue", minimumEnemyLevel: 6, maximumEnemyLevel: 8, evidence: { ...evidence, sourceRecordKey: "caloris" } },
     { type: "recipe", outputExternalId: external("braton"), ingredients: [{ externalId: external("alloy"), quantity: 200 }], evidence },
     { type: "drop", rewardExternalId: external("braton"), nodeExternalId: external("caloris"), locationLabel: "Caloris, Mercury", chance: 0.1, rotation: "A", evidence },
+    { type: "entity-relation", fromExternalId: external("awakening"), toExternalId: external("caloris"), kind: "occurs-at", notes: "The opening mission.", evidence: { ...evidence, sourceRecordKey: "awakening:caloris", citationUrl: "https://example.test/quest" } },
   ];
   promoteSource(sqlite, { source: { id: "items", name: "Items", homepage: "https://example.test/items", priority: 10 }, version: "v1", contentHash: "hash-1", retrievedAt: evidence.retrievedAt, observations });
   const rankingEvidence = { ...evidence, sourceId: "ranking", snapshotVersion: "ranking-v1" };
@@ -45,6 +46,9 @@ test("catalog read models join active recipes, drops, provenance, and rankings",
   assert.deepEqual(item?.rankings[0], { title: "Creator list", author: "Creator", tier: "A", timestampSeconds: 42, sourceUrl: "https://example.test/ranking" });
   assert.equal(item?.evidence.some((entry) => entry.fact === "recipe" && entry.recordKey === "braton"), true);
   assert.equal(item?.evidence.some((entry) => entry.fact === "drop" && entry.recordKey === "braton"), true);
+  const quest = findCatalogItem(sqlite, "quest", "awakening")!;
+  assert.deepEqual(quest.relations[0], { direction: "outgoing", kind: "occurs-at", subject: { kind: "node", slug: "mercury-caloris", name: "Caloris", description: "Rescue on Mercury" }, notes: "The opening mission.", sourceName: "Items", citationUrl: "https://example.test/quest" });
+  assert.equal(quest.evidence.some((entry) => entry.fact === "relation.occurs-at"), true);
   const node = findCatalogNode(sqlite, "mercury-caloris")!;
   assert.equal(node.drops[0]?.name, "Braton");
   assert.deepEqual({ planet: node.planet, missionType: node.missionType, minimumEnemyLevel: node.minimumEnemyLevel, maximumEnemyLevel: node.maximumEnemyLevel }, { planet: "Mercury", missionType: "Rescue", minimumEnemyLevel: 6, maximumEnemyLevel: 8 });

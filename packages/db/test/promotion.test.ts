@@ -133,6 +133,25 @@ test("editorial rankings link cited sets to canonical entities", async (context)
   assert.deepEqual(sqlite.prepare("select rs.source_record_key as setRecord, er.source_record_key as rankingRecord from editorial_rankings er join ranking_sets rs on rs.id = er.set_id").get(), { setRecord: "ranking", rankingRecord: "ranking" });
 });
 
+test("typed relations resolve both endpoints and preserve their evidence", async (context) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-relations-"));
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const databasePath = path.join(root, "catalog.sqlite");
+  migrateDatabase(databasePath);
+  const sqlite = new Database(databasePath);
+  sqlite.pragma("foreign_keys = ON");
+  context.after(() => sqlite.close());
+  const observations = [
+    entity("quest", "A Quest", "quest"),
+    entity("node", "A Node", "node"),
+    { type: "entity-relation", fromExternalId: { sourceId: "fixture", namespace: "id", value: "quest" }, toExternalId: { sourceId: "fixture", namespace: "id", value: "node" }, kind: "occurs-at", notes: "First step", evidence: { ...evidence(), sourceRecordKey: "quest:node", citationUrl: "https://example.test/relation" } },
+  ] satisfies Observation[];
+  const result = promoteSource(sqlite, input("v1", observations));
+
+  assert.equal(result.relationsCreated, 1);
+  assert.deepEqual(sqlite.prepare("select kind, notes, source_record_key as recordKey, citation_url as citationUrl from entity_relations").get(), { kind: "occurs-at", notes: "First step", recordKey: "quest:node", citationUrl: "https://example.test/relation" });
+});
+
 function input(version: string, observations: Observation[]) {
   return { source, version, contentHash: `sha256:${version.padEnd(64, "0")}`, retrievedAt: "2026-10-13T12:00:00.000Z", observations };
 }
@@ -141,7 +160,7 @@ function evidence(version = "v1", sourceId = "fixture") {
   return { sourceId, sourceRecordKey: "record", snapshotVersion: version, retrievedAt: "2026-10-13T12:00:00.000Z" };
 }
 
-function entity(id: string, name: string, kind: "unknown" | "component" | "mod" | "node" | "weapon", version = "v1", sourceId = "fixture"): Observation {
+function entity(id: string, name: string, kind: "unknown" | "component" | "mod" | "node" | "weapon" | "quest", version = "v1", sourceId = "fixture"): Observation {
   return { type: "entity", kind, externalIds: [{ sourceId, namespace: "id", value: id }], fields: { name, slug: name.toLowerCase().replaceAll(" ", "-") }, evidence: evidence(version, sourceId) };
 }
 

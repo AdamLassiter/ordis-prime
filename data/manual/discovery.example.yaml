@@ -1,0 +1,30 @@
+schemaVersion: 1
+source:
+  id: example-discovery-notes
+  title: Example discovery notes
+  url: https://wiki.warframe.com/w/Vors_Prize
+  licenseNote: Example only; replace with source-specific attribution before publishing.
+  priority: 200
+entries:
+  - key: vors-prize
+    kind: quest
+    name: Vor's Prize
+    slug: vors-prize
+    description: The introductory quest that restores core Orbiter systems.
+  - key: modding
+    kind: mechanic
+    name: Modding
+    slug: modding
+    description: Install and rank mods to alter equipment statistics and behavior.
+relations:
+  - from: vors-prize
+    to: modding
+    kind: unlocks
+    notes: The quest introduces and unlocks access to the Arsenal's modding flow.
+  - from: modding
+    to:
+      sourceId: wfcd-items
+      namespace: uniqueName
+      value: /Lotus/Types/Keys/NewWarQuest/NewWarQuestKeyChain
+    kind: requires
+    notes: Example of a relationship to an entity owned by another source.

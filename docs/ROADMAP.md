@@ -42,5 +42,5 @@ node graph as an interactive star chart. The map is a view over established IDs
 and relations, not a second data model.
 
 Composed node metadata, a planet-grouped chart with inventory-aware filtering,
-and a searchable canonical discovery atlas are implemented. Graph edges and the
-quest/mechanic/secret relation and progress models remain.
+a searchable canonical discovery atlas, and cited typed discovery relations are
+implemented. Star-chart connection edges and player discovery progress remain.
