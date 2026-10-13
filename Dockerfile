@@ -11,7 +11,9 @@ COPY packages/db/package.json packages/db/package.json
 COPY packages/ingestion/package.json packages/ingestion/package.json
 RUN pnpm install --frozen-lockfile
 COPY . .
-RUN pnpm build
+# Next evaluates server modules while collecting routes. This value exists only
+# in the build stage; Compose must still provide the runtime authentication key.
+RUN ORDIS_AUTH_SECRET=ordis-prime-build-placeholder-not-for-runtime pnpm build
 
 FROM node:24-bookworm-slim AS runtime
 WORKDIR /app

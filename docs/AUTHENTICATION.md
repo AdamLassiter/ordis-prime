@@ -16,6 +16,11 @@ random value of at least 32 characters. `ORDIS_BASE_URL` defaults to
 `http://localhost:3000` and must be the public origin in deployments reached at
 another URL.
 
+Next.js evaluates server modules during its production build, so automated
+builds provide a clearly named, non-runtime placeholder. The container runtime
+does not inherit it: deployment still fails closed unless the operator supplies
+`ORDIS_AUTH_SECRET`.
+
 The raw API is wired at `/api/auth/*`. `/setup` collects the operator token only
 for the first account, and `/sign-in` establishes returning sessions. Account
 administration, password recovery, and authorization checks on player-state

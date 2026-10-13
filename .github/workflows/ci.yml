@@ -24,6 +24,8 @@ jobs:
       - run: pnpm test
       - run: pnpm check
       - run: pnpm build
+        env:
+          ORDIS_AUTH_SECRET: ordis-prime-ci-build-placeholder-not-for-runtime
       - name: Verify migrations on an empty database
         run: pnpm db:migrate
         env:
