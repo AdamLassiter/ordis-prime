@@ -13,8 +13,9 @@ from.
 - local account bootstrap and database-backed sessions
 - public linked item/node explorer with authenticated inventory overlays
 - persisted acquisition goals and explainable node recommendations
+- live world-state timers with database-leased automatic polling
 - portable profile export and merge/replace import
-- single-container Docker Compose deployment
+- two-service Docker Compose deployment over one durable data volume
 - deterministic domain and adapter tests
 - generated initial SQLite migration
 
@@ -48,6 +49,9 @@ administrator. Registration remains closed unless explicitly enabled.
 `data:refresh` runs the same provider-neutral pipeline for each named adapter:
 fetch, immutable snapshot storage, parsing, validation, and transactional
 promotion. Omit names to refresh every registered adapter.
+
+`data:worker` runs the recurring world-state worker for development. Docker
+Compose runs that worker alongside the web service over the same durable volume.
 
 ## Data safety
 

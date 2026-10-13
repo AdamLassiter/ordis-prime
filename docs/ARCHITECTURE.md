@@ -28,6 +28,12 @@ durable service. Scheduled work uses database leases so a future worker can be
 split into another process without changing job semantics. Failed or stale
 providers never prevent the last promoted catalog from being served.
 
+The Compose deployment runs the web server and world-state worker as separate
+processes over one mounted data volume. The worker also has a standalone CLI
+entry point. Every worker claims recurring jobs through SQLite and recovers
+expired leases, so multiple workers can run without intentionally duplicating
+work.
+
 ## Trust boundaries
 
 All provider payloads and imported YAML are untrusted input and must pass

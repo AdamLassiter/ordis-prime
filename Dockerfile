@@ -27,3 +27,14 @@ USER ordis
 VOLUME ["/data"]
 EXPOSE 3000
 CMD ["node", "apps/web/server.js"]
+
+FROM node:24-bookworm-slim AS worker
+WORKDIR /app
+ENV NODE_ENV=production ORDIS_DATA_DIR=/data
+RUN useradd --system --uid 10001 ordis && mkdir -p /data && chown ordis:ordis /data
+COPY --from=build --chown=ordis:ordis /app/package.json /app/pnpm-workspace.yaml ./
+COPY --from=build --chown=ordis:ordis /app/node_modules ./node_modules
+COPY --from=build --chown=ordis:ordis /app/packages ./packages
+USER ordis
+VOLUME ["/data"]
+CMD ["./packages/ingestion/node_modules/.bin/tsx", "packages/ingestion/src/worker-cli.ts"]

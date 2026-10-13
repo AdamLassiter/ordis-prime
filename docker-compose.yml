@@ -1,10 +1,12 @@
 services:
   ordis-prime:
-    build: .
+    build:
+      context: .
+      target: runtime
     image: ordis-prime:local
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "${ORDIS_PORT:-3000}:3000"
     environment:
       ORDIS_DATA_DIR: /data
       ORDIS_SETUP_TOKEN: ${ORDIS_SETUP_TOKEN:?set ORDIS_SETUP_TOKEN}
@@ -23,6 +25,18 @@ services:
       timeout: 3s
       retries: 5
       start_period: 10s
+
+  world-state-worker:
+    build:
+      context: .
+      target: worker
+    image: ordis-prime-worker:local
+    restart: unless-stopped
+    environment:
+      ORDIS_DATA_DIR: /data
+      ORDIS_WORLD_STATE_INTERVAL_MS: ${ORDIS_WORLD_STATE_INTERVAL_MS:-300000}
+    volumes:
+      - ordis-prime-data:/data
 
 volumes:
   ordis-prime-data:

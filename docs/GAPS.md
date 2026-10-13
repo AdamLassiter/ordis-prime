@@ -21,12 +21,15 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   this same path. Refresh attempts and failures are persisted without replacing
   active data. Administrators can inspect recent attempts, bounded failure
   messages, retained snapshot paths, and record-level resolver conflicts. Manual
-  fact corrections, scheduled refresh jobs, and conflict resolution actions
-  remain to be implemented. A provider-neutral world-state pipeline snapshots
-  and transactionally promotes WFCD cycles, events, alerts, fissures and traders;
+  fact corrections, scheduled static-catalog refresh jobs, and conflict
+  resolution actions remain to be implemented. A provider-neutral world-state
+  pipeline snapshots and transactionally promotes WFCD cycles, events, alerts,
+  fissures and traders.
   A public timer view exposes active and upcoming windows with client-updating
-  countdowns and visible snapshot freshness. Automatic polling, stale-data
-  policy, canonical node reconciliation, todo rules and notifications remain.
+  countdowns and visible snapshot freshness. A database-leased production worker
+  polls it every five minutes and retries failures without replacing active data.
+  Job-history pruning, stale-data policy, canonical node reconciliation, todo
+  rules and notifications remain.
 - The web explorer reads the canonical SQLite catalog and links active recipes,
   drops, nodes, record-level provenance, and editorial rankings. Newly imported
   entity fields and typed relations retain exact source record keys, paths, and
