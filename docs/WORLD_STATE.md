@@ -29,15 +29,23 @@ Run an explicit refresh with:
 pnpm data:refresh wfcd-worldstate
 ```
 
+When run through the root workspace script, the default database and snapshot
+store are under the repository `data/` directory. `ORDIS_DATA_DIR` can override
+both ingestion and web storage in deployments.
+
 World state is excluded from the default static catalog refresh because it needs
 a much shorter cadence. A database-leased scheduler will eventually invoke it.
+
+The public `/world-state` route reads the currently promoted snapshots and shows
+countdowns that advance in the browser. It labels future windows separately and
+keeps the provider observation time visible so users can judge freshness.
 
 ## Current limits
 
 - Only the PC English endpoint is configured; platform and language settings are
   not yet exposed.
-- Snapshot ingestion exists, but automatic polling, stale-data policy, player
-  todo rules and notifications do not.
+- Automatic polling, stale-data policy, player todo rules and notifications do
+  not yet exist.
 - Windows use provider node labels until dynamic nodes can be reconciled safely
   with canonical catalog node identities.
 - Arbitrations between multiple live world-state providers are not implemented.

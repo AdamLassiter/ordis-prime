@@ -19,7 +19,7 @@ async function main(): Promise<void> {
     if (!(name in adapters) && name !== "wfcd-worldstate" && !name.startsWith("manual:")) throw new Error(`Unknown source ${name}. Expected ${Object.keys(adapters).join(", ")}, wfcd-worldstate, or manual:<path>`);
   }
 
-  const dataDirectory = process.env.ORDIS_DATA_DIR ?? "./data";
+  const dataDirectory = process.env.ORDIS_DATA_DIR ?? path.join(process.env.INIT_CWD ?? process.cwd(), "data");
   const databasePath = process.env.ORDIS_DATABASE_URL ?? path.join(dataDirectory, "ordis-prime.sqlite");
   migrateDatabase(databasePath);
   const database = openSqliteDatabase(databasePath);

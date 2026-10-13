@@ -11,9 +11,14 @@ separate while still producing useful joined answers.
 
 ## 2. Time-aware planning
 
+Status: in progress
+
 Add world-state polling, availability windows, dynamic todos, in-app alerts,
 then optional web-push and webhook delivery. Alerts are rules over canonical
 entities and player goals, not provider-specific payloads.
+
+Provider-neutral snapshots, current availability reads and the public timer
+view are implemented. Automated polling and player-owned rules are next.
 
 ## 3. Builds and opinions
 

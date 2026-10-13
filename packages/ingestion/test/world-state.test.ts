@@ -24,7 +24,9 @@ test("WFCD world state normalizes availability windows and promotes one active s
 
   const first = await refreshWorldState({ adapter, database, snapshotStore });
   assert.equal(first.windowCount, 5);
-  assert.deepEqual(listCurrentWorldState(database, Date.parse("2026-10-13T21:00:00.000Z")).map(({ kind }) => kind).sort(), ["alert", "cycle", "event", "fissure", "trader"]);
+  const current = listCurrentWorldState(database, Date.parse("2026-10-13T21:00:00.000Z"));
+  assert.deepEqual(current.map(({ kind }) => kind).sort(), ["alert", "cycle", "event", "fissure", "trader"]);
+  assert.equal(current.find(({ kind }) => kind === "alert")?.label, "Alert: Forma");
   const second = await refreshWorldState({ adapter, database, snapshotStore });
   assert.notEqual(second.snapshotId, first.snapshotId);
   assert.equal((database.prepare("select count(*) as count from world_state_snapshots where active = 1").get() as { count: number }).count, 1);
@@ -38,7 +40,7 @@ function fixtureSnapshot(version: number): Snapshot {
     timestamp,
     cetusCycle: { id: `cetus-${version}`, activation: "2026-10-13T20:30:00.000Z", expiry: "2026-10-13T22:00:00.000Z", state: "night" },
     events: [{ id: `event-${version}`, activation: "2026-10-13T20:00:00.000Z", expiry: "2026-10-20T20:00:00.000Z", description: "Thermia Fractures", node: "Orb Vallis" }],
-    alerts: [{ id: `alert-${version}`, activation: "2026-10-13T20:00:00.000Z", expiry: "2026-10-14T20:00:00.000Z", mission: { node: "Mantle (Earth)", type: "Capture", reward: { items: ["Forma"] } } }],
+    alerts: [{ id: `alert-${version}`, activation: "2026-10-13T20:00:00.000Z", expiry: "2026-10-14T20:00:00.000Z", mission: { node: "Mantle (Earth)", type: "Capture", reward: { items: ["Forma"], countedItems: [{ type: "Forma", count: 1 }] } } }],
     fissures: [{ id: `fissure-${version}`, activation: "2026-10-13T20:00:00.000Z", expiry: "2026-10-13T22:30:00.000Z", tier: "Lith", missionType: "Defense", node: "Romula (Venus)" }],
     voidTraders: [{ id: `trader-${version}`, activation: "2026-10-13T20:00:00.000Z", expiry: "2026-10-15T20:00:00.000Z", location: "Larunda Relay (Mercury)", character: "Baro Ki'Teer" }],
   };

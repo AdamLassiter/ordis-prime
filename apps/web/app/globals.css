@@ -50,3 +50,19 @@ input,select,textarea { width:100%; max-width:36rem; padding:.8rem 1rem; border-
 .error-block { color:#fca5a5; white-space:pre-wrap; overflow-wrap:anywhere; background:#0b111b; padding:1rem; border-radius:8px; }
 .evidence { margin:.4rem 0; overflow-wrap:anywhere; }
 .evidence a { color:var(--cyan); text-decoration:underline; }
+.freshness { color:var(--muted); font-size:.85rem; margin-top:1.5rem; }
+.world-state-groups { display:grid; gap:2.5rem; margin-top:2rem; }
+.world-state-section h2 { margin-bottom:1rem; }
+.world-state-grid { margin-top:0; }
+.world-state-card h3 { margin:.85rem 0 .4rem; font-size:1.1rem; }
+.world-state-heading { display:flex; align-items:center; justify-content:space-between; gap:.75rem; }
+.world-state-heading .tag { margin:0; }
+.tag.upcoming { color:var(--gold); border-color:#715d2d; }
+.state-label { color:var(--cyan); text-transform:capitalize; font-size:.85rem; }
+.world-state-node { color:var(--muted); min-height:1.25rem; }
+.countdown { color:var(--gold); font-size:1.25rem; font-variant-numeric:tabular-nums; margin:.9rem 0 .35rem; }
+.countdown span { color:var(--muted); font-size:.8rem; text-transform:uppercase; letter-spacing:.08em; }
+.world-state-card.expired { opacity:.6; }
+.empty-state { margin-top:2rem; }
+.empty-state code { color:var(--gold); }
+@media (max-width:700px) { nav { gap:.75rem; overflow-x:auto; } nav strong { min-width:max-content; } }

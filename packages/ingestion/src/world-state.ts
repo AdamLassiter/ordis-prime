@@ -47,7 +47,7 @@ export class WfcdWorldStateAdapter implements WorldStateAdapter {
       const alert = recordValue(alertValue); const mission = recordValue(alert?.mission); if (!alert || !mission) continue;
       const id = stringValue(alert.id); if (!id) continue;
       const reward = recordValue(mission.reward);
-      const rewards = [...arrayValue(reward?.items), ...arrayValue(reward?.countedItems).map((item) => stringValue(recordValue(item)?.type))].filter((item): item is string => typeof item === "string");
+      const rewards = [...new Set([...arrayValue(reward?.items), ...arrayValue(reward?.countedItems).map((item) => stringValue(recordValue(item)?.type))].filter((item): item is string => typeof item === "string"))];
       const node = stringValue(mission.node);
       windows.push({ externalId: `alert:${id}`, kind: "alert", label: rewards.length ? `Alert: ${rewards.join(", ")}` : "Alert", nodeLabel: node, activation: dateValue(alert.activation), expiry: dateValue(alert.expiry), metadata: primitiveMetadata({ missionType: mission.type, faction: mission.faction }), evidence: evidence(id, `alerts[${index}]`) });
     }
