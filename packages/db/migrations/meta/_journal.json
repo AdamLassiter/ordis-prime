@@ -43,6 +43,13 @@
       "when": 1791926951060,
       "tag": "0005_harsh_devos",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1791927143379,
+      "tag": "0006_handy_proemial_gods",
+      "breakpoints": true
     }
   ]
 }

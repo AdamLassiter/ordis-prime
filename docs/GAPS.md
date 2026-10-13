@@ -21,8 +21,11 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   this same path. Refresh attempts and failures are persisted without replacing
   active data. Administrators can inspect recent attempts, bounded failure
   messages, retained snapshot paths, and record-level resolver conflicts. Manual
-  fact corrections, scheduled refresh jobs, conflict resolution actions, and
-  live world state remain to be implemented.
+  fact corrections, scheduled refresh jobs, and conflict resolution actions
+  remain to be implemented. A provider-neutral world-state pipeline snapshots
+  and transactionally promotes WFCD cycles, events, alerts, fissures and traders;
+  automatic polling, stale-data policy, canonical node reconciliation, timer UI,
+  todo rules and notifications remain.
 - The web explorer reads the canonical SQLite catalog and links active recipes,
   drops, nodes, record-level provenance, and editorial rankings. Newly imported
   entity fields and typed relations retain exact source record keys, paths, and

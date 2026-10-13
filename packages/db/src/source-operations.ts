@@ -8,6 +8,7 @@ export interface SourceRefreshRecord {
   startedAt: number;
   finishedAt?: number;
   sourceRunId?: string;
+  worldStateSnapshotId?: string;
   version?: string;
   snapshotPath?: string;
   error?: string;
@@ -39,11 +40,12 @@ export function beginSourceRefresh(sqlite: Database.Database, source: PromotionS
   return id;
 }
 
-export function completeSourceRefresh(sqlite: Database.Database, refreshId: string, input: { sourceRunId: string; snapshotPath: string }): void {
+export function completeSourceRefresh(sqlite: Database.Database, refreshId: string, input: { sourceRunId?: string; worldStateSnapshotId?: string; snapshotPath: string }): void {
+  if (Boolean(input.sourceRunId) === Boolean(input.worldStateSnapshotId)) throw new Error("A completed refresh must link exactly one promoted snapshot");
   const result = sqlite.prepare(`
-    update source_refreshes set status = 'succeeded', source_run_id = ?, snapshot_path = ?, finished_at = ?, error = null
+    update source_refreshes set status = 'succeeded', source_run_id = ?, world_state_snapshot_id = ?, snapshot_path = ?, finished_at = ?, error = null
     where id = ? and status = 'running'
-  `).run(input.sourceRunId, input.snapshotPath, Date.now(), refreshId);
+  `).run(input.sourceRunId ?? null, input.worldStateSnapshotId ?? null, input.snapshotPath, Date.now(), refreshId);
   if (result.changes !== 1) throw new Error(`Refresh ${refreshId} is not running`);
 }
 
@@ -60,15 +62,17 @@ export function listSourceRefreshes(sqlite: Database.Database, sourceId: string,
   const normalizedLimit = Math.max(1, Math.min(100, Math.trunc(limit)));
   const rows = sqlite.prepare(`
     select refresh.id, refresh.status, refresh.started_at as startedAt, refresh.finished_at as finishedAt,
-           refresh.source_run_id as sourceRunId, run.version, refresh.snapshot_path as snapshotPath, refresh.error
+           refresh.source_run_id as sourceRunId, refresh.world_state_snapshot_id as worldStateSnapshotId,
+           coalesce(run.version, world.version) as version, refresh.snapshot_path as snapshotPath, refresh.error
     from source_refreshes refresh
     left join source_runs run on run.id = refresh.source_run_id
+    left join world_state_snapshots world on world.id = refresh.world_state_snapshot_id
     where refresh.source_id = ?
     order by refresh.started_at desc, refresh.rowid desc limit ?
-  `).all(sourceId, normalizedLimit) as Array<Omit<SourceRefreshRecord, "finishedAt" | "sourceRunId" | "version" | "snapshotPath" | "error"> & { finishedAt: number | null; sourceRunId: string | null; version: string | null; snapshotPath: string | null; error: string | null }>;
+  `).all(sourceId, normalizedLimit) as Array<Omit<SourceRefreshRecord, "finishedAt" | "sourceRunId" | "worldStateSnapshotId" | "version" | "snapshotPath" | "error"> & { finishedAt: number | null; sourceRunId: string | null; worldStateSnapshotId: string | null; version: string | null; snapshotPath: string | null; error: string | null }>;
   return rows.map((row) => ({
     id: row.id, status: row.status, startedAt: row.startedAt,
-    finishedAt: row.finishedAt ?? undefined, sourceRunId: row.sourceRunId ?? undefined,
+    finishedAt: row.finishedAt ?? undefined, sourceRunId: row.sourceRunId ?? undefined, worldStateSnapshotId: row.worldStateSnapshotId ?? undefined,
     version: row.version ?? undefined, snapshotPath: row.snapshotPath ?? undefined, error: row.error ?? undefined,
   }));
 }

@@ -9,6 +9,7 @@ the compromises between that target and the current implementation.
 - [Manual data](MANUAL_DATA.md) defines the cited editorial import format.
 - [Profile data](PROFILE_DATA.md) defines portable player-state identity and import behavior.
 - [Acquisition planner](ACQUISITION_PLANNER.md) defines goal and recommendation semantics.
+- [World state](WORLD_STATE.md) defines dynamic availability and snapshot semantics.
 - [Authentication](AUTHENTICATION.md) defines local account setup and registration policy.
 - [Roadmap](ROADMAP.md) orders capabilities around end-to-end value.
 - [Known gaps](GAPS.md) is the authoritative implementation delta.

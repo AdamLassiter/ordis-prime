@@ -6,10 +6,33 @@ export const sources = sqliteTable("sources", {
 export const sourceRuns = sqliteTable("source_runs", {
   id: text().primaryKey(), sourceId: text("source_id").notNull().references(() => sources.id), version: text().notNull(), contentHash: text("content_hash").notNull(), retrievedAt: integer("retrieved_at", { mode: "timestamp_ms" }).notNull(), snapshotPath: text("snapshot_path"), status: text({ enum: ["running", "failed", "staged", "active"] }).notNull(), error: text(),
 }, (table) => [uniqueIndex("source_run_version").on(table.sourceId, table.version)]);
+export const worldStateSnapshots = sqliteTable("world_state_snapshots", {
+  id: text().primaryKey(),
+  sourceId: text("source_id").notNull().references(() => sources.id),
+  version: text().notNull(),
+  contentHash: text("content_hash").notNull(),
+  observedAt: integer("observed_at", { mode: "timestamp_ms" }).notNull(),
+  snapshotPath: text("snapshot_path").notNull(),
+  active: integer({ mode: "boolean" }).notNull().default(false),
+}, (table) => [uniqueIndex("world_state_source_version").on(table.sourceId, table.version), index("world_state_active").on(table.active)]);
+export const worldStateWindows = sqliteTable("world_state_windows", {
+  snapshotId: text("snapshot_id").notNull().references(() => worldStateSnapshots.id, { onDelete: "cascade" }),
+  externalId: text("external_id").notNull(),
+  kind: text({ enum: ["cycle", "alert", "fissure", "event", "trader"] }).notNull(),
+  label: text().notNull(),
+  activation: integer({ mode: "timestamp_ms" }),
+  expiry: integer({ mode: "timestamp_ms" }),
+  state: text(),
+  nodeLabel: text("node_label"),
+  metadataJson: text("metadata_json").notNull(),
+  sourceRecordKey: text("source_record_key").notNull(),
+  sourcePath: text("source_path"),
+}, (table) => [primaryKey({ columns: [table.snapshotId, table.externalId] }), index("world_state_window_expiry").on(table.expiry)]);
 export const sourceRefreshes = sqliteTable("source_refreshes", {
   id: text().primaryKey(),
   sourceId: text("source_id").notNull().references(() => sources.id),
   sourceRunId: text("source_run_id").references(() => sourceRuns.id),
+  worldStateSnapshotId: text("world_state_snapshot_id").references(() => worldStateSnapshots.id),
   status: text({ enum: ["running", "succeeded", "failed"] }).notNull(),
   startedAt: integer("started_at", { mode: "timestamp_ms" }).notNull(),
   finishedAt: integer("finished_at", { mode: "timestamp_ms" }),
