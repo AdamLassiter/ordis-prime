@@ -8,13 +8,15 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
 - The workspace installs from a frozen lockfile and has been verified with its
   type checks, tests, production build, SQLite migration, and production
   container smoke test. Automated CI is not configured yet.
-- The canonical schema and initial migration exist, but transactional
-  staging/promotion and the SQLite job runner are not implemented yet. The web
-  process does not yet run migrations at startup.
+- The canonical schema, initial migration, and transactional per-source
+  promotion exist. Cross-source full-catalog candidate releases, pruning of
+  superseded relation rows, and the SQLite job runner are not implemented yet.
+  The web process does not yet run migrations at startup.
 - WFCD item and mission-drop adapters exist and emit entities, recipes,
   components, nodes, and drops. Fetched payloads can be retained in an
-  immutable, hash-verified snapshot store. Manual YAML, canonical persistence,
-  refresh orchestration, and live world state remain to be implemented.
+  immutable, hash-verified snapshot store and observations can be resolved into
+  canonical SQLite records with provenance and reviewable conflicts. Manual
+  YAML, refresh orchestration, and live world state remain to be implemented.
 - The web explorer currently uses a small development catalog through the same
   query interface the SQLite repository will implement. It is not production
   data, and the health endpoint does not yet probe SQLite.

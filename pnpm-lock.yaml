@@ -54,6 +54,9 @@ importers:
 
   packages/db:
     dependencies:
+      '@ordis-prime/domain':
+        specifier: workspace:*
+        version: link:../domain
       better-sqlite3:
         specifier: ^12.4.1
         version: 12.11.1
