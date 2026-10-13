@@ -4,7 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import type { Observation } from "@ordis-prime/domain";
-import { createLocalUser, findCatalogItem, findCatalogNode, listSourceStatuses, listStarChartNodes, migrateDatabase, openSqliteDatabase, promoteSource, searchCatalog, setInventoryEntryByReference } from "../src/index.ts";
+import { createLocalUser, findCatalogItem, findCatalogNode, listSourceStatuses, listStarChartNodes, migrateDatabase, openSqliteDatabase, promoteSource, searchCatalog, searchDiscoveryCatalog, setInventoryEntryByReference } from "../src/index.ts";
 
 test("catalog read models join active recipes, drops, provenance, and rankings", async (context) => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-catalog-"));
@@ -19,6 +19,7 @@ test("catalog read models join active recipes, drops, provenance, and rankings",
     { type: "entity", kind: "weapon", externalIds: [external("braton")], fields: { name: "Braton", slug: "braton", description: "A balanced rifle." }, evidence },
     { type: "entity", kind: "resource", externalIds: [external("alloy")], fields: { name: "Alloy Plate", slug: "alloy-plate" }, evidence: { ...evidence, sourceRecordKey: "alloy" } },
     { type: "entity", kind: "node", externalIds: [external("caloris")], fields: { name: "Caloris", slug: "mercury-caloris", description: "Rescue on Mercury" }, evidence: { ...evidence, sourceRecordKey: "caloris" } },
+    { type: "entity", kind: "quest", externalIds: [external("awakening")], fields: { name: "Awakening", slug: "awakening", description: "Begin again." }, evidence: { ...evidence, sourceRecordKey: "awakening" } },
     { type: "node-detail", nodeExternalId: external("caloris"), planet: "Mercury", missionType: "Rescue", minimumEnemyLevel: 6, maximumEnemyLevel: 8, evidence: { ...evidence, sourceRecordKey: "caloris" } },
     { type: "recipe", outputExternalId: external("braton"), ingredients: [{ externalId: external("alloy"), quantity: 200 }], evidence },
     { type: "drop", rewardExternalId: external("braton"), nodeExternalId: external("caloris"), locationLabel: "Caloris, Mercury", chance: 0.1, rotation: "A", evidence },
@@ -35,6 +36,8 @@ test("catalog read models join active recipes, drops, provenance, and rankings",
 
   assert.deepEqual(searchCatalog(sqlite, "brat").map(({ name }) => name), ["Braton"]);
   assert.deepEqual(searchCatalog(sqlite, "%"), []);
+  assert.deepEqual(searchDiscoveryCatalog(sqlite, { kind: "quest" }).map(({ name }) => name), ["Awakening"]);
+  assert.deepEqual(searchDiscoveryCatalog(sqlite, { query: "%" }), []);
   const item = findCatalogItem(sqlite, "weapon", "braton");
   assert.equal(item?.components[0]?.quantity, 200);
   assert.equal(item?.drops[0]?.nodeSlug, "mercury-caloris");

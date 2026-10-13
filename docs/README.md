@@ -13,6 +13,7 @@ the compromises between that target and the current implementation.
 - [Todos and dynamic watches](TODOS.md) defines private tasks and alert intent.
 - [Builds and sharing](BUILDS.md) defines editable drafts and immutable public snapshots.
 - [Star chart](STAR_CHART.md) defines composed node metadata and spatial compromises.
+- [Discovery atlas](DISCOVERY.md) defines discoverability goals and missing relations.
 - [Authentication](AUTHENTICATION.md) defines local account setup and registration policy.
 - [Roadmap](ROADMAP.md) orders capabilities around end-to-end value.
 - [Known gaps](GAPS.md) is the authoritative implementation delta.

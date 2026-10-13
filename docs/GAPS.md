@@ -66,6 +66,10 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   imported sources do not provide connection edges or coordinates, so it is not
   yet an interactive graph. Quest prerequisites, mechanics, secrets and richer
   enemy/boss facts still need typed discovery relations.
+- A public discovery atlas searches canonical quest, enemy, boss, mechanic and
+  secret kinds. WFCD currently populates quests and enemies; prerequisites,
+  progress, richer boss classification, manual mechanics/secrets and typed links
+  to nodes or rewards remain.
 
 ## Deliberate compromises
 

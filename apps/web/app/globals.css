@@ -115,3 +115,4 @@ input,select,textarea { width:100%; max-width:36rem; padding:.8rem 1rem; border-
 .star-node { display:grid; gap:.3rem; padding:.9rem; background:#0d131e; border:1px solid var(--line); border-radius:10px; }
 .star-node:hover { border-color:var(--cyan); }
 .star-node span { color:var(--muted); font-size:.82rem; }
+.discovery-card .muted { display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden; }

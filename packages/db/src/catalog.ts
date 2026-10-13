@@ -6,6 +6,8 @@ export interface CatalogSummary {
   name: string;
   description?: string;
 }
+export const DISCOVERY_KINDS = ["quest", "mechanic", "secret", "enemy", "boss"] as const;
+export type DiscoveryKind = typeof DISCOVERY_KINDS[number];
 
 export interface CatalogItem extends CatalogSummary {
   components: Array<{ kind: string; slug: string; name: string; quantity: number }>;
@@ -66,6 +68,20 @@ export function searchCatalog(sqlite: Database.Database, query = "", limit = 100
     order by case when lower(name) = lower(?) then 0 else 1 end, name collate nocase, kind
     limit ?
   `).all(pattern, query.trim(), normalizedLimit) as CatalogSummary[];
+}
+
+export function searchDiscoveryCatalog(sqlite: Database.Database, input: { query?: string; kind?: DiscoveryKind; limit?: number } = {}): CatalogSummary[] {
+  if (input.kind && !(DISCOVERY_KINDS as readonly string[]).includes(input.kind)) throw new Error("Discovery kind is invalid");
+  const normalizedLimit = Math.max(1, Math.min(500, Math.trunc(input.limit ?? 200)));
+  const pattern = `%${escapeLike(input.query?.trim() ?? "")}%`;
+  const kindPlaceholders = DISCOVERY_KINDS.map(() => "?").join(", ");
+  return sqlite.prepare(`
+    select kind, slug, name, description from entities
+    where retired = 0 and kind in (${kindPlaceholders})
+      and (? is null or kind = ?) and name like ? escape '\\'
+    order by case kind when 'quest' then 0 when 'mechanic' then 1 when 'secret' then 2 when 'boss' then 3 else 4 end,
+      name collate nocase limit ?
+  `).all(...DISCOVERY_KINDS, input.kind ?? null, input.kind ?? null, pattern, normalizedLimit) as CatalogSummary[];
 }
 
 export function findCatalogItem(sqlite: Database.Database, kind: string, slug: string): CatalogItem | undefined {
