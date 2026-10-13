@@ -1,0 +1,15 @@
+schemaVersion: 1
+source:
+  id: example-video-ranking
+  title: Example weapon ranking
+  author: Example Creator
+  url: https://example.invalid/video
+  publishedAt: 2026-01-01
+  gameVersion: Example only
+  scope: Primary weapons, general play
+  licenseNote: Factual ranking transcribed with citation; no transcript copied.
+scale: [S, A, B, C, D]
+entries:
+  - externalId: /Lotus/Weapons/Example
+    rank: A
+    timestampSeconds: 120

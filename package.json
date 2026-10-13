@@ -1,0 +1,18 @@
+{
+  "name": "ordis-prime",
+  "private": true,
+  "packageManager": "pnpm@10.18.0",
+  "engines": { "node": ">=22.16" },
+  "scripts": {
+    "dev": "pnpm --filter @ordis-prime/web dev",
+    "build": "pnpm -r build",
+    "check": "pnpm -r check",
+    "test": "node --experimental-strip-types --test packages/*/test/*.test.ts",
+    "db:generate": "pnpm --filter @ordis-prime/db generate",
+    "db:migrate": "pnpm --filter @ordis-prime/db migrate"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.0",
+    "typescript": "^5.9.3"
+  }
+}
