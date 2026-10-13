@@ -37,13 +37,15 @@ export interface ProfileImportResult {
 
 export function createLocalUser(
   sqlite: Database.Database,
-  input: { username: string; role?: "admin" | "player"; id?: string },
+  input: { username: string; email?: string; role?: "admin" | "player"; id?: string },
 ): string {
   const username = input.username.trim();
   if (!username || username.length > 80) throw new Error("Username must contain between 1 and 80 characters");
   const id = input.id ?? randomUUID();
-  sqlite.prepare("insert into users (id, username, role, created_at) values (?, ?, ?, ?)")
-    .run(id, username, input.role ?? "player", Date.now());
+  const email = input.email?.trim().toLowerCase() ?? `${id}@local.invalid`;
+  const now = Date.now();
+  sqlite.prepare("insert into users (id, username, email, email_verified, role, created_at, updated_at) values (?, ?, ?, ?, ?, ?, ?)")
+    .run(id, username, email, 0, input.role ?? "player", now, now);
   return id;
 }
 

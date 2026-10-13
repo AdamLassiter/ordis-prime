@@ -15,6 +15,13 @@
       "when": 1791924937454,
       "tag": "0001_sloppy_firedrake",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1791925831231,
+      "tag": "0002_typical_master_mold",
+      "breakpoints": true
     }
   ]
 }

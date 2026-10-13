@@ -27,7 +27,49 @@ export const drops = sqliteTable("drops", { id: text().primaryKey(), rewardId: t
 export const conflicts = sqliteTable("ingestion_conflicts", { id: text().primaryKey(), sourceRunId: text("source_run_id").notNull().references(() => sourceRuns.id), recordKey: text("record_key").notNull(), reason: text().notNull(), candidatesJson: text("candidates_json").notNull(), resolvedAt: integer("resolved_at", { mode: "timestamp_ms" }) });
 export const rankingSets = sqliteTable("ranking_sets", { id: text().primaryKey(), sourceRunId: text("source_run_id").notNull().references(() => sourceRuns.id), setKey: text("set_key").notNull(), title: text().notNull(), author: text().notNull(), publishedAt: integer("published_at", { mode: "timestamp_ms" }).notNull(), gameVersion: text("game_version"), scope: text().notNull(), scaleJson: text("scale_json").notNull(), licenseNote: text("license_note").notNull() }, (table) => [uniqueIndex("ranking_set_run_key").on(table.sourceRunId, table.setKey)]);
 export const editorialRankings = sqliteTable("editorial_rankings", { id: text().primaryKey(), setId: text("set_id").notNull().references(() => rankingSets.id), entityId: text("entity_id").notNull().references(() => entities.id), tier: text().notNull(), position: integer(), timestampSeconds: integer("timestamp_seconds"), notes: text() }, (table) => [uniqueIndex("ranking_set_entity").on(table.setId, table.entityId), index("ranking_entity").on(table.entityId)]);
-export const users = sqliteTable("users", { id: text().primaryKey(), username: text().notNull().unique(), role: text({ enum: ["admin", "player"] }).notNull().default("player"), createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull() });
+export const users = sqliteTable("users", {
+  id: text().primaryKey(),
+  username: text().notNull(),
+  email: text().notNull(),
+  emailVerified: integer("email_verified", { mode: "boolean" }).notNull().default(false),
+  image: text(),
+  role: text({ enum: ["admin", "player"] }).notNull().default("player"),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
+}, (table) => [uniqueIndex("users_email_unique").on(table.email)]);
+export const sessions = sqliteTable("sessions", {
+  id: text().primaryKey(),
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  token: text().notNull(),
+  expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
+}, (table) => [uniqueIndex("sessions_token_unique").on(table.token), index("sessions_user_id").on(table.userId)]);
+export const accounts = sqliteTable("accounts", {
+  id: text().primaryKey(),
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  accountId: text("account_id").notNull(),
+  providerId: text("provider_id").notNull(),
+  accessToken: text("access_token"),
+  refreshToken: text("refresh_token"),
+  idToken: text("id_token"),
+  accessTokenExpiresAt: integer("access_token_expires_at", { mode: "timestamp_ms" }),
+  refreshTokenExpiresAt: integer("refresh_token_expires_at", { mode: "timestamp_ms" }),
+  scope: text(),
+  password: text(),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
+}, (table) => [index("accounts_user_id").on(table.userId), uniqueIndex("accounts_provider_account_unique").on(table.providerId, table.accountId)]);
+export const verifications = sqliteTable("verifications", {
+  id: text().primaryKey(),
+  identifier: text().notNull(),
+  value: text().notNull(),
+  expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
+}, (table) => [index("verifications_identifier").on(table.identifier)]);
 export const inventory = sqliteTable("player_inventory", { userId: text("user_id").notNull().references(() => users.id), entityId: text("entity_id").notNull().references(() => entities.id), ownedCount: integer("owned_count").notNull().default(0), builtCount: integer("built_count").notNull().default(0), wantedCount: integer("wanted_count").notNull().default(0), mastered: integer({ mode: "boolean" }), subsumed: integer({ mode: "boolean" }), note: text(), updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull() }, (table) => [primaryKey({ columns: [table.userId, table.entityId] })]);
 export const nodeProgress = sqliteTable("player_node_progress", { userId: text("user_id").notNull().references(() => users.id), nodeId: text("node_id").notNull().references(() => entities.id), state: text({ enum: ["unknown", "locked", "available", "completed"] }).notNull(), updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull() }, (table) => [primaryKey({ columns: [table.userId, table.nodeId] })]);
 export const jobs = sqliteTable("jobs", { id: text().primaryKey(), kind: text().notNull(), status: text({ enum: ["queued", "running", "succeeded", "failed"] }).notNull(), payloadJson: text("payload_json").notNull(), runAfter: integer("run_after", { mode: "timestamp_ms" }).notNull(), leaseOwner: text("lease_owner"), leaseUntil: integer("lease_until", { mode: "timestamp_ms" }), error: text() });

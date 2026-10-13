@@ -24,8 +24,10 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   drops, nodes, provenance, and editorial rankings. Docker deployments do not
   yet expose an administrative refresh trigger, so their first-run catalog is
   empty until ingestion is run against the mounted data directory.
-- Authentication tables are modeled, but local-account setup, sessions and
-  authorization are not yet wired into routes.
+- Local email/password accounts, persisted sessions, closed registration, and
+  first-administrator bootstrap enforcement are wired at the authentication
+  API. First-run and sign-in screens, account administration, password recovery,
+  and authorization checks on player-state mutations are not implemented yet.
 - Validated inventory persistence and portable profile import/export exist in
   the data layer. Authenticated editing routes, UI, and planner persistence are
   pending.
