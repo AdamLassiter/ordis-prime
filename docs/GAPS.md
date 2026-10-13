@@ -48,6 +48,9 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   inventory, expands active recipes, lists missing requirements, and links to
   candidate nodes with visible reasons. Planning does not yet account for node
   access, alternative recipes, markets, relic refinement, or mission duration.
+- Authenticated players can keep private static todos with optional notes and due
+  dates. Todos are not yet portable, linked to canonical entities, recurring, or
+  generated from dynamic watch rules.
 - The visual star chart, notifications, builds, editorial comparisons and
   discovery atlas are intentional later milestones.
 

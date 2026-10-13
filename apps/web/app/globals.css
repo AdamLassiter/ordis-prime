@@ -66,3 +66,14 @@ input,select,textarea { width:100%; max-width:36rem; padding:.8rem 1rem; border-
 .empty-state { margin-top:2rem; }
 .empty-state code { color:var(--gold); }
 @media (max-width:700px) { nav { gap:.75rem; overflow-x:auto; } nav strong { min-width:max-content; } }
+.todo-create { margin-top:2rem; }
+.todo-create:hover,.todo-card:hover { transform:none; border-color:var(--line); }
+.todo-list { display:grid; gap:.75rem; }
+.todo-card { display:flex; justify-content:space-between; align-items:center; gap:1.5rem; }
+.todo-card h3 { margin:0; }
+.todo-card.completed h3 { color:var(--muted); text-decoration:line-through; }
+.todo-notes { white-space:pre-wrap; margin-bottom:.35rem; }
+.todo-due { color:var(--gold); font-size:.85rem; margin:.35rem 0 0; }
+.todo-actions { display:flex; align-items:center; gap:1rem; flex-shrink:0; }
+.danger-text { color:#fca5a5; }
+@media (max-width:600px) { .todo-card { align-items:flex-start; flex-direction:column; } }
