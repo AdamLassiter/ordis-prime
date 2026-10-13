@@ -47,7 +47,8 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   summary, node reward ownership filtering, and portable profile import/export
   with transfer UI exist. Authenticated goals feed a planner that subtracts
   inventory, expands active recipes, lists missing requirements, and links to
-  candidate nodes with visible reasons. Planning does not yet account for node
+  candidate nodes with visible reasons. Profiles include inventory, goals and
+  discovery progress. Planning does not yet account for node
   access, alternative recipes, markets, relic refinement, or mission duration.
 - Authenticated players can keep private static todos with optional notes and due
   dates. Source-neutral world-state watches match current window fields and

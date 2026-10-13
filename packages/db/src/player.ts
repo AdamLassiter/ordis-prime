@@ -65,16 +65,18 @@ export interface PortableEntityReference {
 }
 
 export interface ProfileExport {
-  schemaVersion: 2;
+  schemaVersion: 3;
   exportedAt: string;
   inventory: Array<InventoryValues & { entity: PortableEntityReference }>;
   goals: Array<{ entity: PortableEntityReference; targetQuantity: number }>;
+  discoveryProgress: Array<{ entity: PortableEntityReference; state: "discovered" | "completed" }>;
 }
 
 export interface ProfileImportResult {
   inventoryImported: number;
   goalsImported: number;
-  unresolved: Array<{ section: "inventory" | "goals"; index: number; name: string; reason: "missing" | "ambiguous" }>;
+  discoveryProgressImported: number;
+  unresolved: Array<{ section: "inventory" | "goals" | "discoveryProgress"; index: number; name: string; reason: "missing" | "ambiguous" }>;
 }
 
 export function createLocalUser(
@@ -144,7 +146,7 @@ export function exportPlayerProfile(sqlite: Database.Database, userId: string): 
              source_id, namespace, value
   `);
   return {
-    schemaVersion: 2,
+    schemaVersion: 3,
     exportedAt: new Date().toISOString(),
     inventory: inventory.map(({ entityId, kind, slug, name, ...values }) => ({
       entity: { externalIds: identifiers.all(entityId) as PortableEntityReference["externalIds"], kind, slug, name },
@@ -157,6 +159,13 @@ export function exportPlayerProfile(sqlite: Database.Database, userId: string): 
     `).all(userId) as Array<{ entityId: string; kind: string; slug: string; name: string; targetQuantity: number }>).map(({ entityId, kind, slug, name, targetQuantity }) => ({
       entity: { externalIds: identifiers.all(entityId) as PortableEntityReference["externalIds"], kind, slug, name },
       targetQuantity,
+    })),
+    discoveryProgress: (sqlite.prepare(`
+      select progress.entity_id as entityId, entity.kind, entity.slug, entity.name, progress.state
+      from player_discovery_progress progress join entities entity on entity.id = progress.entity_id
+      where progress.user_id = ? order by entity.name collate nocase, entity.kind
+    `).all(userId) as Array<{ entityId: string; kind: string; slug: string; name: string; state: "discovered" | "completed" }>).map(({ entityId, kind, slug, name, state }) => ({
+      entity: { externalIds: identifiers.all(entityId) as PortableEntityReference["externalIds"], kind, slug, name }, state,
     })),
   };
 }
@@ -171,6 +180,7 @@ export function importPlayerProfile(
   const profile = parseProfile(value);
   const resolvedInventory: Array<{ entityId: string; values: InventoryValues }> = [];
   const resolvedGoals: Array<{ entityId: string; targetQuantity: number }> = [];
+  const resolvedDiscoveryProgress: Array<{ entityId: string; state: "discovered" | "completed" }> = [];
   const unresolved: ProfileImportResult["unresolved"] = [];
 
   for (const [index, entry] of profile.inventory.entries()) {
@@ -189,11 +199,20 @@ export function importPlayerProfile(
     }
     resolvedGoals.push({ entityId: resolution.entityId!, targetQuantity: goal.targetQuantity });
   }
+  for (const [index, progress] of profile.discoveryProgress.entries()) {
+    const resolution = resolvePortableEntity(sqlite, progress.entity);
+    if (resolution.reason) {
+      unresolved.push({ section: "discoveryProgress", index, name: progress.entity.name, reason: resolution.reason });
+      continue;
+    }
+    resolvedDiscoveryProgress.push({ entityId: resolution.entityId!, state: progress.state });
+  }
 
   sqlite.transaction(() => {
     if (options.mode === "replace") {
       sqlite.prepare("delete from player_inventory where user_id = ?").run(userId);
       sqlite.prepare("delete from player_goals where user_id = ?").run(userId);
+      sqlite.prepare("delete from player_discovery_progress where user_id = ?").run(userId);
     }
     for (const entry of resolvedInventory) setInventoryEntry(sqlite, userId, entry.entityId, entry.values);
     const writeGoal = sqlite.prepare(`
@@ -205,12 +224,17 @@ export function importPlayerProfile(
       const now = Date.now();
       writeGoal.run(userId, goal.entityId, goal.targetQuantity, now, now);
     }
+    const writeProgress = sqlite.prepare(`
+      insert into player_discovery_progress (user_id, entity_id, state, updated_at) values (?, ?, ?, ?)
+      on conflict(user_id, entity_id) do update set state = excluded.state, updated_at = excluded.updated_at
+    `);
+    for (const progress of resolvedDiscoveryProgress) writeProgress.run(userId, progress.entityId, progress.state, Date.now());
   })();
-  return { inventoryImported: resolvedInventory.length, goalsImported: resolvedGoals.length, unresolved };
+  return { inventoryImported: resolvedInventory.length, goalsImported: resolvedGoals.length, discoveryProgressImported: resolvedDiscoveryProgress.length, unresolved };
 }
 
 function parseProfile(value: unknown): ProfileExport {
-  if (!isRecord(value) || value.schemaVersion !== 2 || !Array.isArray(value.inventory) || !Array.isArray(value.goals)) throw new Error("Profile must use schemaVersion 2 and contain inventory and goals arrays");
+  if (!isRecord(value) || value.schemaVersion !== 3 || !Array.isArray(value.inventory) || !Array.isArray(value.goals) || !Array.isArray(value.discoveryProgress)) throw new Error("Profile must use schemaVersion 3 and contain inventory, goals, and discoveryProgress arrays");
   const inventory = value.inventory.map((entry, index) => {
     if (!isRecord(entry)) throw new Error(`Profile inventory entry ${index} is invalid`);
     const entity = parsePortableEntity(entry.entity, `inventory entry ${index}`);
@@ -221,7 +245,11 @@ function parseProfile(value: unknown): ProfileExport {
     if (!isRecord(entry) || !Number.isSafeInteger(entry.targetQuantity) || (entry.targetQuantity as number) <= 0) throw new Error(`Profile goal entry ${index} has an invalid targetQuantity`);
     return { entity: parsePortableEntity(entry.entity, `goal entry ${index}`), targetQuantity: entry.targetQuantity as number };
   });
-  return { schemaVersion: 2, exportedAt: typeof value.exportedAt === "string" ? value.exportedAt : "", inventory, goals };
+  const discoveryProgress = value.discoveryProgress.map((entry, index) => {
+    if (!isRecord(entry) || (entry.state !== "discovered" && entry.state !== "completed")) throw new Error(`Profile discovery progress entry ${index} has an invalid state`);
+    return { entity: parsePortableEntity(entry.entity, `discovery progress entry ${index}`), state: entry.state as "discovered" | "completed" };
+  });
+  return { schemaVersion: 3, exportedAt: typeof value.exportedAt === "string" ? value.exportedAt : "", inventory, goals, discoveryProgress };
 }
 
 function parsePortableEntity(value: unknown, label: string): PortableEntityReference {

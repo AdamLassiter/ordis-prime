@@ -5,7 +5,7 @@ import path from "node:path";
 import test from "node:test";
 import type Database from "better-sqlite3";
 import type { Observation } from "@ordis-prime/domain";
-import { createLocalUser, exportPlayerProfile, findPlayerInventoryEntry, importPlayerProfile, listPlayerGoals, listPlayerInventory, migrateDatabase, openSqliteDatabase, promoteSource, setInventoryEntry, setInventoryEntryByReference, setPlayerGoal } from "../src/index.ts";
+import { createLocalUser, exportPlayerProfile, findPlayerInventoryEntry, getDiscoveryProgress, importPlayerProfile, listPlayerGoals, listPlayerInventory, migrateDatabase, openSqliteDatabase, promoteSource, setDiscoveryProgress, setInventoryEntry, setInventoryEntryByReference, setPlayerGoal } from "../src/index.ts";
 
 test("profiles resolve stable source IDs across installations with different canonical UUIDs", async (context) => {
   const roots = await Promise.all(["a", "b"].map((name) => fs.mkdtemp(path.join(os.tmpdir(), `ordis-profile-${name}-`))));
@@ -22,11 +22,12 @@ test("profiles resolve stable source IDs across installations with different can
   });
   setInventoryEntry(first.sqlite, firstUser, first.entityId, { ownedCount: 2, builtCount: 1, wantedCount: 3, mastered: true, note: "Keep one unranked." });
   setPlayerGoal(first.sqlite, firstUser, { kind: "weapon", slug: "braton" }, 4);
+  setDiscoveryProgress(first.sqlite, firstUser, { kind: "quest", slug: "awakening" }, "completed");
   const profile = exportPlayerProfile(first.sqlite, firstUser);
   const secondUser = createLocalUser(second.sqlite, { username: "Importer" });
   const result = importPlayerProfile(second.sqlite, secondUser, profile);
 
-  assert.deepEqual(result, { inventoryImported: 1, goalsImported: 1, unresolved: [] });
+  assert.deepEqual(result, { inventoryImported: 1, goalsImported: 1, discoveryProgressImported: 1, unresolved: [] });
   assert.deepEqual(listPlayerInventory(second.sqlite, secondUser), [{
     entityId: second.entityId,
     kind: "weapon",
@@ -40,6 +41,7 @@ test("profiles resolve stable source IDs across installations with different can
     note: "Keep one unranked.",
   }]);
   assert.deepEqual(listPlayerGoals(second.sqlite, secondUser).map(({ name, targetQuantity }) => ({ name, targetQuantity })), [{ name: "Braton", targetQuantity: 4 }]);
+  assert.equal(getDiscoveryProgress(second.sqlite, secondUser, { kind: "quest", slug: "awakening" }), "completed");
 });
 
 test("inventory writes can resolve an active canonical entity without accepting its ID", async (context) => {
@@ -62,14 +64,15 @@ test("profile replacement is transactional and reports missing entities", async 
   const userId = createLocalUser(catalog.sqlite, { username: "Player" });
   setInventoryEntry(catalog.sqlite, userId, catalog.entityId, { ownedCount: 1, builtCount: 0, wantedCount: 0 });
   const missingProfile = {
-    schemaVersion: 2,
+    schemaVersion: 3,
     exportedAt: "2026-10-13T12:00:00.000Z",
     inventory: [{ entity: { externalIds: [{ sourceId: "items", namespace: "id", value: "missing" }], kind: "weapon", slug: "missing", name: "Missing" }, ownedCount: 1, builtCount: 0, wantedCount: 0 }],
     goals: [],
+    discoveryProgress: [],
   };
 
   const result = importPlayerProfile(catalog.sqlite, userId, missingProfile, { mode: "replace" });
-  assert.deepEqual(result, { inventoryImported: 0, goalsImported: 0, unresolved: [{ section: "inventory", index: 0, name: "Missing", reason: "missing" }] });
+  assert.deepEqual(result, { inventoryImported: 0, goalsImported: 0, discoveryProgressImported: 0, unresolved: [{ section: "inventory", index: 0, name: "Missing", reason: "missing" }] });
   assert.deepEqual(listPlayerInventory(catalog.sqlite, userId), []);
   assert.throws(() => importPlayerProfile(catalog.sqlite, userId, { ...missingProfile, inventory: [{ ...missingProfile.inventory[0], ownedCount: -1 }] }), /ownedCount/);
   assert.deepEqual(listPlayerInventory(catalog.sqlite, userId), []);
@@ -79,8 +82,11 @@ function createCatalog(databasePath: string): { sqlite: Database.Database; entit
   migrateDatabase(databasePath);
   const sqlite = openSqliteDatabase(databasePath);
   const evidence = { sourceId: "items", sourceRecordKey: "braton", snapshotVersion: "v1", retrievedAt: "2026-10-13T12:00:00.000Z" };
-  const observation: Observation = { type: "entity", kind: "weapon", externalIds: [{ sourceId: "items", namespace: "id", value: "braton" }], fields: { name: "Braton", slug: "braton" }, evidence };
-  promoteSource(sqlite, { source: { id: "items", name: "Items", homepage: "https://example.test", priority: 10 }, version: "v1", contentHash: "hash", retrievedAt: evidence.retrievedAt, observations: [observation] });
+  const observations: Observation[] = [
+    { type: "entity", kind: "weapon", externalIds: [{ sourceId: "items", namespace: "id", value: "braton" }], fields: { name: "Braton", slug: "braton" }, evidence },
+    { type: "entity", kind: "quest", externalIds: [{ sourceId: "items", namespace: "id", value: "awakening" }], fields: { name: "Awakening", slug: "awakening" }, evidence: { ...evidence, sourceRecordKey: "awakening" } },
+  ];
+  promoteSource(sqlite, { source: { id: "items", name: "Items", homepage: "https://example.test", priority: 10 }, version: "v1", contentHash: "hash", retrievedAt: evidence.retrievedAt, observations });
   const entityId = (sqlite.prepare("select id from entities where slug = 'braton'").get() as { id: string }).id;
   return { sqlite, entityId };
 }

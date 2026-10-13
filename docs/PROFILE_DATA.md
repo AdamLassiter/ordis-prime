@@ -5,7 +5,7 @@ canonical entity IDs inside one installation, while exported profiles use
 provider identifiers so they can be restored into another installation whose
 canonical UUIDs differ.
 
-## Version 2 export
+## Version 3 export
 
 Each inventory entry includes:
 
@@ -15,8 +15,11 @@ Each inventory entry includes:
 - optional mastered, subsumed, and note values.
 
 Goals use the same portable entity reference and include their desired final
-quantity. Inventory and goals are validated and resolved before either section
-is changed.
+quantity.
+
+Discovery progress uses the same reference and records either `discovered` or
+`completed`; unseen topics are represented by absence. All three sections are
+validated and resolved before the transactional write begins.
 
 Imports resolve external identifiers first and only fall back to the kind/slug
 pair when no identifier is present in the destination catalog. Ambiguous or
@@ -27,9 +30,10 @@ that writes resolved entries.
 The parser treats profile files as untrusted input and rejects invalid counts,
 flags, identifiers, and oversized notes before changing player state. Version 1
 may be replaced before stable release; there is no pre-release compatibility
-promise. Version 1 was replaced rather than migrated because it omitted goals.
+promise. Earlier schemas were replaced rather than migrated as portable state
+expanded; there is no pre-release backwards-compatibility requirement.
 
 Signed-in players can export from the inventory screen or import in merge or
 replace mode. The HTTP import boundary limits files to 5 MB. Replace mode clears
-the current inventory and writes all resolvable entries in one transaction;
-unresolved entries are reported and are not guessed.
+current inventory, goals, and discovery progress and writes all resolvable
+entries in one transaction; unresolved entries are reported and are not guessed.
