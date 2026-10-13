@@ -37,6 +37,9 @@ export interface SourceStatus {
   retrievedAt?: number;
   contentHash?: string;
   conflictCount: number;
+  latestRefreshStatus?: "running" | "succeeded" | "failed";
+  latestRefreshStartedAt?: number;
+  latestRefreshFinishedAt?: number;
 }
 
 export function searchCatalog(sqlite: Database.Database, query = "", limit = 100): CatalogSummary[] {
@@ -135,12 +138,18 @@ export function listSourceStatuses(sqlite: Database.Database): SourceStatus[] {
   return sqlite.prepare(`
     select source.id, source.name, source.homepage, source.license,
            run.version, run.retrieved_at as retrievedAt, run.content_hash as contentHash,
-           count(conflict.id) as conflictCount
+           count(conflict.id) as conflictCount, refresh.status as latestRefreshStatus,
+           refresh.started_at as latestRefreshStartedAt, refresh.finished_at as latestRefreshFinishedAt
     from sources source
     left join source_runs run on run.source_id = source.id and run.status = 'active'
     left join ingestion_conflicts conflict on conflict.source_run_id = run.id and conflict.resolved_at is null
+    left join source_refreshes refresh on refresh.id = (
+      select candidate.id from source_refreshes candidate
+      where candidate.source_id = source.id
+      order by candidate.started_at desc, candidate.rowid desc limit 1
+    )
     where source.enabled = 1
-    group by source.id, run.id
+    group by source.id, run.id, refresh.id
     order by source.priority desc, source.name collate nocase
   `).all() as SourceStatus[];
 }

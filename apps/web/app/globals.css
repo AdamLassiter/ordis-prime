@@ -45,3 +45,6 @@ input,select,textarea { width:100%; max-width:36rem; padding:.8rem 1rem; border-
 .requirement-list li { display:flex; justify-content:space-between; gap:1rem; padding:.75rem 0; border-bottom:1px solid var(--line); }
 .planner-section h3 { font-size:1.25rem; }
 .planner-section li { line-height:1.5; }
+.operations { display:grid; gap:1rem; }
+.tag.danger { color:#fca5a5; border-color:#7f1d1d; }
+.error-block { color:#fca5a5; white-space:pre-wrap; overflow-wrap:anywhere; background:#0b111b; padding:1rem; border-radius:8px; }

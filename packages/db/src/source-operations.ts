@@ -2,6 +2,28 @@ import { randomUUID } from "node:crypto";
 import type Database from "better-sqlite3";
 import type { PromotionSource } from "./promotion.ts";
 
+export interface SourceRefreshRecord {
+  id: string;
+  status: "running" | "succeeded" | "failed";
+  startedAt: number;
+  finishedAt?: number;
+  sourceRunId?: string;
+  version?: string;
+  snapshotPath?: string;
+  error?: string;
+}
+
+export interface SourceConflictRecord {
+  id: string;
+  sourceRunId: string;
+  version: string;
+  snapshotPath?: string;
+  recordKey: string;
+  reason: string;
+  candidateIds: string[];
+  resolvedAt?: number;
+}
+
 export function beginSourceRefresh(sqlite: Database.Database, source: PromotionSource): string {
   const id = randomUUID();
   sqlite.transaction(() => {
@@ -32,4 +54,50 @@ export function failSourceRefresh(sqlite: Database.Database, refreshId: string, 
     where id = ? and status = 'running'
   `).run(snapshotPath ?? null, Date.now(), message.slice(0, 4_000), refreshId);
   if (result.changes !== 1) throw new Error(`Refresh ${refreshId} is not running`);
+}
+
+export function listSourceRefreshes(sqlite: Database.Database, sourceId: string, limit = 20): SourceRefreshRecord[] {
+  const normalizedLimit = Math.max(1, Math.min(100, Math.trunc(limit)));
+  const rows = sqlite.prepare(`
+    select refresh.id, refresh.status, refresh.started_at as startedAt, refresh.finished_at as finishedAt,
+           refresh.source_run_id as sourceRunId, run.version, refresh.snapshot_path as snapshotPath, refresh.error
+    from source_refreshes refresh
+    left join source_runs run on run.id = refresh.source_run_id
+    where refresh.source_id = ?
+    order by refresh.started_at desc, refresh.rowid desc limit ?
+  `).all(sourceId, normalizedLimit) as Array<Omit<SourceRefreshRecord, "finishedAt" | "sourceRunId" | "version" | "snapshotPath" | "error"> & { finishedAt: number | null; sourceRunId: string | null; version: string | null; snapshotPath: string | null; error: string | null }>;
+  return rows.map((row) => ({
+    id: row.id, status: row.status, startedAt: row.startedAt,
+    finishedAt: row.finishedAt ?? undefined, sourceRunId: row.sourceRunId ?? undefined,
+    version: row.version ?? undefined, snapshotPath: row.snapshotPath ?? undefined, error: row.error ?? undefined,
+  }));
+}
+
+export function listSourceConflicts(sqlite: Database.Database, sourceId: string, limit = 100): SourceConflictRecord[] {
+  const normalizedLimit = Math.max(1, Math.min(500, Math.trunc(limit)));
+  const rows = sqlite.prepare(`
+    select conflict.id, conflict.source_run_id as sourceRunId, run.version, run.snapshot_path as snapshotPath,
+           conflict.record_key as recordKey, conflict.reason, conflict.candidates_json as candidatesJson,
+           conflict.resolved_at as resolvedAt
+    from ingestion_conflicts conflict
+    join source_runs run on run.id = conflict.source_run_id
+    where run.source_id = ?
+    order by case when conflict.resolved_at is null then 0 else 1 end, run.retrieved_at desc, conflict.rowid desc
+    limit ?
+  `).all(sourceId, normalizedLimit) as Array<Omit<SourceConflictRecord, "candidateIds" | "snapshotPath" | "resolvedAt"> & { candidatesJson: string; snapshotPath: string | null; resolvedAt: number | null }>;
+  return rows.map(({ candidatesJson, snapshotPath, resolvedAt, ...row }) => ({
+    ...row,
+    candidateIds: parseCandidateIds(candidatesJson),
+    snapshotPath: snapshotPath ?? undefined,
+    resolvedAt: resolvedAt ?? undefined,
+  }));
+}
+
+function parseCandidateIds(value: string): string[] {
+  try {
+    const parsed: unknown = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === "string") : [];
+  } catch {
+    return [];
+  }
 }

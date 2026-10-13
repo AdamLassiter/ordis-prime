@@ -19,8 +19,10 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   canonical SQLite records with provenance and reviewable conflicts through a
   provider-neutral refresh command. Validated, cited manual ranking YAML uses
   this same path. Refresh attempts and failures are persisted without replacing
-  active data. Manual fact corrections, scheduled refresh jobs, administrative
-  failure/conflict drill-down, and live world state remain to be implemented.
+  active data. Administrators can inspect recent attempts, bounded failure
+  messages, retained snapshot paths, and record-level resolver conflicts. Manual
+  fact corrections, scheduled refresh jobs, conflict resolution actions, and
+  live world state remain to be implemented.
 - The web explorer reads the canonical SQLite catalog and links active recipes,
   drops, nodes, provenance, and editorial rankings. Docker deployments do not
   yet expose an administrative refresh trigger, so their first-run catalog is
