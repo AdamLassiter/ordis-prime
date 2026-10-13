@@ -34,6 +34,8 @@ export interface PromotionResult {
   entitiesMatched: number;
   recipesCreated: number;
   dropsCreated: number;
+  rankingSetsCreated: number;
+  rankingsCreated: number;
   conflictsCreated: number;
 }
 
@@ -79,12 +81,44 @@ function promoteInTransaction(sqlite: Database.Database, input: PromoteSourceInp
   `).run(sourceRunId, input.source.id, input.version, input.contentHash, retrievedAt.getTime());
 
   const state = loadResolutionState(sqlite);
-  const counts = { entitiesCreated: 0, entitiesMatched: 0, recipesCreated: 0, dropsCreated: 0, conflictsCreated: 0 };
+  const counts = { entitiesCreated: 0, entitiesMatched: 0, recipesCreated: 0, dropsCreated: 0, rankingSetsCreated: 0, rankingsCreated: 0, conflictsCreated: 0 };
 
   for (const observation of input.observations) {
     if (observation.type !== "entity") continue;
     const entityId = resolveAndWriteEntity(sqlite, state, observation, input.source.priority, sourceRunId, counts);
     if (entityId) indexObservation(state, entityId, observation);
+  }
+
+  const rankingSets = new Map<string, { id: string; scale: Set<string> }>();
+  for (const observation of input.observations) {
+    if (observation.type !== "ranking-set") continue;
+    const id = randomUUID();
+    sqlite.prepare(`
+      insert into ranking_sets (id, source_run_id, set_key, title, author, published_at, game_version, scope, scale_json, license_note)
+      values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(id, sourceRunId, observation.key, observation.title, observation.author, new Date(observation.publishedAt).getTime(), observation.gameVersion ?? null, observation.scope, JSON.stringify(observation.scale), observation.licenseNote);
+    rankingSets.set(observation.key, { id, scale: new Set(observation.scale) });
+    counts.rankingSetsCreated += 1;
+  }
+
+  for (const observation of input.observations) {
+    if (observation.type !== "ranking") continue;
+    const set = rankingSets.get(observation.setKey);
+    const entityId = state.externalIds.get(externalKey(observation.subjectExternalId));
+    if (!set || !entityId || !set.scale.has(observation.tier)) {
+      const reason = !set
+        ? "Ranking refers to an unresolved ranking set"
+        : !entityId
+          ? "Ranking refers to an unresolved entity"
+          : `Ranking tier ${observation.tier} is outside its declared scale`;
+      writeConflict(sqlite, sourceRunId, observation.evidence.sourceRecordKey, reason, [], counts);
+      continue;
+    }
+    sqlite.prepare(`
+      insert into editorial_rankings (id, set_id, entity_id, tier, position, timestamp_seconds, notes)
+      values (?, ?, ?, ?, ?, ?, ?)
+    `).run(randomUUID(), set.id, entityId, observation.tier, observation.position ?? null, observation.timestampSeconds ?? null, observation.notes ?? null);
+    counts.rankingsCreated += 1;
   }
 
   for (const observation of input.observations) {
@@ -296,6 +330,17 @@ function validateInput(input: PromoteSourceInput): void {
     if (observation.type === "recipe") {
       if (!Number.isInteger(observation.outputQuantity ?? 1) || (observation.outputQuantity ?? 1) < 1) throw new Error("Recipe output quantity must be a positive integer");
       if (observation.ingredients.some((ingredient) => !Number.isInteger(ingredient.quantity) || ingredient.quantity < 1)) throw new Error("Recipe ingredient quantities must be positive integers");
+    }
+    if (observation.type === "ranking-set") {
+      if (!observation.key || !observation.title || !observation.author || !observation.scope || !observation.licenseNote || !observation.scale.length || new Set(observation.scale).size !== observation.scale.length) {
+        throw new Error("Ranking set metadata or scale is invalid");
+      }
+      if (Number.isNaN(new Date(observation.publishedAt).getTime())) throw new Error("Ranking set publishedAt is invalid");
+    }
+    if (observation.type === "ranking") {
+      if (!observation.setKey || !observation.tier) throw new Error("Ranking is incomplete");
+      if (observation.position !== undefined && (!Number.isInteger(observation.position) || observation.position < 1)) throw new Error("Ranking position must be a positive integer");
+      if (observation.timestampSeconds !== undefined && (!Number.isInteger(observation.timestampSeconds) || observation.timestampSeconds < 0)) throw new Error("Ranking timestamp must be a non-negative integer");
     }
   }
 }

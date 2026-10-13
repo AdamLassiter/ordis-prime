@@ -10,6 +10,6 @@ source:
   licenseNote: Factual ranking transcribed with citation; no transcript copied.
 scale: [S, A, B, C, D]
 entries:
-  - externalId: /Lotus/Weapons/Example
+  - externalId: /Lotus/Weapons/Tenno/Rifle/Rifle
     rank: A
     timestampSeconds: 120

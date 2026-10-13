@@ -33,6 +33,7 @@ pnpm check
 pnpm build
 pnpm db:migrate
 pnpm data:refresh wfcd-items wfcd-drops
+pnpm data:refresh manual:data/manual/editorial.example.yaml
 pnpm dev
 ```
 

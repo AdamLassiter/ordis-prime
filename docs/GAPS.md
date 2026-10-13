@@ -16,8 +16,9 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   components, nodes, and drops. Fetched payloads can be retained in an
   immutable, hash-verified snapshot store and observations can be resolved into
   canonical SQLite records with provenance and reviewable conflicts through a
-  provider-neutral refresh command. Manual YAML, scheduled refresh jobs,
-  persisted failure reporting, and live world state remain to be implemented.
+  provider-neutral refresh command. Validated, cited manual ranking YAML uses
+  this same path. Manual fact corrections, scheduled refresh jobs, persisted
+  failure reporting, and live world state remain to be implemented.
 - The web explorer currently uses a small development catalog through the same
   query interface the SQLite repository will implement. It is not production
   data, and the health endpoint does not yet probe SQLite.

@@ -59,7 +59,31 @@ export interface RecipeObservation {
   evidence: Evidence;
 }
 
-export type Observation = EntityObservation | DropObservation | RecipeObservation;
+export interface RankingSetObservation {
+  type: "ranking-set";
+  key: string;
+  title: string;
+  author: string;
+  publishedAt: string;
+  gameVersion?: string;
+  scope: string;
+  scale: string[];
+  licenseNote: string;
+  evidence: Evidence;
+}
+
+export interface RankingObservation {
+  type: "ranking";
+  setKey: string;
+  subjectExternalId: ExternalIdentifier;
+  tier: string;
+  position?: number;
+  timestampSeconds?: number;
+  notes?: string;
+  evidence: Evidence;
+}
+
+export type Observation = EntityObservation | DropObservation | RecipeObservation | RankingSetObservation | RankingObservation;
 
 export interface InventoryEntry {
   entityId: EntityId;
