@@ -9,8 +9,10 @@ from.
 
 - typed canonical entity, acquisition and provenance contracts
 - composable source-adapter and conflict-resolution pipeline
-- SQLite/Drizzle schema for catalog, sources, accounts and player progress
-- public linked item/node explorer and authenticated planner shell
+- SQLite/Drizzle persistence for catalog, sources, accounts and player progress
+- local account bootstrap and database-backed sessions
+- public linked item/node explorer with authenticated inventory overlays
+- portable profile export and merge/replace import
 - single-container Docker Compose deployment
 - deterministic domain and adapter tests
 - generated initial SQLite migration
@@ -38,7 +40,9 @@ pnpm dev
 ```
 
 Copy `.env.example` to `.env`. Production uses `docker compose up --build` and
-stores all durable state in the `ordis-prime-data` volume.
+stores all durable state in the `ordis-prime-data` volume. On a new database,
+open `/setup` and use `ORDIS_SETUP_TOKEN` to create the only bootstrap
+administrator. Registration remains closed unless explicitly enabled.
 
 `data:refresh` runs the same provider-neutral pipeline for each named adapter:
 fetch, immutable snapshot storage, parsing, validation, and transactional
@@ -47,7 +51,8 @@ promotion. Omit names to refresh every registered adapter.
 ## Data safety
 
 The intended refresh model stages and promotes source data in one transaction,
-so a failed refresh cannot replace the active release. This promotion path is
-not implemented yet. User inventory is modeled against stable canonical IDs so
-an upstream rename or retirement will not erase progress once persistence is
-wired into the application.
+so a failed refresh cannot replace the active source run. User inventory is
+stored separately against stable canonical IDs, and portable exports prefer
+provider identifiers so a profile can resolve against a different installation.
+Catalog-wide candidate releases and pruning of superseded relation rows remain
+documented gaps.
