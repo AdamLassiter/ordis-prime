@@ -28,3 +28,16 @@ test("rejects cyclic recipes instead of recursing forever", () => {
      { outputId: id("b"), outputQuantity: 1, ingredients: [{ entityId: id("a"), quantity: 1 }] }],
   ), /Recipe cycle/);
 });
+
+test("consumes shared inventory only once across multiple goals", () => {
+  const recipes: Recipe[] = [
+    { outputId: id("item:a"), outputQuantity: 1, ingredients: [{ entityId: id("resource:shared"), quantity: 2 }] },
+    { outputId: id("item:b"), outputQuantity: 1, ingredients: [{ entityId: id("resource:shared"), quantity: 2 }] },
+  ];
+  const missing = expandMissingRequirements(
+    [{ entityId: id("item:a"), quantity: 1 }, { entityId: id("item:b"), quantity: 1 }],
+    [{ entityId: id("resource:shared"), ownedCount: 3, builtCount: 0, wantedCount: 0 }],
+    recipes,
+  );
+  assert.deepEqual(missing.map(({ entityId, quantity }) => ({ entityId, quantity })), [{ entityId: "resource:shared", quantity: 1 }]);
+});

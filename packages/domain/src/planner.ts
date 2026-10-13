@@ -13,12 +13,15 @@ export function expandMissingRequirements(
   inventory: readonly InventoryEntry[],
   recipes: readonly Recipe[],
 ): MissingRequirement[] {
-  const owned = new Map(inventory.map((entry) => [entry.entityId, entry.ownedCount + entry.builtCount]));
+  const remainingOwned = new Map(inventory.map((entry) => [entry.entityId, entry.ownedCount + entry.builtCount]));
   const recipeByOutput = new Map(recipes.map((recipe) => [recipe.outputId, recipe]));
   const missing = new Map<EntityId, MissingRequirement>();
 
   function visit(entityId: EntityId, quantity: number, via: EntityId[]): void {
-    const remaining = Math.max(0, quantity - (owned.get(entityId) ?? 0));
+    const available = remainingOwned.get(entityId) ?? 0;
+    const consumed = Math.min(quantity, available);
+    remainingOwned.set(entityId, available - consumed);
+    const remaining = quantity - consumed;
     if (!remaining) return;
     if (via.includes(entityId)) throw new Error(`Recipe cycle detected at ${entityId}`);
     const recipe = recipeByOutput.get(entityId);

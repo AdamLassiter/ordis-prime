@@ -71,5 +71,12 @@ export const verifications = sqliteTable("verifications", {
   updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
 }, (table) => [index("verifications_identifier").on(table.identifier)]);
 export const inventory = sqliteTable("player_inventory", { userId: text("user_id").notNull().references(() => users.id), entityId: text("entity_id").notNull().references(() => entities.id), ownedCount: integer("owned_count").notNull().default(0), builtCount: integer("built_count").notNull().default(0), wantedCount: integer("wanted_count").notNull().default(0), mastered: integer({ mode: "boolean" }), subsumed: integer({ mode: "boolean" }), note: text(), updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull() }, (table) => [primaryKey({ columns: [table.userId, table.entityId] })]);
+export const goals = sqliteTable("player_goals", {
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  entityId: text("entity_id").notNull().references(() => entities.id),
+  targetQuantity: integer("target_quantity").notNull(),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
+}, (table) => [primaryKey({ columns: [table.userId, table.entityId] }), index("player_goals_entity").on(table.entityId)]);
 export const nodeProgress = sqliteTable("player_node_progress", { userId: text("user_id").notNull().references(() => users.id), nodeId: text("node_id").notNull().references(() => entities.id), state: text({ enum: ["unknown", "locked", "available", "completed"] }).notNull(), updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull() }, (table) => [primaryKey({ columns: [table.userId, table.nodeId] })]);
 export const jobs = sqliteTable("jobs", { id: text().primaryKey(), kind: text().notNull(), status: text({ enum: ["queued", "running", "succeeded", "failed"] }).notNull(), payloadJson: text("payload_json").notNull(), runAfter: integer("run_after", { mode: "timestamp_ms" }).notNull(), leaseOwner: text("lease_owner"), leaseUntil: integer("lease_until", { mode: "timestamp_ms" }), error: text() });
