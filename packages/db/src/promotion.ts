@@ -35,6 +35,7 @@ export interface PromotionResult {
   entitiesMatched: number;
   recipesCreated: number;
   dropsCreated: number;
+  nodeDetailsCreated: number;
   rankingSetsCreated: number;
   rankingsCreated: number;
   conflictsCreated: number;
@@ -59,7 +60,11 @@ function promoteInTransaction(sqlite: Database.Database, input: PromoteSourceInp
     if (existing.contentHash !== input.contentHash) {
       throw new Error(`Source ${input.source.id} reused version ${input.version} with different content`);
     }
-    throw new Error(`Source version ${input.source.id}@${input.version} has already been imported`);
+    if (existing.status === "active") {
+      const release = sqlite.prepare("select id from catalog_releases where active = 1 order by promoted_at desc limit 1").get() as { id: string } | undefined;
+      return { sourceRunId: existing.id, releaseId: release?.id ?? "unchanged", entitiesCreated: 0, entitiesMatched: 0, recipesCreated: 0, dropsCreated: 0, nodeDetailsCreated: 0, rankingSetsCreated: 0, rankingsCreated: 0, conflictsCreated: 0 };
+    }
+    throw new Error(`Source version ${input.source.id}@${input.version} has already been imported and is not active`);
   }
 
   sqlite.prepare(`
@@ -82,7 +87,7 @@ function promoteInTransaction(sqlite: Database.Database, input: PromoteSourceInp
   `).run(sourceRunId, input.source.id, input.version, input.contentHash, retrievedAt.getTime(), input.snapshotPath ?? null);
 
   const state = loadResolutionState(sqlite);
-  const counts = { entitiesCreated: 0, entitiesMatched: 0, recipesCreated: 0, dropsCreated: 0, rankingSetsCreated: 0, rankingsCreated: 0, conflictsCreated: 0 };
+  const counts = { entitiesCreated: 0, entitiesMatched: 0, recipesCreated: 0, dropsCreated: 0, nodeDetailsCreated: 0, rankingSetsCreated: 0, rankingsCreated: 0, conflictsCreated: 0 };
 
   for (const observation of input.observations) {
     if (observation.type !== "entity") continue;
@@ -123,6 +128,23 @@ function promoteInTransaction(sqlite: Database.Database, input: PromoteSourceInp
   }
 
   for (const observation of input.observations) {
+    if (observation.type === "node-detail") {
+      const nodeId = state.externalIds.get(externalKey(observation.nodeExternalId));
+      if (!nodeId) {
+        writeConflict(sqlite, sourceRunId, observation.evidence.sourceRecordKey, "Node detail refers to an unresolved entity", [], counts);
+        continue;
+      }
+      sqlite.prepare(`
+        insert into node_details
+          (id, entity_id, planet, mission_type, faction, minimum_enemy_level, maximum_enemy_level,
+           mastery_requirement, node_type, source_run_id, source_record_key, citation_url, source_path)
+        values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(randomUUID(), nodeId, observation.planet, observation.missionType ?? null, observation.faction ?? null,
+        observation.minimumEnemyLevel ?? null, observation.maximumEnemyLevel ?? null,
+        observation.masteryRequirement ?? null, observation.nodeType ?? null, sourceRunId,
+        observation.evidence.sourceRecordKey, observation.evidence.citationUrl ?? null, observation.evidence.path ?? null);
+      counts.nodeDetailsCreated += 1;
+    }
     if (observation.type === "drop") {
       const rewardId = state.externalIds.get(externalKey(observation.rewardExternalId));
       const nodeId = observation.nodeExternalId
@@ -342,6 +364,13 @@ function validateInput(input: PromoteSourceInput): void {
       if (!observation.setKey || !observation.tier) throw new Error("Ranking is incomplete");
       if (observation.position !== undefined && (!Number.isInteger(observation.position) || observation.position < 1)) throw new Error("Ranking position must be a positive integer");
       if (observation.timestampSeconds !== undefined && (!Number.isInteger(observation.timestampSeconds) || observation.timestampSeconds < 0)) throw new Error("Ranking timestamp must be a non-negative integer");
+    }
+    if (observation.type === "node-detail") {
+      if (!observation.planet) throw new Error("Node detail planet is required");
+      for (const [label, value] of [["minimum enemy level", observation.minimumEnemyLevel], ["maximum enemy level", observation.maximumEnemyLevel], ["mastery requirement", observation.masteryRequirement], ["node type", observation.nodeType]] as const) {
+        if (value !== undefined && (!Number.isInteger(value) || value < 0)) throw new Error(`Node detail ${label} must be a non-negative integer`);
+      }
+      if (observation.minimumEnemyLevel !== undefined && observation.maximumEnemyLevel !== undefined && observation.maximumEnemyLevel < observation.minimumEnemyLevel) throw new Error("Node detail level range is inverted");
     }
   }
 }

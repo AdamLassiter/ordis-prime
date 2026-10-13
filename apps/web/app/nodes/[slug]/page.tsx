@@ -15,6 +15,13 @@ export default async function NodePage({ params, searchParams }: { params: Promi
     <p className="eyebrow">Star chart node</p>
     <h1>{node.name}</h1>
     {node.description && <p className="lede">{node.description}</p>}
+    <dl className="facts">
+      <dt>Planet</dt><dd>{node.planet ?? "Unknown"}</dd>
+      <dt>Mission</dt><dd>{node.missionType ?? "Not recorded"}</dd>
+      <dt>Faction</dt><dd>{node.faction ?? "Not recorded"}</dd>
+      <dt>Enemy level</dt><dd>{node.minimumEnemyLevel === undefined ? "Not recorded" : `${node.minimumEnemyLevel}–${node.maximumEnemyLevel ?? node.minimumEnemyLevel}`}</dd>
+      <dt>Mastery requirement</dt><dd>{node.masteryRequirement ?? "Not recorded"}</dd>
+    </dl>
     <p>Rewards documented for this node, joined to your private inventory when signed in.</p>
     {session ? <div className="filters"><Link className={!neededOnly ? "tag active" : "tag"} href={`/nodes/${slug}`}>All rewards</Link><Link className={neededOnly ? "tag active" : "tag"} href={`/nodes/${slug}?needed=1`}>Needed only</Link></div> : <p className="notice"><Link href="/sign-in">Sign in</Link> to show rewards you do not own or still want.</p>}
     {drops.length

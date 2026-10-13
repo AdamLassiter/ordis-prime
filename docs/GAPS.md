@@ -61,7 +61,11 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
 - Active cited editorial ranking sets have a public source-and-item comparison
   matrix that preserves unlike scales and disagreement. Source subset controls
   and transparent derived summaries are not implemented.
-- The visual star chart and discovery atlas are intentional later milestones.
+- WFCD item and drop observations compose planet, mission and level metadata in
+  a public planet-grouped star-chart explorer with a player-needed overlay. The
+  imported sources do not provide connection edges or coordinates, so it is not
+  yet an interactive graph. Quest prerequisites, mechanics, secrets and richer
+  enemy/boss facts still need typed discovery relations.
 
 ## Deliberate compromises
 

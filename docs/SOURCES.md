@@ -2,8 +2,8 @@
 
 | Source | Initial use | Policy |
 | --- | --- | --- |
-| WFCD warframe-items | identities, items, components, nodes, quests | Fetch the maintained aggregate API endpoint; snapshot, validate, retain version/hash and MIT attribution |
-| WFCD warframe-drop-data | mission, enemy, relic and rotation drops | Snapshot `info.json` with payload and retain upstream attribution |
+| WFCD warframe-items | identities, items, components, node levels/planets, quests | Fetch the maintained aggregate API endpoint; snapshot, validate, retain version/hash and MIT attribution |
+| WFCD warframe-drop-data | mission metadata, enemy, relic and rotation drops | Snapshot mission rewards with payload and retain upstream attribution |
 | WFCD WarframeStat.us | live cycles, events, alerts, fissures and traders | Snapshot the PC English aggregate response; normalize absolute availability windows and retain MIT attribution |
 | Manual YAML | published editorial rankings; corrections later | Require citation, author, date, scope and licence note; retain each source as an independent set |
 | Warframe Wiki | external detail links only in v1 | No automated fetching; future facts remain segregated and attributable |
@@ -21,3 +21,7 @@ Entity fields, recipes, drops, ranking sets, and individual editorial rankings
 retain the source record key plus optional citation URL and source path. The
 catalog can therefore explain a typed relation at record level instead of
 offering only a provider-level attribution.
+
+Adapter parser versions form part of static snapshot versions. Re-fetching an
+already-active identical version is a successful no-op; a parser change uses a
+new version suffix so retained upstream bytes can be interpreted into a new run.

@@ -31,6 +31,19 @@ test("WFCD component references retain trustworthy item kinds and qualified part
   ]);
 });
 
+test("WFCD node records retain planet and level metadata", async () => {
+  const nodeSnapshot = {
+    ...snapshot,
+    bytes: new TextEncoder().encode(JSON.stringify([{ uniqueName: "SolNode22", name: "Tessera", category: "Node", systemName: "Venus", minEnemyLevel: 3, maxEnemyLevel: 5, masteryReq: 0, nodeType: 0 }])),
+  };
+  const observations = await collect(new WfcdItemsAdapter(), nodeSnapshot);
+  assert.deepEqual(observations.find((entry) => entry.type === "node-detail"), {
+    type: "node-detail", nodeExternalId: { sourceId: "wfcd-items", namespace: "uniqueName", value: "SolNode22" },
+    planet: "Venus", minimumEnemyLevel: 3, maximumEnemyLevel: 5, masteryRequirement: 0, nodeType: 0,
+    evidence: { sourceId: "wfcd-items", sourceRecordKey: "SolNode22", snapshotVersion: "fixture-1", retrievedAt: "2026-01-01T00:00:00Z", citationUrl: undefined, license: "MIT", path: "[0]" },
+  });
+});
+
 test("empty snapshots fail closed", async () => {
   await assert.rejects(() => collect(new WfcdItemsAdapter(), { ...snapshot, bytes: new TextEncoder().encode("[]") }), /produced no observations/);
 });
@@ -45,7 +58,7 @@ test("WFCD adapter defaults to the maintained aggregate endpoint", async () => {
   try {
     const fetched = await new WfcdItemsAdapter().fetch({});
     assert.equal(requestedUrl, DEFAULT_WFCD_ITEMS_URL);
-    assert.equal(fetched.version, "fixture-etag");
+    assert.equal(fetched.version, "fixture-etag|wfcd-items-v2");
   } finally {
     globalThis.fetch = originalFetch;
   }
@@ -61,10 +74,12 @@ test("drop adapter joins node and reward through stable provider IDs", async () 
   assert.equal(observations.filter((entry) => entry.type === "entity").length, 2);
   const drop = observations.find((entry) => entry.type === "drop");
   const reward = observations.find((entry) => entry.type === "entity" && entry.kind === "unknown");
+  const nodeDetail = observations.find((entry) => entry.type === "node-detail");
   assert.equal(reward?.type, "entity");
   if (reward?.type === "entity") assert.equal(reward.fields.name, "Lith A1 Relic");
   assert.equal(drop?.chance, 0.1429);
   assert.equal(drop?.locationLabel, "Tessera, Venus");
+  assert.equal(nodeDetail?.type === "node-detail" && nodeDetail.missionType, "Defense");
 });
 
 test("drop adapter supports missions without named rotations", async () => {

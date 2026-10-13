@@ -4,7 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import type { Observation } from "@ordis-prime/domain";
-import { createLocalUser, findCatalogItem, findCatalogNode, listSourceStatuses, migrateDatabase, openSqliteDatabase, promoteSource, searchCatalog, setInventoryEntryByReference } from "../src/index.ts";
+import { createLocalUser, findCatalogItem, findCatalogNode, listSourceStatuses, listStarChartNodes, migrateDatabase, openSqliteDatabase, promoteSource, searchCatalog, setInventoryEntryByReference } from "../src/index.ts";
 
 test("catalog read models join active recipes, drops, provenance, and rankings", async (context) => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-catalog-"));
@@ -19,6 +19,7 @@ test("catalog read models join active recipes, drops, provenance, and rankings",
     { type: "entity", kind: "weapon", externalIds: [external("braton")], fields: { name: "Braton", slug: "braton", description: "A balanced rifle." }, evidence },
     { type: "entity", kind: "resource", externalIds: [external("alloy")], fields: { name: "Alloy Plate", slug: "alloy-plate" }, evidence: { ...evidence, sourceRecordKey: "alloy" } },
     { type: "entity", kind: "node", externalIds: [external("caloris")], fields: { name: "Caloris", slug: "mercury-caloris", description: "Rescue on Mercury" }, evidence: { ...evidence, sourceRecordKey: "caloris" } },
+    { type: "node-detail", nodeExternalId: external("caloris"), planet: "Mercury", missionType: "Rescue", minimumEnemyLevel: 6, maximumEnemyLevel: 8, evidence: { ...evidence, sourceRecordKey: "caloris" } },
     { type: "recipe", outputExternalId: external("braton"), ingredients: [{ externalId: external("alloy"), quantity: 200 }], evidence },
     { type: "drop", rewardExternalId: external("braton"), nodeExternalId: external("caloris"), locationLabel: "Caloris, Mercury", chance: 0.1, rotation: "A", evidence },
   ];
@@ -41,8 +42,12 @@ test("catalog read models join active recipes, drops, provenance, and rankings",
   assert.deepEqual(item?.rankings[0], { title: "Creator list", author: "Creator", tier: "A", timestampSeconds: 42, sourceUrl: "https://example.test/ranking" });
   assert.equal(item?.evidence.some((entry) => entry.fact === "recipe" && entry.recordKey === "braton"), true);
   assert.equal(item?.evidence.some((entry) => entry.fact === "drop" && entry.recordKey === "braton"), true);
-  assert.equal(findCatalogNode(sqlite, "mercury-caloris")?.drops[0]?.name, "Braton");
+  const node = findCatalogNode(sqlite, "mercury-caloris")!;
+  assert.equal(node.drops[0]?.name, "Braton");
+  assert.deepEqual({ planet: node.planet, missionType: node.missionType, minimumEnemyLevel: node.minimumEnemyLevel, maximumEnemyLevel: node.maximumEnemyLevel }, { planet: "Mercury", missionType: "Rescue", minimumEnemyLevel: 6, maximumEnemyLevel: 8 });
   const userId = createLocalUser(sqlite, { username: "Player" });
+  assert.deepEqual(listStarChartNodes(sqlite).map(({ name, rewardCount, neededRewardCount }) => ({ name, rewardCount, neededRewardCount })), [{ name: "Caloris", rewardCount: 1, neededRewardCount: undefined }]);
+  assert.deepEqual(listStarChartNodes(sqlite, userId).map(({ name, planet, rewardCount, neededRewardCount }) => ({ name, planet, rewardCount, neededRewardCount })), [{ name: "Caloris", planet: "Mercury", rewardCount: 1, neededRewardCount: 1 }]);
   assert.deepEqual(findCatalogNode(sqlite, "mercury-caloris", userId)?.drops[0]?.inventory, { ownedCount: 0, builtCount: 0, wantedCount: 0, needed: true });
   setInventoryEntryByReference(sqlite, userId, { kind: "weapon", slug: "braton" }, { ownedCount: 1, builtCount: 0, wantedCount: 0 });
   assert.deepEqual(findCatalogNode(sqlite, "mercury-caloris", userId)?.drops[0]?.inventory, { ownedCount: 1, builtCount: 0, wantedCount: 0, needed: false });

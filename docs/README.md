@@ -12,6 +12,7 @@ the compromises between that target and the current implementation.
 - [World state](WORLD_STATE.md) defines dynamic availability and snapshot semantics.
 - [Todos and dynamic watches](TODOS.md) defines private tasks and alert intent.
 - [Builds and sharing](BUILDS.md) defines editable drafts and immutable public snapshots.
+- [Star chart](STAR_CHART.md) defines composed node metadata and spatial compromises.
 - [Authentication](AUTHENTICATION.md) defines local account setup and registration policy.
 - [Roadmap](ROADMAP.md) orders capabilities around end-to-end value.
 - [Known gaps](GAPS.md) is the authoritative implementation delta.

@@ -59,6 +59,19 @@ export interface RecipeObservation {
   evidence: Evidence;
 }
 
+export interface NodeDetailObservation {
+  type: "node-detail";
+  nodeExternalId: ExternalIdentifier;
+  planet: string;
+  missionType?: string;
+  faction?: string;
+  minimumEnemyLevel?: number;
+  maximumEnemyLevel?: number;
+  masteryRequirement?: number;
+  nodeType?: number;
+  evidence: Evidence;
+}
+
 export interface RankingSetObservation {
   type: "ranking-set";
   key: string;
@@ -83,7 +96,7 @@ export interface RankingObservation {
   evidence: Evidence;
 }
 
-export type Observation = EntityObservation | DropObservation | RecipeObservation | RankingSetObservation | RankingObservation;
+export type Observation = EntityObservation | DropObservation | RecipeObservation | NodeDetailObservation | RankingSetObservation | RankingObservation;
 
 export interface InventoryEntry {
   entityId: EntityId;

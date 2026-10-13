@@ -35,6 +35,11 @@ mechanics and optional ranking summaries remain documented follow-up work.
 
 ## 4. Discovery and spatial navigation
 
+Status: in progress
+
 Model quests, mechanics, secrets and unlock prerequisites, then render the same
 node graph as an interactive star chart. The map is a view over established IDs
 and relations, not a second data model.
+
+Composed node metadata and a planet-grouped chart with inventory-aware filtering
+are implemented. Graph edges and the quest/mechanic/secret discovery model remain.

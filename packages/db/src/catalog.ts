@@ -16,9 +16,17 @@ export interface CatalogItem extends CatalogSummary {
 }
 
 export interface CatalogNode {
+  id?: string;
   slug: string;
   name: string;
   description?: string;
+  planet?: string;
+  missionType?: string;
+  faction?: string;
+  minimumEnemyLevel?: number;
+  maximumEnemyLevel?: number;
+  masteryRequirement?: number;
+  detailEvidence: Array<{ sourceName: string; version: string; recordKey: string; sourcePath?: string; citationUrl?: string }>;
   drops: Array<{
     kind: string;
     slug: string;
@@ -27,6 +35,11 @@ export interface CatalogNode {
     rotation?: string;
     inventory?: { ownedCount: number; builtCount: number; wantedCount: number; needed: boolean };
   }>;
+}
+
+export interface StarChartNode extends Omit<CatalogNode, "drops" | "id"> {
+  rewardCount: number;
+  neededRewardCount?: number;
 }
 
 export interface SourceStatus {
@@ -157,14 +170,41 @@ export function findCatalogNode(sqlite: Database.Database, slug: string, userId?
       needed: (ownedCount ?? 0) + (builtCount ?? 0) === 0 || (wantedCount ?? 0) > 0,
     } } : {}),
   }));
+  const details = loadNodeDetails(sqlite, [node.id]).get(node.id);
   const { id: _id, ...summary } = node;
-  return { ...summary, drops };
+  return { ...summary, ...details, detailEvidence: details?.detailEvidence ?? [], drops };
 }
 
 export function listCatalogNodes(sqlite: Database.Database, limit = 500): CatalogNode[] {
   const normalizedLimit = Math.max(1, Math.min(2_000, Math.trunc(limit)));
-  return (sqlite.prepare("select slug, name, description from entities where kind = 'node' and retired = 0 order by name collate nocase limit ?")
-    .all(normalizedLimit) as Array<Omit<CatalogNode, "drops">>).map((node) => ({ ...node, drops: [] }));
+  const nodes = sqlite.prepare("select id, slug, name, description from entities where kind = 'node' and retired = 0 order by name collate nocase limit ?")
+    .all(normalizedLimit) as Array<{ id: string; slug: string; name: string; description?: string }>;
+  const details = loadNodeDetails(sqlite, nodes.map(({ id }) => id));
+  return nodes.map(({ id, ...node }) => ({ ...node, ...details.get(id), detailEvidence: details.get(id)?.detailEvidence ?? [], drops: [] }));
+}
+
+export function listStarChartNodes(sqlite: Database.Database, userId?: string): StarChartNode[] {
+  const nodes = sqlite.prepare("select id, slug, name, description from entities where kind = 'node' and retired = 0 order by name collate nocase")
+    .all() as Array<{ id: string; slug: string; name: string; description?: string }>;
+  const details = loadNodeDetails(sqlite, nodes.map(({ id }) => id));
+  const inventoryColumns = userId ? `coalesce(inventory.owned_count, 0) as ownedCount,
+      coalesce(inventory.built_count, 0) as builtCount,
+      coalesce(inventory.wanted_count, 0) as wantedCount` : "0 as ownedCount, 0 as builtCount, 0 as wantedCount";
+  const rewards = sqlite.prepare(`
+    select distinct item_drop.node_id as nodeId, item_drop.reward_id as rewardId,
+      ${inventoryColumns}
+    from drops item_drop join source_runs run on run.id = item_drop.source_run_id and run.status = 'active'
+    ${userId ? "left join player_inventory inventory on inventory.entity_id = item_drop.reward_id and inventory.user_id = ?" : ""}
+    where item_drop.node_id is not null
+  `).all(...(userId ? [userId] : [])) as Array<{ nodeId: string; rewardId: string; ownedCount: number; builtCount: number; wantedCount: number }>;
+  const counts = new Map<string, { rewardCount: number; neededRewardCount: number }>();
+  for (const reward of rewards) {
+    const count = counts.get(reward.nodeId) ?? { rewardCount: 0, neededRewardCount: 0 };
+    count.rewardCount += 1;
+    if (userId && (reward.ownedCount + reward.builtCount === 0 || reward.wantedCount > 0)) count.neededRewardCount += 1;
+    counts.set(reward.nodeId, count);
+  }
+  return nodes.map(({ id, ...node }) => ({ ...node, ...details.get(id), detailEvidence: details.get(id)?.detailEvidence ?? [], rewardCount: counts.get(id)?.rewardCount ?? 0, ...(userId ? { neededRewardCount: counts.get(id)?.neededRewardCount ?? 0 } : {}) }));
 }
 
 export function listSourceStatuses(sqlite: Database.Database): SourceStatus[] {
@@ -189,4 +229,35 @@ export function listSourceStatuses(sqlite: Database.Database): SourceStatus[] {
 
 function escapeLike(value: string): string {
   return value.replace(/[\\%_]/g, "\\$&");
+}
+
+type NodeDetails = Pick<CatalogNode, "planet" | "missionType" | "faction" | "minimumEnemyLevel" | "maximumEnemyLevel" | "masteryRequirement" | "detailEvidence">;
+function loadNodeDetails(sqlite: Database.Database, entityIds: string[]): Map<string, NodeDetails> {
+  if (!entityIds.length) return new Map();
+  const placeholders = entityIds.map(() => "?").join(", ");
+  const rows = sqlite.prepare(`
+    select detail.entity_id as entityId, detail.planet, detail.mission_type as missionType,
+      detail.faction, detail.minimum_enemy_level as minimumEnemyLevel,
+      detail.maximum_enemy_level as maximumEnemyLevel, detail.mastery_requirement as masteryRequirement,
+      source.name as sourceName, run.version, detail.source_record_key as recordKey,
+      detail.source_path as sourcePath, detail.citation_url as citationUrl
+    from node_details detail
+    join source_runs run on run.id = detail.source_run_id and run.status = 'active'
+    join sources source on source.id = run.source_id
+    where detail.entity_id in (${placeholders})
+    order by source.priority desc, run.retrieved_at desc
+  `).all(...entityIds) as Array<{ entityId: string; planet: string; missionType: string | null; faction: string | null; minimumEnemyLevel: number | null; maximumEnemyLevel: number | null; masteryRequirement: number | null; sourceName: string; version: string; recordKey: string; sourcePath: string | null; citationUrl: string | null }>;
+  const result = new Map<string, NodeDetails>();
+  for (const row of rows) {
+    const current = result.get(row.entityId) ?? { detailEvidence: [] };
+    current.planet ??= row.planet;
+    current.missionType ??= row.missionType ?? undefined;
+    current.faction ??= row.faction ?? undefined;
+    current.minimumEnemyLevel ??= row.minimumEnemyLevel ?? undefined;
+    current.maximumEnemyLevel ??= row.maximumEnemyLevel ?? undefined;
+    current.masteryRequirement ??= row.masteryRequirement ?? undefined;
+    current.detailEvidence.push({ sourceName: row.sourceName, version: row.version, recordKey: row.recordKey, sourcePath: row.sourcePath ?? undefined, citationUrl: row.citationUrl ?? undefined });
+    result.set(row.entityId, current);
+  }
+  return result;
 }

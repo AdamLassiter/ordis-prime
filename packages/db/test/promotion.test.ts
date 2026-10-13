@@ -32,6 +32,7 @@ test("promotion atomically replaces the active source run while preserving entit
   assert.equal((sqlite.prepare("select count(*) as count from catalog_releases where active = 1").get() as { count: number }).count, 1);
   assert.equal((sqlite.prepare("select count(*) as count from drops d join source_runs r on r.id = d.source_run_id where r.status = 'active'").get() as { count: number }).count, 1);
   assert.deepEqual(sqlite.prepare("select source_record_key as recordKey from drops d join source_runs r on r.id = d.source_run_id where r.status = 'active'").get(), { recordKey: "record" });
+  assert.equal(promoteSource(sqlite, input("v2", [entity("reward", "Ash Prime Chassis", "component", "v2"), entity("node", "Falling Glory", "node", "v2"), drop("v2", 0.2)])).entitiesCreated, 0);
 
   assert.throws(() => promoteSource(sqlite, input("v3", [entity("reward", "Broken", "component", "v3"), { ...drop("v3", 2), chance: 2 }])), /outside/);
   assert.equal((sqlite.prepare("select count(*) as count from source_runs").get() as { count: number }).count, 2);
