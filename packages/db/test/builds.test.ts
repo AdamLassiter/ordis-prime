@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { createBuildShare, createLocalUser, createPlayerBuild, findSharedBuild, getPlayerBuild, migrateDatabase, openSqliteDatabase, setBuildEquipment, setBuildMod, updatePlayerBuild } from "../src/index.ts";
+import { createBuildShare, createLocalUser, createPlayerBuild, findSharedBuild, getPlayerBuild, migrateDatabase, openSqliteDatabase, searchBuildCandidates, setBuildEquipment, setBuildMod, updatePlayerBuild } from "../src/index.ts";
 
 test("build drafts are private and share snapshots remain immutable", async (context) => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-builds-"));
@@ -17,6 +17,8 @@ test("build drafts are private and share snapshots remain immutable", async (con
   seedEntity(database, "frame", "warframe", "Mag", "mag");
   seedEntity(database, "weapon", "weapon", "Paris", "paris");
   seedEntity(database, "mod", "mod", "Serration", "serration");
+  assert.deepEqual(searchBuildCandidates(database, "primary", "Par"), [{ kind: "weapon", slug: "paris", name: "Paris" }]);
+  assert.deepEqual(searchBuildCandidates(database, "mod", "Serr"), [{ kind: "mod", slug: "serration", name: "Serration" }]);
   const buildId = createPlayerBuild(database, owner, { title: "Starter setup", category: "beginner" });
   setBuildEquipment(database, owner, buildId, "warframe", { kind: "warframe", slug: "mag" });
   setBuildEquipment(database, owner, buildId, "primary", { kind: "weapon", slug: "paris" });

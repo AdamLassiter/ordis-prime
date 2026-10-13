@@ -21,6 +21,7 @@ export interface SharedBuildSnapshot extends Omit<PlayerBuild, "id" | "createdAt
   shareKey: string;
   sharedAt: number;
 }
+export type BuildCandidate = BuildEntityReference;
 
 export function createPlayerBuild(sqlite: Database.Database, userId: string, input: { title: string; category?: string; notes?: string }): string {
   assertUser(sqlite, userId);
@@ -50,6 +51,23 @@ export function updatePlayerBuild(sqlite: Database.Database, userId: string, bui
   const result = sqlite.prepare("update player_builds set title = ?, category = ?, notes = ?, revision = revision + 1, updated_at = ? where id = ? and user_id = ?")
     .run(details.title, details.category ?? null, details.notes ?? null, Date.now(), buildId, userId);
   if (result.changes !== 1) throw new Error("Build not found");
+}
+
+export function deletePlayerBuild(sqlite: Database.Database, userId: string, buildId: string): void {
+  const result = sqlite.prepare("delete from player_builds where id = ? and user_id = ?").run(buildId, userId);
+  if (result.changes !== 1) throw new Error("Build not found");
+}
+
+export function searchBuildCandidates(sqlite: Database.Database, slot: BuildSlot | "mod", query: string, limit = 20): BuildCandidate[] {
+  if (slot !== "mod" && !(BUILD_SLOTS as readonly string[]).includes(slot)) throw new Error("Build slot is invalid");
+  const kind = slot === "mod" ? "mod" : slot === "warframe" ? "warframe" : slot === "companion" ? "companion" : "weapon";
+  const normalizedLimit = Math.max(1, Math.min(100, Math.trunc(limit)));
+  return sqlite.prepare(`
+    select kind, slug, name from entities
+    where retired = 0 and kind = ? and name like ? escape '\\'
+    order by case when lower(name) = lower(?) then 0 else 1 end, name collate nocase
+    limit ?
+  `).all(kind, `%${escapeLike(query.trim())}%`, query.trim(), normalizedLimit) as BuildCandidate[];
 }
 
 export function setBuildEquipment(sqlite: Database.Database, userId: string, buildId: string, slot: BuildSlot, reference: { kind: string; slug: string }, notes?: string): void {
@@ -151,3 +169,4 @@ function assertUser(sqlite: Database.Database, userId: string): void { if (!sqli
 function assertBuildOwner(sqlite: Database.Database, userId: string, buildId: string): void { if (!sqlite.prepare("select 1 from player_builds where id = ? and user_id = ?").get(buildId, userId)) throw new Error("Build not found"); }
 function findEntity(sqlite: Database.Database, reference: { kind: string; slug: string }): { id: string; kind: string } { const entity = sqlite.prepare("select id, kind from entities where kind = ? and slug = ? and retired = 0").get(reference.kind, reference.slug) as { id: string; kind: string } | undefined; if (!entity) throw new Error(`Unknown active entity ${reference.kind}:${reference.slug}`); return entity; }
 function touchBuild(sqlite: Database.Database, buildId: string): void { sqlite.prepare("update player_builds set revision = revision + 1, updated_at = ? where id = ?").run(Date.now(), buildId); }
+function escapeLike(value: string): string { return value.replace(/[\\%_]/g, "\\$&"); }

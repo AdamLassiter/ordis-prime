@@ -86,3 +86,18 @@ input,select,textarea { width:100%; max-width:36rem; padding:.8rem 1rem; border-
 .watch-card h3,.notification-card h3 { margin:.75rem 0 .25rem; }
 .notification-card.unread { border-color:#3b7182; box-shadow:inset 3px 0 var(--cyan); }
 @media (max-width:600px) { .watch-card,.notification-card { align-items:flex-start; flex-direction:column; } }
+.build-create,.build-details { margin-top:2rem; }
+.build-create:hover,.build-details:hover,.build-slot:hover { transform:none; border-color:var(--line); }
+.build-slots { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:1rem; }
+.build-slot h3 { margin:.8rem 0; }
+.compact-form { margin:1rem 0; gap:.5rem; }
+.compact-form textarea { width:100%; }
+.mod-list { padding-left:1.2rem; }
+.mod-list li { margin:.5rem 0; }
+.mod-list form { display:inline; margin-left:.75rem; }
+.candidate-list { display:grid; gap:.5rem; max-width:48rem; margin-top:1rem; }
+.candidate-list form { display:flex; align-items:center; gap:1rem; justify-content:space-between; border-bottom:1px solid var(--line); padding:.5rem 0; }
+.candidate-list label { display:flex; align-items:center; gap:.5rem; color:var(--muted); margin-left:auto; }
+.candidate-list input { width:6rem; }
+.build-publish { display:flex; align-items:center; gap:1.5rem; margin-top:3rem; }
+.build-notes { white-space:pre-wrap; }

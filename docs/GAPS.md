@@ -54,9 +54,10 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   portable or linked to canonical entities; todos cannot recur, watches cannot
   be edited or paused, and there are no web-push or webhook delivery channels.
 - Private, revisioned build persistence supports partial equipment loadouts,
-  positioned mods, notes and immutable unlisted share snapshots. Build editing
-  and public share routes, advanced configuration fields, profile portability
-  and share revocation remain to be implemented.
+  positioned mods, notes and immutable unlisted share snapshots. Authenticated
+  editor and public snapshot routes use canonical catalog links. Advanced
+  configuration fields, profile portability, cloning, share-history management
+  and revocation remain to be implemented.
 - The visual star chart, notifications, builds, editorial comparisons and
   discovery atlas are intentional later milestones.
 

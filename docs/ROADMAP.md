@@ -29,8 +29,8 @@ Add partial/full versioned loadouts and immutable share snapshots. Import cited
 editorial rankings as independent observations and show disagreement before any
 derived consensus.
 
-Build drafts and immutable snapshot persistence are implemented; editor/share UI
-and cross-source ranking comparison remain.
+Build drafts, editor/search workflow and immutable public snapshots are
+implemented; cross-source ranking comparison remains.
 
 ## 4. Discovery and spatial navigation
 

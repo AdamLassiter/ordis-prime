@@ -22,12 +22,17 @@ This is intentional: an editable public build would make discussion links and
 cited recommendations unstable. Authentication is required to edit a draft but
 not to view a snapshot.
 
+The authenticated `/builds` workshop creates drafts. Its editor searches the
+canonical catalog with slot-specific kind filtering, assigns equipment and mods,
+records build and per-slot notes, and publishes snapshots. Public snapshot routes
+render without authentication and link embedded entities back into the catalog.
+
 ## Current limits
 
-- The persistence and snapshot model exists; build list/editor and public share
-  routes are the next implementation slice.
 - Forma, polarities, capacities, arcanes, shards, abilities, schools and weapon
   configuration variants are not modeled yet.
 - Builds are not included in portable profile export and have no import format.
 - Share keys are unlisted capabilities, not access-controlled invitations, and
   cannot yet be revoked.
+- Search is submit-driven rather than an autocomplete, and there is no build
+  cloning or snapshot history UI.
