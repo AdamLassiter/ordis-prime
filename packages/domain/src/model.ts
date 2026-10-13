@@ -1,7 +1,7 @@
 export type EntityId = string & { readonly __entityId: unique symbol };
 
 export type EntityKind =
-  | "warframe" | "weapon" | "companion" | "mod" | "resource"
+  | "unknown" | "warframe" | "weapon" | "companion" | "mod" | "resource"
   | "relic" | "blueprint" | "component" | "node" | "planet"
   | "quest" | "enemy" | "boss" | "mechanic" | "secret";
 

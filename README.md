@@ -32,11 +32,16 @@ pnpm test
 pnpm check
 pnpm build
 pnpm db:migrate
+pnpm data:refresh wfcd-items wfcd-drops
 pnpm dev
 ```
 
 Copy `.env.example` to `.env`. Production uses `docker compose up --build` and
 stores all durable state in the `ordis-prime-data` volume.
+
+`data:refresh` runs the same provider-neutral pipeline for each named adapter:
+fetch, immutable snapshot storage, parsing, validation, and transactional
+promotion. Omit names to refresh every registered adapter.
 
 ## Data safety
 

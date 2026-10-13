@@ -1,8 +1,9 @@
 import type { EntityKind, EntityObservation, Observation } from "@ordis-prime/domain";
 import { createSnapshot, type Snapshot, type SourceAdapter } from "../adapter.ts";
 
-interface WfcdItem { uniqueName?: string; name?: string; description?: string; category?: string; type?: string; wikiaUrl?: string; components?: Array<{ uniqueName?: string; name?: string; itemCount?: number }> }
-const categories: Record<string, EntityKind> = { Warframes: "warframe", Primary: "weapon", Secondary: "weapon", Melee: "weapon", Mods: "mod", Resources: "resource", Relics: "relic", Node: "node", Quests: "quest", Pets: "companion", Sentinels: "companion", Components: "component" };
+interface WfcdItem { uniqueName?: string; name?: string; description?: string; category?: string; type?: string; wikiaUrl?: string; components?: WfcdComponent[] }
+interface WfcdComponent { uniqueName?: string; name?: string; description?: string; category?: string; type?: string; itemCount?: number }
+const categories: Record<string, EntityKind> = { Warframes: "warframe", Primary: "weapon", Secondary: "weapon", Melee: "weapon", "Arch-Gun": "weapon", "Arch-Melee": "weapon", SentinelWeapons: "weapon", Mods: "mod", Resources: "resource", Fish: "resource", Relics: "relic", Node: "node", Quests: "quest", Pets: "companion", Sentinels: "companion", Components: "component", Enemy: "enemy" };
 export const DEFAULT_WFCD_ITEMS_URL = "https://api.warframestat.us/items";
 
 export class WfcdItemsAdapter implements SourceAdapter {
@@ -20,16 +21,18 @@ export class WfcdItemsAdapter implements SourceAdapter {
     if (!Array.isArray(items)) throw new Error("WFCD items payload must be an array");
     for (const [index, item] of items.entries()) {
       if (!item.uniqueName || !item.name) continue;
-      const kind = categories[item.category ?? ""] ?? (item.type === "Blueprint" ? "blueprint" : undefined);
-      if (!kind) continue;
+      const kind = kindFor(item);
       const evidence = { sourceId: this.source.id, sourceRecordKey: item.uniqueName, snapshotVersion: snapshot.version, retrievedAt: snapshot.retrievedAt, citationUrl: item.wikiaUrl, license: this.source.license, path: `[${index}]` };
       yield { type: "entity", kind, externalIds: [{ sourceId: this.source.id, namespace: "uniqueName", value: item.uniqueName }], fields: { name: item.name, slug: slugify(item.name), description: item.description }, evidence };
       const components = (item.components ?? []).filter((component) => component.uniqueName && component.name);
       for (const [componentIndex, component] of components.entries()) {
-        yield { type: "entity", kind: "component", externalIds: [{ sourceId: this.source.id, namespace: "uniqueName", value: component.uniqueName! }], fields: { name: component.name!, slug: slugify(`${item.name}-${component.name}`) }, aliases: [`${item.name} ${component.name}`], evidence: { ...evidence, sourceRecordKey: component.uniqueName!, path: `[${index}].components[${componentIndex}]` } };
+        const componentKind = kindFor(component, "component");
+        const componentName = componentKind === "component" ? `${item.name} ${component.name}` : component.name!;
+        yield { type: "entity", kind: componentKind, externalIds: [{ sourceId: this.source.id, namespace: "uniqueName", value: component.uniqueName! }], fields: { name: componentName, slug: slugify(componentName), description: component.description }, evidence: { ...evidence, sourceRecordKey: component.uniqueName!, path: `[${index}].components[${componentIndex}]` } };
       }
       if (components.length) yield { type: "recipe", outputExternalId: { sourceId: this.source.id, namespace: "uniqueName", value: item.uniqueName }, ingredients: components.map((component) => ({ externalId: { sourceId: this.source.id, namespace: "uniqueName", value: component.uniqueName! }, quantity: component.itemCount ?? 1 })), evidence };
     }
   }
 }
+function kindFor(item: Pick<WfcdItem, "category" | "type">, fallback: EntityKind = "unknown"): EntityKind { return categories[item.category ?? ""] ?? (item.type === "Blueprint" ? "blueprint" : fallback); }
 function slugify(value: string) { return value.toLocaleLowerCase("en").normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""); }

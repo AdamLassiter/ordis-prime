@@ -174,9 +174,13 @@ function resolveAndWriteEntity(
   } else {
     entityId = resolution.entityId;
     const entity = state.entities.get(entityId)!;
-    if (entity.kind !== observation.kind) {
+    if (entity.kind !== observation.kind && observation.kind !== "unknown" && entity.kind !== "unknown") {
       writeConflict(sqlite, sourceRunId, observation.evidence.sourceRecordKey, `Entity kind disagrees with ${entity.kind}`, [entityId], counts);
       return undefined;
+    }
+    if (entity.kind === "unknown" && observation.kind !== "unknown") {
+      sqlite.prepare("update entities set kind = ?, updated_at = ? where id = ?").run(observation.kind, Date.now(), entityId);
+      state.entities.set(entityId, { ...entity, kind: observation.kind });
     }
     updateWinningFields(sqlite, entityId, observation, sourcePriority);
     counts.entitiesMatched += 1;

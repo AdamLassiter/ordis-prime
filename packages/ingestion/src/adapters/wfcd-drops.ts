@@ -2,7 +2,7 @@ import type { Observation } from "@ordis-prime/domain";
 import { createSnapshot, type Snapshot, type SourceAdapter } from "../adapter.ts";
 
 interface Reward { _id?: string; itemName?: string; chance?: number; rotation?: string }
-interface Mission { gameMode?: string; rewards?: Record<string, Reward[]> }
+interface Mission { gameMode?: string; rewards?: Reward[] | Record<string, Reward[]> }
 interface DropsPayload { missionRewards?: Record<string, Record<string, Mission>> }
 
 export class WfcdDropsAdapter implements SourceAdapter {
@@ -22,12 +22,15 @@ export class WfcdDropsAdapter implements SourceAdapter {
         const nodeKey = `${planet}/${node}`;
         const evidence = { sourceId: this.source.id, sourceRecordKey: nodeKey, snapshotVersion: snapshot.version, retrievedAt: snapshot.retrievedAt, license: this.source.license, path: `missionRewards.${planet}.${node}` };
         yield { type: "entity", kind: "node", externalIds: [{ sourceId: this.source.id, namespace: "mission", value: nodeKey }], fields: { name: node, slug: slugify(`${planet}-${node}`), description: mission.gameMode ? `${mission.gameMode} on ${planet}` : undefined }, aliases: [`${node}, ${planet}`], evidence };
-        for (const [rotation, rewards] of Object.entries(mission.rewards ?? {})) {
+        const rewardGroups: Array<[string | undefined, Reward[]]> = Array.isArray(mission.rewards)
+          ? [[undefined, mission.rewards]]
+          : Object.entries(mission.rewards ?? {});
+        for (const [rotation, rewards] of rewardGroups) {
           for (const [rewardIndex, reward] of rewards.entries()) {
             if (!reward.itemName) continue;
             const rewardKey = reward._id ?? reward.itemName;
             const rewardEvidence = { ...evidence, sourceRecordKey: rewardKey, path: `${evidence.path}.rewards.${rotation}[${rewardIndex}]` };
-            yield { type: "entity", kind: "component", externalIds: [{ sourceId: this.source.id, namespace: "reward", value: rewardKey }], fields: { name: reward.itemName, slug: slugify(reward.itemName) }, evidence: rewardEvidence };
+            yield { type: "entity", kind: "unknown", externalIds: [{ sourceId: this.source.id, namespace: "reward", value: rewardKey }], fields: { name: reward.itemName, slug: slugify(reward.itemName) }, evidence: rewardEvidence };
             yield { type: "drop", rewardExternalId: { sourceId: this.source.id, namespace: "reward", value: rewardKey }, nodeExternalId: { sourceId: this.source.id, namespace: "mission", value: nodeKey }, locationLabel: `${node}, ${planet}`, chance: reward.chance == null ? undefined : reward.chance / 100, rotation: reward.rotation ?? rotation, evidence: rewardEvidence };
           }
         }

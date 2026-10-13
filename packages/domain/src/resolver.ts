@@ -29,7 +29,12 @@ export function resolveEntity(observation: EntityObservation, state: ResolutionS
   const names = [observation.fields.name, ...(observation.aliases ?? [])].filter(
     (value): value is string => Boolean(value),
   );
-  const aliases = new Set(names.flatMap((name) => state.aliases.get(normalizedAlias(name)) ?? []));
+  const aliases = new Set(names.flatMap((name) => state.aliases.get(normalizedAlias(name)) ?? []).filter((entityId) => {
+    const candidate = state.entities.get(entityId);
+    if (!candidate) return false;
+    if (observation.kind === "unknown") return candidate.kind === "unknown";
+    return candidate.kind === "unknown" || candidate.kind === observation.kind;
+  }));
   if (aliases.size === 1) return { status: "matched", entityId: [...aliases][0]!, by: "alias" };
   if (aliases.size > 1) return { status: "conflict", candidateIds: [...aliases] };
   return { status: "new" };

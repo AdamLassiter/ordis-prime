@@ -4,7 +4,7 @@ import { externalKey, normalizedAlias, resolveEntity, type EntityId, type Entity
 
 const entityId = "weapon:braton" as EntityId;
 const state: ResolutionState = {
-  entities: new Map(),
+  entities: new Map([[entityId, { id: entityId, kind: "weapon", name: "Braton", slug: "braton", retired: false }]]),
   externalIds: new Map([[externalKey({ sourceId: "wfcd", namespace: "uniqueName", value: "/Lotus/Braton" }), entityId]]),
   aliases: new Map([[normalizedAlias("Braton"), [entityId]]]),
 };
@@ -20,6 +20,24 @@ test("stable external IDs take precedence over names", () => {
 
 test("ambiguous aliases become reviewable conflicts", () => {
   const other = "weapon:mk1-braton" as EntityId;
-  const result = resolveEntity(base, { ...state, externalIds: new Map(), aliases: new Map([[normalizedAlias("Braton"), [entityId, other]]]) });
+  const entities = new Map(state.entities);
+  entities.set(other, { id: other, kind: "weapon", name: "MK1-Braton", slug: "mk1-braton", retired: false });
+  const result = resolveEntity(base, { ...state, entities, externalIds: new Map(), aliases: new Map([[normalizedAlias("Braton"), [entityId, other]]]) });
   assert.equal(result.status, "conflict");
+});
+
+test("alias matching respects known kinds and only typed evidence refines unknowns", () => {
+  const node = "node:lex" as EntityId;
+  const unknown = "unknown:vitality" as EntityId;
+  const entities = new Map(state.entities);
+  entities.set(node, { id: node, kind: "node", name: "Lex", slug: "lex", retired: false });
+  entities.set(unknown, { id: unknown, kind: "unknown", name: "Vitality", slug: "vitality", retired: false });
+  const aliases = new Map([
+    [normalizedAlias("Lex"), [node]],
+    [normalizedAlias("Vitality"), [unknown]],
+  ]);
+
+  assert.deepEqual(resolveEntity({ ...base, fields: { name: "Lex" } }, { entities, aliases, externalIds: new Map() }), { status: "new" });
+  assert.deepEqual(resolveEntity({ ...base, kind: "unknown", fields: { name: "Lex" } }, { entities, aliases, externalIds: new Map() }), { status: "new" });
+  assert.deepEqual(resolveEntity({ ...base, kind: "mod", fields: { name: "Vitality" } }, { entities, aliases, externalIds: new Map() }), { status: "matched", entityId: unknown, by: "alias" });
 });

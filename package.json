@@ -9,7 +9,8 @@
     "check": "pnpm -r check",
     "test": "node --experimental-strip-types --test packages/*/test/*.test.ts",
     "db:generate": "pnpm --filter @ordis-prime/db generate",
-    "db:migrate": "pnpm --filter @ordis-prime/db migrate"
+    "db:migrate": "pnpm --filter @ordis-prime/db migrate",
+    "data:refresh": "pnpm --filter @ordis-prime/ingestion refresh"
   },
   "devDependencies": {
     "@types/node": "^24.10.0",

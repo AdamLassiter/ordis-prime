@@ -77,6 +77,31 @@ test("ambiguous aliases are recorded for review without corrupting relationships
   assert.match((sqlite.prepare("select reason from ingestion_conflicts where source_run_id = ?").get(result.sourceRunId) as { reason: string }).reason, /ambiguous/);
 });
 
+test("a typed source refines an untyped drop reward without changing its identity", async (context) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-promotion-"));
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const databasePath = path.join(root, "catalog.sqlite");
+  migrateDatabase(databasePath);
+  const sqlite = new Database(databasePath);
+  sqlite.pragma("foreign_keys = ON");
+  context.after(() => sqlite.close());
+
+  promoteSource(sqlite, input("v1", [entity("reward", "Vitality", "unknown")]));
+  const before = sqlite.prepare("select id, kind from entities").get() as { id: string; kind: string };
+  const typed = {
+    ...entity("mod-vitality", "Vitality", "mod", "v2", "typed"),
+    evidence: evidence("v2", "typed"),
+  } satisfies Observation;
+  const result = promoteSource(sqlite, {
+    ...input("v2", [typed]),
+    source: { ...source, id: "typed", priority: 20 },
+  });
+  const after = sqlite.prepare("select id, kind from entities").get() as { id: string; kind: string };
+
+  assert.equal(result.conflictsCreated, 0);
+  assert.deepEqual(after, { id: before.id, kind: "mod" });
+});
+
 function input(version: string, observations: Observation[]) {
   return { source, version, contentHash: `sha256:${version.padEnd(64, "0")}`, retrievedAt: "2026-10-13T12:00:00.000Z", observations };
 }
@@ -85,8 +110,8 @@ function evidence(version = "v1", sourceId = "fixture") {
   return { sourceId, sourceRecordKey: "record", snapshotVersion: version, retrievedAt: "2026-10-13T12:00:00.000Z" };
 }
 
-function entity(id: string, name: string, kind: "component" | "node", version = "v1"): Observation {
-  return { type: "entity", kind, externalIds: [{ sourceId: "fixture", namespace: "id", value: id }], fields: { name, slug: name.toLowerCase().replaceAll(" ", "-") }, evidence: evidence(version) };
+function entity(id: string, name: string, kind: "unknown" | "component" | "mod" | "node", version = "v1", sourceId = "fixture"): Observation {
+  return { type: "entity", kind, externalIds: [{ sourceId, namespace: "id", value: id }], fields: { name, slug: name.toLowerCase().replaceAll(" ", "-") }, evidence: evidence(version, sourceId) };
 }
 
 function drop(version: string, chance: number): Observation {

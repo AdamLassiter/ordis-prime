@@ -6,9 +6,29 @@ const snapshot: Snapshot = { sourceId: "wfcd-items", version: "fixture-1", retri
 
 test("WFCD adapter emits source-neutral, evidenced observations", async () => {
   const observations = await collect(new WfcdItemsAdapter(), snapshot);
-  assert.equal(observations.length, 1);
+  assert.equal(observations.length, 2);
   assert.equal(observations[0]?.type, "entity");
   assert.equal(observations[0]?.evidence.sourceRecordKey, "/Lotus/Powersuits/Ash/Ash");
+  assert.equal(observations[1]?.type === "entity" && observations[1].kind, "unknown");
+});
+
+test("WFCD component references retain trustworthy item kinds and qualified part names", async () => {
+  const componentSnapshot = {
+    ...snapshot,
+    bytes: new TextEncoder().encode(JSON.stringify([
+      { uniqueName: "/alloy", name: "Adramal Alloy", category: "Resources", components: [
+        { uniqueName: "/ore", name: "Adramalium", category: "Resources", itemCount: 20 },
+        { uniqueName: "/blueprint", name: "Blueprint", category: "Components", itemCount: 1 },
+      ] },
+    ])),
+  };
+  const observations = await collect(new WfcdItemsAdapter(), componentSnapshot);
+  const entities = observations.filter((entry) => entry.type === "entity");
+  assert.deepEqual(entities.map((entry) => [entry.kind, entry.fields.name]), [
+    ["resource", "Adramal Alloy"],
+    ["resource", "Adramalium"],
+    ["component", "Adramal Alloy Blueprint"],
+  ]);
 });
 
 test("empty snapshots fail closed", async () => {
@@ -40,6 +60,20 @@ test("drop adapter joins node and reward through stable provider IDs", async () 
   });
   assert.equal(observations.filter((entry) => entry.type === "entity").length, 2);
   const drop = observations.find((entry) => entry.type === "drop");
+  const reward = observations.find((entry) => entry.type === "entity" && entry.kind === "unknown");
+  assert.equal(reward?.type, "entity");
+  if (reward?.type === "entity") assert.equal(reward.fields.name, "Lith A1 Relic");
   assert.equal(drop?.chance, 0.1429);
   assert.equal(drop?.locationLabel, "Tessera, Venus");
+});
+
+test("drop adapter supports missions without named rotations", async () => {
+  const observations = await collect(new WfcdDropsAdapter(), {
+    ...snapshot,
+    sourceId: "wfcd-drops",
+    bytes: new TextEncoder().encode(JSON.stringify({ missionRewards: { Mercury: { Elion: { gameMode: "Capture", rewards: [{ _id: "reward-2", itemName: "Vitality", chance: 10.84 }] } } } })),
+  });
+  const drop = observations.find((entry) => entry.type === "drop");
+  assert.equal(drop?.rotation, undefined);
+  assert.equal(drop?.chance, 0.1084);
 });
