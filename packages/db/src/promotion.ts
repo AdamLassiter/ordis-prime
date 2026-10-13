@@ -24,6 +24,7 @@ export interface PromoteSourceInput {
   version: string;
   contentHash: string;
   retrievedAt: string;
+  snapshotPath?: string;
   observations: Observation[];
 }
 
@@ -76,9 +77,9 @@ function promoteInTransaction(sqlite: Database.Database, input: PromoteSourceInp
   const releaseId = randomUUID();
   const retrievedAt = new Date(input.retrievedAt);
   sqlite.prepare(`
-    insert into source_runs (id, source_id, version, content_hash, retrieved_at, status)
-    values (?, ?, ?, ?, ?, 'staged')
-  `).run(sourceRunId, input.source.id, input.version, input.contentHash, retrievedAt.getTime());
+    insert into source_runs (id, source_id, version, content_hash, retrieved_at, snapshot_path, status)
+    values (?, ?, ?, ?, ?, ?, 'staged')
+  `).run(sourceRunId, input.source.id, input.version, input.contentHash, retrievedAt.getTime(), input.snapshotPath ?? null);
 
   const state = loadResolutionState(sqlite);
   const counts = { entitiesCreated: 0, entitiesMatched: 0, recipesCreated: 0, dropsCreated: 0, rankingSetsCreated: 0, rankingsCreated: 0, conflictsCreated: 0 };

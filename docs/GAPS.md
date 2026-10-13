@@ -18,8 +18,9 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   immutable, hash-verified snapshot store and observations can be resolved into
   canonical SQLite records with provenance and reviewable conflicts through a
   provider-neutral refresh command. Validated, cited manual ranking YAML uses
-  this same path. Manual fact corrections, scheduled refresh jobs, persisted
-  failure reporting, and live world state remain to be implemented.
+  this same path. Refresh attempts and failures are persisted without replacing
+  active data. Manual fact corrections, scheduled refresh jobs, administrative
+  failure/conflict drill-down, and live world state remain to be implemented.
 - The web explorer reads the canonical SQLite catalog and links active recipes,
   drops, nodes, provenance, and editorial rankings. Docker deployments do not
   yet expose an administrative refresh trigger, so their first-run catalog is

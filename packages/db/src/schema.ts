@@ -4,8 +4,18 @@ export const sources = sqliteTable("sources", {
   id: text().primaryKey(), name: text().notNull(), homepage: text().notNull(), license: text(), priority: integer().notNull().default(0), enabled: integer({ mode: "boolean" }).notNull().default(true),
 });
 export const sourceRuns = sqliteTable("source_runs", {
-  id: text().primaryKey(), sourceId: text("source_id").notNull().references(() => sources.id), version: text().notNull(), contentHash: text("content_hash").notNull(), retrievedAt: integer("retrieved_at", { mode: "timestamp_ms" }).notNull(), status: text({ enum: ["running", "failed", "staged", "active"] }).notNull(), error: text(),
+  id: text().primaryKey(), sourceId: text("source_id").notNull().references(() => sources.id), version: text().notNull(), contentHash: text("content_hash").notNull(), retrievedAt: integer("retrieved_at", { mode: "timestamp_ms" }).notNull(), snapshotPath: text("snapshot_path"), status: text({ enum: ["running", "failed", "staged", "active"] }).notNull(), error: text(),
 }, (table) => [uniqueIndex("source_run_version").on(table.sourceId, table.version)]);
+export const sourceRefreshes = sqliteTable("source_refreshes", {
+  id: text().primaryKey(),
+  sourceId: text("source_id").notNull().references(() => sources.id),
+  sourceRunId: text("source_run_id").references(() => sourceRuns.id),
+  status: text({ enum: ["running", "succeeded", "failed"] }).notNull(),
+  startedAt: integer("started_at", { mode: "timestamp_ms" }).notNull(),
+  finishedAt: integer("finished_at", { mode: "timestamp_ms" }),
+  snapshotPath: text("snapshot_path"),
+  error: text(),
+}, (table) => [index("source_refreshes_source_started").on(table.sourceId, table.startedAt)]);
 export const catalogReleases = sqliteTable("catalog_releases", {
   id: text().primaryKey(), createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(), promotedAt: integer("promoted_at", { mode: "timestamp_ms" }), active: integer({ mode: "boolean" }).notNull().default(false),
 });

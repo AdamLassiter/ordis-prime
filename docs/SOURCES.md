@@ -9,3 +9,9 @@
 
 Provider absence never means deletion. Removals require an explicit tombstone,
 and records referenced by player data are retired rather than physically deleted.
+
+Every refresh creates an operational attempt before network access begins. The
+attempt records success or a bounded error message and links successful imports
+to their promoted source run. If a snapshot was retained before parsing or
+promotion failed, its path remains attached to the failed attempt. A failure
+never changes the previously active source run.
