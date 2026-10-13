@@ -1,0 +1,47 @@
+import assert from "node:assert/strict";
+import fs from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+import test from "node:test";
+import type { Observation } from "@ordis-prime/domain";
+import { findCatalogItem, findCatalogNode, listSourceStatuses, migrateDatabase, openSqliteDatabase, promoteSource, searchCatalog } from "../src/index.ts";
+
+test("catalog read models join active recipes, drops, provenance, and rankings", async (context) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-catalog-"));
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const databasePath = path.join(root, "catalog.sqlite");
+  migrateDatabase(databasePath);
+  const sqlite = openSqliteDatabase(databasePath);
+  context.after(() => sqlite.close());
+  const evidence = { sourceId: "items", sourceRecordKey: "braton", snapshotVersion: "v1", retrievedAt: "2026-10-13T12:00:00.000Z" };
+  const external = (value: string) => ({ sourceId: "items", namespace: "id", value });
+  const observations: Observation[] = [
+    { type: "entity", kind: "weapon", externalIds: [external("braton")], fields: { name: "Braton", slug: "braton", description: "A balanced rifle." }, evidence },
+    { type: "entity", kind: "resource", externalIds: [external("alloy")], fields: { name: "Alloy Plate", slug: "alloy-plate" }, evidence: { ...evidence, sourceRecordKey: "alloy" } },
+    { type: "entity", kind: "node", externalIds: [external("caloris")], fields: { name: "Caloris", slug: "mercury-caloris", description: "Rescue on Mercury" }, evidence: { ...evidence, sourceRecordKey: "caloris" } },
+    { type: "recipe", outputExternalId: external("braton"), ingredients: [{ externalId: external("alloy"), quantity: 200 }], evidence },
+    { type: "drop", rewardExternalId: external("braton"), nodeExternalId: external("caloris"), locationLabel: "Caloris, Mercury", chance: 0.1, rotation: "A", evidence },
+  ];
+  promoteSource(sqlite, { source: { id: "items", name: "Items", homepage: "https://example.test/items", priority: 10 }, version: "v1", contentHash: "hash-1", retrievedAt: evidence.retrievedAt, observations });
+  const rankingEvidence = { ...evidence, sourceId: "ranking", snapshotVersion: "ranking-v1" };
+  promoteSource(sqlite, {
+    source: { id: "ranking", name: "Ranking", homepage: "https://example.test/ranking", priority: 20 }, version: "ranking-v1", contentHash: "hash-2", retrievedAt: evidence.retrievedAt,
+    observations: [
+      { type: "ranking-set", key: "set", title: "Creator list", author: "Creator", publishedAt: "2026-10-01", scope: "Weapons", scale: ["S", "A"], licenseNote: "Citation", evidence: rankingEvidence },
+      { type: "ranking", setKey: "set", subjectExternalId: external("braton"), tier: "A", timestampSeconds: 42, evidence: rankingEvidence },
+    ],
+  });
+
+  assert.deepEqual(searchCatalog(sqlite, "brat").map(({ name }) => name), ["Braton"]);
+  assert.deepEqual(searchCatalog(sqlite, "%"), []);
+  const item = findCatalogItem(sqlite, "weapon", "braton");
+  assert.equal(item?.components[0]?.quantity, 200);
+  assert.equal(item?.drops[0]?.nodeSlug, "mercury-caloris");
+  assert.equal(item?.sources[0]?.name, "Items");
+  assert.deepEqual(item?.rankings[0], { title: "Creator list", author: "Creator", tier: "A", timestampSeconds: 42, sourceUrl: "https://example.test/ranking" });
+  assert.equal(findCatalogNode(sqlite, "mercury-caloris")?.drops[0]?.name, "Braton");
+  assert.deepEqual(listSourceStatuses(sqlite).map(({ id, conflictCount }) => ({ id, conflictCount })), [
+    { id: "ranking", conflictCount: 0 },
+    { id: "items", conflictCount: 0 },
+  ]);
+});

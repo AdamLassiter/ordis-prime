@@ -11,7 +11,7 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
 - The canonical schema, initial migration, and transactional per-source
   promotion exist. Cross-source full-catalog candidate releases, pruning of
   superseded relation rows, and the SQLite job runner are not implemented yet.
-  The web process does not yet run migrations at startup.
+  Migrations run lazily when the web process first opens SQLite.
 - WFCD item and mission-drop adapters exist and emit entities, recipes,
   components, nodes, and drops. Fetched payloads can be retained in an
   immutable, hash-verified snapshot store and observations can be resolved into
@@ -19,9 +19,10 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   provider-neutral refresh command. Validated, cited manual ranking YAML uses
   this same path. Manual fact corrections, scheduled refresh jobs, persisted
   failure reporting, and live world state remain to be implemented.
-- The web explorer currently uses a small development catalog through the same
-  query interface the SQLite repository will implement. It is not production
-  data, and the health endpoint does not yet probe SQLite.
+- The web explorer reads the canonical SQLite catalog and links active recipes,
+  drops, nodes, provenance, and editorial rankings. Docker deployments do not
+  yet expose an administrative refresh trigger, so their first-run catalog is
+  empty until ingestion is run against the mounted data directory.
 - Authentication tables are modeled, but local-account setup, sessions and
   authorization are not yet wired into routes.
 - Inventory editing, profile import/export and planner persistence are pending.

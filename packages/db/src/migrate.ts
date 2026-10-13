@@ -9,7 +9,7 @@ const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "
 
 export function migrateDatabase(
   databasePath = process.env.ORDIS_DATABASE_URL ?? `${process.env.ORDIS_DATA_DIR ?? "./data"}/ordis-prime.sqlite`,
-  migrationsFolder = path.join(packageRoot, "migrations"),
+  migrationsFolder = process.env.ORDIS_MIGRATIONS_DIR ?? path.join(packageRoot, "migrations"),
 ) {
   fs.mkdirSync(path.dirname(databasePath), { recursive: true });
   const sqlite = new Database(databasePath);

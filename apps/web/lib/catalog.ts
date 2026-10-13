@@ -1,8 +1,23 @@
-export interface CatalogItem { kind:string; slug:string; name:string; description:string; components:Array<{ name:string; quantity:number }>; drops:Array<{ nodeSlug:string; node:string; chance:number; rotation?:string }>; source:string }
-export interface CatalogNode { slug:string; name:string; planet:string; mission:string; drops:Array<{ kind:string; slug:string; name:string; chance:number; rotation?:string }> }
-const items: CatalogItem[] = [{ kind:"warframe", slug:"ash", name:"Ash", description:"A development fixture demonstrating linked acquisition data.", components:[{ name:"Ash Systems",quantity:1},{name:"Ash Chassis",quantity:1},{name:"Ash Neuroptics",quantity:1}], drops:[{nodeSlug:"venus-proxima-falling-glory",node:"Falling Glory, Venus Proxima",chance:.1,rotation:"C"}], source:"WFCD fixture" }, { kind:"weapon", slug:"braton", name:"Braton", description:"A balanced rifle included as a second searchable fixture.", components:[], drops:[], source:"WFCD fixture" }];
-const nodes: CatalogNode[] = [{ slug:"venus-proxima-falling-glory", name:"Falling Glory", planet:"Venus Proxima", mission:"Defense", drops:[{kind:"warframe",slug:"ash",name:"Ash Systems",chance:.1,rotation:"C"}] }];
-export async function searchCatalog(query="") { const q=query.toLocaleLowerCase("en"); return items.filter((item)=>!q||item.name.toLocaleLowerCase("en").includes(q)); }
-export async function findItem(kind:string,slug:string) { return items.find((item)=>item.kind===kind&&item.slug===slug); }
-export async function findNode(slug:string) { return nodes.find((node)=>node.slug===slug); }
-export async function listNodes() { return nodes; }
+import {
+  findCatalogItem,
+  findCatalogNode,
+  listCatalogNodes,
+  searchCatalog as searchDatabaseCatalog,
+} from "@ordis-prime/db";
+import { getDatabase } from "./database";
+
+export async function searchCatalog(query = "") {
+  return searchDatabaseCatalog(getDatabase(), query);
+}
+
+export async function findItem(kind: string, slug: string) {
+  return findCatalogItem(getDatabase(), kind, slug);
+}
+
+export async function findNode(slug: string) {
+  return findCatalogNode(getDatabase(), slug);
+}
+
+export async function listNodes() {
+  return listCatalogNodes(getDatabase());
+}
