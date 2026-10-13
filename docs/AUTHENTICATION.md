@@ -16,7 +16,7 @@ random value of at least 32 characters. `ORDIS_BASE_URL` defaults to
 `http://localhost:3000` and must be the public origin in deployments reached at
 another URL.
 
-The raw API is wired at `/api/auth/*`. A first-run setup screen, sign-in screen,
-account administration, and authorization checks on player-state mutations are
-still gaps; the setup header is an implementation interface until that UI is
-available.
+The raw API is wired at `/api/auth/*`. `/setup` collects the operator token only
+for the first account, and `/sign-in` establishes returning sessions. Account
+administration, password recovery, and authorization checks on player-state
+mutations are still gaps.

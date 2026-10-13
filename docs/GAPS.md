@@ -26,8 +26,9 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   empty until ingestion is run against the mounted data directory.
 - Local email/password accounts, persisted sessions, closed registration, and
   first-administrator bootstrap enforcement are wired at the authentication
-  API. First-run and sign-in screens, account administration, password recovery,
-  and authorization checks on player-state mutations are not implemented yet.
+  API, with first-run, sign-in, and sign-out UI. Account administration,
+  password recovery, and authorization checks on player-state mutations are not
+  implemented yet.
 - Validated inventory persistence and portable profile import/export exist in
   the data layer. Authenticated editing routes, UI, and planner persistence are
   pending.

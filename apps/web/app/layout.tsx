@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { headers } from "next/headers";
+import { auth } from "@/lib/auth";
+import { SignOutButton } from "./sign-out-button";
 import "./globals.css";
 export const metadata: Metadata = { title: "Ordis Prime", description: "A source-aware Warframe acquisition companion" };
-export default function Layout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en"><body><header><nav><strong>ORDIS PRIME</strong><Link href="/">Explore</Link><Link href="/planner">Planner</Link><Link href="/data-sources">Sources</Link></nav></header><main>{children}</main></body></html>;
+export default async function Layout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  return <html lang="en"><body><header><nav><strong>ORDIS PRIME</strong><Link href="/">Explore</Link><Link href="/planner">Planner</Link><Link href="/data-sources">Sources</Link>{session ? <><span className="nav-user">{session.user.name}</span><SignOutButton /></> : <Link href="/sign-in">Sign in</Link>}</nav></header><main>{children}</main></body></html>;
 }
