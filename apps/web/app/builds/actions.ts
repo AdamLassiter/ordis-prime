@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { addBuildAcquisitionGoals, clonePlayerBuild, cloneSharedBuild, configureBuildEquipment, createBuildShare, createPlayerBuild, deletePlayerBuild, removeBuildEquipment, removeBuildMod, revokeBuildShare, setBuildEquipment, setBuildMod, updatePlayerBuild, type BuildSlot } from "@ordis-prime/db";
+import { addBuildAcquisitionGoals, clonePlayerBuild, cloneSharedBuild, configureBuildEquipment, createBuildShare, createPlayerBuild, deletePlayerBuild, removeBuildEnhancement, removeBuildEquipment, removeBuildMod, revokeBuildShare, setBuildEnhancement, setBuildEquipment, setBuildMod, updatePlayerBuild, type BuildEnhancementSlot, type BuildSlot } from "@ordis-prime/db";
 import { getDatabase } from "@/lib/database";
 import { requireCurrentSession } from "@/lib/session";
 
@@ -60,6 +60,20 @@ export async function assignMod(buildId: string, slot: BuildSlot, position: numb
 export async function clearMod(buildId: string, slot: BuildSlot, position: number) {
   const session = await requireCurrentSession();
   removeBuildMod(getDatabase(), session.user.id, buildId, slot, position);
+  revalidatePath(`/builds/${buildId}`);
+}
+
+export async function assignEnhancement(buildId: string, slot: BuildEnhancementSlot, kind: string, slug: string, form: FormData) {
+  const session = await requireCurrentSession();
+  const rawRank = String(form.get("rank") ?? "");
+  if (rawRank && !/^\d+$/.test(rawRank)) throw new Error("Enhancement rank must be a non-negative integer");
+  setBuildEnhancement(getDatabase(), session.user.id, buildId, slot, { kind, slug }, rawRank ? Number(rawRank) : undefined);
+  revalidatePath(`/builds/${buildId}`);
+}
+
+export async function clearEnhancement(buildId: string, slot: BuildEnhancementSlot) {
+  const session = await requireCurrentSession();
+  removeBuildEnhancement(getDatabase(), session.user.id, buildId, slot);
   revalidatePath(`/builds/${buildId}`);
 }
 

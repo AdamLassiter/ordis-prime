@@ -203,6 +203,13 @@ export const buildMods = sqliteTable("build_mods", {
   entityId: text("entity_id").notNull().references(() => entities.id),
   rank: integer(),
 }, (table) => [uniqueIndex("build_mod_position").on(table.equipmentId, table.position)]);
+export const buildEnhancements = sqliteTable("build_enhancements", {
+  id: text().primaryKey(),
+  buildId: text("build_id").notNull().references(() => playerBuilds.id, { onDelete: "cascade" }),
+  slot: text().notNull(),
+  entityId: text("entity_id").notNull().references(() => entities.id),
+  rank: integer(),
+}, (table) => [uniqueIndex("build_enhancement_slot").on(table.buildId, table.slot)]);
 export const buildShareSnapshots = sqliteTable("build_share_snapshots", {
   id: text().primaryKey(),
   shareKey: text("share_key").notNull(),

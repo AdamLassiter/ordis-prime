@@ -3,10 +3,13 @@ import type Database from "better-sqlite3";
 
 export const BUILD_SLOTS = ["warframe", "primary", "secondary", "melee", "companion", "companion-weapon", "archwing", "archgun", "archmelee", "operator-amp"] as const;
 export type BuildSlot = typeof BUILD_SLOTS[number];
+export const BUILD_ENHANCEMENT_SLOTS = ["warframe-arcane-1", "warframe-arcane-2", "operator-arcane-1", "operator-arcane-2", "amp-arcane-1", "amp-arcane-2", "primary-arcane", "secondary-arcane", "melee-arcane", "archon-shard-1", "archon-shard-2", "archon-shard-3", "archon-shard-4", "archon-shard-5"] as const;
+export type BuildEnhancementSlot = typeof BUILD_ENHANCEMENT_SLOTS[number];
 
 export interface BuildEntityReference { kind: string; slug: string; name: string }
 export interface BuildMod { position: number; entity: BuildEntityReference; rank?: number }
 export interface BuildEquipmentEntry { id: string; slot: BuildSlot; entity: BuildEntityReference; notes?: string; configuration?: string; formaCount: number; capacityUpgrade: boolean; mods: BuildMod[] }
+export interface BuildEnhancement { slot: BuildEnhancementSlot; entity: BuildEntityReference; rank?: number }
 export interface PlayerBuild {
   id: string;
   title: string;
@@ -16,6 +19,7 @@ export interface PlayerBuild {
   createdAt: number;
   updatedAt: number;
   equipment: BuildEquipmentEntry[];
+  enhancements: BuildEnhancement[];
 }
 export interface SharedBuildSnapshot extends Omit<PlayerBuild, "id" | "createdAt" | "updatedAt"> {
   shareKey: string;
@@ -72,7 +76,7 @@ export function cloneSharedBuild(sqlite: Database.Database, userId: string, shar
   return cloneBuildSnapshot(sqlite, userId, source);
 }
 
-function cloneBuildSnapshot(sqlite: Database.Database, userId: string, source: Pick<PlayerBuild, "title" | "category" | "notes" | "equipment">): string {
+function cloneBuildSnapshot(sqlite: Database.Database, userId: string, source: Pick<PlayerBuild, "title" | "category" | "notes" | "equipment" | "enhancements">): string {
   return sqlite.transaction(() => {
     const cloneId = createPlayerBuild(sqlite, userId, { title: cloneTitle(source.title), category: source.category, notes: source.notes });
     for (const equipment of source.equipment) {
@@ -80,6 +84,7 @@ function cloneBuildSnapshot(sqlite: Database.Database, userId: string, source: P
       configureBuildEquipment(sqlite, userId, cloneId, equipment.slot, { configuration: equipment.configuration, formaCount: equipment.formaCount, capacityUpgrade: equipment.capacityUpgrade });
       for (const mod of equipment.mods) setBuildMod(sqlite, userId, cloneId, equipment.slot, mod.position, { kind: mod.entity.kind, slug: mod.entity.slug }, mod.rank);
     }
+    for (const enhancement of source.enhancements) setBuildEnhancement(sqlite, userId, cloneId, enhancement.slot, { kind: enhancement.entity.kind, slug: enhancement.entity.slug }, enhancement.rank);
     return cloneId;
   })();
 }
@@ -94,6 +99,42 @@ export function searchBuildCandidates(sqlite: Database.Database, slot: BuildSlot
     order by case when lower(name) = lower(?) then 0 else 1 end, name collate nocase
     limit ?
   `).all(kind, `%${escapeLike(query.trim())}%`, query.trim(), normalizedLimit) as BuildCandidate[];
+}
+
+export function searchBuildEnhancementCandidates(sqlite: Database.Database, slot: BuildEnhancementSlot, query: string, limit = 20): BuildCandidate[] {
+  const kind = enhancementKind(slot);
+  const normalizedLimit = Math.max(1, Math.min(100, Math.trunc(limit)));
+  return sqlite.prepare(`
+    select kind, slug, name from entities
+    where retired = 0 and kind = ? and name like ? escape '\\'
+    order by case when lower(name) = lower(?) then 0 else 1 end, name collate nocase
+    limit ?
+  `).all(kind, `%${escapeLike(query.trim())}%`, query.trim(), normalizedLimit) as BuildCandidate[];
+}
+
+export function setBuildEnhancement(sqlite: Database.Database, userId: string, buildId: string, slot: BuildEnhancementSlot, reference: { kind: string; slug: string }, rank?: number): void {
+  const expectedKind = enhancementKind(slot);
+  if (rank !== undefined && (!Number.isSafeInteger(rank) || rank < 0 || rank > 100)) throw new Error("Enhancement rank must be between 0 and 100");
+  sqlite.transaction(() => {
+    assertBuildOwner(sqlite, userId, buildId);
+    const entity = findEntity(sqlite, reference);
+    if (entity.kind !== expectedKind) throw new Error(`${slot} requires a ${expectedKind}, not ${entity.kind}`);
+    sqlite.prepare(`
+      insert into build_enhancements (id, build_id, slot, entity_id, rank) values (?, ?, ?, ?, ?)
+      on conflict(build_id, slot) do update set entity_id = excluded.entity_id, rank = excluded.rank
+    `).run(randomUUID(), buildId, slot, entity.id, rank ?? null);
+    touchBuild(sqlite, buildId);
+  })();
+}
+
+export function removeBuildEnhancement(sqlite: Database.Database, userId: string, buildId: string, slot: BuildEnhancementSlot): void {
+  sqlite.transaction(() => {
+    assertBuildOwner(sqlite, userId, buildId);
+    enhancementKind(slot);
+    const result = sqlite.prepare("delete from build_enhancements where build_id = ? and slot = ?").run(buildId, slot);
+    if (result.changes !== 1) throw new Error("Build enhancement not found");
+    touchBuild(sqlite, buildId);
+  })();
 }
 
 export function setBuildEquipment(sqlite: Database.Database, userId: string, buildId: string, slot: BuildSlot, reference: { kind: string; slug: string }, notes?: string): void {
@@ -204,8 +245,10 @@ export function addBuildAcquisitionGoals(sqlite: Database.Database, userId: stri
       select entity_id from build_equipment where build_id = ?
       union all
       select mod.entity_id from build_mods mod join build_equipment equipment on equipment.id = mod.equipment_id where equipment.build_id = ?
+      union all
+      select entity_id from build_enhancements where build_id = ?
     ) group by entity_id
-  `).all(buildId, buildId) as Array<{ entityId: string; quantity: number }>;
+  `).all(buildId, buildId, buildId) as Array<{ entityId: string; quantity: number }>;
   const inventory = sqlite.prepare("select coalesce(owned_count, 0) + coalesce(built_count, 0) as available from player_inventory where user_id = ? and entity_id = ?");
   const existingGoal = sqlite.prepare("select target_quantity as targetQuantity from player_goals where user_id = ? and entity_id = ?");
   const writeGoal = sqlite.prepare(`
@@ -242,10 +285,16 @@ function hydrateBuild(sqlite: Database.Database, build: { id: string; title: str
     from build_mods mod join entities entity on entity.id = mod.entity_id
     where mod.equipment_id = ? order by mod.position
   `);
+  const enhancements = sqlite.prepare(`
+    select enhancement.slot, enhancement.rank, entity.kind, entity.slug, entity.name
+    from build_enhancements enhancement join entities entity on entity.id = enhancement.entity_id
+    where enhancement.build_id = ? order by enhancement.slot
+  `).all(build.id) as Array<{ slot: BuildEnhancementSlot; rank: number | null; kind: string; slug: string; name: string }>;
   return {
     id: build.id, title: build.title, category: build.category ?? undefined, notes: build.notes ?? undefined,
     revision: build.revision, createdAt: build.createdAt, updatedAt: build.updatedAt,
     equipment: equipmentRows.map((entry) => ({ id: entry.id, slot: entry.slot, entity: { kind: entry.kind, slug: entry.slug, name: entry.name }, notes: entry.notes ?? undefined, configuration: entry.configuration ?? undefined, formaCount: entry.formaCount, capacityUpgrade: Boolean(entry.capacityUpgrade), mods: (modsQuery.all(entry.id) as Array<{ position: number; rank: number | null; kind: string; slug: string; name: string }>).map(({ position, rank, kind, slug, name }) => ({ position, rank: rank ?? undefined, entity: { kind, slug, name } })) })),
+    enhancements: enhancements.map(({ slot, rank, kind, slug, name }) => ({ slot, rank: rank ?? undefined, entity: { kind, slug, name } })),
   };
 }
 
@@ -259,5 +308,9 @@ function normalizeText(value: string | undefined, maximum: number, label: string
 function assertUser(sqlite: Database.Database, userId: string): void { if (!sqlite.prepare("select 1 from users where id = ?").get(userId)) throw new Error("Unknown user"); }
 function assertBuildOwner(sqlite: Database.Database, userId: string, buildId: string): void { if (!sqlite.prepare("select 1 from player_builds where id = ? and user_id = ?").get(buildId, userId)) throw new Error("Build not found"); }
 function findEntity(sqlite: Database.Database, reference: { kind: string; slug: string }): { id: string; kind: string } { const entity = sqlite.prepare("select id, kind from entities where kind = ? and slug = ? and retired = 0").get(reference.kind, reference.slug) as { id: string; kind: string } | undefined; if (!entity) throw new Error(`Unknown active entity ${reference.kind}:${reference.slug}`); return entity; }
+function enhancementKind(slot: BuildEnhancementSlot): "arcane" | "shard" {
+  if (!(BUILD_ENHANCEMENT_SLOTS as readonly string[]).includes(slot)) throw new Error("Build enhancement slot is invalid");
+  return slot.startsWith("archon-shard-") ? "shard" : "arcane";
+}
 function touchBuild(sqlite: Database.Database, buildId: string): void { sqlite.prepare("update player_builds set revision = revision + 1, updated_at = ? where id = ?").run(Date.now(), buildId); }
 function escapeLike(value: string): string { return value.replace(/[\\%_]/g, "\\$&"); }

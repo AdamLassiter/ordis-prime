@@ -26,6 +26,7 @@ export default async function SharedBuildPage({ params }: { params: Promise<{ sh
       {equipment.notes && <p className="muted build-notes">{equipment.notes}</p>}
       {equipment.mods.length > 0 && <ol className="mod-list">{equipment.mods.map((mod) => <li key={mod.position}><Link href={`/catalog/${mod.entity.kind}/${mod.entity.slug}`}>{mod.entity.name}</Link>{mod.rank === undefined ? "" : ` · rank ${mod.rank}`}</li>)}</ol>}
     </article>)}</div></section>
+    {build.enhancements.length > 0 && <section className="planner-section"><h2>Arcanes and Archon Shards</h2><div className="candidate-list">{build.enhancements.map((enhancement) => <div key={enhancement.slot}><span><span className="tag">{enhancement.slot}</span> <Link href={`/catalog/${enhancement.entity.kind}/${enhancement.entity.slug}`}>{enhancement.entity.name}</Link>{enhancement.rank === undefined ? "" : ` · rank ${enhancement.rank}`}</span></div>)}</div></section>}
   </>;
 }
 

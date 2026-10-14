@@ -6,11 +6,14 @@ subset of the supported loadout slots. Each equipment entry can carry notes and
 up to twenty positioned mods with optional ranks. It can also record a freeform
 configuration label (for example, an Incarnon or named config), Forma count, and
 whether an Orokin capacity upgrade is installed.
+Build-level enhancement slots record Warframe, operator/amp and weapon arcanes
+plus five positioned Archon Shards. Arcanes can retain an optional rank.
 
 Changing an equipment item clears that slot's mods and configuration because
 those assignments are usually item-specific. Every edit increments the build revision. Slot validation
 currently requires Warframe, companion and weapon entity kinds as appropriate;
-mod positions require canonical mod entities.
+mod positions require canonical mod entities, and enhancement slots require
+canonical arcane or shard entities.
 
 ## Share semantics
 
@@ -25,7 +28,8 @@ cited recommendations unstable. Authentication is required to edit a draft but
 not to view a snapshot.
 
 The authenticated `/builds` workshop creates drafts. Its editor searches the
-canonical catalog with slot-specific kind filtering, assigns equipment and mods,
+canonical catalog with slot-specific kind filtering, assigns equipment, mods and
+enhancements,
 records build and per-slot notes, and publishes snapshots. Public snapshot routes
 render without authentication and link embedded entities back into the catalog.
 The draft page lists every snapshot it published, can revoke an individual
@@ -36,15 +40,17 @@ changed and the clone resolves every embedded kind/slug against the recipient
 installation's active catalog in one transaction.
 
 The editor can project a draft into acquisition goals. It counts repeated mod
-requirements, ignores requirements already covered by owned or built inventory,
+requirements (including repeated shard slots), ignores requirements already covered by owned or built inventory,
 and never reduces a larger existing goal. The regular planner then expands
 recipes and recommends nodes using the same canonical IDs.
 
 ## Current limits
 
 - Forma count, a capacity-upgrade flag, and a configuration label are recorded,
-  but polarities and calculated capacity/drain are not modeled. Arcanes, shards,
-  abilities, schools and structured weapon configuration variants are also absent.
+  but polarities and calculated capacity/drain are not modeled. Arcane subtype
+  compatibility is not enforced because the canonical catalog does not yet
+  retain WFCD's arcane subtype. Shard effects, abilities, schools and structured
+  weapon configuration variants are also absent.
 - Private build drafts are included in portable profile export/import. Published
   share snapshots are deliberately installation-local capability URLs.
 - Share keys are unlisted capabilities, not access-controlled invitations.

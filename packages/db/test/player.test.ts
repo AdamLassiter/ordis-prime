@@ -5,7 +5,7 @@ import path from "node:path";
 import test from "node:test";
 import type Database from "better-sqlite3";
 import type { Observation } from "@ordis-prime/domain";
-import { configureBuildEquipment, createLocalUser, createPlayerBuild, createPlayerTodo, createWorldStateWatch, exportPlayerProfile, findPlayerInventoryEntry, getDiscoveryProgress, importPlayerProfile, listPlayerBuilds, listPlayerGoals, listPlayerInventory, listPlayerTodos, listWorldStateWatches, migrateDatabase, openSqliteDatabase, promoteSource, setBuildEquipment, setBuildMod, setDiscoveryProgress, setInventoryEntry, setInventoryEntryByReference, setPlayerGoal, setPlayerTodoStatus } from "../src/index.ts";
+import { configureBuildEquipment, createLocalUser, createPlayerBuild, createPlayerTodo, createWorldStateWatch, exportPlayerProfile, findPlayerInventoryEntry, getDiscoveryProgress, importPlayerProfile, listPlayerBuilds, listPlayerGoals, listPlayerInventory, listPlayerTodos, listWorldStateWatches, migrateDatabase, openSqliteDatabase, promoteSource, setBuildEnhancement, setBuildEquipment, setBuildMod, setDiscoveryProgress, setInventoryEntry, setInventoryEntryByReference, setPlayerGoal, setPlayerTodoStatus } from "../src/index.ts";
 
 test("profiles resolve stable source IDs across installations with different canonical UUIDs", async (context) => {
   const roots = await Promise.all(["a", "b"].map((name) => fs.mkdtemp(path.join(os.tmpdir(), `ordis-profile-${name}-`))));
@@ -30,6 +30,8 @@ test("profiles resolve stable source IDs across installations with different can
   setBuildEquipment(first.sqlite, firstUser, buildId, "primary", { kind: "weapon", slug: "braton" }, "Main weapon");
   configureBuildEquipment(first.sqlite, firstUser, buildId, "primary", { configuration: "A", formaCount: 2, capacityUpgrade: true });
   setBuildMod(first.sqlite, firstUser, buildId, "primary", 0, { kind: "mod", slug: "serration" }, 5);
+  setBuildEnhancement(first.sqlite, firstUser, buildId, "warframe-arcane-1", { kind: "arcane", slug: "arcane-barrier" }, 5);
+  setBuildEnhancement(first.sqlite, firstUser, buildId, "archon-shard-1", { kind: "shard", slug: "crimson-archon-shard" });
   const profile = exportPlayerProfile(first.sqlite, firstUser);
   const secondUser = createLocalUser(second.sqlite, { username: "Importer" });
   const result = importPlayerProfile(second.sqlite, secondUser, profile);
@@ -61,6 +63,10 @@ test("profiles resolve stable source IDs across installations with different can
   const importedBuild = listPlayerBuilds(second.sqlite, secondUser)[0]!;
   assert.equal(importedBuild.title, "Portable build");
   assert.deepEqual(importedBuild.equipment[0], { id: importedBuild.equipment[0]?.id, slot: "primary", entity: { kind: "weapon", slug: "braton", name: "Braton" }, notes: "Main weapon", configuration: "A", formaCount: 2, capacityUpgrade: true, mods: [{ position: 0, rank: 5, entity: { kind: "mod", slug: "serration", name: "Serration" } }] });
+  assert.deepEqual(importedBuild.enhancements, [
+    { slot: "archon-shard-1", entity: { kind: "shard", slug: "crimson-archon-shard", name: "Crimson Archon Shard" }, rank: undefined },
+    { slot: "warframe-arcane-1", entity: { kind: "arcane", slug: "arcane-barrier", name: "Arcane Barrier" }, rank: 5 },
+  ]);
 });
 
 test("inventory writes can resolve an active canonical entity without accepting its ID", async (context) => {
@@ -83,7 +89,7 @@ test("profile replacement is transactional and reports missing entities", async 
   const userId = createLocalUser(catalog.sqlite, { username: "Player" });
   setInventoryEntry(catalog.sqlite, userId, catalog.entityId, { ownedCount: 1, builtCount: 0, wantedCount: 0 });
   const missingProfile = {
-    schemaVersion: 6,
+    schemaVersion: 7,
     exportedAt: "2026-10-13T12:00:00.000Z",
     inventory: [{ entity: { externalIds: [{ sourceId: "items", namespace: "id", value: "missing" }], kind: "weapon", slug: "missing", name: "Missing" }, ownedCount: 1, builtCount: 0, wantedCount: 0 }],
     goals: [],
@@ -98,7 +104,7 @@ test("profile replacement is transactional and reports missing entities", async 
   assert.deepEqual(listPlayerInventory(catalog.sqlite, userId), []);
   assert.throws(() => importPlayerProfile(catalog.sqlite, userId, { ...missingProfile, inventory: [{ ...missingProfile.inventory[0], ownedCount: -1 }] }), /ownedCount/);
   assert.deepEqual(listPlayerInventory(catalog.sqlite, userId), []);
-  const missingBuildProfile = { ...missingProfile, inventory: [], builds: [{ title: "Broken build", equipment: [{ slot: "primary", entity: missingProfile.inventory[0]!.entity, formaCount: 0, capacityUpgrade: false, mods: [] }] }] };
+  const missingBuildProfile = { ...missingProfile, inventory: [], builds: [{ title: "Broken build", equipment: [{ slot: "primary", entity: missingProfile.inventory[0]!.entity, formaCount: 0, capacityUpgrade: false, mods: [] }], enhancements: [] }] };
   assert.deepEqual(importPlayerProfile(catalog.sqlite, userId, missingBuildProfile), {
     inventoryImported: 0, goalsImported: 0, discoveryProgressImported: 0, todosImported: 0, watchesImported: 0, buildsImported: 0,
     unresolved: [{ section: "builds", index: 0, name: "Broken build: Missing", reason: "missing" }],
@@ -110,7 +116,7 @@ test("profile replacement is transactional and reports missing entities", async 
     unresolved: [{ section: "todos", index: 0, name: "Missing", reason: "missing" }],
   });
   assert.deepEqual(listPlayerTodos(catalog.sqlite, userId).map(({ title, entity }) => ({ title, entity })), [{ title: "Keep this task", entity: undefined }]);
-  assert.throws(() => importPlayerProfile(catalog.sqlite, userId, { ...missingProfile, schemaVersion: 5 }), /schemaVersion 6/);
+  assert.throws(() => importPlayerProfile(catalog.sqlite, userId, { ...missingProfile, schemaVersion: 6 }), /schemaVersion 7/);
 });
 
 function createCatalog(databasePath: string): { sqlite: Database.Database; entityId: string } {
@@ -121,6 +127,8 @@ function createCatalog(databasePath: string): { sqlite: Database.Database; entit
     { type: "entity", kind: "weapon", externalIds: [{ sourceId: "items", namespace: "id", value: "braton" }], fields: { name: "Braton", slug: "braton" }, evidence },
     { type: "entity", kind: "quest", externalIds: [{ sourceId: "items", namespace: "id", value: "awakening" }], fields: { name: "Awakening", slug: "awakening" }, evidence: { ...evidence, sourceRecordKey: "awakening" } },
     { type: "entity", kind: "mod", externalIds: [{ sourceId: "items", namespace: "id", value: "serration" }], fields: { name: "Serration", slug: "serration" }, evidence: { ...evidence, sourceRecordKey: "serration" } },
+    { type: "entity", kind: "arcane", externalIds: [{ sourceId: "items", namespace: "id", value: "arcane-barrier" }], fields: { name: "Arcane Barrier", slug: "arcane-barrier" }, evidence: { ...evidence, sourceRecordKey: "arcane-barrier" } },
+    { type: "entity", kind: "shard", externalIds: [{ sourceId: "items", namespace: "id", value: "crimson-shard" }], fields: { name: "Crimson Archon Shard", slug: "crimson-archon-shard" }, evidence: { ...evidence, sourceRecordKey: "crimson-shard" } },
   ];
   promoteSource(sqlite, { source: { id: "items", name: "Items", homepage: "https://example.test", priority: 10 }, version: "v1", contentHash: "hash", retrievedAt: evidence.retrievedAt, observations });
   const entityId = (sqlite.prepare("select id from entities where slug = 'braton'").get() as { id: string }).id;

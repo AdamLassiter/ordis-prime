@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type Database from "better-sqlite3";
-import { BUILD_SLOTS, configureBuildEquipment, createPlayerBuild, listPlayerBuilds, setBuildEquipment, setBuildMod, type BuildSlot } from "./builds.ts";
+import { BUILD_ENHANCEMENT_SLOTS, BUILD_SLOTS, configureBuildEquipment, createPlayerBuild, listPlayerBuilds, setBuildEnhancement, setBuildEquipment, setBuildMod, type BuildEnhancementSlot, type BuildSlot } from "./builds.ts";
 import { createPlayerTodo, listPlayerTodos, type PlayerTodo } from "./todos.ts";
 import { createWorldStateWatch, listWorldStateWatches, type WorldStateWatch, type WorldStateWatchTrigger } from "./world-state-watches.ts";
 import type { WorldStateWindowKind } from "@ordis-prime/domain";
@@ -69,7 +69,7 @@ export interface PortableEntityReference {
 }
 
 export interface ProfileExport {
-  schemaVersion: 6;
+  schemaVersion: 7;
   exportedAt: string;
   inventory: Array<InventoryValues & { entity: PortableEntityReference }>;
   goals: Array<{ entity: PortableEntityReference; targetQuantity: number }>;
@@ -92,6 +92,7 @@ export interface PortableBuild {
     capacityUpgrade: boolean;
     mods: Array<{ position: number; rank?: number; entity: PortableEntityReference }>;
   }>;
+  enhancements: Array<{ slot: BuildEnhancementSlot; rank?: number; entity: PortableEntityReference }>;
 }
 
 export interface ProfileImportResult {
@@ -173,7 +174,7 @@ export function exportPlayerProfile(sqlite: Database.Database, userId: string): 
              source_id, namespace, value
   `);
   return {
-    schemaVersion: 6,
+    schemaVersion: 7,
     exportedAt: new Date().toISOString(),
     inventory: inventory.map(({ entityId, kind, slug, name, ...values }) => ({
       entity: { externalIds: identifiers.all(entityId) as PortableEntityReference["externalIds"], kind, slug, name },
@@ -200,12 +201,13 @@ export function exportPlayerProfile(sqlite: Database.Database, userId: string): 
       recurrenceFrom: recurrenceSourceId === undefined ? undefined : todoIndices.get(recurrenceSourceId),
     })),
     watches: listWorldStateWatches(sqlite, userId).map(({ id: _id, createdAt: _createdAt, ...watch }) => watch),
-    builds: listPlayerBuilds(sqlite, userId).map(({ title, category, notes, equipment }) => ({
+    builds: listPlayerBuilds(sqlite, userId).map(({ title, category, notes, equipment, enhancements }) => ({
       title, category, notes,
       equipment: equipment.map(({ slot, entity, notes: equipmentNotes, configuration, formaCount, capacityUpgrade, mods }) => ({
         slot, entity: portableReferenceForCatalogEntity(sqlite, identifiers, entity), notes: equipmentNotes, configuration, formaCount, capacityUpgrade,
         mods: mods.map(({ position, rank, entity: mod }) => ({ position, rank, entity: portableReferenceForCatalogEntity(sqlite, identifiers, mod) })),
       })),
+      enhancements: enhancements.map(({ slot, rank, entity }) => ({ slot, rank, entity: portableReferenceForCatalogEntity(sqlite, identifiers, entity) })),
     })),
   };
 }
@@ -222,7 +224,7 @@ export function importPlayerProfile(
   const resolvedGoals: Array<{ entityId: string; targetQuantity: number }> = [];
   const resolvedDiscoveryProgress: Array<{ entityId: string; state: "discovered" | "completed" }> = [];
   const resolvedTodos: Array<Omit<ProfileExport["todos"][number], "entity"> & { entity?: { kind: string; slug: string } }> = [];
-  const resolvedBuilds: Array<{ build: PortableBuild; equipment: Array<{ slot: BuildSlot; reference: { kind: string; slug: string }; notes?: string; configuration?: string; formaCount: number; capacityUpgrade: boolean; mods: Array<{ position: number; rank?: number; reference: { kind: string; slug: string } }> }> }> = [];
+  const resolvedBuilds: Array<{ build: PortableBuild; equipment: Array<{ slot: BuildSlot; reference: { kind: string; slug: string }; notes?: string; configuration?: string; formaCount: number; capacityUpgrade: boolean; mods: Array<{ position: number; rank?: number; reference: { kind: string; slug: string } }> }>; enhancements: Array<{ slot: BuildEnhancementSlot; rank?: number; reference: { kind: string; slug: string } }> }> = [];
   const unresolved: ProfileImportResult["unresolved"] = [];
 
   for (const [index, entry] of profile.inventory.entries()) {
@@ -281,7 +283,15 @@ export function importPlayerProfile(
       });
       return { slot: entry.slot, reference: equipmentResolution.entityId ? catalogReferenceById(sqlite, equipmentResolution.entityId) : { kind: entry.entity.kind, slug: entry.entity.slug }, notes: entry.notes, configuration: entry.configuration, formaCount: entry.formaCount, capacityUpgrade: entry.capacityUpgrade, mods };
     });
-    if (complete) resolvedBuilds.push({ build, equipment });
+    const enhancements = build.enhancements.map((entry) => {
+      const resolution = resolvePortableEntity(sqlite, entry.entity);
+      if (resolution.reason) {
+        unresolved.push({ section: "builds", index, name: `${build.title}: ${entry.entity.name}`, reason: resolution.reason });
+        complete = false;
+      }
+      return { slot: entry.slot, rank: entry.rank, reference: resolution.entityId ? catalogReferenceById(sqlite, resolution.entityId) : { kind: entry.entity.kind, slug: entry.entity.slug } };
+    });
+    if (complete) resolvedBuilds.push({ build, equipment, enhancements });
   }
 
   sqlite.transaction(() => {
@@ -323,13 +333,14 @@ export function importPlayerProfile(
       const id = createWorldStateWatch(sqlite, userId, watch);
       if (!watch.enabled) sqlite.prepare("update world_state_watches set enabled = 0 where id = ? and user_id = ?").run(id, userId);
     }
-    for (const { build, equipment } of resolvedBuilds) {
+    for (const { build, equipment, enhancements } of resolvedBuilds) {
       const buildId = createPlayerBuild(sqlite, userId, build);
       for (const entry of equipment) {
         setBuildEquipment(sqlite, userId, buildId, entry.slot, entry.reference, entry.notes);
         configureBuildEquipment(sqlite, userId, buildId, entry.slot, entry);
         for (const mod of entry.mods) setBuildMod(sqlite, userId, buildId, entry.slot, mod.position, mod.reference, mod.rank);
       }
+      for (const enhancement of enhancements) setBuildEnhancement(sqlite, userId, buildId, enhancement.slot, enhancement.reference, enhancement.rank);
     }
   })();
   return {
@@ -339,7 +350,7 @@ export function importPlayerProfile(
 }
 
 function parseProfile(value: unknown): ProfileExport {
-  if (!isRecord(value) || value.schemaVersion !== 6 || !Array.isArray(value.inventory) || !Array.isArray(value.goals) || !Array.isArray(value.discoveryProgress) || !Array.isArray(value.todos) || !Array.isArray(value.watches) || !Array.isArray(value.builds)) throw new Error("Profile must use schemaVersion 6 and contain every portable state array");
+  if (!isRecord(value) || value.schemaVersion !== 7 || !Array.isArray(value.inventory) || !Array.isArray(value.goals) || !Array.isArray(value.discoveryProgress) || !Array.isArray(value.todos) || !Array.isArray(value.watches) || !Array.isArray(value.builds)) throw new Error("Profile must use schemaVersion 7 and contain every portable state array");
   const inventory = value.inventory.map((entry, index) => {
     if (!isRecord(entry)) throw new Error(`Profile inventory entry ${index} is invalid`);
     const entity = parsePortableEntity(entry.entity, `inventory entry ${index}`);
@@ -364,7 +375,7 @@ function parseProfile(value: unknown): ProfileExport {
   }
   const watches = value.watches.map((entry, index) => parsePortableWatch(entry, index));
   const builds = value.builds.map((entry, index) => parsePortableBuild(entry, index));
-  return { schemaVersion: 6, exportedAt: typeof value.exportedAt === "string" ? value.exportedAt : "", inventory, goals, discoveryProgress, todos, watches, builds };
+  return { schemaVersion: 7, exportedAt: typeof value.exportedAt === "string" ? value.exportedAt : "", inventory, goals, discoveryProgress, todos, watches, builds };
 }
 
 function parsePortableTodo(value: unknown, index: number): ProfileExport["todos"][number] {
@@ -389,7 +400,7 @@ function parsePortableWatch(value: unknown, index: number): ProfileExport["watch
 }
 
 function parsePortableBuild(value: unknown, index: number): PortableBuild {
-  if (!isRecord(value) || typeof value.title !== "string" || !value.title.trim() || value.title.length > 160 || !Array.isArray(value.equipment)) throw new Error(`Profile build entry ${index} is invalid`);
+  if (!isRecord(value) || typeof value.title !== "string" || !value.title.trim() || value.title.length > 160 || !Array.isArray(value.equipment) || !Array.isArray(value.enhancements)) throw new Error(`Profile build entry ${index} is invalid`);
   const slots = new Set<string>();
   const equipment = value.equipment.map((entry, equipmentIndex) => {
     const label = `build entry ${index} equipment ${equipmentIndex}`;
@@ -409,7 +420,15 @@ function parsePortableBuild(value: unknown, index: number): PortableBuild {
       formaCount: entry.formaCount as number, capacityUpgrade: entry.capacityUpgrade, mods,
     };
   });
-  return { title: value.title, category: optionalText(value.category, 80, `build entry ${index} category`), notes: optionalText(value.notes, 10_000, `build entry ${index} notes`), equipment };
+  const enhancementSlots = new Set<string>();
+  const enhancements = value.enhancements.map((entry, enhancementIndex) => {
+    const label = `build entry ${index} enhancement ${enhancementIndex}`;
+    if (!isRecord(entry) || typeof entry.slot !== "string" || !(BUILD_ENHANCEMENT_SLOTS as readonly string[]).includes(entry.slot) || (entry.rank !== undefined && (!Number.isSafeInteger(entry.rank) || (entry.rank as number) < 0 || (entry.rank as number) > 100))) throw new Error(`Profile ${label} is invalid`);
+    if (enhancementSlots.has(entry.slot)) throw new Error(`Profile build entry ${index} contains duplicate enhancement slot ${entry.slot}`);
+    enhancementSlots.add(entry.slot);
+    return { slot: entry.slot as BuildEnhancementSlot, rank: entry.rank as number | undefined, entity: parsePortableEntity(entry.entity, label) };
+  });
+  return { title: value.title, category: optionalText(value.category, 80, `build entry ${index} category`), notes: optionalText(value.notes, 10_000, `build entry ${index} notes`), equipment, enhancements };
 }
 
 function parsePortableEntity(value: unknown, label: string): PortableEntityReference {

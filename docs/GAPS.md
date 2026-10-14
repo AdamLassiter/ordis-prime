@@ -72,7 +72,9 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   positioned mods, ranks, configuration labels, Forma counts, capacity-upgrade
   flags, notes and immutable unlisted share snapshots. Authenticated
   editor and public snapshot routes use canonical catalog links. Advanced
-  polarity/capacity calculation and assigning arcanes and shards to builds remain. Private drafts are
+  polarity/capacity calculation remains. Builds can assign ranked arcanes and
+  positioned Archon Shards, but do not yet validate arcane subtype compatibility
+  or record selected shard effects. Private drafts are
   portable and can be cloned; their snapshot history can be viewed or revoked.
   Authenticated recipients can clone a public snapshot into a private draft.
   Draft equipment and mods can seed missing-item acquisition goals, but the

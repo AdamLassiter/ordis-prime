@@ -5,7 +5,7 @@ canonical entity IDs inside one installation, while exported profiles use
 provider identifiers so they can be restored into another installation whose
 canonical UUIDs differ.
 
-## Version 6 export
+## Version 7 export
 
 Each inventory entry includes:
 
@@ -29,8 +29,8 @@ the link and the unresolved reference is reported. Recurring occurrence chains
 use array-index predecessor references so completed history and an existing next
 occurrence cannot generate duplicates after restoration. Generated notifications are
 not portable. Private build drafts include their details,
-equipment, configurations and positioned mods, with every catalog member using
-the same portable reference. Published share snapshots are intentionally
+equipment, configurations, positioned mods, and typed arcane/shard enhancement
+slots, with every catalog member using the same portable reference. Published share snapshots are intentionally
 excluded because they are server-hosted immutable artifacts and capability URLs.
 
 Imports resolve external identifiers first and only fall back to the kind/slug
