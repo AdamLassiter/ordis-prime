@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { setPlayerGoal } from "@ordis-prime/db";
+import { setPlayerGoal, setPlayerRecipePreference } from "@ordis-prime/db";
 import { getDatabase } from "@/lib/database";
 import { requireCurrentSession } from "@/lib/session";
 
@@ -14,4 +14,10 @@ export async function updateGoal(kind: string, slug: string, form: FormData) {
   setPlayerGoal(getDatabase(), session.user.id, { kind, slug }, targetQuantity);
   revalidatePath("/planner");
   revalidatePath(`/catalog/${kind}/${slug}`);
+}
+
+export async function chooseRecipe(kind: string, slug: string, recipeId: string) {
+  const session = await requireCurrentSession();
+  setPlayerRecipePreference(getDatabase(), session.user.id, { kind, slug }, recipeId || undefined);
+  revalidatePath("/planner");
 }

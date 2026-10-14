@@ -145,6 +145,14 @@ export const goals = sqliteTable("player_goals", {
   createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
 }, (table) => [primaryKey({ columns: [table.userId, table.entityId] }), index("player_goals_entity").on(table.entityId)]);
+export const recipePreferences = sqliteTable("player_recipe_preferences", {
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  outputEntityId: text("output_entity_id").notNull().references(() => entities.id),
+  sourceId: text("source_id").notNull().references(() => sources.id),
+  sourceRecordKey: text("source_record_key").notNull(),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
+}, (table) => [primaryKey({ columns: [table.userId, table.outputEntityId] })]);
 export const playerTodos = sqliteTable("player_todos", {
   id: text().primaryKey(),
   userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),

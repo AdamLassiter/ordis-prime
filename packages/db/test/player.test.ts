@@ -5,7 +5,7 @@ import path from "node:path";
 import test from "node:test";
 import type Database from "better-sqlite3";
 import type { Observation } from "@ordis-prime/domain";
-import { configureBuildEquipment, createLocalUser, createPlayerBuild, createPlayerTodo, createWorldStateWatch, exportPlayerProfile, findPlayerInventoryEntry, getDiscoveryProgress, importPlayerProfile, listPlayerBuilds, listPlayerGoals, listPlayerInventory, listPlayerTodos, listWorldStateWatches, migrateDatabase, openSqliteDatabase, promoteSource, setBuildEnhancement, setBuildEquipment, setBuildMod, setDiscoveryProgress, setInventoryEntry, setInventoryEntryByReference, setPlayerGoal, setPlayerTodoStatus } from "../src/index.ts";
+import { configureBuildEquipment, createLocalUser, createPlayerBuild, createPlayerTodo, createWorldStateWatch, exportPlayerProfile, findPlayerInventoryEntry, getDiscoveryProgress, importPlayerProfile, listPlayerBuilds, listPlayerGoals, listPlayerInventory, listPlayerTodos, listWorldStateWatches, migrateDatabase, openSqliteDatabase, promoteSource, setBuildEnhancement, setBuildEquipment, setBuildMod, setDiscoveryProgress, setInventoryEntry, setInventoryEntryByReference, setPlayerGoal, setPlayerRecipePreference, setPlayerTodoStatus } from "../src/index.ts";
 
 test("profiles resolve stable source IDs across installations with different canonical UUIDs", async (context) => {
   const roots = await Promise.all(["a", "b"].map((name) => fs.mkdtemp(path.join(os.tmpdir(), `ordis-profile-${name}-`))));
@@ -22,6 +22,8 @@ test("profiles resolve stable source IDs across installations with different can
   });
   setInventoryEntry(first.sqlite, firstUser, first.entityId, { ownedCount: 2, builtCount: 1, wantedCount: 3, mastered: true, note: "Keep one unranked." });
   setPlayerGoal(first.sqlite, firstUser, { kind: "weapon", slug: "braton" }, 4);
+  const recipeId = (first.sqlite.prepare("select id from recipes where output_id = ?").get(first.entityId) as { id: string }).id;
+  setPlayerRecipePreference(first.sqlite, firstUser, { kind: "weapon", slug: "braton" }, recipeId);
   setDiscoveryProgress(first.sqlite, firstUser, { kind: "quest", slug: "awakening" }, "completed");
   const todoId = createPlayerTodo(first.sqlite, firstUser, { title: "Prepare", notes: "Before reset", dueAt: 1_800_000_000_000, recurrenceDays: 30, entity: { kind: "weapon", slug: "braton" } });
   setPlayerTodoStatus(first.sqlite, firstUser, todoId, "completed");
@@ -36,7 +38,7 @@ test("profiles resolve stable source IDs across installations with different can
   const secondUser = createLocalUser(second.sqlite, { username: "Importer" });
   const result = importPlayerProfile(second.sqlite, secondUser, profile);
 
-  assert.deepEqual(result, { inventoryImported: 1, goalsImported: 1, discoveryProgressImported: 1, todosImported: 2, watchesImported: 1, buildsImported: 1, unresolved: [] });
+  assert.deepEqual(result, { inventoryImported: 1, goalsImported: 1, recipePreferencesImported: 1, discoveryProgressImported: 1, todosImported: 2, watchesImported: 1, buildsImported: 1, unresolved: [] });
   assert.deepEqual(listPlayerInventory(second.sqlite, secondUser), [{
     entityId: second.entityId,
     kind: "weapon",
@@ -50,6 +52,7 @@ test("profiles resolve stable source IDs across installations with different can
     note: "Keep one unranked.",
   }]);
   assert.deepEqual(listPlayerGoals(second.sqlite, secondUser).map(({ name, targetQuantity }) => ({ name, targetQuantity })), [{ name: "Braton", targetQuantity: 4 }]);
+  assert.deepEqual(second.sqlite.prepare("select source_id as sourceId, source_record_key as sourceRecordKey from player_recipe_preferences where user_id = ?").all(secondUser), [{ sourceId: "items", sourceRecordKey: "braton" }]);
   assert.equal(getDiscoveryProgress(second.sqlite, secondUser, { kind: "quest", slug: "awakening" }), "completed");
   assert.deepEqual(listPlayerTodos(second.sqlite, secondUser).map(({ title, notes, status, dueAt, recurrenceDays, entity }) => ({ title, notes, status, dueAt, recurrenceDays, entity })), [
     { title: "Prepare", notes: "Before reset", status: "open", dueAt: 1_800_000_000_000 + 30 * 86_400_000, recurrenceDays: 30, entity: { kind: "weapon", slug: "braton", name: "Braton" } },
@@ -89,10 +92,11 @@ test("profile replacement is transactional and reports missing entities", async 
   const userId = createLocalUser(catalog.sqlite, { username: "Player" });
   setInventoryEntry(catalog.sqlite, userId, catalog.entityId, { ownedCount: 1, builtCount: 0, wantedCount: 0 });
   const missingProfile = {
-    schemaVersion: 8,
+    schemaVersion: 9,
     exportedAt: "2026-10-13T12:00:00.000Z",
     inventory: [{ entity: { externalIds: [{ sourceId: "items", namespace: "id", value: "missing" }], kind: "weapon", slug: "missing", name: "Missing" }, ownedCount: 1, builtCount: 0, wantedCount: 0 }],
     goals: [],
+    recipePreferences: [],
     discoveryProgress: [],
     todos: [],
     watches: [],
@@ -100,29 +104,29 @@ test("profile replacement is transactional and reports missing entities", async 
   };
 
   const result = importPlayerProfile(catalog.sqlite, userId, missingProfile, { mode: "replace" });
-  assert.deepEqual(result, { inventoryImported: 0, goalsImported: 0, discoveryProgressImported: 0, todosImported: 0, watchesImported: 0, buildsImported: 0, unresolved: [{ section: "inventory", index: 0, name: "Missing", reason: "missing" }] });
+  assert.deepEqual(result, { inventoryImported: 0, goalsImported: 0, recipePreferencesImported: 0, discoveryProgressImported: 0, todosImported: 0, watchesImported: 0, buildsImported: 0, unresolved: [{ section: "inventory", index: 0, name: "Missing", reason: "missing" }] });
   assert.deepEqual(listPlayerInventory(catalog.sqlite, userId), []);
   assert.throws(() => importPlayerProfile(catalog.sqlite, userId, { ...missingProfile, inventory: [{ ...missingProfile.inventory[0], ownedCount: -1 }] }), /ownedCount/);
   assert.deepEqual(listPlayerInventory(catalog.sqlite, userId), []);
   const missingBuildProfile = { ...missingProfile, inventory: [], builds: [{ title: "Broken build", equipment: [{ slot: "primary", entity: missingProfile.inventory[0]!.entity, formaCount: 0, capacityUpgrade: false, mods: [] }], enhancements: [] }] };
   assert.deepEqual(importPlayerProfile(catalog.sqlite, userId, missingBuildProfile), {
-    inventoryImported: 0, goalsImported: 0, discoveryProgressImported: 0, todosImported: 0, watchesImported: 0, buildsImported: 0,
+    inventoryImported: 0, goalsImported: 0, recipePreferencesImported: 0, discoveryProgressImported: 0, todosImported: 0, watchesImported: 0, buildsImported: 0,
     unresolved: [{ section: "builds", index: 0, name: "Broken build: Missing", reason: "missing" }],
   });
   assert.deepEqual(listPlayerBuilds(catalog.sqlite, userId), []);
   const missingTodoProfile = { ...missingProfile, inventory: [], todos: [{ title: "Keep this task", status: "open", entity: missingProfile.inventory[0]!.entity }] };
   assert.deepEqual(importPlayerProfile(catalog.sqlite, userId, missingTodoProfile), {
-    inventoryImported: 0, goalsImported: 0, discoveryProgressImported: 0, todosImported: 1, watchesImported: 0, buildsImported: 0,
+    inventoryImported: 0, goalsImported: 0, recipePreferencesImported: 0, discoveryProgressImported: 0, todosImported: 1, watchesImported: 0, buildsImported: 0,
     unresolved: [{ section: "todos", index: 0, name: "Missing", reason: "missing" }],
   });
   assert.deepEqual(listPlayerTodos(catalog.sqlite, userId).map(({ title, entity }) => ({ title, entity })), [{ title: "Keep this task", entity: undefined }]);
   const missingWatchProfile = { ...missingProfile, inventory: [], watches: [{ kind: "event", trigger: "active", leadMinutes: 0, enabled: true, labelContains: "Missing", entity: missingProfile.inventory[0]!.entity }] };
   assert.deepEqual(importPlayerProfile(catalog.sqlite, userId, missingWatchProfile), {
-    inventoryImported: 0, goalsImported: 0, discoveryProgressImported: 0, todosImported: 0, watchesImported: 1, buildsImported: 0,
+    inventoryImported: 0, goalsImported: 0, recipePreferencesImported: 0, discoveryProgressImported: 0, todosImported: 0, watchesImported: 1, buildsImported: 0,
     unresolved: [{ section: "watches", index: 0, name: "Missing", reason: "missing" }],
   });
   assert.deepEqual(listWorldStateWatches(catalog.sqlite, userId).map(({ kind, labelContains, entity }) => ({ kind, labelContains, entity })), [{ kind: "event", labelContains: "Missing", entity: undefined }]);
-  assert.throws(() => importPlayerProfile(catalog.sqlite, userId, { ...missingProfile, schemaVersion: 7 }), /schemaVersion 8/);
+  assert.throws(() => importPlayerProfile(catalog.sqlite, userId, { ...missingProfile, schemaVersion: 8 }), /schemaVersion 9/);
 });
 
 function createCatalog(databasePath: string): { sqlite: Database.Database; entityId: string } {
@@ -135,6 +139,8 @@ function createCatalog(databasePath: string): { sqlite: Database.Database; entit
     { type: "entity", kind: "mod", externalIds: [{ sourceId: "items", namespace: "id", value: "serration" }], fields: { name: "Serration", slug: "serration" }, evidence: { ...evidence, sourceRecordKey: "serration" } },
     { type: "entity", kind: "arcane", externalIds: [{ sourceId: "items", namespace: "id", value: "arcane-barrier" }], fields: { name: "Arcane Barrier", slug: "arcane-barrier" }, evidence: { ...evidence, sourceRecordKey: "arcane-barrier" } },
     { type: "entity", kind: "shard", externalIds: [{ sourceId: "items", namespace: "id", value: "crimson-shard" }], fields: { name: "Crimson Archon Shard", slug: "crimson-archon-shard" }, evidence: { ...evidence, sourceRecordKey: "crimson-shard" } },
+    { type: "entity", kind: "resource", externalIds: [{ sourceId: "items", namespace: "id", value: "alloy" }], fields: { name: "Alloy Plate", slug: "alloy-plate" }, evidence: { ...evidence, sourceRecordKey: "alloy" } },
+    { type: "recipe", outputExternalId: { sourceId: "items", namespace: "id", value: "braton" }, ingredients: [{ externalId: { sourceId: "items", namespace: "id", value: "alloy" }, quantity: 10 }], evidence },
   ];
   promoteSource(sqlite, { source: { id: "items", name: "Items", homepage: "https://example.test", priority: 10 }, version: "v1", contentHash: "hash", retrievedAt: evidence.retrievedAt, observations });
   const entityId = (sqlite.prepare("select id from entities where slug = 'braton'").get() as { id: string }).id;

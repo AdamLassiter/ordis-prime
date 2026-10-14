@@ -4,7 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import type { Observation } from "@ordis-prime/domain";
-import { buildAcquisitionPlan, createLocalUser, findLiveAcquisitionOpportunities, migrateDatabase, openSqliteDatabase, promoteSource, promoteWorldState, setInventoryEntryByReference, setPlayerGoal } from "../src/index.ts";
+import { buildAcquisitionPlan, createLocalUser, findLiveAcquisitionOpportunities, migrateDatabase, openSqliteDatabase, promoteSource, promoteWorldState, setInventoryEntryByReference, setPlayerGoal, setPlayerRecipePreference } from "../src/index.ts";
 
 test("persisted goals expand through active recipes and produce named node reasons", async (context) => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-planner-db-"));
@@ -40,4 +40,40 @@ test("persisted goals expand through active recipes and produce named node reaso
 
   setPlayerGoal(sqlite, userId, { kind: "warframe", slug: "test-frame" }, 0);
   assert.deepEqual(buildAcquisitionPlan(sqlite, userId).goals, []);
+});
+
+test("players can choose stable alternatives when active sources disagree on a recipe", async (context) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-planner-alternatives-"));
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const databasePath = path.join(root, "planner.sqlite");
+  migrateDatabase(databasePath);
+  const sqlite = openSqliteDatabase(databasePath);
+  context.after(() => sqlite.close());
+  const external = (value: string) => ({ sourceId: "base", namespace: "id", value });
+  const evidence = { sourceId: "base", sourceRecordKey: "base-recipe", snapshotVersion: "v1", retrievedAt: "2026-10-13T12:00:00.000Z" };
+  const entities: Observation[] = [
+    { type: "entity", kind: "weapon", externalIds: [external("weapon")], fields: { name: "Choice Weapon", slug: "choice-weapon" }, evidence: { ...evidence, sourceRecordKey: "weapon" } },
+    { type: "entity", kind: "resource", externalIds: [external("alloy")], fields: { name: "Alloy", slug: "alloy" }, evidence: { ...evidence, sourceRecordKey: "alloy" } },
+    { type: "entity", kind: "resource", externalIds: [external("cells")], fields: { name: "Cells", slug: "cells" }, evidence: { ...evidence, sourceRecordKey: "cells" } },
+    { type: "recipe", outputExternalId: external("weapon"), ingredients: [{ externalId: external("alloy"), quantity: 10 }], evidence },
+  ];
+  promoteSource(sqlite, { source: { id: "base", name: "Base recipes", homepage: "https://example.test/base", priority: 10 }, version: "v1", contentHash: "base-v1", retrievedAt: evidence.retrievedAt, observations: entities });
+  const alternateEvidence = { ...evidence, sourceId: "alternate", sourceRecordKey: "alternate-recipe", snapshotVersion: "alt-v1" };
+  promoteSource(sqlite, { source: { id: "alternate", name: "Alternate recipes", homepage: "https://example.test/alternate", priority: 20 }, version: "alt-v1", contentHash: "alt-v1", retrievedAt: evidence.retrievedAt, observations: [{ type: "recipe", outputExternalId: external("weapon"), ingredients: [{ externalId: external("cells"), quantity: 2 }], evidence: alternateEvidence }] });
+  const userId = createLocalUser(sqlite, { username: "Chooser" });
+  setPlayerGoal(sqlite, userId, { kind: "weapon", slug: "choice-weapon" }, 1);
+
+  let plan = buildAcquisitionPlan(sqlite, userId);
+  assert.deepEqual(plan.missing.map(({ name, quantity }) => ({ name, quantity })), [{ name: "Cells", quantity: 2 }]);
+  assert.equal(plan.recipeChoices[0]?.options.find(({ selected }) => selected)?.sourceId, "alternate");
+  const baseOption = plan.recipeChoices[0]!.options.find(({ sourceId }) => sourceId === "base")!;
+  setPlayerRecipePreference(sqlite, userId, { kind: "weapon", slug: "choice-weapon" }, baseOption.recipeId);
+  plan = buildAcquisitionPlan(sqlite, userId);
+  assert.deepEqual(plan.missing.map(({ name, quantity }) => ({ name, quantity })), [{ name: "Alloy", quantity: 10 }]);
+  assert.equal(plan.recipeChoices[0]?.options.find(({ selected }) => selected)?.sourceId, "base");
+
+  const refreshed = entities.map((observation) => ({ ...observation, evidence: { ...observation.evidence, snapshotVersion: "v2" } })) as Observation[];
+  promoteSource(sqlite, { source: { id: "base", name: "Base recipes", homepage: "https://example.test/base", priority: 10 }, version: "v2", contentHash: "base-v2", retrievedAt: evidence.retrievedAt, observations: refreshed });
+  plan = buildAcquisitionPlan(sqlite, userId);
+  assert.equal(plan.recipeChoices[0]?.options.find(({ selected }) => selected)?.sourceId, "base");
 });

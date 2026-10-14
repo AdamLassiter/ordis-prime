@@ -5,7 +5,7 @@ canonical entity IDs inside one installation, while exported profiles use
 provider identifiers so they can be restored into another installation whose
 canonical UUIDs differ.
 
-## Version 8 export
+## Version 9 export
 
 Each inventory entry includes:
 
@@ -16,6 +16,10 @@ Each inventory entry includes:
 
 Goals use the same portable entity reference and include their desired final
 quantity.
+Recipe preferences carry a portable output reference plus the selected source
+ID and stable recipe record key. Import accepts the preference only when that
+exact active recipe is available in the destination catalog; otherwise it is
+reported unresolved and the planner uses its deterministic fallback.
 
 Discovery progress uses the same reference and records either `discovered` or
 `completed`; unseen topics are represented by absence. Every entity-keyed

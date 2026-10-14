@@ -69,10 +69,11 @@ export interface PortableEntityReference {
 }
 
 export interface ProfileExport {
-  schemaVersion: 8;
+  schemaVersion: 9;
   exportedAt: string;
   inventory: Array<InventoryValues & { entity: PortableEntityReference }>;
   goals: Array<{ entity: PortableEntityReference; targetQuantity: number }>;
+  recipePreferences: Array<{ output: PortableEntityReference; sourceId: string; sourceRecordKey: string }>;
   discoveryProgress: Array<{ entity: PortableEntityReference; state: "discovered" | "completed" }>;
   todos: Array<Pick<PlayerTodo, "title" | "notes" | "status" | "dueAt" | "recurrenceDays"> & { entity?: PortableEntityReference; recurrenceFrom?: number }>;
   watches: Array<Omit<WorldStateWatch, "id" | "createdAt" | "entity"> & { entity?: PortableEntityReference }>;
@@ -98,11 +99,12 @@ export interface PortableBuild {
 export interface ProfileImportResult {
   inventoryImported: number;
   goalsImported: number;
+  recipePreferencesImported: number;
   discoveryProgressImported: number;
   todosImported: number;
   watchesImported: number;
   buildsImported: number;
-  unresolved: Array<{ section: "inventory" | "goals" | "discoveryProgress" | "todos" | "watches" | "builds"; index: number; name: string; reason: "missing" | "ambiguous" }>;
+  unresolved: Array<{ section: "inventory" | "goals" | "recipePreferences" | "discoveryProgress" | "todos" | "watches" | "builds"; index: number; name: string; reason: "missing" | "ambiguous" }>;
 }
 
 export function createLocalUser(
@@ -174,7 +176,7 @@ export function exportPlayerProfile(sqlite: Database.Database, userId: string): 
              source_id, namespace, value
   `);
   return {
-    schemaVersion: 8,
+    schemaVersion: 9,
     exportedAt: new Date().toISOString(),
     inventory: inventory.map(({ entityId, kind, slug, name, ...values }) => ({
       entity: { externalIds: identifiers.all(entityId) as PortableEntityReference["externalIds"], kind, slug, name },
@@ -187,6 +189,14 @@ export function exportPlayerProfile(sqlite: Database.Database, userId: string): 
     `).all(userId) as Array<{ entityId: string; kind: string; slug: string; name: string; targetQuantity: number }>).map(({ entityId, kind, slug, name, targetQuantity }) => ({
       entity: { externalIds: identifiers.all(entityId) as PortableEntityReference["externalIds"], kind, slug, name },
       targetQuantity,
+    })),
+    recipePreferences: (sqlite.prepare(`
+      select preference.output_entity_id as entityId, entity.kind, entity.slug, entity.name,
+        preference.source_id as sourceId, preference.source_record_key as sourceRecordKey
+      from player_recipe_preferences preference join entities entity on entity.id = preference.output_entity_id
+      where preference.user_id = ? order by entity.name collate nocase, entity.kind
+    `).all(userId) as Array<{ entityId: string; kind: string; slug: string; name: string; sourceId: string; sourceRecordKey: string }>).map(({ entityId, kind, slug, name, sourceId, sourceRecordKey }) => ({
+      output: { externalIds: identifiers.all(entityId) as PortableEntityReference["externalIds"], kind, slug, name }, sourceId, sourceRecordKey,
     })),
     discoveryProgress: (sqlite.prepare(`
       select progress.entity_id as entityId, entity.kind, entity.slug, entity.name, progress.state
@@ -222,6 +232,7 @@ export function importPlayerProfile(
   const profile = parseProfile(value);
   const resolvedInventory: Array<{ entityId: string; values: InventoryValues }> = [];
   const resolvedGoals: Array<{ entityId: string; targetQuantity: number }> = [];
+  const resolvedRecipePreferences: Array<{ outputEntityId: string; sourceId: string; sourceRecordKey: string }> = [];
   const resolvedDiscoveryProgress: Array<{ entityId: string; state: "discovered" | "completed" }> = [];
   const resolvedTodos: Array<Omit<ProfileExport["todos"][number], "entity"> & { entity?: { kind: string; slug: string } }> = [];
   const resolvedWatches: Array<Omit<ProfileExport["watches"][number], "entity"> & { entity?: { kind: string; slug: string } }> = [];
@@ -243,6 +254,22 @@ export function importPlayerProfile(
       continue;
     }
     resolvedGoals.push({ entityId: resolution.entityId!, targetQuantity: goal.targetQuantity });
+  }
+  for (const [index, preference] of profile.recipePreferences.entries()) {
+    const resolution = resolvePortableEntity(sqlite, preference.output);
+    if (resolution.reason) {
+      unresolved.push({ section: "recipePreferences", index, name: preference.output.name, reason: resolution.reason });
+      continue;
+    }
+    const active = sqlite.prepare(`
+      select 1 from recipes recipe join source_runs run on run.id = recipe.source_run_id and run.status = 'active'
+      where recipe.output_id = ? and run.source_id = ? and recipe.source_record_key = ?
+    `).get(resolution.entityId!, preference.sourceId, preference.sourceRecordKey);
+    if (!active) {
+      unresolved.push({ section: "recipePreferences", index, name: preference.output.name, reason: "missing" });
+      continue;
+    }
+    resolvedRecipePreferences.push({ outputEntityId: resolution.entityId!, sourceId: preference.sourceId, sourceRecordKey: preference.sourceRecordKey });
   }
   for (const [index, progress] of profile.discoveryProgress.entries()) {
     const resolution = resolvePortableEntity(sqlite, progress.entity);
@@ -313,6 +340,7 @@ export function importPlayerProfile(
     if (options.mode === "replace") {
       sqlite.prepare("delete from player_inventory where user_id = ?").run(userId);
       sqlite.prepare("delete from player_goals where user_id = ?").run(userId);
+      sqlite.prepare("delete from player_recipe_preferences where user_id = ?").run(userId);
       sqlite.prepare("delete from player_discovery_progress where user_id = ?").run(userId);
       sqlite.prepare("delete from player_todos where user_id = ?").run(userId);
       sqlite.prepare("delete from world_state_watches where user_id = ?").run(userId);
@@ -327,6 +355,16 @@ export function importPlayerProfile(
     for (const goal of resolvedGoals) {
       const now = Date.now();
       writeGoal.run(userId, goal.entityId, goal.targetQuantity, now, now);
+    }
+    const writePreference = sqlite.prepare(`
+      insert into player_recipe_preferences (user_id, output_entity_id, source_id, source_record_key, created_at, updated_at)
+      values (?, ?, ?, ?, ?, ?)
+      on conflict(user_id, output_entity_id) do update set source_id = excluded.source_id,
+        source_record_key = excluded.source_record_key, updated_at = excluded.updated_at
+    `);
+    for (const preference of resolvedRecipePreferences) {
+      const now = Date.now();
+      writePreference.run(userId, preference.outputEntityId, preference.sourceId, preference.sourceRecordKey, now, now);
     }
     const writeProgress = sqlite.prepare(`
       insert into player_discovery_progress (user_id, entity_id, state, updated_at) values (?, ?, ?, ?)
@@ -359,13 +397,13 @@ export function importPlayerProfile(
     }
   })();
   return {
-    inventoryImported: resolvedInventory.length, goalsImported: resolvedGoals.length, discoveryProgressImported: resolvedDiscoveryProgress.length,
+    inventoryImported: resolvedInventory.length, goalsImported: resolvedGoals.length, recipePreferencesImported: resolvedRecipePreferences.length, discoveryProgressImported: resolvedDiscoveryProgress.length,
     todosImported: resolvedTodos.length, watchesImported: resolvedWatches.length, buildsImported: resolvedBuilds.length, unresolved,
   };
 }
 
 function parseProfile(value: unknown): ProfileExport {
-  if (!isRecord(value) || value.schemaVersion !== 8 || !Array.isArray(value.inventory) || !Array.isArray(value.goals) || !Array.isArray(value.discoveryProgress) || !Array.isArray(value.todos) || !Array.isArray(value.watches) || !Array.isArray(value.builds)) throw new Error("Profile must use schemaVersion 8 and contain every portable state array");
+  if (!isRecord(value) || value.schemaVersion !== 9 || !Array.isArray(value.inventory) || !Array.isArray(value.goals) || !Array.isArray(value.recipePreferences) || !Array.isArray(value.discoveryProgress) || !Array.isArray(value.todos) || !Array.isArray(value.watches) || !Array.isArray(value.builds)) throw new Error("Profile must use schemaVersion 9 and contain every portable state array");
   const inventory = value.inventory.map((entry, index) => {
     if (!isRecord(entry)) throw new Error(`Profile inventory entry ${index} is invalid`);
     const entity = parsePortableEntity(entry.entity, `inventory entry ${index}`);
@@ -375,6 +413,10 @@ function parseProfile(value: unknown): ProfileExport {
   const goals = value.goals.map((entry, index) => {
     if (!isRecord(entry) || !Number.isSafeInteger(entry.targetQuantity) || (entry.targetQuantity as number) <= 0) throw new Error(`Profile goal entry ${index} has an invalid targetQuantity`);
     return { entity: parsePortableEntity(entry.entity, `goal entry ${index}`), targetQuantity: entry.targetQuantity as number };
+  });
+  const recipePreferences = value.recipePreferences.map((entry, index) => {
+    if (!isRecord(entry) || typeof entry.sourceId !== "string" || !entry.sourceId || typeof entry.sourceRecordKey !== "string" || !entry.sourceRecordKey) throw new Error(`Profile recipe preference entry ${index} is invalid`);
+    return { output: parsePortableEntity(entry.output, `recipe preference entry ${index}`), sourceId: entry.sourceId, sourceRecordKey: entry.sourceRecordKey };
   });
   const discoveryProgress = value.discoveryProgress.map((entry, index) => {
     if (!isRecord(entry) || (entry.state !== "discovered" && entry.state !== "completed")) throw new Error(`Profile discovery progress entry ${index} has an invalid state`);
@@ -390,7 +432,7 @@ function parseProfile(value: unknown): ProfileExport {
   }
   const watches = value.watches.map((entry, index) => parsePortableWatch(entry, index));
   const builds = value.builds.map((entry, index) => parsePortableBuild(entry, index));
-  return { schemaVersion: 8, exportedAt: typeof value.exportedAt === "string" ? value.exportedAt : "", inventory, goals, discoveryProgress, todos, watches, builds };
+  return { schemaVersion: 9, exportedAt: typeof value.exportedAt === "string" ? value.exportedAt : "", inventory, goals, recipePreferences, discoveryProgress, todos, watches, builds };
 }
 
 function parsePortableTodo(value: unknown, index: number): ProfileExport["todos"][number] {

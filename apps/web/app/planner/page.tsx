@@ -4,6 +4,7 @@ import { buildAcquisitionPlan, findLiveAcquisitionOpportunities } from "@ordis-p
 import { getDatabase } from "@/lib/database";
 import { getCurrentSession } from "@/lib/session";
 import { GoalForm } from "./goal-form";
+import { chooseRecipe } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -38,6 +39,8 @@ export default async function Planner() {
       <h2>Still required</h2>
       {plan.missing.length ? <ul className="requirement-list">{plan.missing.map((item) => <li key={item.entityId}><Link href={`/catalog/${item.kind}/${item.slug}`}>{item.name}</Link><strong>{item.quantity}</strong></li>)}</ul> : <p className="success">Your recorded inventory satisfies every goal.</p>}
     </section>}
+
+    {plan.recipeChoices.length > 0 && <section className="planner-section"><h2>Recipe choices</h2><p className="muted">Choose which active recipe the planner expands for each output. The highest-priority current source is used until you choose.</p><div className="grid">{plan.recipeChoices.map((choice) => <article className="card" key={choice.output.entityId}><h3><Link href={`/catalog/${choice.output.kind}/${choice.output.slug}`}>{choice.output.name}</Link></h3>{!choice.preferredAvailable && <p className="notice">Your saved recipe is unavailable; the current fallback is selected.</p>}<div className="form-stack">{choice.options.map((option) => <form action={chooseRecipe.bind(null, choice.output.kind, choice.output.slug, option.recipeId)} key={option.recipeId}><p><strong>{option.sourceName}</strong>{option.sourceRecordKey ? <> · <code>{option.sourceRecordKey}</code></> : ""}</p><p className="muted">Makes {option.outputQuantity} from {option.ingredients.map(({ name, quantity }) => `${quantity} × ${name}`).join(" + ")}</p><button className={option.selected ? "button" : "nav-button"} disabled={option.selected || !option.sourceRecordKey}>{option.selected ? "Used in plan" : option.sourceRecordKey ? "Use this recipe" : "No stable recipe key"}</button></form>)}</div><form action={chooseRecipe.bind(null, choice.output.kind, choice.output.slug, "")}><button className="nav-button">Use automatic source priority</button></form></article>)}</div></section>}
 
     {plan.missing.length > 0 && <section className="planner-section">
       <h2>Candidate nodes</h2>

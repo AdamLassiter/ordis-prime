@@ -20,6 +20,19 @@ export interface AcquisitionPlan {
     neededRewards: Array<{ entityId: string; kind: string; slug: string; name: string; quantity: number; chance?: number; rotation?: string }>;
     reasons: string[];
   }>;
+  recipeChoices: Array<{
+    output: { entityId: string; kind: string; slug: string; name: string };
+    preferredAvailable: boolean;
+    options: Array<{
+      recipeId: string;
+      sourceId: string;
+      sourceName: string;
+      sourceRecordKey?: string;
+      selected: boolean;
+      outputQuantity: number;
+      ingredients: Array<{ entityId: string; kind: string; slug: string; name: string; quantity: number }>;
+    }>;
+  }>;
 }
 
 export interface LiveAcquisitionOpportunity {
@@ -68,6 +81,35 @@ export function listPlayerGoals(sqlite: Database.Database, userId: string): Play
   `).all(userId) as PlayerGoal[];
 }
 
+export function setPlayerRecipePreference(
+  sqlite: Database.Database,
+  userId: string,
+  output: { kind: string; slug: string },
+  recipeId?: string,
+): void {
+  assertUser(sqlite, userId);
+  const outputEntity = sqlite.prepare("select id from entities where kind = ? and slug = ? and retired = 0").get(output.kind, output.slug) as { id: string } | undefined;
+  if (!outputEntity) throw new Error(`Unknown active entity ${output.kind}:${output.slug}`);
+  if (!recipeId) {
+    sqlite.prepare("delete from player_recipe_preferences where user_id = ? and output_entity_id = ?").run(userId, outputEntity.id);
+    return;
+  }
+  const recipe = sqlite.prepare(`
+    select run.source_id as sourceId, recipe.source_record_key as sourceRecordKey
+    from recipes recipe join source_runs run on run.id = recipe.source_run_id and run.status = 'active'
+    where recipe.id = ? and recipe.output_id = ?
+  `).get(recipeId, outputEntity.id) as { sourceId: string; sourceRecordKey: string | null } | undefined;
+  if (!recipe) throw new Error("Recipe alternative is not active for this output");
+  if (!recipe.sourceRecordKey) throw new Error("Recipe alternative has no stable source record key");
+  const now = Date.now();
+  sqlite.prepare(`
+    insert into player_recipe_preferences (user_id, output_entity_id, source_id, source_record_key, created_at, updated_at)
+    values (?, ?, ?, ?, ?, ?)
+    on conflict(user_id, output_entity_id) do update set source_id = excluded.source_id,
+      source_record_key = excluded.source_record_key, updated_at = excluded.updated_at
+  `).run(userId, outputEntity.id, recipe.sourceId, recipe.sourceRecordKey, now, now);
+}
+
 export function buildAcquisitionPlan(sqlite: Database.Database, userId: string): AcquisitionPlan {
   const goals = listPlayerGoals(sqlite, userId);
   const inventoryRows = sqlite.prepare(`
@@ -84,26 +126,35 @@ export function buildAcquisitionPlan(sqlite: Database.Database, userId: string):
     subsumed: row.subsumed === null ? undefined : Boolean(row.subsumed),
   }));
   const recipeRows = sqlite.prepare(`
-    with selected_recipes as (
-      select recipe.*, row_number() over (
-        partition by recipe.output_id order by source.priority desc, run.retrieved_at desc, recipe.id
-      ) as preference
-      from recipes recipe
-      join source_runs run on run.id = recipe.source_run_id and run.status = 'active'
-      join sources source on source.id = run.source_id
-    )
     select recipe.id, recipe.output_id as outputId, recipe.output_quantity as outputQuantity,
-           ingredient.entity_id as entityId, ingredient.quantity
-    from selected_recipes recipe
+           recipe.source_record_key as sourceRecordKey, run.source_id as sourceId,
+           source.name as sourceName, ingredient.entity_id as entityId, ingredient.quantity
+    from recipes recipe
+    join source_runs run on run.id = recipe.source_run_id and run.status = 'active'
+    join sources source on source.id = run.source_id
     join recipe_ingredients ingredient on ingredient.recipe_id = recipe.id
-    where recipe.preference = 1
-    order by recipe.id, ingredient.entity_id
-  `).all() as Array<{ id: string; outputId: string; outputQuantity: number; entityId: string; quantity: number }>;
-  const recipesById = new Map<string, Recipe>();
+    order by recipe.output_id, source.priority desc, run.retrieved_at desc, recipe.id, ingredient.entity_id
+  `).all() as Array<{ id: string; outputId: string; outputQuantity: number; sourceId: string; sourceName: string; sourceRecordKey: string | null; entityId: string; quantity: number }>;
+  type RecipeOption = Recipe & { id: string; sourceId: string; sourceName: string; sourceRecordKey?: string };
+  const recipesById = new Map<string, RecipeOption>();
   for (const row of recipeRows) {
-    const recipe = recipesById.get(row.id) ?? { outputId: row.outputId as EntityId, outputQuantity: row.outputQuantity, ingredients: [] };
+    const recipe = recipesById.get(row.id) ?? { id: row.id, outputId: row.outputId as EntityId, outputQuantity: row.outputQuantity, sourceId: row.sourceId, sourceName: row.sourceName, sourceRecordKey: row.sourceRecordKey ?? undefined, ingredients: [] };
     recipe.ingredients.push({ entityId: row.entityId as EntityId, quantity: row.quantity });
     recipesById.set(row.id, recipe);
+  }
+  const preferences = new Map((sqlite.prepare("select output_entity_id as outputId, source_id as sourceId, source_record_key as sourceRecordKey from player_recipe_preferences where user_id = ?").all(userId) as Array<{ outputId: string; sourceId: string; sourceRecordKey: string }>).map((entry) => [entry.outputId, entry]));
+  const recipeGroups = new Map<string, RecipeOption[]>();
+  for (const recipe of recipesById.values()) recipeGroups.set(recipe.outputId, [...(recipeGroups.get(recipe.outputId) ?? []), recipe]);
+  const selectedRecipes: Recipe[] = [];
+  const selectedIds = new Set<string>();
+  const preferredAvailability = new Map<string, boolean>();
+  for (const [outputId, options] of recipeGroups) {
+    const preference = preferences.get(outputId);
+    const preferred = preference ? options.find((option) => option.sourceId === preference.sourceId && option.sourceRecordKey === preference.sourceRecordKey) : undefined;
+    const selected = preferred ?? options[0]!;
+    selectedRecipes.push(selected);
+    selectedIds.add(selected.id);
+    preferredAvailability.set(outputId, !preference || Boolean(preferred));
   }
   const drops = sqlite.prepare(`
     select item_drop.reward_id as rewardId, item_drop.node_id as nodeId, item_drop.location_label as locationLabel,
@@ -118,9 +169,9 @@ export function buildAcquisitionPlan(sqlite: Database.Database, userId: string):
   const missingRequirements = expandMissingRequirements(
     goals.map((goal) => ({ entityId: goal.entityId as EntityId, quantity: goal.targetQuantity })),
     inventory,
-    [...recipesById.values()],
+    selectedRecipes,
   );
-  const entityIds = new Set([...missingRequirements.map((entry) => entry.entityId), ...drops.map((drop) => drop.nodeId).filter(Boolean) as EntityId[]]);
+  const entityIds = new Set([...missingRequirements.map((entry) => entry.entityId), ...drops.map((drop) => drop.nodeId).filter(Boolean) as EntityId[], ...recipeGroups.keys() as Iterable<EntityId>, ...recipeRows.map((row) => row.entityId as EntityId)]);
   const entities = loadEntityNames(sqlite, entityIds);
   const missing = missingRequirements.map((entry) => ({ ...entityDetails(entities, entry.entityId), entityId: entry.entityId, quantity: entry.quantity }));
   const recommendations = recommendNodes(missingRequirements, drops).map((recommendation) => {
@@ -140,7 +191,17 @@ export function buildAcquisitionPlan(sqlite: Database.Database, userId: string):
       ],
     };
   });
-  return { goals, missing, recommendations };
+  const plannedOutputs = new Set<string>([...goals.map(({ entityId }) => entityId), ...missingRequirements.flatMap(({ via }) => via)]);
+  const recipeChoices = [...recipeGroups.entries()].filter(([outputId, options]) => options.length > 1 && plannedOutputs.has(outputId)).map(([outputId, options]) => ({
+    output: { entityId: outputId, ...entityDetails(entities, outputId) },
+    preferredAvailable: preferredAvailability.get(outputId) ?? true,
+    options: options.map((option) => ({
+      recipeId: option.id, sourceId: option.sourceId, sourceName: option.sourceName, sourceRecordKey: option.sourceRecordKey,
+      selected: selectedIds.has(option.id), outputQuantity: option.outputQuantity,
+      ingredients: option.ingredients.map((ingredient) => ({ entityId: ingredient.entityId, ...entityDetails(entities, ingredient.entityId), quantity: ingredient.quantity })),
+    })),
+  }));
+  return { goals, missing, recommendations, recipeChoices };
 }
 
 export function findLiveAcquisitionOpportunities(sqlite: Database.Database, plan: AcquisitionPlan, now = Date.now()): LiveAcquisitionOpportunity[] {
