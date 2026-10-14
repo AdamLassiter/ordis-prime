@@ -28,10 +28,12 @@ interface ManualRankingDocument {
 
 export class ManualRankingAdapter implements SourceAdapter {
   readonly source: SourceDescriptor;
-  private readonly filePath: string;
+  private readonly filePath?: string;
+  private readonly providedBytes?: Uint8Array;
 
-  private constructor(filePath: string, document: ManualRankingDocument) {
+  private constructor(document: ManualRankingDocument, filePath?: string, providedBytes?: Uint8Array) {
     this.filePath = filePath;
+    this.providedBytes = providedBytes;
     this.source = {
       id: document.source.id,
       name: document.source.title,
@@ -43,11 +45,15 @@ export class ManualRankingAdapter implements SourceAdapter {
 
   static async fromFile(filePath: string): Promise<ManualRankingAdapter> {
     const bytes = await fs.readFile(filePath);
-    return new ManualRankingAdapter(filePath, parseDocument(bytes));
+    return new ManualRankingAdapter(parseDocument(bytes), filePath);
+  }
+
+  static fromBytes(bytes: Uint8Array): ManualRankingAdapter {
+    return new ManualRankingAdapter(parseDocument(bytes), undefined, bytes.slice());
   }
 
   async fetch(_context: FetchContext): Promise<Snapshot> {
-    const bytes = new Uint8Array(await fs.readFile(this.filePath));
+    const bytes = this.providedBytes?.slice() ?? new Uint8Array(await fs.readFile(this.filePath!));
     const hash = contentHash(bytes);
     return {
       sourceId: this.source.id,

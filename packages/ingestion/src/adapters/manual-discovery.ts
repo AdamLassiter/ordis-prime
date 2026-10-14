@@ -16,19 +16,24 @@ type EntityReference = string | ExternalIdentifier;
 
 export class ManualDiscoveryAdapter implements SourceAdapter {
   readonly source: SourceDescriptor;
-  private readonly filePath: string;
-  private constructor(filePath: string, document: ManualDiscoveryDocument) {
+  private readonly filePath?: string;
+  private readonly providedBytes?: Uint8Array;
+  private constructor(document: ManualDiscoveryDocument, filePath?: string, providedBytes?: Uint8Array) {
     this.filePath = filePath;
+    this.providedBytes = providedBytes;
     this.source = { id: document.source.id, name: document.source.title, homepage: document.source.url, license: document.source.licenseNote, priority: document.source.priority ?? 200 };
   }
 
   static async fromFile(filePath: string): Promise<ManualDiscoveryAdapter> {
     const bytes = await fs.readFile(filePath);
-    return new ManualDiscoveryAdapter(filePath, parseDocument(bytes));
+    return new ManualDiscoveryAdapter(parseDocument(bytes), filePath);
+  }
+  static fromBytes(bytes: Uint8Array): ManualDiscoveryAdapter {
+    return new ManualDiscoveryAdapter(parseDocument(bytes), undefined, bytes.slice());
   }
 
   async fetch(_context: FetchContext): Promise<Snapshot> {
-    const bytes = new Uint8Array(await fs.readFile(this.filePath));
+    const bytes = this.providedBytes?.slice() ?? new Uint8Array(await fs.readFile(this.filePath!));
     const hash = contentHash(bytes);
     return { sourceId: this.source.id, version: hash, retrievedAt: new Date().toISOString(), contentHash: hash, mediaType: "application/yaml", bytes };
   }

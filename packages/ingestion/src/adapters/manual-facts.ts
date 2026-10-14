@@ -22,20 +22,25 @@ interface ManualFactsDocument {
 
 export class ManualFactsAdapter implements SourceAdapter {
   readonly source: SourceDescriptor;
-  private readonly filePath: string;
+  private readonly filePath?: string;
+  private readonly providedBytes?: Uint8Array;
 
-  private constructor(filePath: string, document: ManualFactsDocument) {
+  private constructor(document: ManualFactsDocument, filePath?: string, providedBytes?: Uint8Array) {
     this.filePath = filePath;
+    this.providedBytes = providedBytes;
     this.source = { id: document.source.id, name: document.source.title, homepage: document.source.url, license: document.source.licenseNote, priority: document.source.priority ?? 300 };
   }
 
   static async fromFile(filePath: string): Promise<ManualFactsAdapter> {
     const bytes = await fs.readFile(filePath);
-    return new ManualFactsAdapter(filePath, parseDocument(bytes));
+    return new ManualFactsAdapter(parseDocument(bytes), filePath);
+  }
+  static fromBytes(bytes: Uint8Array): ManualFactsAdapter {
+    return new ManualFactsAdapter(parseDocument(bytes), undefined, bytes.slice());
   }
 
   async fetch(_context: FetchContext): Promise<Snapshot> {
-    const bytes = new Uint8Array(await fs.readFile(this.filePath));
+    const bytes = this.providedBytes?.slice() ?? new Uint8Array(await fs.readFile(this.filePath!));
     const hash = contentHash(bytes);
     return { sourceId: this.source.id, version: hash, retrievedAt: new Date().toISOString(), contentHash: hash, mediaType: "application/yaml", bytes };
   }

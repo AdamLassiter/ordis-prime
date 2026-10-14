@@ -18,6 +18,11 @@ Import a file after the WFCD item catalog so its subjects can resolve:
 pnpm data:refresh manual-ranking:data/manual/editorial.example.yaml
 ```
 
+Administrators can also upload any of the three YAML formats from
+`/data-sources`. Uploads are limited to 1 MB, parsed as untrusted input, and
+passed directly to the same immutable snapshot, observation and transactional
+promotion pipeline. The browser never supplies a server filesystem path.
+
 The original YAML is stored as an immutable snapshot. Ranking sets and their
 entries are versioned by source run, so different authors and dates remain
 independently queryable rather than being collapsed into a consensus score.
@@ -86,5 +91,5 @@ canonical field.
 
 An unresolved target, mismatched entity kind, or unregistered target source is
 recorded as an ingestion conflict. It is never redirected by a similar display
-name. Manual files remain explicit operator imports and are not scheduled by
-the background worker.
+name. Manual sources remain explicit operator imports—by CLI or administrator
+upload—and are not scheduled by the background worker.

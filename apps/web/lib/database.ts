@@ -6,10 +6,14 @@ const processGlobal = globalThis as typeof globalThis & { ordisDatabase?: Sqlite
 
 export function getDatabase(): SqliteDatabase {
   if (processGlobal.ordisDatabase) return processGlobal.ordisDatabase;
-  const dataDirectory = process.env.ORDIS_DATA_DIR ?? path.resolve(process.cwd(), "../../data");
+  const dataDirectory = getDataDirectory();
   const databasePath = process.env.ORDIS_DATABASE_URL ?? path.join(dataDirectory, "ordis-prime.sqlite");
   migrateDatabase(databasePath);
   const database = openSqliteDatabase(databasePath);
   processGlobal.ordisDatabase = database;
   return database;
+}
+
+export function getDataDirectory(): string {
+  return process.env.ORDIS_DATA_DIR ?? path.resolve(process.cwd(), "../../data");
 }

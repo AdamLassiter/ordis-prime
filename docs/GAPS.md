@@ -44,8 +44,10 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   entity fields and typed relations retain exact source record keys, paths, and
   citations when supplied. Older pre-provenance relation rows display without
   those optional details. Docker deployments queue initial catalog imports in
-  the worker and expose administrator-only refresh controls; manual sources still
-  require an explicit CLI import against the mounted data directory.
+  the worker and expose administrator-only refresh controls. Administrators can
+  upload bounded ranking, discovery or factual-overlay YAML through the same
+  snapshot/promotion pipeline; uploads run in the web request and do not yet
+  provide a preview/dry-run stage.
 - Local email/password accounts, persisted sessions, closed registration, and
   first-administrator bootstrap enforcement are wired at the authentication
   API, with first-run, sign-in, and sign-out UI. Player-state reads and mutations
