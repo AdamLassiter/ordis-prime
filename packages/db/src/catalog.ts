@@ -8,7 +8,11 @@ export interface CatalogSummary {
 }
 export const DISCOVERY_KINDS = ["quest", "mechanic", "secret", "enemy", "boss"] as const;
 export type DiscoveryKind = typeof DISCOVERY_KINDS[number];
-export interface DiscoveryCatalogEntry extends CatalogSummary { progressState?: "unseen" | "discovered" | "completed"; relationCount: number }
+export interface DiscoveryCatalogEntry extends CatalogSummary {
+  progressState?: "unseen" | "discovered" | "completed";
+  relationCount: number;
+  neighbors: Array<{ direction: "outgoing" | "incoming"; relationKind: string; kind: string; slug: string; name: string; sourceName: string; citationUrl?: string }>;
+}
 
 export interface CatalogItem extends CatalogSummary {
   components: Array<{ kind: string; slug: string; name: string; quantity: number }>;
@@ -83,8 +87,8 @@ export function searchDiscoveryCatalog(sqlite: Database.Database, input: { query
   const progressJoin = input.userId ? "left join player_discovery_progress progress on progress.entity_id = entity.id and progress.user_id = ?" : "";
   const progressColumn = input.userId ? "coalesce(progress.state, 'unseen') as progressState" : "null as progressState";
   const progressWhere = input.progress ? "and coalesce(progress.state, 'unseen') = ?" : "";
-  return sqlite.prepare(`
-    select entity.kind, entity.slug, entity.name, entity.description, ${progressColumn},
+  const entries = sqlite.prepare(`
+    select entity.id as entityId, entity.kind, entity.slug, entity.name, entity.description, ${progressColumn},
       (select count(*) from entity_relations relation join source_runs relation_run on relation_run.id = relation.source_run_id and relation_run.status = 'active'
        where relation.from_entity_id = entity.id or relation.to_entity_id = entity.id) as relationCount
     from entities entity
@@ -93,7 +97,50 @@ export function searchDiscoveryCatalog(sqlite: Database.Database, input: { query
       and (? is null or entity.kind = ?) and entity.name like ? escape '\\' ${progressWhere}
     order by case entity.kind when 'quest' then 0 when 'mechanic' then 1 when 'secret' then 2 when 'boss' then 3 else 4 end,
       entity.name collate nocase limit ?
-  `).all(...(input.userId ? [input.userId] : []), ...DISCOVERY_KINDS, input.kind ?? null, input.kind ?? null, pattern, ...(input.progress ? [input.progress] : []), normalizedLimit) as DiscoveryCatalogEntry[];
+  `).all(...(input.userId ? [input.userId] : []), ...DISCOVERY_KINDS, input.kind ?? null, input.kind ?? null, pattern, ...(input.progress ? [input.progress] : []), normalizedLimit) as Array<Omit<DiscoveryCatalogEntry, "neighbors"> & { entityId: string }>;
+  const neighbors = loadDiscoveryNeighbors(sqlite, entries.map(({ entityId }) => entityId));
+  return entries.map(({ entityId, ...entry }) => ({ ...entry, neighbors: neighbors.get(entityId) ?? [] }));
+}
+
+function loadDiscoveryNeighbors(sqlite: Database.Database, entityIds: string[]): Map<string, DiscoveryCatalogEntry["neighbors"]> {
+  const result = new Map<string, DiscoveryCatalogEntry["neighbors"]>();
+  if (!entityIds.length) return result;
+  for (let offset = 0; offset < entityIds.length; offset += 400) {
+    const chunk = entityIds.slice(offset, offset + 400);
+    const placeholders = chunk.map(() => "?").join(", ");
+    const rows = sqlite.prepare(`
+    with neighbor_candidates as (
+      select relation.from_entity_id as ownerId, 'outgoing' as direction,
+        relation.kind as relationKind, target.kind, target.slug, target.name,
+        source.name as sourceName, relation.citation_url as citationUrl
+      from entity_relations relation
+      join source_runs run on run.id = relation.source_run_id and run.status = 'active'
+      join sources source on source.id = run.source_id
+      join entities target on target.id = relation.to_entity_id and target.retired = 0
+      where relation.from_entity_id in (${placeholders})
+      union all
+      select relation.to_entity_id, 'incoming', relation.kind, origin.kind,
+        origin.slug, origin.name, source.name, relation.citation_url
+      from entity_relations relation
+      join source_runs run on run.id = relation.source_run_id and run.status = 'active'
+      join sources source on source.id = run.source_id
+      join entities origin on origin.id = relation.from_entity_id and origin.retired = 0
+      where relation.to_entity_id in (${placeholders})
+    ), ranked as (
+      select *, row_number() over (
+        partition by ownerId order by relationKind, name collate nocase, kind, slug
+      ) as neighborPosition
+      from neighbor_candidates
+    )
+    select ownerId, direction, relationKind, kind, slug, name, sourceName, citationUrl
+    from ranked where neighborPosition <= 3
+    order by ownerId, neighborPosition
+  `).all(...chunk, ...chunk) as Array<{ ownerId: string; direction: "outgoing" | "incoming"; relationKind: string; kind: string; slug: string; name: string; sourceName: string; citationUrl: string | null }>;
+    for (const { ownerId, citationUrl, ...neighbor } of rows) {
+      result.set(ownerId, [...(result.get(ownerId) ?? []), { ...neighbor, citationUrl: citationUrl ?? undefined }]);
+    }
+  }
+  return result;
 }
 
 export function findCatalogItem(sqlite: Database.Database, kind: string, slug: string): CatalogItem | undefined {
