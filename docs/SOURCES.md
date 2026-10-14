@@ -30,6 +30,11 @@ their stable `/Lotus/Types/Gameplay/NarmerSorties/ArchonCrystal` internal-name
 prefix because the aggregate currently labels both their category and type as
 `Misc`; this provider-specific rule is isolated in the adapter.
 
+Promoting any static source creates a catalog release whose membership records
+the active run of every static source at that instant. The data-source page
+shows the current release ID and versions, so a composed catalog can be audited
+without reconstructing membership from later mutable run status.
+
 The leased worker schedules `wfcd-items` and `wfcd-drops` independently once per
 day by default, while world state runs every five minutes. An administrator can
 bring any of those queued jobs forward from `/data-sources`; this does not run

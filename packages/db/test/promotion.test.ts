@@ -48,6 +48,31 @@ test("promotion atomically replaces the active source run while preserving entit
   assert.equal((sqlite.prepare("select version from source_runs where status = 'active'").get() as { version: string }).version, "v2");
 });
 
+test("each catalog release records its complete active source-run composition", async (context) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-releases-"));
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const databasePath = path.join(root, "catalog.sqlite");
+  migrateDatabase(databasePath);
+  const sqlite = new Database(databasePath);
+  sqlite.pragma("foreign_keys = ON");
+  context.after(() => sqlite.close());
+
+  const firstA = promoteSource(sqlite, input("a-v1", [entity("a", "Source A", "component", "a-v1")]));
+  const sourceB = { ...source, id: "fixture-b", name: "Fixture B" };
+  const firstB = promoteSource(sqlite, { ...input("b-v1", [entity("b", "Source B", "component", "b-v1", "fixture-b")]), source: sourceB });
+  const secondA = promoteSource(sqlite, input("a-v2", [entity("a", "Source A revised", "component", "a-v2")]));
+
+  const releaseMembers = sqlite.prepare(`
+    select member.source_id as sourceId, run.version
+    from catalog_release_sources member join source_runs run on run.id = member.source_run_id
+    where member.release_id = ? order by member.source_id
+  `);
+  assert.deepEqual(releaseMembers.all(firstA.releaseId), [{ sourceId: "fixture", version: "a-v1" }]);
+  assert.deepEqual(releaseMembers.all(firstB.releaseId), [{ sourceId: "fixture", version: "a-v1" }, { sourceId: "fixture-b", version: "b-v1" }]);
+  assert.deepEqual(releaseMembers.all(secondA.releaseId), [{ sourceId: "fixture", version: "a-v2" }, { sourceId: "fixture-b", version: "b-v1" }]);
+  assert.equal(promoteSource(sqlite, input("a-v2", [entity("a", "Source A revised", "component", "a-v2")])).releaseId, secondA.releaseId);
+});
+
 test("ambiguous aliases are recorded for review without corrupting relationships", async (context) => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-promotion-"));
   context.after(() => fs.rm(root, { recursive: true, force: true }));

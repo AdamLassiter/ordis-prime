@@ -206,6 +206,10 @@ function promoteInTransaction(sqlite: Database.Database, input: PromoteSourceInp
   sqlite.prepare("update source_runs set status = 'active' where id = ?").run(sourceRunId);
   sqlite.prepare("update catalog_releases set active = 0 where active = 1").run();
   sqlite.prepare("insert into catalog_releases (id, created_at, promoted_at, active) values (?, ?, ?, 1)").run(releaseId, now, now);
+  sqlite.prepare(`
+    insert into catalog_release_sources (release_id, source_id, source_run_id)
+    select ?, source_id, id from source_runs where status = 'active'
+  `).run(releaseId);
 
   return { sourceRunId, releaseId, ...counts };
 }

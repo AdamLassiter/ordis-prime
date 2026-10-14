@@ -10,8 +10,9 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   container smoke test. GitHub Actions runs those build gates, but the workflow
   has not yet been observed on the remote repository.
 - The canonical schema, initial migration, and transactional per-source
-  promotion exist. Cross-source full-catalog candidate releases and pruning of
-  superseded inactive-source rows are not implemented yet; a SQLite-leased job
+  promotion exist. Each release now records its complete active source-run
+  composition. Pre-promotion validation across the whole candidate set and
+  pruning of superseded inactive-source rows are not implemented yet; a SQLite-leased job
   runner handles the current recurring world-state job.
   Migrations run lazily when the web process first opens SQLite.
 - WFCD item and mission-drop adapters exist and emit entities, recipes,

@@ -21,6 +21,11 @@ Names and URL slugs are never persistence keys. Query-critical relationships
 such as recipes and drops use typed tables; a generic relation is reserved for
 discovery links that do not require domain-specific attributes.
 
+Every promoted catalog release records the exact active run for every static
+source. Source-run `active` flags remain the efficient read selector, while the
+immutable membership rows make the composed release inspectable and reproducible.
+World-state snapshots remain a separate, faster-moving release stream.
+
 ## Runtime
 
 The Next.js process serves public and authenticated routes. SQLite is the only

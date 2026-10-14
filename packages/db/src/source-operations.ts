@@ -34,6 +34,27 @@ export interface SourceConflictReviewEvent {
   actor: string;
 }
 
+export interface ActiveCatalogRelease {
+  id: string;
+  promotedAt: number;
+  sources: Array<{ sourceId: string; sourceName: string; sourceRunId: string; version: string; retrievedAt: number }>;
+}
+
+export function getActiveCatalogRelease(sqlite: Database.Database): ActiveCatalogRelease | undefined {
+  const release = sqlite.prepare("select id, promoted_at as promotedAt from catalog_releases where active = 1 order by promoted_at desc limit 1")
+    .get() as Omit<ActiveCatalogRelease, "sources"> | undefined;
+  if (!release) return undefined;
+  const sources = sqlite.prepare(`
+    select source.id as sourceId, source.name as sourceName, run.id as sourceRunId,
+      run.version, run.retrieved_at as retrievedAt
+    from catalog_release_sources member
+    join sources source on source.id = member.source_id
+    join source_runs run on run.id = member.source_run_id
+    where member.release_id = ? order by source.name collate nocase
+  `).all(release.id) as ActiveCatalogRelease["sources"];
+  return { ...release, sources };
+}
+
 export function beginSourceRefresh(sqlite: Database.Database, source: PromotionSource): string {
   const id = randomUUID();
   sqlite.transaction(() => {

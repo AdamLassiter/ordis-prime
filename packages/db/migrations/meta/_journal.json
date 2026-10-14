@@ -141,6 +141,13 @@
       "when": 1792007243555,
       "tag": "0019_curly_mastermind",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "6",
+      "when": 1792007398813,
+      "tag": "0020_small_doctor_faustus",
+      "breakpoints": true
     }
   ]
 }
