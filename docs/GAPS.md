@@ -47,21 +47,23 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   summary, node reward ownership filtering, and portable profile import/export
   with transfer UI exist. Authenticated goals feed a planner that subtracts
   inventory, expands active recipes, lists missing requirements, and links to
-  candidate nodes with visible reasons. Profiles include inventory, goals and
-  discovery progress. Planning does not yet account for node
+  candidate nodes with visible reasons. Profiles include inventory, goals,
+  discovery progress, static todos, watch rules and private build drafts.
+  Generated alerts and published share snapshots are deliberately excluded.
+  Planning does not yet account for node
   access, alternative recipes, markets, relic refinement, or mission duration.
 - Authenticated players can keep private static todos with optional notes and due
   dates. Source-neutral world-state watches match current window fields and
   create deduplicated private in-app alerts. Todos and watches are not yet
-  portable or linked to canonical entities; todos cannot recur, watches cannot
+  linked to canonical entities; todos cannot recur, watches cannot
   be edited or paused, and there are no web-push or webhook delivery channels.
 - Private, revisioned build persistence supports partial equipment loadouts,
   positioned mods, ranks, configuration labels, Forma counts, capacity-upgrade
   flags, notes and immutable unlisted share snapshots. Authenticated
   editor and public snapshot routes use canonical catalog links. Advanced
-  polarity/capacity calculation, arcanes and shards, profile portability,
-  and cloning from public snapshots remain. Private drafts can be cloned, and
-  their snapshot history can be viewed or revoked.
+  polarity/capacity calculation, arcanes, shards and cloning from public
+  snapshots remain. Private drafts are portable and can be cloned; their
+  snapshot history can be viewed or revoked.
 - Active cited editorial ranking sets have a public source-and-item comparison
   matrix that preserves unlike scales and disagreement. Source subset controls
   and transparent derived summaries are not implemented.

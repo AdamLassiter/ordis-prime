@@ -1,5 +1,9 @@
 import { randomUUID } from "node:crypto";
 import type Database from "better-sqlite3";
+import { BUILD_SLOTS, configureBuildEquipment, createPlayerBuild, listPlayerBuilds, setBuildEquipment, setBuildMod, type BuildSlot } from "./builds.ts";
+import { createPlayerTodo, listPlayerTodos, setPlayerTodoStatus, type PlayerTodo } from "./todos.ts";
+import { createWorldStateWatch, listWorldStateWatches, type WorldStateWatch, type WorldStateWatchTrigger } from "./world-state-watches.ts";
+import type { WorldStateWindowKind } from "@ordis-prime/domain";
 
 export interface InventoryValues {
   ownedCount: number;
@@ -65,18 +69,39 @@ export interface PortableEntityReference {
 }
 
 export interface ProfileExport {
-  schemaVersion: 3;
+  schemaVersion: 4;
   exportedAt: string;
   inventory: Array<InventoryValues & { entity: PortableEntityReference }>;
   goals: Array<{ entity: PortableEntityReference; targetQuantity: number }>;
   discoveryProgress: Array<{ entity: PortableEntityReference; state: "discovered" | "completed" }>;
+  todos: Array<Pick<PlayerTodo, "title" | "notes" | "status" | "dueAt">>;
+  watches: Array<Omit<WorldStateWatch, "id" | "createdAt">>;
+  builds: PortableBuild[];
+}
+
+export interface PortableBuild {
+  title: string;
+  category?: string;
+  notes?: string;
+  equipment: Array<{
+    slot: BuildSlot;
+    entity: PortableEntityReference;
+    notes?: string;
+    configuration?: string;
+    formaCount: number;
+    capacityUpgrade: boolean;
+    mods: Array<{ position: number; rank?: number; entity: PortableEntityReference }>;
+  }>;
 }
 
 export interface ProfileImportResult {
   inventoryImported: number;
   goalsImported: number;
   discoveryProgressImported: number;
-  unresolved: Array<{ section: "inventory" | "goals" | "discoveryProgress"; index: number; name: string; reason: "missing" | "ambiguous" }>;
+  todosImported: number;
+  watchesImported: number;
+  buildsImported: number;
+  unresolved: Array<{ section: "inventory" | "goals" | "discoveryProgress" | "builds"; index: number; name: string; reason: "missing" | "ambiguous" }>;
 }
 
 export function createLocalUser(
@@ -146,7 +171,7 @@ export function exportPlayerProfile(sqlite: Database.Database, userId: string): 
              source_id, namespace, value
   `);
   return {
-    schemaVersion: 3,
+    schemaVersion: 4,
     exportedAt: new Date().toISOString(),
     inventory: inventory.map(({ entityId, kind, slug, name, ...values }) => ({
       entity: { externalIds: identifiers.all(entityId) as PortableEntityReference["externalIds"], kind, slug, name },
@@ -167,6 +192,15 @@ export function exportPlayerProfile(sqlite: Database.Database, userId: string): 
     `).all(userId) as Array<{ entityId: string; kind: string; slug: string; name: string; state: "discovered" | "completed" }>).map(({ entityId, kind, slug, name, state }) => ({
       entity: { externalIds: identifiers.all(entityId) as PortableEntityReference["externalIds"], kind, slug, name }, state,
     })),
+    todos: listPlayerTodos(sqlite, userId).map(({ title, notes, status, dueAt }) => ({ title, notes, status, dueAt })),
+    watches: listWorldStateWatches(sqlite, userId).map(({ id: _id, createdAt: _createdAt, ...watch }) => watch),
+    builds: listPlayerBuilds(sqlite, userId).map(({ title, category, notes, equipment }) => ({
+      title, category, notes,
+      equipment: equipment.map(({ slot, entity, notes: equipmentNotes, configuration, formaCount, capacityUpgrade, mods }) => ({
+        slot, entity: portableReferenceForCatalogEntity(sqlite, identifiers, entity), notes: equipmentNotes, configuration, formaCount, capacityUpgrade,
+        mods: mods.map(({ position, rank, entity: mod }) => ({ position, rank, entity: portableReferenceForCatalogEntity(sqlite, identifiers, mod) })),
+      })),
+    })),
   };
 }
 
@@ -181,6 +215,7 @@ export function importPlayerProfile(
   const resolvedInventory: Array<{ entityId: string; values: InventoryValues }> = [];
   const resolvedGoals: Array<{ entityId: string; targetQuantity: number }> = [];
   const resolvedDiscoveryProgress: Array<{ entityId: string; state: "discovered" | "completed" }> = [];
+  const resolvedBuilds: Array<{ build: PortableBuild; equipment: Array<{ slot: BuildSlot; reference: { kind: string; slug: string }; notes?: string; configuration?: string; formaCount: number; capacityUpgrade: boolean; mods: Array<{ position: number; rank?: number; reference: { kind: string; slug: string } }> }> }> = [];
   const unresolved: ProfileImportResult["unresolved"] = [];
 
   for (const [index, entry] of profile.inventory.entries()) {
@@ -207,12 +242,35 @@ export function importPlayerProfile(
     }
     resolvedDiscoveryProgress.push({ entityId: resolution.entityId!, state: progress.state });
   }
+  for (const [index, build] of profile.builds.entries()) {
+    let complete = true;
+    const equipment = build.equipment.map((entry) => {
+      const equipmentResolution = resolvePortableEntity(sqlite, entry.entity);
+      if (equipmentResolution.reason) {
+        unresolved.push({ section: "builds", index, name: `${build.title}: ${entry.entity.name}`, reason: equipmentResolution.reason });
+        complete = false;
+      }
+      const mods = entry.mods.map((mod) => {
+        const modResolution = resolvePortableEntity(sqlite, mod.entity);
+        if (modResolution.reason) {
+          unresolved.push({ section: "builds", index, name: `${build.title}: ${mod.entity.name}`, reason: modResolution.reason });
+          complete = false;
+        }
+        return { position: mod.position, rank: mod.rank, reference: modResolution.entityId ? catalogReferenceById(sqlite, modResolution.entityId) : { kind: mod.entity.kind, slug: mod.entity.slug } };
+      });
+      return { slot: entry.slot, reference: equipmentResolution.entityId ? catalogReferenceById(sqlite, equipmentResolution.entityId) : { kind: entry.entity.kind, slug: entry.entity.slug }, notes: entry.notes, configuration: entry.configuration, formaCount: entry.formaCount, capacityUpgrade: entry.capacityUpgrade, mods };
+    });
+    if (complete) resolvedBuilds.push({ build, equipment });
+  }
 
   sqlite.transaction(() => {
     if (options.mode === "replace") {
       sqlite.prepare("delete from player_inventory where user_id = ?").run(userId);
       sqlite.prepare("delete from player_goals where user_id = ?").run(userId);
       sqlite.prepare("delete from player_discovery_progress where user_id = ?").run(userId);
+      sqlite.prepare("delete from player_todos where user_id = ?").run(userId);
+      sqlite.prepare("delete from world_state_watches where user_id = ?").run(userId);
+      sqlite.prepare("delete from player_builds where user_id = ?").run(userId);
     }
     for (const entry of resolvedInventory) setInventoryEntry(sqlite, userId, entry.entityId, entry.values);
     const writeGoal = sqlite.prepare(`
@@ -229,12 +287,31 @@ export function importPlayerProfile(
       on conflict(user_id, entity_id) do update set state = excluded.state, updated_at = excluded.updated_at
     `);
     for (const progress of resolvedDiscoveryProgress) writeProgress.run(userId, progress.entityId, progress.state, Date.now());
+    for (const todo of profile.todos) {
+      const id = createPlayerTodo(sqlite, userId, todo);
+      if (todo.status === "completed") setPlayerTodoStatus(sqlite, userId, id, "completed");
+    }
+    for (const watch of profile.watches) {
+      const id = createWorldStateWatch(sqlite, userId, watch);
+      if (!watch.enabled) sqlite.prepare("update world_state_watches set enabled = 0 where id = ? and user_id = ?").run(id, userId);
+    }
+    for (const { build, equipment } of resolvedBuilds) {
+      const buildId = createPlayerBuild(sqlite, userId, build);
+      for (const entry of equipment) {
+        setBuildEquipment(sqlite, userId, buildId, entry.slot, entry.reference, entry.notes);
+        configureBuildEquipment(sqlite, userId, buildId, entry.slot, entry);
+        for (const mod of entry.mods) setBuildMod(sqlite, userId, buildId, entry.slot, mod.position, mod.reference, mod.rank);
+      }
+    }
   })();
-  return { inventoryImported: resolvedInventory.length, goalsImported: resolvedGoals.length, discoveryProgressImported: resolvedDiscoveryProgress.length, unresolved };
+  return {
+    inventoryImported: resolvedInventory.length, goalsImported: resolvedGoals.length, discoveryProgressImported: resolvedDiscoveryProgress.length,
+    todosImported: profile.todos.length, watchesImported: profile.watches.length, buildsImported: resolvedBuilds.length, unresolved,
+  };
 }
 
 function parseProfile(value: unknown): ProfileExport {
-  if (!isRecord(value) || value.schemaVersion !== 3 || !Array.isArray(value.inventory) || !Array.isArray(value.goals) || !Array.isArray(value.discoveryProgress)) throw new Error("Profile must use schemaVersion 3 and contain inventory, goals, and discoveryProgress arrays");
+  if (!isRecord(value) || value.schemaVersion !== 4 || !Array.isArray(value.inventory) || !Array.isArray(value.goals) || !Array.isArray(value.discoveryProgress) || !Array.isArray(value.todos) || !Array.isArray(value.watches) || !Array.isArray(value.builds)) throw new Error("Profile must use schemaVersion 4 and contain every portable state array");
   const inventory = value.inventory.map((entry, index) => {
     if (!isRecord(entry)) throw new Error(`Profile inventory entry ${index} is invalid`);
     const entity = parsePortableEntity(entry.entity, `inventory entry ${index}`);
@@ -249,7 +326,52 @@ function parseProfile(value: unknown): ProfileExport {
     if (!isRecord(entry) || (entry.state !== "discovered" && entry.state !== "completed")) throw new Error(`Profile discovery progress entry ${index} has an invalid state`);
     return { entity: parsePortableEntity(entry.entity, `discovery progress entry ${index}`), state: entry.state as "discovered" | "completed" };
   });
-  return { schemaVersion: 3, exportedAt: typeof value.exportedAt === "string" ? value.exportedAt : "", inventory, goals, discoveryProgress };
+  const todos = value.todos.map((entry, index) => parsePortableTodo(entry, index));
+  const watches = value.watches.map((entry, index) => parsePortableWatch(entry, index));
+  const builds = value.builds.map((entry, index) => parsePortableBuild(entry, index));
+  return { schemaVersion: 4, exportedAt: typeof value.exportedAt === "string" ? value.exportedAt : "", inventory, goals, discoveryProgress, todos, watches, builds };
+}
+
+function parsePortableTodo(value: unknown, index: number): ProfileExport["todos"][number] {
+  if (!isRecord(value) || typeof value.title !== "string" || !value.title.trim() || value.title.length > 160 || (value.status !== "open" && value.status !== "completed")) throw new Error(`Profile todo entry ${index} is invalid`);
+  const notes = optionalText(value.notes, 4_000, `todo entry ${index} notes`);
+  if (value.dueAt !== undefined && (!Number.isSafeInteger(value.dueAt) || (value.dueAt as number) < 0)) throw new Error(`Profile todo entry ${index} has an invalid dueAt`);
+  return { title: value.title, notes, status: value.status, dueAt: value.dueAt as number | undefined };
+}
+
+function parsePortableWatch(value: unknown, index: number): ProfileExport["watches"][number] {
+  if (!isRecord(value) || !(WATCH_KINDS as readonly unknown[]).includes(value.kind) || !(WATCH_TRIGGERS as readonly unknown[]).includes(value.trigger) || typeof value.enabled !== "boolean" || !Number.isSafeInteger(value.leadMinutes) || (value.leadMinutes as number) < 0 || (value.leadMinutes as number) > 10_080) throw new Error(`Profile watch entry ${index} is invalid`);
+  return {
+    kind: value.kind as WorldStateWindowKind, trigger: value.trigger as WorldStateWatchTrigger,
+    leadMinutes: value.leadMinutes as number, enabled: value.enabled,
+    labelContains: optionalText(value.labelContains, 120, `watch entry ${index} labelContains`),
+    stateEquals: optionalText(value.stateEquals, 120, `watch entry ${index} stateEquals`),
+    nodeContains: optionalText(value.nodeContains, 120, `watch entry ${index} nodeContains`),
+  };
+}
+
+function parsePortableBuild(value: unknown, index: number): PortableBuild {
+  if (!isRecord(value) || typeof value.title !== "string" || !value.title.trim() || value.title.length > 160 || !Array.isArray(value.equipment)) throw new Error(`Profile build entry ${index} is invalid`);
+  const slots = new Set<string>();
+  const equipment = value.equipment.map((entry, equipmentIndex) => {
+    const label = `build entry ${index} equipment ${equipmentIndex}`;
+    if (!isRecord(entry) || typeof entry.slot !== "string" || !(BUILD_SLOTS as readonly string[]).includes(entry.slot) || !Array.isArray(entry.mods) || !Number.isSafeInteger(entry.formaCount) || (entry.formaCount as number) < 0 || (entry.formaCount as number) > 100 || typeof entry.capacityUpgrade !== "boolean") throw new Error(`Profile ${label} is invalid`);
+    if (slots.has(entry.slot)) throw new Error(`Profile build entry ${index} contains duplicate slot ${entry.slot}`);
+    slots.add(entry.slot);
+    const positions = new Set<number>();
+    const mods = entry.mods.map((mod, modIndex) => {
+      if (!isRecord(mod) || !Number.isSafeInteger(mod.position) || (mod.position as number) < 0 || (mod.position as number) > 19 || (mod.rank !== undefined && (!Number.isSafeInteger(mod.rank) || (mod.rank as number) < 0 || (mod.rank as number) > 100))) throw new Error(`Profile ${label} mod ${modIndex} is invalid`);
+      if (positions.has(mod.position as number)) throw new Error(`Profile ${label} contains duplicate mod position ${mod.position}`);
+      positions.add(mod.position as number);
+      return { position: mod.position as number, rank: mod.rank as number | undefined, entity: parsePortableEntity(mod.entity, `${label} mod ${modIndex}`) };
+    });
+    return {
+      slot: entry.slot as BuildSlot, entity: parsePortableEntity(entry.entity, label),
+      notes: optionalText(entry.notes, 2_000, `${label} notes`), configuration: optionalText(entry.configuration, 120, `${label} configuration`),
+      formaCount: entry.formaCount as number, capacityUpgrade: entry.capacityUpgrade, mods,
+    };
+  });
+  return { title: value.title, category: optionalText(value.category, 80, `build entry ${index} category`), notes: optionalText(value.notes, 10_000, `build entry ${index} notes`), equipment };
 }
 
 function parsePortableEntity(value: unknown, label: string): PortableEntityReference {
@@ -260,6 +382,27 @@ function parsePortableEntity(value: unknown, label: string): PortableEntityRefer
     return { sourceId: identifier.sourceId, namespace: identifier.namespace, value: identifier.value };
   });
   return { externalIds, kind: value.kind as string, slug: value.slug as string, name: value.name as string };
+}
+
+const WATCH_KINDS = ["cycle", "alert", "fissure", "event", "trader"] as const;
+const WATCH_TRIGGERS = ["active", "starting", "ending"] as const;
+
+function optionalText(value: unknown, maximum: number, label: string): string | undefined {
+  if (value === undefined) return undefined;
+  if (typeof value !== "string" || value.length > maximum) throw new Error(`Profile ${label} must be a string of at most ${maximum} characters`);
+  return value;
+}
+
+function portableReferenceForCatalogEntity(sqlite: Database.Database, identifiers: Database.Statement, entity: { kind: string; slug: string; name: string }): PortableEntityReference {
+  const row = sqlite.prepare("select id from entities where kind = ? and slug = ?").get(entity.kind, entity.slug) as { id: string } | undefined;
+  if (!row) throw new Error(`Build references missing catalog entity ${entity.kind}:${entity.slug}`);
+  return { ...entity, externalIds: identifiers.all(row.id) as PortableEntityReference["externalIds"] };
+}
+
+function catalogReferenceById(sqlite: Database.Database, entityId: string): { kind: string; slug: string } {
+  const entity = sqlite.prepare("select kind, slug from entities where id = ? and retired = 0").get(entityId) as { kind: string; slug: string } | undefined;
+  if (!entity) throw new Error(`Resolved entity ${entityId} is not active`);
+  return entity;
 }
 
 function resolvePortableEntity(sqlite: Database.Database, entity: PortableEntityReference): { entityId?: string; reason?: "missing" | "ambiguous" } {

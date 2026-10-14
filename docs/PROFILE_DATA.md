@@ -5,7 +5,7 @@ canonical entity IDs inside one installation, while exported profiles use
 provider identifiers so they can be restored into another installation whose
 canonical UUIDs differ.
 
-## Version 3 export
+## Version 4 export
 
 Each inventory entry includes:
 
@@ -18,22 +18,30 @@ Goals use the same portable entity reference and include their desired final
 quantity.
 
 Discovery progress uses the same reference and records either `discovered` or
-`completed`; unseen topics are represented by absence. All three sections are
-validated and resolved before the transactional write begins.
+`completed`; unseen topics are represented by absence. Every entity-keyed
+section is validated and resolved before the transactional write begins.
+
+Static todos and world-state watch rules are portable as user-authored intent;
+generated notifications are not. Private build drafts include their details,
+equipment, configurations and positioned mods, with every catalog member using
+the same portable reference. Published share snapshots are intentionally
+excluded because they are server-hosted immutable artifacts and capability URLs.
 
 Imports resolve external identifiers first and only fall back to the kind/slug
 pair when no identifier is present in the destination catalog. Ambiguous or
 missing entries are reported rather than guessed. Merge mode is the default;
-replace mode explicitly clears existing inventory inside the same transaction
-that writes resolved entries.
+replace mode explicitly clears portable state inside the same transaction that
+writes resolved entries.
 
 The parser treats profile files as untrusted input and rejects invalid counts,
-flags, identifiers, and oversized notes before changing player state. Version 1
-may be replaced before stable release; there is no pre-release compatibility
-promise. Earlier schemas were replaced rather than migrated as portable state
-expanded; there is no pre-release backwards-compatibility requirement.
+flags, identifiers, and oversized notes before changing player state. Earlier
+schemas were replaced rather than migrated as portable state expanded; there is
+no pre-release backwards-compatibility requirement.
 
 Signed-in players can export from the inventory screen or import in merge or
 replace mode. The HTTP import boundary limits files to 5 MB. Replace mode clears
-current inventory, goals, and discovery progress and writes all resolvable
-entries in one transaction; unresolved entries are reported and are not guessed.
+all portable state—inventory, goals, discovery progress, todos, watches and
+private build drafts—and writes all resolvable entries in one transaction.
+Deleting watches also deletes their derived notifications. Merge mode upserts
+identity-keyed state and appends todos, watches and builds. Unresolved build
+members skip that whole build; unresolved entries are reported and never guessed.

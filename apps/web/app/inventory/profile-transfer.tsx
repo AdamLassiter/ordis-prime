@@ -6,7 +6,11 @@ import { useRouter } from "next/navigation";
 interface ImportResult {
   inventoryImported: number;
   goalsImported: number;
-  unresolved: Array<{ section: "inventory" | "goals"; index: number; name: string; reason: "missing" | "ambiguous" }>;
+  discoveryProgressImported: number;
+  todosImported: number;
+  watchesImported: number;
+  buildsImported: number;
+  unresolved: Array<{ section: string; index: number; name: string; reason: "missing" | "ambiguous" }>;
 }
 
 export function ProfileTransfer() {
@@ -31,7 +35,7 @@ export function ProfileTransfer() {
     if (!response.ok) {
       setError(true); setMessage(result.message ?? "Import failed."); setPending(false); return;
     }
-    setMessage(`Imported ${result.inventoryImported} inventory entr${result.inventoryImported === 1 ? "y" : "ies"} and ${result.goalsImported} goal${result.goalsImported === 1 ? "" : "s"}.${result.unresolved.length ? ` ${result.unresolved.length} could not be matched: ${result.unresolved.map((entry) => entry.name).join(", ")}.` : ""}`);
+    setMessage(`Imported ${result.inventoryImported} inventory, ${result.goalsImported} goals, ${result.discoveryProgressImported} discovery states, ${result.todosImported} todos, ${result.watchesImported} watches, and ${result.buildsImported} builds.${result.unresolved.length ? ` ${result.unresolved.length} references could not be matched: ${result.unresolved.map((entry) => entry.name).join(", ")}.` : ""}`);
     setPending(false);
     router.refresh();
   }
@@ -42,7 +46,7 @@ export function ProfileTransfer() {
     <a className="button" href="/api/profile/export" download>Export JSON</a>
     <form className="form-stack" onSubmit={submit}>
       <label>Profile JSON<input name="profile" type="file" accept="application/json,.json" required /></label>
-      <label>Import behavior<select name="mode" defaultValue="merge"><option value="merge">Merge with current inventory</option><option value="replace">Replace current inventory</option></select></label>
+      <label>Import behavior<select name="mode" defaultValue="merge"><option value="merge">Merge with current profile</option><option value="replace">Replace portable profile state</option></select></label>
       <button className="button" disabled={pending}>{pending ? "Importing…" : "Import profile"}</button>
       {message && <p className={error ? "error" : "success"} role="status">{message}</p>}
     </form>
