@@ -3,9 +3,10 @@ import { createSnapshot, type Snapshot, type SourceAdapter } from "../adapter.ts
 
 interface WfcdItem { uniqueName?: string; name?: string; description?: string; category?: string; type?: string; wikiaUrl?: string; components?: WfcdComponent[]; systemName?: string; minEnemyLevel?: number; maxEnemyLevel?: number; masteryReq?: number; nodeType?: number }
 interface WfcdComponent { uniqueName?: string; name?: string; description?: string; category?: string; type?: string; itemCount?: number }
-const categories: Record<string, EntityKind> = { Warframes: "warframe", Primary: "weapon", Secondary: "weapon", Melee: "weapon", "Arch-Gun": "weapon", "Arch-Melee": "weapon", SentinelWeapons: "weapon", Mods: "mod", Resources: "resource", Fish: "resource", Relics: "relic", Node: "node", Quests: "quest", Pets: "companion", Sentinels: "companion", Components: "component", Enemy: "enemy" };
+const categories: Record<string, EntityKind> = { Warframes: "warframe", Primary: "weapon", Secondary: "weapon", Melee: "weapon", "Arch-Gun": "weapon", "Arch-Melee": "weapon", SentinelWeapons: "weapon", Mods: "mod", Arcanes: "arcane", Resources: "resource", Fish: "resource", Relics: "relic", Node: "node", Quests: "quest", Pets: "companion", Sentinels: "companion", Components: "component", Enemy: "enemy" };
 export const DEFAULT_WFCD_ITEMS_URL = "https://api.warframestat.us/items";
-const PARSER_VERSION = "wfcd-items-v2";
+const PARSER_VERSION = "wfcd-items-v3";
+const ARCHON_SHARD_PREFIX = "/Lotus/Types/Gameplay/NarmerSorties/ArchonCrystal";
 
 export class WfcdItemsAdapter implements SourceAdapter {
   readonly source = { id: "wfcd-items", name: "WFCD warframe-items", homepage: "https://github.com/WFCD/warframe-items", license: "MIT", priority: 100 };
@@ -41,5 +42,8 @@ export class WfcdItemsAdapter implements SourceAdapter {
     }
   }
 }
-function kindFor(item: Pick<WfcdItem, "category" | "type">, fallback: EntityKind = "unknown"): EntityKind { return categories[item.category ?? ""] ?? (item.type === "Blueprint" ? "blueprint" : fallback); }
+function kindFor(item: Pick<WfcdItem, "uniqueName" | "category" | "type">, fallback: EntityKind = "unknown"): EntityKind {
+  if (item.uniqueName?.startsWith(ARCHON_SHARD_PREFIX)) return "shard";
+  return categories[item.category ?? ""] ?? (item.type === "Blueprint" ? "blueprint" : fallback);
+}
 function slugify(value: string) { return value.toLocaleLowerCase("en").normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""); }

@@ -15,7 +15,7 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   runner handles the current recurring world-state job.
   Migrations run lazily when the web process first opens SQLite.
 - WFCD item and mission-drop adapters exist and emit entities, recipes,
-  components, nodes, and drops. Fetched payloads can be retained in an
+  components, arcanes, Archon Shards, nodes, and drops. Fetched payloads can be retained in an
   immutable, hash-verified snapshot store and observations can be resolved into
   canonical SQLite records with provenance and reviewable conflicts through a
   provider-neutral refresh command. Validated, cited manual ranking and factual
@@ -72,7 +72,7 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   positioned mods, ranks, configuration labels, Forma counts, capacity-upgrade
   flags, notes and immutable unlisted share snapshots. Authenticated
   editor and public snapshot routes use canonical catalog links. Advanced
-  polarity/capacity calculation, arcanes and shards remain. Private drafts are
+  polarity/capacity calculation and assigning arcanes and shards to builds remain. Private drafts are
   portable and can be cloned; their snapshot history can be viewed or revoked.
   Authenticated recipients can clone a public snapshot into a private draft.
   Draft equipment and mods can seed missing-item acquisition goals, but the

@@ -3,7 +3,7 @@ import { parse } from "yaml";
 import type { EntityKind, ExternalIdentifier, Observation } from "@ordis-prime/domain";
 import { contentHash, type FetchContext, type Snapshot, type SourceAdapter, type SourceDescriptor } from "../adapter.ts";
 
-const ENTITY_KINDS = ["unknown", "warframe", "weapon", "companion", "mod", "resource", "relic", "blueprint", "component", "node", "planet", "quest", "enemy", "boss", "mechanic", "secret"] as const satisfies readonly EntityKind[];
+const ENTITY_KINDS = ["unknown", "warframe", "weapon", "companion", "mod", "arcane", "shard", "resource", "relic", "blueprint", "component", "node", "planet", "quest", "enemy", "boss", "mechanic", "secret"] as const satisfies readonly EntityKind[];
 
 interface ManualFactsDocument {
   schemaVersion: 1;

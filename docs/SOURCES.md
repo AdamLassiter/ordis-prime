@@ -2,7 +2,7 @@
 
 | Source | Initial use | Policy |
 | --- | --- | --- |
-| WFCD warframe-items | identities, items, components, node levels/planets, quests | Fetch the maintained aggregate API endpoint; snapshot, validate, retain version/hash and MIT attribution |
+| WFCD warframe-items | identities, items, components, arcanes, Archon Shards, node levels/planets, quests | Fetch the maintained aggregate API endpoint; snapshot, validate, retain version/hash and MIT attribution |
 | WFCD warframe-drop-data | mission metadata, enemy, relic and rotation drops | Snapshot mission rewards with payload and retain upstream attribution |
 | WFCD WarframeStat.us | live cycles, events, alerts, fissures and traders | Snapshot the PC English aggregate response; normalize absolute availability windows and retain MIT attribution |
 | Manual YAML | published editorial rankings; curated discovery facts and relations; factual overlays | Require source-specific citations and licence notes; retain each source as an independent versioned set and resolve overlays by explicit external ID |
@@ -25,6 +25,10 @@ offering only a provider-level attribution.
 Adapter parser versions form part of static snapshot versions. Re-fetching an
 already-active identical version is a successful no-op; a parser change uses a
 new version suffix so retained upstream bytes can be interpreted into a new run.
+Arcanes use WFCD's explicit `Arcanes` category. Archon Shards are classified by
+their stable `/Lotus/Types/Gameplay/NarmerSorties/ArchonCrystal` internal-name
+prefix because the aggregate currently labels both their category and type as
+`Misc`; this provider-specific rule is isolated in the adapter.
 
 The leased worker schedules `wfcd-items` and `wfcd-drops` independently once per
 day by default, while world state runs every five minutes. An administrator can

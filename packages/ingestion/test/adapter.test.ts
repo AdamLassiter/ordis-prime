@@ -31,6 +31,21 @@ test("WFCD component references retain trustworthy item kinds and qualified part
   ]);
 });
 
+test("WFCD adapter distinguishes arcanes and provider-miscategorised Archon Shards", async () => {
+  const specialItemSnapshot = {
+    ...snapshot,
+    bytes: new TextEncoder().encode(JSON.stringify([
+      { uniqueName: "/Lotus/Upgrades/CosmeticEnhancers/Defensive/GolemArcaneBarrier", name: "Arcane Barrier", category: "Arcanes", type: "Warframe Arcane" },
+      { uniqueName: "/Lotus/Types/Gameplay/NarmerSorties/ArchonCrystalAmarMythic", name: "Tauforged Crimson Archon Shard", category: "Misc", type: "Misc" },
+    ])),
+  };
+  const observations = await collect(new WfcdItemsAdapter(), specialItemSnapshot);
+  assert.deepEqual(observations.filter((entry) => entry.type === "entity").map((entry) => [entry.kind, entry.fields.name]), [
+    ["arcane", "Arcane Barrier"],
+    ["shard", "Tauforged Crimson Archon Shard"],
+  ]);
+});
+
 test("WFCD node records retain planet and level metadata", async () => {
   const nodeSnapshot = {
     ...snapshot,
@@ -58,7 +73,7 @@ test("WFCD adapter defaults to the maintained aggregate endpoint", async () => {
   try {
     const fetched = await new WfcdItemsAdapter().fetch({});
     assert.equal(requestedUrl, DEFAULT_WFCD_ITEMS_URL);
-    assert.equal(fetched.version, "fixture-etag|wfcd-items-v2");
+    assert.equal(fetched.version, "fixture-etag|wfcd-items-v3");
   } finally {
     globalThis.fetch = originalFetch;
   }
