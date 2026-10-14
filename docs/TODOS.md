@@ -26,6 +26,14 @@ fields, not raw WFCD JSON. A watch triggers when a matching window is active,
 approaching activation, or approaching expiry. Lead time is configurable from
 zero to seven days.
 
+A watch may link to one canonical entity. Item pages create an editable event
+watch whose label initially contains that item's name. Node pages create a Void
+Fissure watch tied to the exact canonical node; it matches only when world-state
+normalization reconciles the window to that node, avoiding substring collisions.
+The linked entity is visible from the watch and portable across installations.
+For non-node entities the link is context, while the normalized text fields
+remain the explicit matching rule.
+
 The worker evaluates enabled rules after every successful snapshot promotion.
 It hashes the normalized occurrence fields and creates at most one notification
 per watch and occurrence, even when polling observes it repeatedly. Watch
@@ -41,6 +49,9 @@ occurrence keys remain deduplicated after an edit.
 
 - Static todos and watch rules are portable; generated notification history is
   deliberately installation-local.
+- Each detail-page shortcut chooses a conservative initial window kind and must
+  be edited when the player wants another kind. Non-node links cannot become an
+  exact match until world-state reward/subject identities are normalized.
 - Recurrence is a fixed day interval; calendar rules such as weekdays or “first
   Sunday” are not modeled. There are no subtasks, tags or ordering controls. A
   todo can link to one canonical entity but cannot yet carry multiple targets.

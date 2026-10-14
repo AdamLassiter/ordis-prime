@@ -29,6 +29,7 @@ export default async function TodosPage() {
       </form>
       {watches.length > 0 && <div className="watch-list">{watches.map((watch) => <article className="card watch-card" key={watch.id}>
         <div><span className="tag">{watch.kind}</span>{!watch.enabled && <span className="tag">paused</span>}<h3>{watch.labelContains ? `Label contains “${watch.labelContains}”` : `All ${watch.kind} windows`}</h3>
+          {watch.entity && <p><Link href={watch.entity.kind === "node" ? `/nodes/${watch.entity.slug}` : `/catalog/${watch.entity.kind}/${watch.entity.slug}`}>{watch.entity.name}</Link></p>}
           <p className="muted">{watch.trigger}{watch.trigger === "active" ? "" : ` · ${watch.leadMinutes} minute lead`}{watch.stateEquals ? ` · state ${watch.stateEquals}` : ""}{watch.nodeContains ? ` · node contains ${watch.nodeContains}` : ""}</p></div>
         <div className="todo-actions"><form action={changeWatchEnabled.bind(null, watch.id, !watch.enabled)}><button className="nav-button">{watch.enabled ? "Pause" : "Resume"}</button></form><form action={removeWatch.bind(null, watch.id)}><button className="nav-button danger-text">Delete watch and its alerts</button></form></div>
         <details><summary>Edit watch</summary><form className="form-stack compact-form" action={editWatch.bind(null, watch.id)}><WatchFields watch={watch} /><button className="nav-button">Save watch</button></form></details>
@@ -49,6 +50,7 @@ export default async function TodosPage() {
 
 function WatchFields({ watch }: { watch?: WorldStateWatch }) {
   return <>
+    {watch?.entity && <><input type="hidden" name="entityKind" value={watch.entity.kind} /><input type="hidden" name="entitySlug" value={watch.entity.slug} /></>}
     <label>Kind<select name="kind" defaultValue={watch?.kind ?? "cycle"}><option value="cycle">Cycle</option><option value="event">Event</option><option value="alert">Alert</option><option value="fissure">Void Fissure</option><option value="trader">Trader</option></select></label>
     <label>Label contains<input name="labelContains" maxLength={120} placeholder="Cetus or Lith" defaultValue={watch?.labelContains} /></label>
     <label>State equals<input name="stateEquals" maxLength={120} placeholder="night" defaultValue={watch?.stateEquals} /></label>

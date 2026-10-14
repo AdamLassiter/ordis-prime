@@ -69,13 +69,13 @@ export interface PortableEntityReference {
 }
 
 export interface ProfileExport {
-  schemaVersion: 7;
+  schemaVersion: 8;
   exportedAt: string;
   inventory: Array<InventoryValues & { entity: PortableEntityReference }>;
   goals: Array<{ entity: PortableEntityReference; targetQuantity: number }>;
   discoveryProgress: Array<{ entity: PortableEntityReference; state: "discovered" | "completed" }>;
   todos: Array<Pick<PlayerTodo, "title" | "notes" | "status" | "dueAt" | "recurrenceDays"> & { entity?: PortableEntityReference; recurrenceFrom?: number }>;
-  watches: Array<Omit<WorldStateWatch, "id" | "createdAt">>;
+  watches: Array<Omit<WorldStateWatch, "id" | "createdAt" | "entity"> & { entity?: PortableEntityReference }>;
   builds: PortableBuild[];
 }
 
@@ -102,7 +102,7 @@ export interface ProfileImportResult {
   todosImported: number;
   watchesImported: number;
   buildsImported: number;
-  unresolved: Array<{ section: "inventory" | "goals" | "discoveryProgress" | "todos" | "builds"; index: number; name: string; reason: "missing" | "ambiguous" }>;
+  unresolved: Array<{ section: "inventory" | "goals" | "discoveryProgress" | "todos" | "watches" | "builds"; index: number; name: string; reason: "missing" | "ambiguous" }>;
 }
 
 export function createLocalUser(
@@ -174,7 +174,7 @@ export function exportPlayerProfile(sqlite: Database.Database, userId: string): 
              source_id, namespace, value
   `);
   return {
-    schemaVersion: 7,
+    schemaVersion: 8,
     exportedAt: new Date().toISOString(),
     inventory: inventory.map(({ entityId, kind, slug, name, ...values }) => ({
       entity: { externalIds: identifiers.all(entityId) as PortableEntityReference["externalIds"], kind, slug, name },
@@ -200,7 +200,7 @@ export function exportPlayerProfile(sqlite: Database.Database, userId: string): 
       entity: entity ? portableReferenceForCatalogEntity(sqlite, identifiers, entity) : undefined,
       recurrenceFrom: recurrenceSourceId === undefined ? undefined : todoIndices.get(recurrenceSourceId),
     })),
-    watches: listWorldStateWatches(sqlite, userId).map(({ id: _id, createdAt: _createdAt, ...watch }) => watch),
+    watches: listWorldStateWatches(sqlite, userId).map(({ id: _id, createdAt: _createdAt, entity, ...watch }) => ({ ...watch, entity: entity ? portableReferenceForCatalogEntity(sqlite, identifiers, entity) : undefined })),
     builds: listPlayerBuilds(sqlite, userId).map(({ title, category, notes, equipment, enhancements }) => ({
       title, category, notes,
       equipment: equipment.map(({ slot, entity, notes: equipmentNotes, configuration, formaCount, capacityUpgrade, mods }) => ({
@@ -224,6 +224,7 @@ export function importPlayerProfile(
   const resolvedGoals: Array<{ entityId: string; targetQuantity: number }> = [];
   const resolvedDiscoveryProgress: Array<{ entityId: string; state: "discovered" | "completed" }> = [];
   const resolvedTodos: Array<Omit<ProfileExport["todos"][number], "entity"> & { entity?: { kind: string; slug: string } }> = [];
+  const resolvedWatches: Array<Omit<ProfileExport["watches"][number], "entity"> & { entity?: { kind: string; slug: string } }> = [];
   const resolvedBuilds: Array<{ build: PortableBuild; equipment: Array<{ slot: BuildSlot; reference: { kind: string; slug: string }; notes?: string; configuration?: string; formaCount: number; capacityUpgrade: boolean; mods: Array<{ position: number; rank?: number; reference: { kind: string; slug: string } }> }>; enhancements: Array<{ slot: BuildEnhancementSlot; rank?: number; reference: { kind: string; slug: string } }> }> = [];
   const unresolved: ProfileImportResult["unresolved"] = [];
 
@@ -264,6 +265,20 @@ export function importPlayerProfile(
       continue;
     }
     resolvedTodos.push({ ...todo, entity: catalogReferenceById(sqlite, resolution.entityId!) });
+  }
+  for (const [index, watch] of profile.watches.entries()) {
+    if (!watch.entity) {
+      resolvedWatches.push(watch);
+      continue;
+    }
+    const resolution = resolvePortableEntity(sqlite, watch.entity);
+    if (resolution.reason) {
+      unresolved.push({ section: "watches", index, name: watch.entity.name, reason: resolution.reason });
+      const { entity: _entity, ...unlinked } = watch;
+      resolvedWatches.push(unlinked);
+      continue;
+    }
+    resolvedWatches.push({ ...watch, entity: catalogReferenceById(sqlite, resolution.entityId!) });
   }
   for (const [index, build] of profile.builds.entries()) {
     let complete = true;
@@ -329,7 +344,7 @@ export function importPlayerProfile(
       sqlite.prepare("update player_todos set recurrence_source_id = ? where id = ? and user_id = ?")
         .run(importedTodoIds[todo.recurrenceFrom], importedTodoIds[index], userId);
     }
-    for (const watch of profile.watches) {
+    for (const watch of resolvedWatches) {
       const id = createWorldStateWatch(sqlite, userId, watch);
       if (!watch.enabled) sqlite.prepare("update world_state_watches set enabled = 0 where id = ? and user_id = ?").run(id, userId);
     }
@@ -345,12 +360,12 @@ export function importPlayerProfile(
   })();
   return {
     inventoryImported: resolvedInventory.length, goalsImported: resolvedGoals.length, discoveryProgressImported: resolvedDiscoveryProgress.length,
-    todosImported: resolvedTodos.length, watchesImported: profile.watches.length, buildsImported: resolvedBuilds.length, unresolved,
+    todosImported: resolvedTodos.length, watchesImported: resolvedWatches.length, buildsImported: resolvedBuilds.length, unresolved,
   };
 }
 
 function parseProfile(value: unknown): ProfileExport {
-  if (!isRecord(value) || value.schemaVersion !== 7 || !Array.isArray(value.inventory) || !Array.isArray(value.goals) || !Array.isArray(value.discoveryProgress) || !Array.isArray(value.todos) || !Array.isArray(value.watches) || !Array.isArray(value.builds)) throw new Error("Profile must use schemaVersion 7 and contain every portable state array");
+  if (!isRecord(value) || value.schemaVersion !== 8 || !Array.isArray(value.inventory) || !Array.isArray(value.goals) || !Array.isArray(value.discoveryProgress) || !Array.isArray(value.todos) || !Array.isArray(value.watches) || !Array.isArray(value.builds)) throw new Error("Profile must use schemaVersion 8 and contain every portable state array");
   const inventory = value.inventory.map((entry, index) => {
     if (!isRecord(entry)) throw new Error(`Profile inventory entry ${index} is invalid`);
     const entity = parsePortableEntity(entry.entity, `inventory entry ${index}`);
@@ -375,7 +390,7 @@ function parseProfile(value: unknown): ProfileExport {
   }
   const watches = value.watches.map((entry, index) => parsePortableWatch(entry, index));
   const builds = value.builds.map((entry, index) => parsePortableBuild(entry, index));
-  return { schemaVersion: 7, exportedAt: typeof value.exportedAt === "string" ? value.exportedAt : "", inventory, goals, discoveryProgress, todos, watches, builds };
+  return { schemaVersion: 8, exportedAt: typeof value.exportedAt === "string" ? value.exportedAt : "", inventory, goals, discoveryProgress, todos, watches, builds };
 }
 
 function parsePortableTodo(value: unknown, index: number): ProfileExport["todos"][number] {
@@ -396,6 +411,7 @@ function parsePortableWatch(value: unknown, index: number): ProfileExport["watch
     labelContains: optionalText(value.labelContains, 120, `watch entry ${index} labelContains`),
     stateEquals: optionalText(value.stateEquals, 120, `watch entry ${index} stateEquals`),
     nodeContains: optionalText(value.nodeContains, 120, `watch entry ${index} nodeContains`),
+    entity: value.entity === undefined ? undefined : parsePortableEntity(value.entity, `watch entry ${index}`),
   };
 }
 

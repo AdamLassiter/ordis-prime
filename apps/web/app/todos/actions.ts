@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createEntityTodo, createPlayerTodo, createWorldStateWatch, deletePlayerTodo, deleteWorldStateWatch, evaluateWorldStateWatches, markPlayerNotificationRead, setPlayerTodoStatus, setWorldStateWatchEnabled, updateWorldStateWatch } from "@ordis-prime/db";
+import { createEntityTodo, createPlayerTodo, createWorldStateWatch, deletePlayerTodo, deleteWorldStateWatch, evaluateWorldStateWatches, findCatalogItem, findCatalogNode, markPlayerNotificationRead, setPlayerTodoStatus, setWorldStateWatchEnabled, updateWorldStateWatch } from "@ordis-prime/db";
 import type { WorldStateWindowKind } from "@ordis-prime/domain";
 import { getDatabase } from "@/lib/database";
 import { requireCurrentSession } from "@/lib/session";
@@ -49,6 +49,21 @@ export async function addWatch(form: FormData) {
   revalidatePath("/todos");
 }
 
+export async function addCatalogWatch(kind: string, slug: string) {
+  const session = await requireCurrentSession();
+  const database = getDatabase();
+  const entity = kind === "node" ? findCatalogNode(database, slug) : findCatalogItem(database, kind, slug);
+  if (!entity) throw new Error(`Unknown active entity ${kind}:${slug}`);
+  createWorldStateWatch(database, session.user.id, {
+    kind: kind === "node" ? "fissure" : "event",
+    labelContains: kind === "node" ? undefined : entity.name,
+    trigger: "active", leadMinutes: 0, entity: { kind, slug },
+  });
+  evaluateWorldStateWatches(database, Date.now(), session.user.id);
+  revalidatePath("/todos");
+  revalidatePath(kind === "node" ? `/nodes/${slug}` : `/catalog/${kind}/${slug}`);
+}
+
 export async function editWatch(watchId: string, form: FormData) {
   const session = await requireCurrentSession();
   const database = getDatabase();
@@ -80,6 +95,9 @@ export async function readNotification(notificationId: string) {
 function watchInput(form: FormData) {
   const rawLead = String(form.get("leadMinutes") ?? "");
   if (!/^\d+$/.test(rawLead)) throw new Error("Lead time must be a non-negative integer");
+  const entityKind = String(form.get("entityKind") ?? "");
+  const entitySlug = String(form.get("entitySlug") ?? "");
+  if (Boolean(entityKind) !== Boolean(entitySlug)) throw new Error("Watch entity reference is incomplete");
   return {
     kind: String(form.get("kind") ?? "") as WorldStateWindowKind,
     labelContains: String(form.get("labelContains") ?? ""),
@@ -87,5 +105,6 @@ function watchInput(form: FormData) {
     nodeContains: String(form.get("nodeContains") ?? ""),
     trigger: String(form.get("trigger") ?? "") as "active" | "starting" | "ending",
     leadMinutes: Number(rawLead),
+    entity: entityKind ? { kind: entityKind, slug: entitySlug } : undefined,
   };
 }

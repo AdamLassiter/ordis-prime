@@ -42,8 +42,32 @@ test("world-state watches create private notifications once per normalized occur
   updateWorldStateWatch(database, firstUser, firstWatch, { kind: "cycle", labelContains: "  Cetus  ", stateEquals: "night", trigger: "active", leadMinutes: 0 });
   assert.deepEqual(listWorldStateWatches(database, firstUser)[0], {
     id: firstWatch, kind: "cycle", labelContains: "Cetus", stateEquals: "night", nodeContains: undefined,
-    trigger: "active", leadMinutes: 0, enabled: true, createdAt: listWorldStateWatches(database, firstUser)[0]!.createdAt,
+    entity: undefined, trigger: "active", leadMinutes: 0, enabled: true, createdAt: listWorldStateWatches(database, firstUser)[0]!.createdAt,
   });
   assert.equal(evaluateWorldStateWatches(database, now + 2_000), 0);
   assert.equal(listPlayerNotifications(database, firstUser).length, 1);
+});
+
+test("node-linked watches match canonical reconciled nodes rather than similar labels", async (context) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-node-watch-"));
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const databasePath = path.join(root, "watches.sqlite");
+  migrateDatabase(databasePath);
+  const database = openSqliteDatabase(databasePath);
+  context.after(() => database.close());
+  const userId = createLocalUser(database, { username: "Node watcher" });
+  database.prepare("insert into entities (id, kind, name, slug, retired, updated_at) values ('node-tessera', 'node', 'Tessera', 'tessera', 0, ?)").run(Date.now());
+  const watchId = createWorldStateWatch(database, userId, { kind: "fissure", trigger: "active", leadMinutes: 0, entity: { kind: "node", slug: "tessera" } });
+  promoteWorldState(database, {
+    source: { id: "test-world", name: "Test world", homepage: "https://example.test", priority: 1 },
+    version: "node-window-v1", contentHash: "node-hash", observedAt: "2026-10-13T20:30:00.000Z", snapshotPath: "/snapshot",
+    windows: [
+      { externalId: "fissure:tessera", kind: "fissure", label: "Lith fissure", nodeLabel: "Tessera (Venus)", expiry: "2026-10-13T22:00:00.000Z", evidence: { sourceId: "test-world", sourceRecordKey: "tessera", snapshotVersion: "node-window-v1", retrievedAt: "2026-10-13T20:30:00.000Z" } },
+      { externalId: "fissure:tessera-prime", kind: "fissure", label: "Lith fissure", nodeLabel: "Tessera Prime", expiry: "2026-10-13T22:00:00.000Z", evidence: { sourceId: "test-world", sourceRecordKey: "other", snapshotVersion: "node-window-v1", retrievedAt: "2026-10-13T20:30:00.000Z" } },
+    ],
+  });
+  assert.equal(evaluateWorldStateWatches(database, Date.parse("2026-10-13T21:00:00.000Z")), 1);
+  assert.equal(listPlayerNotifications(database, userId).length, 1);
+  assert.deepEqual(listWorldStateWatches(database, userId)[0]?.entity, { kind: "node", slug: "tessera", name: "Tessera" });
+  assert.throws(() => updateWorldStateWatch(database, userId, watchId, { kind: "fissure", trigger: "active", leadMinutes: 0, entity: { kind: "node", slug: "missing" } }), /Unknown active entity/);
 });

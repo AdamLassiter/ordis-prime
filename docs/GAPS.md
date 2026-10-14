@@ -63,9 +63,11 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   recipes, markets, relic refinement, or mission duration.
 - Authenticated players can keep private static todos with optional notes and due
   dates. Source-neutral world-state watches match current window fields and
-  create deduplicated private in-app alerts. Detail pages can create todos linked
-  to one canonical item, discovery topic or node; watches are not yet linked to
-  canonical entities. Todos support fixed-day recurrence but not calendar-rule
+  create deduplicated private in-app alerts. Detail pages can create todos and
+  world-state watches linked to one canonical item, discovery topic or node.
+  Node watches match exact reconciled node identity; other linked entities
+  remain contextual because world-state subjects are not normalized yet. Todos
+  support fixed-day recurrence but not calendar-rule
   schedules, and there are no web-push or webhook delivery channels. Watches
   can be edited, paused and resumed without losing generated alerts.
 - Private, revisioned build persistence supports partial equipment loadouts,

@@ -11,12 +11,13 @@ export interface WorldStateWatch {
   labelContains?: string;
   stateEquals?: string;
   nodeContains?: string;
+  entity?: { kind: string; slug: string; name: string };
   trigger: WorldStateWatchTrigger;
   leadMinutes: number;
   enabled: boolean;
   createdAt: number;
 }
-export type WorldStateWatchInput = Omit<WorldStateWatch, "id" | "enabled" | "createdAt">;
+export type WorldStateWatchInput = Omit<WorldStateWatch, "id" | "enabled" | "createdAt" | "entity"> & { entity?: { kind: string; slug: string } };
 
 export interface PlayerNotification {
   id: string;
@@ -33,33 +34,36 @@ export function createWorldStateWatch(sqlite: Database.Database, userId: string,
   assertUser(sqlite, userId);
   const watch = validateWatchInput(input);
   const id = randomUUID();
+  const entityId = input.entity ? resolveEntity(sqlite, input.entity) : undefined;
   sqlite.prepare(`
     insert into world_state_watches
-      (id, user_id, kind, label_contains, state_equals, node_contains, trigger, lead_minutes, enabled, created_at)
-    values (?, ?, ?, ?, ?, ?, ?, ?, 1, ?)
-  `).run(id, userId, watch.kind, watch.labelContains ?? null, watch.stateEquals ?? null, watch.nodeContains ?? null, watch.trigger, watch.leadMinutes, Date.now());
+      (id, user_id, entity_id, kind, label_contains, state_equals, node_contains, trigger, lead_minutes, enabled, created_at)
+    values (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)
+  `).run(id, userId, entityId ?? null, watch.kind, watch.labelContains ?? null, watch.stateEquals ?? null, watch.nodeContains ?? null, watch.trigger, watch.leadMinutes, Date.now());
   return id;
 }
 
 export function updateWorldStateWatch(sqlite: Database.Database, userId: string, watchId: string, input: WorldStateWatchInput): void {
   const watch = validateWatchInput(input);
+  const entityId = input.entity ? resolveEntity(sqlite, input.entity) : undefined;
   const result = sqlite.prepare(`
-    update world_state_watches set kind = ?, label_contains = ?, state_equals = ?,
+    update world_state_watches set entity_id = ?, kind = ?, label_contains = ?, state_equals = ?,
       node_contains = ?, trigger = ?, lead_minutes = ?
     where id = ? and user_id = ?
-  `).run(watch.kind, watch.labelContains ?? null, watch.stateEquals ?? null, watch.nodeContains ?? null, watch.trigger, watch.leadMinutes, watchId, userId);
+  `).run(entityId ?? null, watch.kind, watch.labelContains ?? null, watch.stateEquals ?? null, watch.nodeContains ?? null, watch.trigger, watch.leadMinutes, watchId, userId);
   if (result.changes !== 1) throw new Error("Watch not found");
 }
 
 export function listWorldStateWatches(sqlite: Database.Database, userId: string): WorldStateWatch[] {
   assertUser(sqlite, userId);
   const rows = sqlite.prepare(`
-    select id, kind, label_contains as labelContains, state_equals as stateEquals,
+    select watch.id, watch.kind, watch.label_contains as labelContains, watch.state_equals as stateEquals,
       node_contains as nodeContains, trigger, lead_minutes as leadMinutes, enabled,
-      created_at as createdAt
-    from world_state_watches where user_id = ? order by created_at desc
-  `).all(userId) as Array<Omit<WorldStateWatch, "labelContains" | "stateEquals" | "nodeContains" | "enabled"> & { labelContains: string | null; stateEquals: string | null; nodeContains: string | null; enabled: number }>;
-  return rows.map(({ labelContains, stateEquals, nodeContains, enabled, ...row }) => ({ ...row, labelContains: labelContains ?? undefined, stateEquals: stateEquals ?? undefined, nodeContains: nodeContains ?? undefined, enabled: enabled === 1 }));
+      watch.created_at as createdAt, entity.kind as entityKind, entity.slug as entitySlug, entity.name as entityName
+    from world_state_watches watch left join entities entity on entity.id = watch.entity_id
+    where watch.user_id = ? order by watch.created_at desc
+  `).all(userId) as Array<Omit<WorldStateWatch, "labelContains" | "stateEquals" | "nodeContains" | "entity" | "enabled"> & { labelContains: string | null; stateEquals: string | null; nodeContains: string | null; entityKind: string | null; entitySlug: string | null; entityName: string | null; enabled: number }>;
+  return rows.map(({ labelContains, stateEquals, nodeContains, entityKind, entitySlug, entityName, enabled, ...row }) => ({ ...row, labelContains: labelContains ?? undefined, stateEquals: stateEquals ?? undefined, nodeContains: nodeContains ?? undefined, entity: entityKind && entitySlug && entityName ? { kind: entityKind, slug: entitySlug, name: entityName } : undefined, enabled: enabled === 1 }));
 }
 
 export function deleteWorldStateWatch(sqlite: Database.Database, userId: string, watchId: string): void {
@@ -75,11 +79,12 @@ export function setWorldStateWatchEnabled(sqlite: Database.Database, userId: str
 
 export function evaluateWorldStateWatches(sqlite: Database.Database, now = Date.now(), userId?: string): number {
   const watches = sqlite.prepare(`
-    select id, user_id as userId, kind, label_contains as labelContains,
+    select watch.id, watch.user_id as userId, watch.kind, watch.label_contains as labelContains,
       state_equals as stateEquals, node_contains as nodeContains, trigger,
-      lead_minutes as leadMinutes
-    from world_state_watches where enabled = 1 ${userId ? "and user_id = ?" : ""}
-  `).all(...(userId ? [userId] : [])) as Array<{ id: string; userId: string; kind: WorldStateWindowKind; labelContains: string | null; stateEquals: string | null; nodeContains: string | null; trigger: WorldStateWatchTrigger; leadMinutes: number }>;
+      lead_minutes as leadMinutes, entity.kind as entityKind, entity.slug as entitySlug
+    from world_state_watches watch left join entities entity on entity.id = watch.entity_id
+    where watch.enabled = 1 ${userId ? "and watch.user_id = ?" : ""}
+  `).all(...(userId ? [userId] : [])) as Array<{ id: string; userId: string; kind: WorldStateWindowKind; labelContains: string | null; stateEquals: string | null; nodeContains: string | null; trigger: WorldStateWatchTrigger; leadMinutes: number; entityKind: string | null; entitySlug: string | null }>;
   const windows = listCurrentWorldState(sqlite, now);
   const insert = sqlite.prepare(`
     insert or ignore into player_notifications
@@ -114,8 +119,9 @@ export function markPlayerNotificationRead(sqlite: Database.Database, userId: st
   if (result.changes !== 1) throw new Error("Notification not found");
 }
 
-function watchMatches(watch: { kind: WorldStateWindowKind; labelContains: string | null; stateEquals: string | null; nodeContains: string | null }, window: CurrentWorldStateWindow): boolean {
+function watchMatches(watch: { kind: WorldStateWindowKind; labelContains: string | null; stateEquals: string | null; nodeContains: string | null; entityKind: string | null; entitySlug: string | null }, window: CurrentWorldStateWindow): boolean {
   return watch.kind === window.kind
+    && (watch.entityKind !== "node" || window.node?.slug === watch.entitySlug)
     && contains(window.label, watch.labelContains)
     && (!watch.stateEquals || window.state?.toLocaleLowerCase() === watch.stateEquals.toLocaleLowerCase())
     && contains(window.nodeLabel, watch.nodeContains);
@@ -161,9 +167,16 @@ function validateWatchInput(input: WorldStateWatchInput): WorldStateWatchInput {
     labelContains: normalizeFilter(input.labelContains, "label"),
     stateEquals: normalizeFilter(input.stateEquals, "state"),
     nodeContains: normalizeFilter(input.nodeContains, "node"),
+    entity: input.entity,
     trigger: input.trigger,
     leadMinutes: input.leadMinutes,
   };
+}
+
+function resolveEntity(sqlite: Database.Database, reference: { kind: string; slug: string }): string {
+  const row = sqlite.prepare("select id from entities where kind = ? and slug = ? and retired = 0").get(reference.kind, reference.slug) as { id: string } | undefined;
+  if (!row) throw new Error(`Unknown active entity ${reference.kind}:${reference.slug}`);
+  return row.id;
 }
 
 function assertUser(sqlite: Database.Database, userId: string): void {

@@ -155,6 +155,7 @@ export const playerTodos = sqliteTable("player_todos", {
 export const worldStateWatches = sqliteTable("world_state_watches", {
   id: text().primaryKey(),
   userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  entityId: text("entity_id").references(() => entities.id),
   kind: text({ enum: ["cycle", "alert", "fissure", "event", "trader"] }).notNull(),
   labelContains: text("label_contains"),
   stateEquals: text("state_equals"),

@@ -25,7 +25,7 @@ test("profiles resolve stable source IDs across installations with different can
   setDiscoveryProgress(first.sqlite, firstUser, { kind: "quest", slug: "awakening" }, "completed");
   const todoId = createPlayerTodo(first.sqlite, firstUser, { title: "Prepare", notes: "Before reset", dueAt: 1_800_000_000_000, recurrenceDays: 30, entity: { kind: "weapon", slug: "braton" } });
   setPlayerTodoStatus(first.sqlite, firstUser, todoId, "completed");
-  createWorldStateWatch(first.sqlite, firstUser, { kind: "cycle", trigger: "ending", leadMinutes: 15, labelContains: "Cetus" });
+  createWorldStateWatch(first.sqlite, firstUser, { kind: "cycle", trigger: "ending", leadMinutes: 15, labelContains: "Cetus", entity: { kind: "weapon", slug: "braton" } });
   const buildId = createPlayerBuild(first.sqlite, firstUser, { title: "Portable build", category: "test", notes: "Moves across catalogs" });
   setBuildEquipment(first.sqlite, firstUser, buildId, "primary", { kind: "weapon", slug: "braton" }, "Main weapon");
   configureBuildEquipment(first.sqlite, firstUser, buildId, "primary", { configuration: "A", formaCount: 2, capacityUpgrade: true });
@@ -59,7 +59,7 @@ test("profiles resolve stable source IDs across installations with different can
   setPlayerTodoStatus(second.sqlite, secondUser, restoredCompleted.id, "open");
   setPlayerTodoStatus(second.sqlite, secondUser, restoredCompleted.id, "completed");
   assert.equal(listPlayerTodos(second.sqlite, secondUser).length, 2);
-  assert.deepEqual(listWorldStateWatches(second.sqlite, secondUser).map(({ kind, trigger, leadMinutes, labelContains, enabled }) => ({ kind, trigger, leadMinutes, labelContains, enabled })), [{ kind: "cycle", trigger: "ending", leadMinutes: 15, labelContains: "Cetus", enabled: true }]);
+  assert.deepEqual(listWorldStateWatches(second.sqlite, secondUser).map(({ kind, trigger, leadMinutes, labelContains, enabled, entity }) => ({ kind, trigger, leadMinutes, labelContains, enabled, entity })), [{ kind: "cycle", trigger: "ending", leadMinutes: 15, labelContains: "Cetus", enabled: true, entity: { kind: "weapon", slug: "braton", name: "Braton" } }]);
   const importedBuild = listPlayerBuilds(second.sqlite, secondUser)[0]!;
   assert.equal(importedBuild.title, "Portable build");
   assert.deepEqual(importedBuild.equipment[0], { id: importedBuild.equipment[0]?.id, slot: "primary", entity: { kind: "weapon", slug: "braton", name: "Braton" }, notes: "Main weapon", configuration: "A", formaCount: 2, capacityUpgrade: true, mods: [{ position: 0, rank: 5, entity: { kind: "mod", slug: "serration", name: "Serration" } }] });
@@ -89,7 +89,7 @@ test("profile replacement is transactional and reports missing entities", async 
   const userId = createLocalUser(catalog.sqlite, { username: "Player" });
   setInventoryEntry(catalog.sqlite, userId, catalog.entityId, { ownedCount: 1, builtCount: 0, wantedCount: 0 });
   const missingProfile = {
-    schemaVersion: 7,
+    schemaVersion: 8,
     exportedAt: "2026-10-13T12:00:00.000Z",
     inventory: [{ entity: { externalIds: [{ sourceId: "items", namespace: "id", value: "missing" }], kind: "weapon", slug: "missing", name: "Missing" }, ownedCount: 1, builtCount: 0, wantedCount: 0 }],
     goals: [],
@@ -116,7 +116,13 @@ test("profile replacement is transactional and reports missing entities", async 
     unresolved: [{ section: "todos", index: 0, name: "Missing", reason: "missing" }],
   });
   assert.deepEqual(listPlayerTodos(catalog.sqlite, userId).map(({ title, entity }) => ({ title, entity })), [{ title: "Keep this task", entity: undefined }]);
-  assert.throws(() => importPlayerProfile(catalog.sqlite, userId, { ...missingProfile, schemaVersion: 6 }), /schemaVersion 7/);
+  const missingWatchProfile = { ...missingProfile, inventory: [], watches: [{ kind: "event", trigger: "active", leadMinutes: 0, enabled: true, labelContains: "Missing", entity: missingProfile.inventory[0]!.entity }] };
+  assert.deepEqual(importPlayerProfile(catalog.sqlite, userId, missingWatchProfile), {
+    inventoryImported: 0, goalsImported: 0, discoveryProgressImported: 0, todosImported: 0, watchesImported: 1, buildsImported: 0,
+    unresolved: [{ section: "watches", index: 0, name: "Missing", reason: "missing" }],
+  });
+  assert.deepEqual(listWorldStateWatches(catalog.sqlite, userId).map(({ kind, labelContains, entity }) => ({ kind, labelContains, entity })), [{ kind: "event", labelContains: "Missing", entity: undefined }]);
+  assert.throws(() => importPlayerProfile(catalog.sqlite, userId, { ...missingProfile, schemaVersion: 7 }), /schemaVersion 8/);
 });
 
 function createCatalog(databasePath: string): { sqlite: Database.Database; entityId: string } {
