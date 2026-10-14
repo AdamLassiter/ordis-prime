@@ -5,7 +5,7 @@
 | WFCD warframe-items | identities, items, components, node levels/planets, quests | Fetch the maintained aggregate API endpoint; snapshot, validate, retain version/hash and MIT attribution |
 | WFCD warframe-drop-data | mission metadata, enemy, relic and rotation drops | Snapshot mission rewards with payload and retain upstream attribution |
 | WFCD WarframeStat.us | live cycles, events, alerts, fissures and traders | Snapshot the PC English aggregate response; normalize absolute availability windows and retain MIT attribution |
-| Manual YAML | published editorial rankings; corrections later | Require citation, author, date, scope and licence note; retain each source as an independent set |
+| Manual YAML | published editorial rankings; curated discovery facts and relations | Require source-specific citations and licence notes; retain each source as an independent versioned set |
 | Warframe Wiki | external detail links only in v1 | No automated fetching; future facts remain segregated and attributable |
 
 Provider absence never means deletion. Removals require an explicit tombstone,
@@ -25,3 +25,10 @@ offering only a provider-level attribution.
 Adapter parser versions form part of static snapshot versions. Re-fetching an
 already-active identical version is a successful no-op; a parser change uses a
 new version suffix so retained upstream bytes can be interpreted into a new run.
+
+The leased worker schedules `wfcd-items` and `wfcd-drops` independently once per
+day by default, while world state runs every five minutes. An administrator can
+bring any of those queued jobs forward from `/data-sources`; this does not run
+network work in the web request or create a duplicate queued job. Manual files
+remain explicit imports because the server cannot infer which local documents
+an operator intends to publish.

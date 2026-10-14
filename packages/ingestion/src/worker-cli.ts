@@ -4,6 +4,8 @@ import { migrateDatabase, openSqliteDatabase } from "@ordis-prime/db";
 import { SnapshotStore } from "./snapshot-store.ts";
 import { WfcdWorldStateAdapter } from "./world-state.ts";
 import { runWorkerCycle } from "./worker.ts";
+import { WfcdDropsAdapter } from "./adapters/wfcd-drops.ts";
+import { WfcdItemsAdapter } from "./adapters/wfcd-items.ts";
 
 const dataDirectory = process.env.ORDIS_DATA_DIR ?? path.join(process.env.INIT_CWD ?? process.cwd(), "data");
 const databasePath = process.env.ORDIS_DATABASE_URL ?? path.join(dataDirectory, "ordis-prime.sqlite");
@@ -11,6 +13,8 @@ const refreshInterval = positiveInteger(process.env.ORDIS_WORLD_STATE_INTERVAL_M
 const retryInterval = positiveInteger(process.env.ORDIS_WORLD_STATE_RETRY_MS, 60_000);
 const pollInterval = positiveInteger(process.env.ORDIS_WORKER_POLL_MS, 5_000);
 const requestTimeout = positiveInteger(process.env.ORDIS_WORLD_STATE_TIMEOUT_MS, 30_000);
+const catalogRefreshInterval = positiveInteger(process.env.ORDIS_CATALOG_INTERVAL_MS, 24 * 60 * 60_000);
+const catalogRequestTimeout = positiveInteger(process.env.ORDIS_CATALOG_TIMEOUT_MS, 5 * 60_000);
 const owner = `${hostname()}:${process.pid}`;
 const abortController = new AbortController();
 for (const signal of ["SIGINT", "SIGTERM"] as const) process.once(signal, () => abortController.abort());
@@ -19,12 +23,13 @@ migrateDatabase(databasePath);
 const database = openSqliteDatabase(databasePath);
 const snapshotStore = new SnapshotStore(path.join(dataDirectory, "sources"));
 const adapter = new WfcdWorldStateAdapter();
-process.stdout.write(`${JSON.stringify({ event: "worker-started", owner, databasePath, refreshInterval })}\n`);
+const catalogAdapters = [new WfcdItemsAdapter(), new WfcdDropsAdapter()];
+process.stdout.write(`${JSON.stringify({ event: "worker-started", owner, databasePath, refreshInterval, catalogRefreshInterval })}\n`);
 
 try {
   while (!abortController.signal.aborted) {
-    const result = await runWorkerCycle({ database, snapshotStore, worldStateAdapter: adapter, owner, refreshIntervalMilliseconds: refreshInterval, retryIntervalMilliseconds: retryInterval, requestTimeoutMilliseconds: requestTimeout });
-    if (result.status !== "idle") process.stdout.write(`${JSON.stringify({ event: "world-state-refresh", ...result, at: new Date().toISOString() })}\n`);
+    const result = await runWorkerCycle({ database, snapshotStore, worldStateAdapter: adapter, catalogAdapters, owner, refreshIntervalMilliseconds: refreshInterval, retryIntervalMilliseconds: retryInterval, requestTimeoutMilliseconds: requestTimeout, catalogRefreshIntervalMilliseconds: catalogRefreshInterval, catalogRequestTimeoutMilliseconds: catalogRequestTimeout });
+    if (result.status !== "idle") process.stdout.write(`${JSON.stringify({ event: "source-refresh", ...result, at: new Date().toISOString() })}\n`);
     await delay(pollInterval, abortController.signal);
   }
 } finally {

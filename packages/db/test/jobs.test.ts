@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { claimDueJob, ensurePendingJob, finishAndRescheduleJob, migrateDatabase, openSqliteDatabase } from "../src/index.ts";
+import { claimDueJob, enqueueJobNow, ensurePendingJob, finishAndRescheduleJob, migrateDatabase, openSqliteDatabase } from "../src/index.ts";
 
 test("database leases serialize recurring jobs and recover expired workers", async (context) => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-jobs-"));
@@ -25,4 +25,16 @@ test("database leases serialize recurring jobs and recover expired workers", asy
   const nextId = finishAndRescheduleJob(second, { id, owner: "worker-b", succeeded: true, kind: recovered!.kind, payload: recovered!.payload, nextRunAfter: 500 });
   assert.equal(claimDueJob(first, { owner: "worker-a", now: 499, leaseMilliseconds: 50, kinds: ["refresh-world-state"] }), undefined);
   assert.equal(claimDueJob(first, { owner: "worker-a", now: 500, leaseMilliseconds: 50, kinds: ["refresh-world-state"] })?.id, nextId);
+});
+
+test("manual enqueue brings scheduled work forward without duplication", async (context) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-jobs-expedite-"));
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const databasePath = path.join(root, "jobs.sqlite");
+  migrateDatabase(databasePath);
+  const database = openSqliteDatabase(databasePath);
+  context.after(() => database.close());
+  const id = ensurePendingJob(database, { kind: "refresh", payload: { source: "items" }, runAfter: 10_000 });
+  assert.equal(enqueueJobNow(database, { kind: "refresh", payload: { source: "items" }, now: 100 }), id);
+  assert.deepEqual(database.prepare("select count(*) as count, min(run_after) as runAfter from jobs where status = 'queued'").get(), { count: 1, runAfter: 100 });
 });

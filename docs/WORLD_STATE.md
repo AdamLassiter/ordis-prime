@@ -40,11 +40,13 @@ When run through the root workspace script, the default database and snapshot
 store are under the repository `data/` directory. `ORDIS_DATA_DIR` can override
 both ingestion and web storage in deployments.
 
-World state is excluded from the default static catalog refresh because it needs
-a much shorter cadence. The Compose deployment runs a database-leased worker
-service that refreshes every five minutes. Development can run the same process
+World state has a separate recurring job because it needs a much shorter cadence.
+The Compose deployment runs a database-leased worker service that refreshes it
+every five minutes and the static WFCD item/drop sources daily. Development can run the same process
 with `pnpm data:worker`; leases ensure only one worker claims a due job.
 Failed calls retain the previous active snapshot and retry after one minute.
+`ORDIS_CATALOG_INTERVAL_MS` and `ORDIS_CATALOG_TIMEOUT_MS` configure the static
+cadence and its larger request budget.
 
 The public `/world-state` route reads the currently promoted snapshots and shows
 countdowns that advance in the browser. It labels future windows separately and

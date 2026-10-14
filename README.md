@@ -54,8 +54,9 @@ administrator. Registration remains closed unless explicitly enabled.
 fetch, immutable snapshot storage, parsing, validation, and transactional
 promotion. Omit names to refresh every registered adapter.
 
-`data:worker` runs the recurring world-state worker for development. Docker
-Compose runs that worker alongside the web service over the same durable volume.
+`data:worker` runs recurring world-state and static WFCD catalog refreshes for
+development. Docker Compose runs that worker alongside the web service over the
+same durable volume.
 
 ## Data safety
 

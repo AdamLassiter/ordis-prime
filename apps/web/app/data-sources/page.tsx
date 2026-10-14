@@ -2,6 +2,7 @@ import { listSourceStatuses } from "@ordis-prime/db";
 import { getDatabase } from "@/lib/database";
 import { getCurrentSession } from "@/lib/session";
 import Link from "next/link";
+import { queueSourceRefresh } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +14,7 @@ export default async function Sources() {
     <p className="eyebrow">Trust and provenance</p>
     <h1>Data sources</h1>
     <p className="lede">Providers contribute evidence. They do not silently become application truth.</p>
+    {isAdmin && <section className="card source-controls"><h2>Refresh controls</h2><p className="muted">Queue work for the leased background worker. Existing queued work is brought forward instead of duplicated.</p><div className="filters">{[["wfcd-items", "WFCD items"], ["wfcd-drops", "WFCD drops"], ["wfcd-worldstate", "World state"]].map(([id, label]) => <form action={queueSourceRefresh.bind(null, id!)} key={id}><button className="button">Queue {label}</button></form>)}</div></section>}
     {sources.length
       ? <section className="grid">{sources.map((source) => <article className="card" key={source.id}>
           <h2><a href={source.homepage}>{source.name}</a></h2>

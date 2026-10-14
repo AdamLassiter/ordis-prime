@@ -22,8 +22,9 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   this same path. Refresh attempts and failures are persisted without replacing
   active data. Administrators can inspect recent attempts, bounded failure
   messages, retained snapshot paths, and record-level resolver conflicts. Manual
-  fact corrections, scheduled static-catalog refresh jobs, and conflict
-  resolution actions remain to be implemented. A provider-neutral world-state
+  fact corrections and conflict resolution actions remain to be implemented.
+  The leased worker schedules WFCD item and drop refreshes daily, and an
+  administrator can bring supported source jobs forward from the source UI. A provider-neutral world-state
   pipeline snapshots and transactionally promotes WFCD cycles, events, alerts,
   fissures and traders.
   A public timer view exposes active and upcoming windows with client-updating
@@ -37,9 +38,9 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   drops, nodes, record-level provenance, and editorial rankings. Newly imported
   entity fields and typed relations retain exact source record keys, paths, and
   citations when supplied. Older pre-provenance relation rows display without
-  those optional details. Docker deployments do not yet expose an administrative
-  refresh trigger, so their first-run catalog is empty until ingestion is run
-  against the mounted data directory.
+  those optional details. Docker deployments queue initial catalog imports in
+  the worker and expose administrator-only refresh controls; manual sources still
+  require an explicit CLI import against the mounted data directory.
 - Local email/password accounts, persisted sessions, closed registration, and
   first-administrator bootstrap enforcement are wired at the authentication
   API, with first-run, sign-in, and sign-out UI. Account administration,

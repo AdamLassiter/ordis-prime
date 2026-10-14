@@ -1,6 +1,9 @@
 import { randomUUID } from "node:crypto";
 import type Database from "better-sqlite3";
 
+export const WORLD_STATE_REFRESH_JOB = "refresh-world-state";
+export const CATALOG_SOURCE_REFRESH_JOB = "refresh-catalog-source";
+
 export interface ClaimedJob {
   id: string;
   kind: string;
@@ -21,6 +24,23 @@ export function ensurePendingJob(sqlite: Database.Database, input: { kind: strin
   }).immediate();
 }
 
+export function enqueueJobNow(sqlite: Database.Database, input: { kind: string; payload: Record<string, unknown>; now?: number }): string {
+  const payloadJson = JSON.stringify(input.payload);
+  const now = input.now ?? Date.now();
+  if (!input.kind || !Number.isFinite(now)) throw new Error("Invalid job request");
+  return sqlite.transaction(() => {
+    const existing = sqlite.prepare("select id, status, run_after as runAfter from jobs where kind = ? and payload_json = ? and status in ('queued', 'running') order by run_after limit 1")
+      .get(input.kind, payloadJson) as { id: string; status: "queued" | "running"; runAfter: number } | undefined;
+    if (existing) {
+      if (existing.status === "queued" && existing.runAfter > now) sqlite.prepare("update jobs set run_after = ? where id = ?").run(now, existing.id);
+      return existing.id;
+    }
+    const id = randomUUID();
+    sqlite.prepare("insert into jobs (id, kind, status, payload_json, run_after) values (?, ?, 'queued', ?, ?)").run(id, input.kind, payloadJson, now);
+    return id;
+  }).immediate();
+}
+
 export function claimDueJob(sqlite: Database.Database, input: { owner: string; now: number; leaseMilliseconds: number; kinds: string[] }): ClaimedJob | undefined {
   if (!input.owner || !Number.isFinite(input.now) || input.leaseMilliseconds <= 0 || !input.kinds.length) throw new Error("Invalid job claim");
   return sqlite.transaction(() => {
@@ -34,7 +54,7 @@ export function claimDueJob(sqlite: Database.Database, input: { owner: string; n
       select id, kind, payload_json as payloadJson, run_after as runAfter
       from jobs
       where status = 'queued' and run_after <= ? and kind in (${placeholders})
-      order by run_after, id limit 1
+      order by run_after, case kind when 'refresh-world-state' then 0 else 1 end, id limit 1
     `).get(input.now, ...input.kinds) as { id: string; kind: string; payloadJson: string; runAfter: number } | undefined;
     if (!row) return undefined;
     sqlite.prepare("update jobs set status = 'running', lease_owner = ?, lease_until = ?, error = null where id = ?")
