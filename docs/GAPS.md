@@ -69,9 +69,9 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   positioned mods, ranks, configuration labels, Forma counts, capacity-upgrade
   flags, notes and immutable unlisted share snapshots. Authenticated
   editor and public snapshot routes use canonical catalog links. Advanced
-  polarity/capacity calculation, arcanes, shards and cloning from public
-  snapshots remain. Private drafts are portable and can be cloned; their
-  snapshot history can be viewed or revoked.
+  polarity/capacity calculation, arcanes and shards remain. Private drafts are
+  portable and can be cloned; their snapshot history can be viewed or revoked.
+  Authenticated recipients can clone a public snapshot into a private draft.
   Draft equipment and mods can seed missing-item acquisition goals, but the
   planner does not yet understand build capacity, alternative mod ranks or
   configuration-specific requirements.

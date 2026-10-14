@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { addBuildAcquisitionGoals, clonePlayerBuild, configureBuildEquipment, createBuildShare, createLocalUser, createPlayerBuild, findSharedBuild, getPlayerBuild, listBuildShares, listPlayerGoals, migrateDatabase, openSqliteDatabase, revokeBuildShare, searchBuildCandidates, setBuildEquipment, setBuildMod, setInventoryEntry, setPlayerGoal, updatePlayerBuild } from "../src/index.ts";
+import { addBuildAcquisitionGoals, clonePlayerBuild, cloneSharedBuild, configureBuildEquipment, createBuildShare, createLocalUser, createPlayerBuild, findSharedBuild, getPlayerBuild, listBuildShares, listPlayerGoals, migrateDatabase, openSqliteDatabase, revokeBuildShare, searchBuildCandidates, setBuildEquipment, setBuildMod, setInventoryEntry, setPlayerGoal, updatePlayerBuild } from "../src/index.ts";
 
 test("build drafts are private and share snapshots remain immutable", async (context) => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-builds-"));
@@ -43,6 +43,17 @@ test("build drafts are private and share snapshots remain immutable", async (con
   assert.equal(shared.title, "Starter setup");
   assert.equal(shared.equipment.find(({ slot }) => slot === "primary")?.configuration, "Incarnon");
   assert.deepEqual(listBuildShares(database, owner, buildId).map(({ shareKey: _shareKey, ...entry }) => entry), [{ revision: shared.revision, createdAt: shared.sharedAt }]);
+  const publicCloneId = cloneSharedBuild(database, other, shareKey);
+  const publicClone = getPlayerBuild(database, other, publicCloneId)!;
+  assert.equal(publicClone.title, "Starter setup (copy)");
+  assert.equal(publicClone.equipment.find(({ slot }) => slot === "primary")?.configuration, "Incarnon");
+  assert.equal(publicClone.equipment.find(({ slot }) => slot === "primary")?.mods[0]?.rank, 5);
+  assert.equal(getPlayerBuild(database, owner, publicCloneId), undefined);
+  const buildCountBeforeFailedClone = (database.prepare("select count(*) as count from player_builds").get() as { count: number }).count;
+  database.prepare("update entities set retired = 1 where id = 'mod'").run();
+  assert.throws(() => cloneSharedBuild(database, other, shareKey), /Unknown active entity mod:serration/);
+  assert.equal((database.prepare("select count(*) as count from player_builds").get() as { count: number }).count, buildCountBeforeFailedClone);
+  database.prepare("update entities set retired = 0 where id = 'mod'").run();
   const cloneId = clonePlayerBuild(database, owner, buildId);
   const clone = getPlayerBuild(database, owner, cloneId)!;
   assert.equal(clone.title, "Changed setup (copy)");
@@ -53,6 +64,21 @@ test("build drafts are private and share snapshots remain immutable", async (con
   assert.throws(() => revokeBuildShare(database, other, buildId, shareKey), /not found/);
   assert.notEqual(getPlayerBuild(database, owner, buildId)?.revision, shared.revision);
   assert.throws(() => setBuildEquipment(database, other, buildId, "primary", { kind: "weapon", slug: "paris" }), /not found/);
+  assert.throws(() => cloneSharedBuild(database, other, "missing-share"), /not found/);
+});
+
+test("cloned build titles stay within the draft title limit", async (context) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-build-title-"));
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const databasePath = path.join(root, "builds.sqlite");
+  migrateDatabase(databasePath);
+  const database = openSqliteDatabase(databasePath);
+  context.after(() => database.close());
+  const owner = createLocalUser(database, { username: "Builder" });
+  const buildId = createPlayerBuild(database, owner, { title: "x".repeat(160) });
+  const clone = getPlayerBuild(database, owner, clonePlayerBuild(database, owner, buildId))!;
+  assert.equal(clone.title.length, 160);
+  assert.match(clone.title, / \(copy\)$/);
 });
 
 function seedEntity(database: ReturnType<typeof openSqliteDatabase>, id: string, kind: string, name: string, slug: string) {

@@ -62,8 +62,19 @@ export function deletePlayerBuild(sqlite: Database.Database, userId: string, bui
 export function clonePlayerBuild(sqlite: Database.Database, userId: string, buildId: string): string {
   const source = getPlayerBuild(sqlite, userId, buildId);
   if (!source) throw new Error("Build not found");
+  return cloneBuildSnapshot(sqlite, userId, source);
+}
+
+export function cloneSharedBuild(sqlite: Database.Database, userId: string, shareKey: string): string {
+  assertUser(sqlite, userId);
+  const source = findSharedBuild(sqlite, shareKey);
+  if (!source) throw new Error("Shared build not found");
+  return cloneBuildSnapshot(sqlite, userId, source);
+}
+
+function cloneBuildSnapshot(sqlite: Database.Database, userId: string, source: Pick<PlayerBuild, "title" | "category" | "notes" | "equipment">): string {
   return sqlite.transaction(() => {
-    const cloneId = createPlayerBuild(sqlite, userId, { title: `${source.title} (copy)`, category: source.category, notes: source.notes });
+    const cloneId = createPlayerBuild(sqlite, userId, { title: cloneTitle(source.title), category: source.category, notes: source.notes });
     for (const equipment of source.equipment) {
       setBuildEquipment(sqlite, userId, cloneId, equipment.slot, { kind: equipment.entity.kind, slug: equipment.entity.slug }, equipment.notes);
       configureBuildEquipment(sqlite, userId, cloneId, equipment.slot, { configuration: equipment.configuration, formaCount: equipment.formaCount, capacityUpgrade: equipment.capacityUpgrade });
@@ -243,6 +254,7 @@ function validateDetails(input: { title: string; category?: string; notes?: stri
   if (!title || title.length > 160) throw new Error("Build title must contain between 1 and 160 characters");
   return { title, category: normalizeText(input.category, 80, "Build category"), notes: normalizeText(input.notes, 10_000, "Build notes") };
 }
+function cloneTitle(title: string): string { const suffix = " (copy)"; return `${title.slice(0, 160 - suffix.length).trimEnd()}${suffix}`; }
 function normalizeText(value: string | undefined, maximum: number, label: string): string | undefined { const text = value?.trim() || undefined; if (text && text.length > maximum) throw new Error(`${label} cannot exceed ${maximum} characters`); return text; }
 function assertUser(sqlite: Database.Database, userId: string): void { if (!sqlite.prepare("select 1 from users where id = ?").get(userId)) throw new Error("Unknown user"); }
 function assertBuildOwner(sqlite: Database.Database, userId: string, buildId: string): void { if (!sqlite.prepare("select 1 from player_builds where id = ? and user_id = ?").get(buildId, userId)) throw new Error("Build not found"); }

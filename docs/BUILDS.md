@@ -30,7 +30,10 @@ records build and per-slot notes, and publishes snapshots. Public snapshot route
 render without authentication and link embedded entities back into the catalog.
 The draft page lists every snapshot it published, can revoke an individual
 capability URL, and can clone the current private draft with its equipment,
-configuration and mods intact.
+configuration and mods intact. An authenticated recipient can also clone a
+public snapshot into a new private draft. The immutable source snapshot is not
+changed and the clone resolves every embedded kind/slug against the recipient
+installation's active catalog in one transaction.
 
 The editor can project a draft into acquisition goals. It counts repeated mod
 requirements, ignores requirements already covered by owned or built inventory,
@@ -42,9 +45,9 @@ recipes and recommends nodes using the same canonical IDs.
 - Forma count, a capacity-upgrade flag, and a configuration label are recorded,
   but polarities and calculated capacity/drain are not modeled. Arcanes, shards,
   abilities, schools and structured weapon configuration variants are also absent.
-- Builds are not included in portable profile export and have no import format.
+- Private build drafts are included in portable profile export/import. Published
+  share snapshots are deliberately installation-local capability URLs.
 - Share keys are unlisted capabilities, not access-controlled invitations.
   Revocation deletes that immutable snapshot; anyone with the URL then receives
   a not-found response.
-- Search is submit-driven rather than an autocomplete, and there is no build
-  cloning from somebody else's public snapshot.
+- Search is submit-driven rather than an autocomplete.

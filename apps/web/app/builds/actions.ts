@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { addBuildAcquisitionGoals, clonePlayerBuild, configureBuildEquipment, createBuildShare, createPlayerBuild, deletePlayerBuild, removeBuildEquipment, removeBuildMod, revokeBuildShare, setBuildEquipment, setBuildMod, updatePlayerBuild, type BuildSlot } from "@ordis-prime/db";
+import { addBuildAcquisitionGoals, clonePlayerBuild, cloneSharedBuild, configureBuildEquipment, createBuildShare, createPlayerBuild, deletePlayerBuild, removeBuildEquipment, removeBuildMod, revokeBuildShare, setBuildEquipment, setBuildMod, updatePlayerBuild, type BuildSlot } from "@ordis-prime/db";
 import { getDatabase } from "@/lib/database";
 import { requireCurrentSession } from "@/lib/session";
 
@@ -78,6 +78,12 @@ export async function removeBuild(buildId: string) {
 export async function cloneBuild(buildId: string) {
   const session = await requireCurrentSession();
   const cloneId = clonePlayerBuild(getDatabase(), session.user.id, buildId);
+  redirect(`/builds/${cloneId}`);
+}
+
+export async function cloneSharedBuildToDraft(shareKey: string) {
+  const session = await requireCurrentSession();
+  const cloneId = cloneSharedBuild(getDatabase(), session.user.id, shareKey);
   redirect(`/builds/${cloneId}`);
 }
 
