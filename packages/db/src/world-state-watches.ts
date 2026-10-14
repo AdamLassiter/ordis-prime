@@ -63,6 +63,12 @@ export function deleteWorldStateWatch(sqlite: Database.Database, userId: string,
   if (result.changes !== 1) throw new Error("Watch not found");
 }
 
+export function setWorldStateWatchEnabled(sqlite: Database.Database, userId: string, watchId: string, enabled: boolean): void {
+  if (typeof enabled !== "boolean") throw new Error("Watch enabled state is invalid");
+  const result = sqlite.prepare("update world_state_watches set enabled = ? where id = ? and user_id = ?").run(enabled ? 1 : 0, watchId, userId);
+  if (result.changes !== 1) throw new Error("Watch not found");
+}
+
 export function evaluateWorldStateWatches(sqlite: Database.Database, now = Date.now(), userId?: string): number {
   const watches = sqlite.prepare(`
     select id, user_id as userId, kind, label_contains as labelContains,

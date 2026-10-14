@@ -25,6 +25,8 @@ per watch and occurrence, even when polling observes it repeatedly. Watch
 creation also evaluates the current snapshot immediately. Notifications are
 private, can be marked read, and do not silently complete static todos. Deleting
 a watch deletes its generated alerts.
+Watches can be paused without losing their definition or existing notification
+history; resuming immediately evaluates the current snapshot.
 
 ## Current limits
 
@@ -32,7 +34,7 @@ a watch deletes its generated alerts.
   deliberately installation-local.
 - There are no recurring schedules, subtasks, tags, ordering controls or links
   from a todo to canonical catalog entities.
-- Watches cannot yet be paused or edited, and notification retention is not
+- Watches cannot yet be edited, and notification retention is not
   configurable. Web push and webhooks remain later opt-in delivery channels.
 
 The acquisition planner separately surfaces active or upcoming world-state

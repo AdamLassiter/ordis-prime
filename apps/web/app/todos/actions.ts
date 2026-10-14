@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createPlayerTodo, createWorldStateWatch, deletePlayerTodo, deleteWorldStateWatch, evaluateWorldStateWatches, markPlayerNotificationRead, setPlayerTodoStatus } from "@ordis-prime/db";
+import { createPlayerTodo, createWorldStateWatch, deletePlayerTodo, deleteWorldStateWatch, evaluateWorldStateWatches, markPlayerNotificationRead, setPlayerTodoStatus, setWorldStateWatchEnabled } from "@ordis-prime/db";
 import type { WorldStateWindowKind } from "@ordis-prime/domain";
 import { getDatabase } from "@/lib/database";
 import { requireCurrentSession } from "@/lib/session";
@@ -50,6 +50,14 @@ export async function addWatch(form: FormData) {
 export async function removeWatch(watchId: string) {
   const session = await requireCurrentSession();
   deleteWorldStateWatch(getDatabase(), session.user.id, watchId);
+  revalidatePath("/todos");
+}
+
+export async function changeWatchEnabled(watchId: string, enabled: boolean) {
+  const session = await requireCurrentSession();
+  const database = getDatabase();
+  setWorldStateWatchEnabled(database, session.user.id, watchId, enabled);
+  if (enabled) evaluateWorldStateWatches(database, Date.now(), session.user.id);
   revalidatePath("/todos");
 }
 

@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { createLocalUser, createWorldStateWatch, evaluateWorldStateWatches, listPlayerNotifications, markPlayerNotificationRead, migrateDatabase, openSqliteDatabase, promoteWorldState } from "../src/index.ts";
+import { createLocalUser, createWorldStateWatch, evaluateWorldStateWatches, listPlayerNotifications, listWorldStateWatches, markPlayerNotificationRead, migrateDatabase, openSqliteDatabase, promoteWorldState, setWorldStateWatchEnabled } from "../src/index.ts";
 
 test("world-state watches create private notifications once per normalized occurrence", async (context) => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-watches-"));
@@ -14,7 +14,7 @@ test("world-state watches create private notifications once per normalized occur
   context.after(() => database.close());
   const firstUser = createLocalUser(database, { username: "First" });
   const secondUser = createLocalUser(database, { username: "Second" });
-  createWorldStateWatch(database, firstUser, { kind: "cycle", labelContains: "cetus", trigger: "ending", leadMinutes: 10 });
+  const firstWatch = createWorldStateWatch(database, firstUser, { kind: "cycle", labelContains: "cetus", trigger: "ending", leadMinutes: 10 });
   createWorldStateWatch(database, secondUser, { kind: "cycle", labelContains: "vallis", trigger: "ending", leadMinutes: 10 });
   const activation = "2026-10-13T20:00:00.000Z";
   const expiry = "2026-10-13T21:00:00.000Z";
@@ -24,6 +24,11 @@ test("world-state watches create private notifications once per normalized occur
     windows: [{ externalId: "cycle:cetus", kind: "cycle", label: "Cetus", state: "night", activation, expiry, evidence: { sourceId: "test-world", sourceRecordKey: "cetus", snapshotVersion: "2026-10-13T20:30:00.000Z", retrievedAt: "2026-10-13T20:30:00.000Z" } }],
   });
   const now = Date.parse("2026-10-13T20:55:00.000Z");
+  setWorldStateWatchEnabled(database, firstUser, firstWatch, false);
+  assert.equal(evaluateWorldStateWatches(database, now), 0);
+  assert.equal(listWorldStateWatches(database, firstUser)[0]?.enabled, false);
+  assert.throws(() => setWorldStateWatchEnabled(database, secondUser, firstWatch, true), /not found/);
+  setWorldStateWatchEnabled(database, firstUser, firstWatch, true);
   assert.equal(evaluateWorldStateWatches(database, now), 1);
   assert.equal(evaluateWorldStateWatches(database, now + 1_000), 0);
   assert.equal(listPlayerNotifications(database, firstUser).length, 1);

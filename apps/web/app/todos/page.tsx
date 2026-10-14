@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { listPlayerNotifications, listPlayerTodos, listWorldStateWatches, type PlayerNotification, type PlayerTodo } from "@ordis-prime/db";
 import { getDatabase } from "@/lib/database";
 import { getCurrentSession } from "@/lib/session";
-import { addTodo, addWatch, changeTodoStatus, readNotification, removeTodo, removeWatch } from "./actions";
+import { addTodo, addWatch, changeTodoStatus, changeWatchEnabled, readNotification, removeTodo, removeWatch } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -32,9 +32,9 @@ export default async function TodosPage() {
         <button className="button">Add watch</button>
       </form>
       {watches.length > 0 && <div className="watch-list">{watches.map((watch) => <article className="card watch-card" key={watch.id}>
-        <div><span className="tag">{watch.kind}</span><h3>{watch.labelContains ? `Label contains “${watch.labelContains}”` : `All ${watch.kind} windows`}</h3>
+        <div><span className="tag">{watch.kind}</span>{!watch.enabled && <span className="tag">paused</span>}<h3>{watch.labelContains ? `Label contains “${watch.labelContains}”` : `All ${watch.kind} windows`}</h3>
           <p className="muted">{watch.trigger}{watch.trigger === "active" ? "" : ` · ${watch.leadMinutes} minute lead`}{watch.stateEquals ? ` · state ${watch.stateEquals}` : ""}{watch.nodeContains ? ` · node contains ${watch.nodeContains}` : ""}</p></div>
-        <form action={removeWatch.bind(null, watch.id)}><button className="nav-button danger-text">Delete watch and its alerts</button></form>
+        <div className="todo-actions"><form action={changeWatchEnabled.bind(null, watch.id, !watch.enabled)}><button className="nav-button">{watch.enabled ? "Pause" : "Resume"}</button></form><form action={removeWatch.bind(null, watch.id)}><button className="nav-button danger-text">Delete watch and its alerts</button></form></div>
       </article>)}</div>}
     </section>
     <form className="card form-stack todo-create" action={addTodo}>
