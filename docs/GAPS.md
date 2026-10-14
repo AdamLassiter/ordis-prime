@@ -48,8 +48,9 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
 - Local email/password accounts, persisted sessions, closed registration, and
   first-administrator bootstrap enforcement are wired at the authentication
   API, with first-run, sign-in, and sign-out UI. Player-state reads and mutations
-  are scoped by the authenticated user in database queries. Account
-  administration and password recovery are not implemented yet.
+  are scoped by the authenticated user in database queries. Administrators can
+  list local accounts and safely change roles with session invalidation.
+  Password recovery and account deletion are not implemented yet.
 - Validated inventory persistence, authenticated catalog editing, an inventory
   summary, node reward ownership filtering, and portable profile import/export
   with transfer UI exist. Authenticated goals feed a planner that subtracts

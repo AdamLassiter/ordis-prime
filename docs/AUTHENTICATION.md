@@ -22,6 +22,11 @@ does not inherit it: deployment still fails closed unless the operator supplies
 `ORDIS_AUTH_SECRET`.
 
 The raw API is wired at `/api/auth/*`. `/setup` collects the operator token only
-for the first account, and `/sign-in` establishes returning sessions. Account
-administration, password recovery, and authorization checks on player-state
-mutations are still gaps.
+for the first account, and `/sign-in` establishes returning sessions. The
+administrator-only `/admin/accounts` page lists local users and can promote or
+demote roles. The database rejects non-admin actors and refuses to demote the
+final administrator. A role change deletes the target account's sessions so it
+takes effect at the next sign-in.
+
+Player-state mutations scope their database writes by authenticated user ID.
+Password recovery and account deletion remain gaps.
