@@ -1,5 +1,6 @@
 import type Database from "better-sqlite3";
 import { expandMissingRequirements, recommendNodes, type DropSource, type EntityId, type InventoryEntry, type Recipe } from "@ordis-prime/domain";
+import { listCurrentWorldState } from "./world-state.ts";
 
 export interface PlayerGoal {
   entityId: string;
@@ -19,6 +20,18 @@ export interface AcquisitionPlan {
     neededRewards: Array<{ entityId: string; kind: string; slug: string; name: string; quantity: number; chance?: number; rotation?: string }>;
     reasons: string[];
   }>;
+}
+
+export interface LiveAcquisitionOpportunity {
+  externalId: string;
+  kind: string;
+  label: string;
+  nodeSlug: string;
+  nodeLabel: string;
+  activation?: number;
+  expiry?: number;
+  status: "active" | "upcoming";
+  neededRewards: AcquisitionPlan["recommendations"][number]["neededRewards"];
 }
 
 export function setPlayerGoal(
@@ -128,6 +141,22 @@ export function buildAcquisitionPlan(sqlite: Database.Database, userId: string):
     };
   });
   return { goals, missing, recommendations };
+}
+
+export function findLiveAcquisitionOpportunities(sqlite: Database.Database, plan: AcquisitionPlan, now = Date.now()): LiveAcquisitionOpportunity[] {
+  const recommendations = new Map(plan.recommendations.filter((entry) => entry.nodeSlug).map((entry) => [entry.nodeSlug!, entry]));
+  return listCurrentWorldState(sqlite, now).flatMap((window) => {
+    if (!window.node) return [];
+    const recommendation = recommendations.get(window.node.slug);
+    if (!recommendation) return [];
+    return [{
+      externalId: window.externalId, kind: window.kind, label: window.label,
+      nodeSlug: window.node.slug, nodeLabel: window.nodeLabel ?? window.node.name,
+      activation: window.activation, expiry: window.expiry,
+      status: window.activation !== undefined && window.activation > now ? "upcoming" as const : "active" as const,
+      neededRewards: recommendation.neededRewards,
+    }];
+  });
 }
 
 function loadEntityNames(sqlite: Database.Database, ids: Set<EntityId>) {

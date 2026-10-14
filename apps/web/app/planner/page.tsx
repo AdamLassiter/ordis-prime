@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { buildAcquisitionPlan } from "@ordis-prime/db";
+import { buildAcquisitionPlan, findLiveAcquisitionOpportunities } from "@ordis-prime/db";
 import { getDatabase } from "@/lib/database";
 import { getCurrentSession } from "@/lib/session";
 import { GoalForm } from "./goal-form";
@@ -11,8 +11,11 @@ export default async function Planner() {
   const session = await getCurrentSession();
   if (!session) redirect("/sign-in");
   let plan;
+  let opportunities;
   try {
-    plan = buildAcquisitionPlan(getDatabase(), session.user.id);
+    const database = getDatabase();
+    plan = buildAcquisitionPlan(database, session.user.id);
+    opportunities = findLiveAcquisitionOpportunities(database, plan);
   } catch (error) {
     return <><p className="eyebrow">Private workspace</p><h1>Acquisition planner</h1><p className="error">The plan could not be expanded: {error instanceof Error ? error.message : "unknown catalog error"}</p></>;
   }
@@ -20,6 +23,8 @@ export default async function Planner() {
     <p className="eyebrow">Private workspace</p>
     <h1>Acquisition planner</h1>
     <p className="lede">Set desired final quantities. Your inventory is subtracted before recipes are expanded, and every candidate node explains which missing requirements it covers.</p>
+
+    {opportunities.length > 0 && <section className="planner-section"><h2>Live opportunities</h2><p className="muted">Current or upcoming world-state windows on nodes that drop something this plan still needs.</p><div className="grid">{opportunities.map((opportunity) => <article className="card" key={`${opportunity.kind}:${opportunity.externalId}`}><span className="tag">{opportunity.status}</span><h3>{opportunity.label}</h3><p><Link href={`/nodes/${opportunity.nodeSlug}`}>{opportunity.nodeLabel}</Link></p><p>{opportunity.neededRewards.map(({ name, quantity }) => `${name} × ${quantity}`).join(" · ")}</p>{opportunity.expiry && <p className="muted">Ends {formatInstant(opportunity.expiry)}</p>}</article>)}</div></section>}
 
     <section className="planner-section">
       <h2>Goals</h2>
@@ -44,3 +49,5 @@ export default async function Planner() {
     </section>}
   </>;
 }
+
+function formatInstant(timestamp: number): string { return `${new Date(timestamp).toISOString().slice(0, 16).replace("T", " ")} UTC`; }

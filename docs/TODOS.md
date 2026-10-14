@@ -28,8 +28,13 @@ a watch deletes its generated alerts.
 
 ## Current limits
 
-- Static todos are not included in portable profile exports yet.
+- Static todos and watch rules are portable; generated notification history is
+  deliberately installation-local.
 - There are no recurring schedules, subtasks, tags, ordering controls or links
   from a todo to canonical catalog entities.
 - Watches cannot yet be paused or edited, and notification retention is not
   configurable. Web push and webhooks remain later opt-in delivery channels.
+
+The acquisition planner separately surfaces active or upcoming world-state
+windows on recommended nodes. Those are derived, expiring suggestions rather
+than persisted todos or alerts.

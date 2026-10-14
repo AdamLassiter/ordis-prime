@@ -26,6 +26,7 @@
 
 ## Later consumers of the same graph
 
-- Live events intersect with goals to create expiring todo suggestions.
+- Live windows intersect with goal-backed node recommendations to surface
+  expiring acquisition opportunities in the planner.
 - Quest and mechanic prerequisites surface systems a player has not discovered.
 - A visual star chart uses the same node IDs, edges, filters and planner queries.

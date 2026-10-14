@@ -4,7 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import type { Observation } from "@ordis-prime/domain";
-import { buildAcquisitionPlan, createLocalUser, migrateDatabase, openSqliteDatabase, promoteSource, setInventoryEntryByReference, setPlayerGoal } from "../src/index.ts";
+import { buildAcquisitionPlan, createLocalUser, findLiveAcquisitionOpportunities, migrateDatabase, openSqliteDatabase, promoteSource, promoteWorldState, setInventoryEntryByReference, setPlayerGoal } from "../src/index.ts";
 
 test("persisted goals expand through active recipes and produce named node reasons", async (context) => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-planner-db-"));
@@ -32,6 +32,11 @@ test("persisted goals expand through active recipes and produce named node reaso
   assert.deepEqual(plan.missing.map(({ name, quantity }) => ({ name, quantity })), [{ name: "Test Chassis", quantity: 3 }]);
   assert.equal(plan.recommendations[0]?.nodeSlug, "test-node");
   assert.deepEqual(plan.recommendations[0]?.reasons, ["Drops 1 missing goal item", "Test Chassis: need 3, 25.00% documented chance, rotation C"]);
+  promoteWorldState(sqlite, {
+    source: { id: "world", name: "World", homepage: "https://example.test/world", priority: 1 }, version: "live-v1", contentHash: "live-hash", observedAt: "2026-10-13T12:00:00.000Z", snapshotPath: "/live",
+    windows: [{ externalId: "fissure:test", kind: "fissure", label: "Lith Fissure", nodeLabel: "Test Node", activation: "2026-10-13T11:00:00.000Z", expiry: "2026-10-13T13:00:00.000Z", evidence: { sourceId: "world", sourceRecordKey: "test", snapshotVersion: "live-v1", retrievedAt: "2026-10-13T12:00:00.000Z" } }],
+  });
+  assert.deepEqual(findLiveAcquisitionOpportunities(sqlite, plan, Date.parse("2026-10-13T12:00:00.000Z")).map(({ label, nodeSlug, status, neededRewards }) => ({ label, nodeSlug, status, neededRewards: neededRewards.map(({ name, quantity }) => ({ name, quantity })) })), [{ label: "Lith Fissure", nodeSlug: "test-node", status: "active", neededRewards: [{ name: "Test Chassis", quantity: 3 }] }]);
 
   setPlayerGoal(sqlite, userId, { kind: "warframe", slug: "test-frame" }, 0);
   assert.deepEqual(buildAcquisitionPlan(sqlite, userId).goals, []);

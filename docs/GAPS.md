@@ -53,8 +53,9 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   candidate nodes with visible reasons. Profiles include inventory, goals,
   discovery progress, static todos, watch rules and private build drafts.
   Generated alerts and published share snapshots are deliberately excluded.
-  Planning does not yet account for node
-  access, alternative recipes, markets, relic refinement, or mission duration.
+  Live windows on reconciled recommended nodes surface as expiring acquisition
+  opportunities. Planning does not yet account for node access, alternative
+  recipes, markets, relic refinement, or mission duration.
 - Authenticated players can keep private static todos with optional notes and due
   dates. Source-neutral world-state watches match current window fields and
   create deduplicated private in-app alerts. Todos and watches are not yet
