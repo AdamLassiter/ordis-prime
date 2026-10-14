@@ -104,6 +104,49 @@ test("a typed source refines an untyped drop reward without changing its identit
   assert.deepEqual(after, { id: before.id, kind: "mod" });
 });
 
+test("higher-priority cited facts remain field winners across provider refreshes", async (context) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-priority-"));
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const databasePath = path.join(root, "catalog.sqlite");
+  migrateDatabase(databasePath);
+  const sqlite = new Database(databasePath);
+  sqlite.pragma("foreign_keys = ON");
+  context.after(() => sqlite.close());
+  promoteSource(sqlite, input("v1", [{ ...entity("braton", "Braton", "weapon"), fields: { name: "Braton", slug: "braton", description: "Provider description" } }]));
+  const correction: Observation = { type: "entity", kind: "weapon", externalIds: [{ sourceId: "fixture", namespace: "id", value: "braton" }], fields: { description: "Cited correction" }, evidence: { ...evidence("manual-v1", "manual"), citationUrl: "https://example.test/correction" } };
+  promoteSource(sqlite, { source: { id: "manual", name: "Manual", homepage: "https://example.test/correction", priority: 300 }, version: "manual-v1", contentHash: "manual", retrievedAt: correction.evidence.retrievedAt, observations: [correction] });
+  promoteSource(sqlite, input("v2", [{ ...entity("braton", "Braton", "weapon", "v2"), fields: { name: "Braton", slug: "braton", description: "New provider description" } }]));
+  assert.deepEqual(sqlite.prepare("select description from entities where slug = 'braton'").get(), { description: "Cited correction" });
+});
+
+test("an overlay targeting an unimported provider becomes a reviewable conflict", async (context) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-missing-source-"));
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const databasePath = path.join(root, "catalog.sqlite");
+  migrateDatabase(databasePath);
+  const sqlite = new Database(databasePath);
+  sqlite.pragma("foreign_keys = ON");
+  context.after(() => sqlite.close());
+  const correction: Observation = {
+    type: "entity",
+    kind: "weapon",
+    externalIds: [{ sourceId: "not-imported", namespace: "id", value: "braton" }],
+    fields: { name: "Braton", slug: "braton", description: "Cited correction" },
+    evidence: { ...evidence("manual-v1", "manual"), citationUrl: "https://example.test/correction" },
+  };
+  const result = promoteSource(sqlite, {
+    source: { id: "manual", name: "Manual", homepage: "https://example.test/correction", priority: 300 },
+    version: "manual-v1",
+    contentHash: "manual",
+    retrievedAt: correction.evidence.retrievedAt,
+    observations: [correction],
+  });
+
+  assert.equal(result.conflictsCreated, 1);
+  assert.equal(result.entitiesCreated, 0);
+  assert.match((sqlite.prepare("select reason from ingestion_conflicts where source_run_id = ?").get(result.sourceRunId) as { reason: string }).reason, /not registered: not-imported/);
+});
+
 test("editorial rankings link cited sets to canonical entities", async (context) => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-promotion-"));
   context.after(() => fs.rm(root, { recursive: true, force: true }));

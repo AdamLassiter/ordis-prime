@@ -18,11 +18,11 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   components, nodes, and drops. Fetched payloads can be retained in an
   immutable, hash-verified snapshot store and observations can be resolved into
   canonical SQLite records with provenance and reviewable conflicts through a
-  provider-neutral refresh command. Validated, cited manual ranking YAML uses
-  this same path. Refresh attempts and failures are persisted without replacing
-  active data. Administrators can inspect recent attempts, bounded failure
-  messages, retained snapshot paths, and record-level resolver conflicts. Manual
-  fact corrections and conflict resolution actions remain to be implemented.
+  provider-neutral refresh command. Validated, cited manual ranking and factual
+  overlay YAML use this same path. Refresh attempts and failures are persisted
+  without replacing active data. Administrators can inspect recent attempts,
+  bounded failure messages, retained snapshot paths, and record-level resolver
+  conflicts. Conflict resolution actions remain to be implemented.
   The leased worker schedules WFCD item and drop refreshes daily, and an
   administrator can bring supported source jobs forward from the source UI. A provider-neutral world-state
   pipeline snapshots and transactionally promotes WFCD cycles, events, alerts,

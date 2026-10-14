@@ -226,6 +226,12 @@ function resolveAndWriteEntity(
 
   let entityId: EntityId;
   if (resolution.status === "new") {
+    const missingSourceIds = [...new Set(observation.externalIds.map((externalId) => externalId.sourceId))]
+      .filter((sourceId) => !sqlite.prepare("select 1 from sources where id = ?").get(sourceId));
+    if (missingSourceIds.length) {
+      writeConflict(sqlite, sourceRunId, observation.evidence.sourceRecordKey, `External identifier source is not registered: ${missingSourceIds.join(", ")}`, [], counts);
+      return undefined;
+    }
     if (!observation.fields.name || !observation.fields.slug) {
       writeConflict(sqlite, sourceRunId, observation.evidence.sourceRecordKey, "New entity is missing a name or slug", [], counts);
       return undefined;

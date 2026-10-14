@@ -1,0 +1,16 @@
+schemaVersion: 1
+source:
+  id: example-curated-facts
+  title: Example curated facts
+  url: https://wiki.warframe.com/w/Braton
+  licenseNote: Example only; verify source licensing and wording before publishing.
+  priority: 300
+entries:
+  - target:
+      sourceId: wfcd-items
+      namespace: uniqueName
+      value: /Lotus/Weapons/Tenno/Rifle/Rifle
+    kind: weapon
+    description: A balanced automatic rifle available early in a Tenno's progression.
+    aliases:
+      - Braton rifle

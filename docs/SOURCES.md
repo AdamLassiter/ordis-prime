@@ -5,7 +5,7 @@
 | WFCD warframe-items | identities, items, components, node levels/planets, quests | Fetch the maintained aggregate API endpoint; snapshot, validate, retain version/hash and MIT attribution |
 | WFCD warframe-drop-data | mission metadata, enemy, relic and rotation drops | Snapshot mission rewards with payload and retain upstream attribution |
 | WFCD WarframeStat.us | live cycles, events, alerts, fissures and traders | Snapshot the PC English aggregate response; normalize absolute availability windows and retain MIT attribution |
-| Manual YAML | published editorial rankings; curated discovery facts and relations | Require source-specific citations and licence notes; retain each source as an independent versioned set |
+| Manual YAML | published editorial rankings; curated discovery facts and relations; factual overlays | Require source-specific citations and licence notes; retain each source as an independent versioned set and resolve overlays by explicit external ID |
 | Warframe Wiki | external detail links only in v1 | No automated fetching; future facts remain segregated and attributable |
 
 Provider absence never means deletion. Removals require an explicit tombstone,

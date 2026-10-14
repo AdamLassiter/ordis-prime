@@ -29,15 +29,12 @@ numerically equivalent. The table can be filtered by canonical item name and
 source subset, reports source coverage per item, and currently shows at most 200
 matching items.
 
-## Current compromise
+## Editorial compromise
 
 The editorial v1 format handles tier sets only. The comparison UI does not
 compute per-scale summaries because unlike verbal scales do not have an honest
-shared numeric meaning. Curated factual corrections
-need a separate explicit schema because corrections require field-level
-precedence and review semantics. Before stable release, `schemaVersion: 1` may
-be replaced rather than migrated; there is no pre-release compatibility
-promise.
+shared numeric meaning. Before stable release, `schemaVersion: 1` may be
+replaced rather than migrated; there is no pre-release compatibility promise.
 
 ## Discovery format
 
@@ -60,6 +57,34 @@ citation URL (the source URL by default, or an entry/relation override). Missing
 external endpoints become ingestion conflicts; misspelled local keys fail
 validation before promotion.
 
-The current format cannot override individual fields from another source or
-express conditional relationships. Those require explicit semantics rather
-than overloading free-form notes.
+The current format cannot express conditional relationships. Those require
+explicit semantics rather than overloading free-form notes.
+
+## Factual overlay format
+
+Factual overlays correct or enrich canonical entity fields without modifying a
+provider snapshot. Version 1 YAML declares an independently cited source and
+targets every entry by an explicit `{ sourceId, namespace, value }` identifier.
+Display names are never used to guess the correction target. An entry can
+provide a name, slug, description, aliases, or the explicit tombstone
+`retired: true`; `retired: false` is rejected because restoration needs a
+separate reviewed operation. See `data/manual/facts.example.yaml`.
+
+Import the target provider first, then the overlay:
+
+```sh
+pnpm data:refresh wfcd-items
+pnpm data:refresh manual-facts:data/manual/facts.example.yaml
+```
+
+Source priority determines the active value for name, slug, and description.
+The default manual priority is 300, above the bundled providers, while each
+field retains the overlay's source record, YAML path, snapshot, and citation.
+Later provider refreshes therefore cannot silently erase an accepted
+correction. Aliases supplement identity matching rather than replacing a
+canonical field.
+
+An unresolved target, mismatched entity kind, or unregistered target source is
+recorded as an ingestion conflict. It is never redirected by a similar display
+name. Manual files remain explicit operator imports and are not scheduled by
+the background worker.

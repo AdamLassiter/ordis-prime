@@ -42,6 +42,7 @@ pnpm db:migrate
 pnpm data:refresh wfcd-items wfcd-drops
 pnpm data:refresh manual-ranking:data/manual/editorial.example.yaml
 pnpm data:refresh manual-discovery:data/manual/discovery.example.yaml
+pnpm data:refresh manual-facts:data/manual/facts.example.yaml
 pnpm dev
 ```
 
