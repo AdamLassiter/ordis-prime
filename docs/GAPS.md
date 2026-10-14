@@ -60,8 +60,8 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   flags, notes and immutable unlisted share snapshots. Authenticated
   editor and public snapshot routes use canonical catalog links. Advanced
   polarity/capacity calculation, arcanes and shards, profile portability,
-  cloning, share-history management
-  and revocation remain to be implemented.
+  and cloning from public snapshots remain. Private drafts can be cloned, and
+  their snapshot history can be viewed or revoked.
 - Active cited editorial ranking sets have a public source-and-item comparison
   matrix that preserves unlike scales and disagreement. Source subset controls
   and transparent derived summaries are not implemented.

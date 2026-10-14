@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { BUILD_SLOTS, getPlayerBuild, searchBuildCandidates, type BuildSlot } from "@ordis-prime/db";
+import { BUILD_SLOTS, getPlayerBuild, listBuildShares, searchBuildCandidates, type BuildSlot } from "@ordis-prime/db";
 import { getDatabase } from "@/lib/database";
 import { getCurrentSession } from "@/lib/session";
-import { assignEquipment, assignMod, clearEquipment, clearMod, removeBuild, saveBuildDetails, saveEquipmentConfiguration, saveEquipmentNotes, shareBuild } from "../actions";
+import { assignEquipment, assignMod, clearEquipment, clearMod, cloneBuild, removeBuild, revokeShare, saveBuildDetails, saveEquipmentConfiguration, saveEquipmentNotes, shareBuild } from "../actions";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +15,7 @@ export default async function BuildEditor({ params, searchParams }: { params: Pr
   const database = getDatabase();
   const build = getPlayerBuild(database, session.user.id, id);
   if (!build) notFound();
+  const shares = listBuildShares(database, session.user.id, id);
   const selectedSlot = isBuildSlot(query.slot) ? query.slot : "warframe";
   const modSlot = isBuildSlot(query.modslot) ? query.modslot : build.equipment[0]?.slot;
   const position = /^\d+$/.test(query.position ?? "") ? Math.min(19, Number(query.position)) : 0;
@@ -49,8 +50,10 @@ export default async function BuildEditor({ params, searchParams }: { params: Pr
       {build.equipment.length ? <><form className="inline-form"><label>Equipment<select name="modslot" defaultValue={modSlot}>{build.equipment.map(({ slot, entity }) => <option value={slot} key={slot}>{slot}: {entity.name}</option>)}</select></label><label>Position<input name="position" type="number" min="0" max="19" defaultValue={position} required /></label><label>Search<input name="modq" defaultValue={query.modq} required /></label><button className="button">Search</button></form>
       {modCandidates.length > 0 && modSlot && <div className="candidate-list">{modCandidates.map((item) => <form action={assignMod.bind(null, id, modSlot, position, item.kind, item.slug)} key={`${item.kind}:${item.slug}`}><span>{item.name}</span><label>Rank<input name="rank" type="number" min="0" max="100" /></label><button className="button">Assign</button></form>)}</div>}</> : <p className="notice">Assign equipment before adding mods.</p>}
     </section>
-    <section className="build-publish"><form action={shareBuild.bind(null, id)}><button className="button">Publish immutable snapshot</button></form><form action={removeBuild.bind(null, id)}><button className="nav-button danger-text">Delete draft</button></form></section>
+    <section className="planner-section"><h2>Share history</h2>{shares.length ? <div className="todo-list">{shares.map((share) => <article className="card todo-card" key={share.shareKey}><div><h3><Link href={`/builds/shared/${share.shareKey}`}>Revision {share.revision}</Link></h3><p className="muted">Published {formatInstant(share.createdAt)}</p></div><form action={revokeShare.bind(null, id, share.shareKey)}><button className="nav-button danger-text">Revoke</button></form></article>)}</div> : <p className="notice">No published snapshots yet.</p>}</section>
+    <section className="build-publish"><form action={shareBuild.bind(null, id)}><button className="button">Publish immutable snapshot</button></form><form action={cloneBuild.bind(null, id)}><button className="nav-button">Clone draft</button></form><form action={removeBuild.bind(null, id)}><button className="nav-button danger-text">Delete draft</button></form></section>
   </>;
 }
 
 function isBuildSlot(value: string | undefined): value is BuildSlot { return (BUILD_SLOTS as readonly string[]).includes(value ?? ""); }
+function formatInstant(timestamp: number): string { return `${new Date(timestamp).toISOString().slice(0, 16).replace("T", " ")} UTC`; }

@@ -21,6 +21,7 @@ export interface SharedBuildSnapshot extends Omit<PlayerBuild, "id" | "createdAt
   shareKey: string;
   sharedAt: number;
 }
+export interface BuildShareSummary { shareKey: string; revision: number; createdAt: number }
 export type BuildCandidate = BuildEntityReference;
 
 export function createPlayerBuild(sqlite: Database.Database, userId: string, input: { title: string; category?: string; notes?: string }): string {
@@ -56,6 +57,20 @@ export function updatePlayerBuild(sqlite: Database.Database, userId: string, bui
 export function deletePlayerBuild(sqlite: Database.Database, userId: string, buildId: string): void {
   const result = sqlite.prepare("delete from player_builds where id = ? and user_id = ?").run(buildId, userId);
   if (result.changes !== 1) throw new Error("Build not found");
+}
+
+export function clonePlayerBuild(sqlite: Database.Database, userId: string, buildId: string): string {
+  const source = getPlayerBuild(sqlite, userId, buildId);
+  if (!source) throw new Error("Build not found");
+  return sqlite.transaction(() => {
+    const cloneId = createPlayerBuild(sqlite, userId, { title: `${source.title} (copy)`, category: source.category, notes: source.notes });
+    for (const equipment of source.equipment) {
+      setBuildEquipment(sqlite, userId, cloneId, equipment.slot, { kind: equipment.entity.kind, slug: equipment.entity.slug }, equipment.notes);
+      configureBuildEquipment(sqlite, userId, cloneId, equipment.slot, { configuration: equipment.configuration, formaCount: equipment.formaCount, capacityUpgrade: equipment.capacityUpgrade });
+      for (const mod of equipment.mods) setBuildMod(sqlite, userId, cloneId, equipment.slot, mod.position, { kind: mod.entity.kind, slug: mod.entity.slug }, mod.rank);
+    }
+    return cloneId;
+  })();
 }
 
 export function searchBuildCandidates(sqlite: Database.Database, slot: BuildSlot | "mod", query: string, limit = 20): BuildCandidate[] {
@@ -157,6 +172,18 @@ export function findSharedBuild(sqlite: Database.Database, shareKey: string): Sh
   const row = sqlite.prepare("select snapshot_json as snapshotJson from build_share_snapshots where share_key = ?").get(shareKey) as { snapshotJson: string } | undefined;
   if (!row) return undefined;
   return JSON.parse(row.snapshotJson) as SharedBuildSnapshot;
+}
+
+export function listBuildShares(sqlite: Database.Database, userId: string, buildId: string): BuildShareSummary[] {
+  assertBuildOwner(sqlite, userId, buildId);
+  return sqlite.prepare("select share_key as shareKey, revision, created_at as createdAt from build_share_snapshots where source_build_id = ? order by created_at desc")
+    .all(buildId) as BuildShareSummary[];
+}
+
+export function revokeBuildShare(sqlite: Database.Database, userId: string, buildId: string, shareKey: string): void {
+  assertBuildOwner(sqlite, userId, buildId);
+  const result = sqlite.prepare("delete from build_share_snapshots where source_build_id = ? and share_key = ?").run(buildId, shareKey);
+  if (result.changes !== 1) throw new Error("Build share not found");
 }
 
 function hydrateBuild(sqlite: Database.Database, build: { id: string; title: string; category: string | null; notes: string | null; revision: number; createdAt: number; updatedAt: number }): PlayerBuild {

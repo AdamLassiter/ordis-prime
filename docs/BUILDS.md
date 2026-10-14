@@ -28,6 +28,9 @@ The authenticated `/builds` workshop creates drafts. Its editor searches the
 canonical catalog with slot-specific kind filtering, assigns equipment and mods,
 records build and per-slot notes, and publishes snapshots. Public snapshot routes
 render without authentication and link embedded entities back into the catalog.
+The draft page lists every snapshot it published, can revoke an individual
+capability URL, and can clone the current private draft with its equipment,
+configuration and mods intact.
 
 ## Current limits
 
@@ -35,7 +38,8 @@ render without authentication and link embedded entities back into the catalog.
   but polarities and calculated capacity/drain are not modeled. Arcanes, shards,
   abilities, schools and structured weapon configuration variants are also absent.
 - Builds are not included in portable profile export and have no import format.
-- Share keys are unlisted capabilities, not access-controlled invitations, and
-  cannot yet be revoked.
+- Share keys are unlisted capabilities, not access-controlled invitations.
+  Revocation deletes that immutable snapshot; anyone with the URL then receives
+  a not-found response.
 - Search is submit-driven rather than an autocomplete, and there is no build
-  cloning or snapshot history UI.
+  cloning from somebody else's public snapshot.

@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { configureBuildEquipment, createBuildShare, createLocalUser, createPlayerBuild, findSharedBuild, getPlayerBuild, migrateDatabase, openSqliteDatabase, searchBuildCandidates, setBuildEquipment, setBuildMod, updatePlayerBuild } from "../src/index.ts";
+import { clonePlayerBuild, configureBuildEquipment, createBuildShare, createLocalUser, createPlayerBuild, findSharedBuild, getPlayerBuild, listBuildShares, migrateDatabase, openSqliteDatabase, revokeBuildShare, searchBuildCandidates, setBuildEquipment, setBuildMod, updatePlayerBuild } from "../src/index.ts";
 
 test("build drafts are private and share snapshots remain immutable", async (context) => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-builds-"));
@@ -37,7 +37,15 @@ test("build drafts are private and share snapshots remain immutable", async (con
   updatePlayerBuild(database, owner, buildId, { title: "Changed setup" });
   assert.equal(shared.title, "Starter setup");
   assert.equal(shared.equipment.find(({ slot }) => slot === "primary")?.configuration, "Incarnon");
-  assert.equal(findSharedBuild(database, shareKey)?.title, "Starter setup");
+  assert.deepEqual(listBuildShares(database, owner, buildId).map(({ shareKey: _shareKey, ...entry }) => entry), [{ revision: shared.revision, createdAt: shared.sharedAt }]);
+  const cloneId = clonePlayerBuild(database, owner, buildId);
+  const clone = getPlayerBuild(database, owner, cloneId)!;
+  assert.equal(clone.title, "Changed setup (copy)");
+  assert.equal(clone.equipment.find(({ slot }) => slot === "primary")?.mods[0]?.entity.name, "Serration");
+  assert.equal(clone.equipment.find(({ slot }) => slot === "primary")?.configuration, "Incarnon");
+  revokeBuildShare(database, owner, buildId, shareKey);
+  assert.equal(findSharedBuild(database, shareKey), undefined);
+  assert.throws(() => revokeBuildShare(database, other, buildId, shareKey), /not found/);
   assert.notEqual(getPlayerBuild(database, owner, buildId)?.revision, shared.revision);
   assert.throws(() => setBuildEquipment(database, other, buildId, "primary", { kind: "weapon", slug: "paris" }), /not found/);
 });
