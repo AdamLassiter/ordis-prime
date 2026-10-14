@@ -122,9 +122,9 @@ export function listSourceConflicts(sqlite: Database.Database, sourceId: string,
   const placeholders = rows.map(() => "?").join(", ");
   const events = rows.length ? sqlite.prepare(`
     select event.id, event.conflict_id as conflictId, event.action, event.note,
-           event.created_at as createdAt, user.username as actor
+           event.created_at as createdAt, coalesce(user.username, event.actor_name) as actor
     from ingestion_conflict_review_events event
-    join users user on user.id = event.user_id
+    left join users user on user.id = event.user_id
     where event.conflict_id in (${placeholders})
     order by event.created_at, event.rowid
   `).all(...rows.map((row) => row.id)) as Array<SourceConflictReviewEvent & { conflictId: string }> : [];
@@ -170,10 +170,12 @@ function changeConflictReviewState(
     if (!conflict) throw new Error(`Conflict ${input.conflictId} is not available for ${input.action}`);
     sqlite.prepare("update ingestion_conflicts set resolved_at = ? where id = ?")
       .run(input.resolved ? now : null, input.conflictId);
+    const actor = sqlite.prepare("select username from users where id = ?").get(input.userId) as { username: string } | undefined;
+    if (!actor) throw new Error("Conflict review actor not found");
     sqlite.prepare(`
-      insert into ingestion_conflict_review_events (id, conflict_id, user_id, action, note, created_at)
-      values (?, ?, ?, ?, ?, ?)
-    `).run(randomUUID(), input.conflictId, input.userId, input.action, note, now);
+      insert into ingestion_conflict_review_events (id, conflict_id, user_id, actor_name, action, note, created_at)
+      values (?, ?, ?, ?, ?, ?, ?)
+    `).run(randomUUID(), input.conflictId, input.userId, actor.username, input.action, note, now);
   })();
 }
 

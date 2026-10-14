@@ -38,3 +38,18 @@ export function setLocalAccountRole(
     sqlite.prepare("delete from sessions where user_id = ?").run(input.targetUserId);
   }).immediate();
 }
+
+export function deleteLocalAccount(sqlite: Database.Database, userId: string): void {
+  sqlite.transaction(() => {
+    const user = sqlite.prepare("select email, role from users where id = ?").get(userId) as { email: string; role: "admin" | "player" } | undefined;
+    if (!user) throw new Error("Account not found");
+    if (user.role === "admin") {
+      const admins = sqlite.prepare("select count(*) as count from users where role = 'admin'").get() as { count: number };
+      if (admins.count <= 1) throw new Error("The final administrator cannot delete their account");
+    }
+    sqlite.prepare("delete from build_share_snapshots where source_build_id in (select id from player_builds where user_id = ?)").run(userId);
+    sqlite.prepare("delete from verifications where identifier = ?").run(user.email);
+    const result = sqlite.prepare("delete from users where id = ?").run(userId);
+    if (result.changes !== 1) throw new Error("Account not found");
+  }).immediate();
+}

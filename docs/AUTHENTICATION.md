@@ -29,4 +29,13 @@ final administrator. A role change deletes the target account's sessions so it
 takes effect at the next sign-in.
 
 Player-state mutations scope their database writes by authenticated user ID.
-Password recovery and account deletion remain gaps.
+Signed-in users can delete their account from `/account` after typing an exact
+confirmation phrase. Deletion is transactional, removes credentials, sessions
+and private player state, and revokes immutable build-share URLs owned by the
+account. The final administrator cannot self-delete until another administrator
+exists. Conflict-review audit entries retain the actor's recorded display name
+after the account foreign key is cleared.
+
+Deletion trusts the active authenticated session and confirmation phrase; it
+does not currently require password re-entry. Password recovery remains a gap
+until an outbound email provider and token-delivery policy are selected.
