@@ -24,11 +24,14 @@ test("ranking comparison preserves independent scales, citations, and disagreeme
     ];
     promoteSource(database, { source: { id, name: id, homepage: `https://${id}.test`, priority: 20 }, version: "v1", contentHash: id, retrievedAt, observations });
   }
-  const comparison = compareEditorialRankings(database, "Brat");
+  const comparison = compareEditorialRankings(database, { query: "Brat" });
   assert.deepEqual(comparison.sets.map(({ title, scale, citationUrl }) => ({ title, scale, citationUrl })), [
     { title: "creator-one", scale: ["S", "A", "B"], citationUrl: "https://creator-one.test/video" },
     { title: "creator-two", scale: ["Top", "Mid", "Low"], citationUrl: "https://creator-two.test/video" },
   ]);
   assert.deepEqual(Object.values(comparison.rows[0]!.rankings).map(({ tier }) => tier).sort(), ["Low", "S"]);
-  assert.equal(compareEditorialRankings(database, "%").rows.length, 0);
+  const selected = compareEditorialRankings(database, { setIds: [comparison.sets[0]!.id] });
+  assert.equal(selected.sets.length, 1);
+  assert.deepEqual(Object.values(selected.rows[0]!.rankings).map(({ tier }) => tier), ["S"]);
+  assert.equal(compareEditorialRankings(database, { query: "%" }).rows.length, 0);
 });

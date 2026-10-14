@@ -26,12 +26,14 @@ The public `/rankings` view shows each active source's declared scale, scope,
 game version and citation beside a matrix of its entries. Values remain verbatim
 and blank cells remain blank; the application does not pretend unlike scales are
 numerically equivalent. The table can be filtered by canonical item name and
-currently shows at most 200 matching items.
+source subset, reports source coverage per item, and currently shows at most 200
+matching items.
 
 ## Current compromise
 
-The editorial v1 format handles tier sets only. The comparison UI does not yet
-select subsets of sources or compute transparent per-scale summaries. Curated factual corrections
+The editorial v1 format handles tier sets only. The comparison UI does not
+compute per-scale summaries because unlike verbal scales do not have an honest
+shared numeric meaning. Curated factual corrections
 need a separate explicit schema because corrections require field-level
 precedence and review semantics. Before stable release, `schemaVersion: 1` may
 be replaced rather than migrated; there is no pre-release compatibility

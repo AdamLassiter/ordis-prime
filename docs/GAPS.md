@@ -71,8 +71,9 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   planner does not yet understand build capacity, alternative mod ranks or
   configuration-specific requirements.
 - Active cited editorial ranking sets have a public source-and-item comparison
-  matrix that preserves unlike scales and disagreement. Source subset controls
-  and transparent derived summaries are not implemented.
+  matrix with source-subset controls and coverage counts that preserve unlike
+  scales and disagreement. Cross-scale numerical summaries are deliberately not
+  fabricated; a future derived summary needs an explicit, inspectable method.
 - WFCD item and drop observations compose planet, mission and level metadata in
   a public planet-grouped star-chart explorer with a player-needed overlay. The
   imported WFCD sources do not provide connection edges or coordinates, so it is
