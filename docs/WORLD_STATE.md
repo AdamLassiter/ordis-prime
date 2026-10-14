@@ -46,7 +46,10 @@ every five minutes and the static WFCD item/drop sources daily. Development can 
 with `pnpm data:worker`; leases ensure only one worker claims a due job.
 Failed calls retain the previous active snapshot and retry after one minute.
 `ORDIS_CATALOG_INTERVAL_MS` and `ORDIS_CATALOG_TIMEOUT_MS` configure the static
-cadence and its larger request budget.
+cadence and its larger request budget. The worker retains the newest 1,000
+finished scheduler jobs by default and prunes older successes and failures;
+`ORDIS_JOB_HISTORY_LIMIT` changes that bound without touching queued or leased
+work.
 
 The public `/world-state` route reads the currently promoted snapshots and shows
 countdowns that advance in the browser. It labels future windows separately and
@@ -59,7 +62,8 @@ disappearing.
 
 - Only the PC English endpoint is configured; platform and language settings are
   not yet exposed.
-- Completed job history is not pruned or exposed in the administration UI.
+- Completed scheduler job history is bounded but is not exposed in the
+  administration UI. Source refresh attempts remain separately visible.
 - Reconciliation is exact-name based and intentionally does not fuzzy-match
   aliases, relays, open worlds or provider spelling differences.
 - Arbitrations between multiple live world-state providers are not implemented.

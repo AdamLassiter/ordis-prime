@@ -77,6 +77,17 @@ export function finishAndRescheduleJob(sqlite: Database.Database, input: { id: s
   }).immediate();
 }
 
+export function pruneFinishedJobs(sqlite: Database.Database, retain = 1_000): number {
+  if (!Number.isSafeInteger(retain) || retain < 0 || retain > 100_000) throw new Error("Job history retention must be between 0 and 100000");
+  const result = sqlite.prepare(`
+    delete from jobs where rowid in (
+      select rowid from jobs where status in ('succeeded', 'failed')
+      order by rowid desc limit -1 offset ?
+    )
+  `).run(retain);
+  return result.changes;
+}
+
 function parsePayload(value: string): Record<string, unknown> {
   const parsed: unknown = JSON.parse(value);
   if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) throw new Error("Job payload must be an object");

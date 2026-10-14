@@ -23,7 +23,7 @@ test("worker refreshes once, waits for its interval, and retries failures sooner
     },
     parse: (snapshot) => parser.parse(snapshot),
   };
-  const options = { database, snapshotStore: new SnapshotStore(path.join(root, "sources")), worldStateAdapter: adapter, owner: "worker-test", refreshIntervalMilliseconds: 300, retryIntervalMilliseconds: 50 };
+  const options = { database, snapshotStore: new SnapshotStore(path.join(root, "sources")), worldStateAdapter: adapter, owner: "worker-test", refreshIntervalMilliseconds: 300, retryIntervalMilliseconds: 50, jobHistoryLimit: 1 };
 
   assert.deepEqual(await runWorkerCycle({ ...options, now: 100 }), { status: "succeeded", sourceId: "wfcd-worldstate", notificationsCreated: 0 });
   assert.deepEqual(await runWorkerCycle({ ...options, now: 399 }), { status: "idle" });
@@ -33,6 +33,8 @@ test("worker refreshes once, waits for its interval, and retries failures sooner
   shouldFail = false;
   assert.deepEqual(await runWorkerCycle({ ...options, now: 450 }), { status: "succeeded", sourceId: "wfcd-worldstate", notificationsCreated: 0 });
   assert.equal((database.prepare("select count(*) as count from jobs where status = 'running'").get() as { count: number }).count, 0);
+  await runWorkerCycle({ ...options, now: 451 });
+  assert.equal((database.prepare("select count(*) as count from jobs where status in ('succeeded', 'failed')").get() as { count: number }).count, 1);
 });
 
 test("worker schedules static catalog adapters independently of world state", async (context) => {

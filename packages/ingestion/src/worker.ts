@@ -1,4 +1,4 @@
-import { CATALOG_SOURCE_REFRESH_JOB, claimDueJob, ensurePendingJob, evaluateWorldStateWatches, finishAndRescheduleJob, WORLD_STATE_REFRESH_JOB } from "@ordis-prime/db";
+import { CATALOG_SOURCE_REFRESH_JOB, claimDueJob, ensurePendingJob, evaluateWorldStateWatches, finishAndRescheduleJob, pruneFinishedJobs, WORLD_STATE_REFRESH_JOB } from "@ordis-prime/db";
 import { SnapshotStore } from "./snapshot-store.ts";
 import { refreshWorldState, type WorldStateAdapter } from "./world-state.ts";
 import { refreshSource } from "./refresh.ts";
@@ -18,6 +18,7 @@ export async function runWorkerCycle(options: {
   requestTimeoutMilliseconds?: number;
   catalogRefreshIntervalMilliseconds?: number;
   catalogRequestTimeoutMilliseconds?: number;
+  jobHistoryLimit?: number;
 }): Promise<{ status: "idle" | "succeeded" | "failed"; sourceId?: string; notificationsCreated?: number; error?: string }> {
   const now = options.now ?? Date.now();
   const refreshInterval = options.refreshIntervalMilliseconds ?? 5 * 60_000;
@@ -25,9 +26,11 @@ export async function runWorkerCycle(options: {
   const requestTimeout = options.requestTimeoutMilliseconds ?? 30_000;
   const catalogRefreshInterval = options.catalogRefreshIntervalMilliseconds ?? 24 * 60 * 60_000;
   const catalogRequestTimeout = options.catalogRequestTimeoutMilliseconds ?? 5 * 60_000;
+  const jobHistoryLimit = options.jobHistoryLimit ?? 1_000;
   const payload = { source: options.worldStateAdapter.source.id };
   ensurePendingJob(options.database, { kind: WORLD_STATE_REFRESH_JOB, payload, runAfter: now });
   for (const adapter of options.catalogAdapters ?? []) ensurePendingJob(options.database, { kind: CATALOG_SOURCE_REFRESH_JOB, payload: { source: adapter.source.id }, runAfter: now });
+  pruneFinishedJobs(options.database, jobHistoryLimit);
   const job = claimDueJob(options.database, { owner: options.owner, now, leaseMilliseconds: Math.max(2 * catalogRequestTimeout, 2 * requestTimeout, 2 * 60_000), kinds: [WORLD_STATE_REFRESH_JOB, CATALOG_SOURCE_REFRESH_JOB] });
   if (!job) return { status: "idle" };
   const sourceId = typeof job.payload.source === "string" ? job.payload.source : undefined;
