@@ -1,0 +1,1 @@
+ALTER TABLE `player_todos` ADD `entity_id` text REFERENCES entities(id);

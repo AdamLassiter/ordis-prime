@@ -5,7 +5,7 @@ canonical entity IDs inside one installation, while exported profiles use
 provider identifiers so they can be restored into another installation whose
 canonical UUIDs differ.
 
-## Version 4 export
+## Version 5 export
 
 Each inventory entry includes:
 
@@ -22,7 +22,10 @@ Discovery progress uses the same reference and records either `discovered` or
 section is validated and resolved before the transactional write begins.
 
 Static todos and world-state watch rules are portable as user-authored intent;
-generated notifications are not. Private build drafts include their details,
+a todo's optional catalog link uses the same portable entity reference. If that
+link cannot resolve during import, the player-authored task is retained without
+the link and the unresolved reference is reported. Generated notifications are
+not portable. Private build drafts include their details,
 equipment, configurations and positioned mods, with every catalog member using
 the same portable reference. Published share snapshots are intentionally
 excluded because they are server-hosted immutable artifacts and capability URLs.

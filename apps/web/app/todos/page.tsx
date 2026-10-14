@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { listPlayerNotifications, listPlayerTodos, listWorldStateWatches, type PlayerNotification, type PlayerTodo, type WorldStateWatch } from "@ordis-prime/db";
 import { getDatabase } from "@/lib/database";
@@ -72,6 +73,7 @@ function TodoSection({ title, todos }: { title: string; todos: PlayerTodo[] }) {
     {todos.length ? <div className="todo-list">{todos.map((todo) => <article className={`card todo-card ${todo.status}`} key={todo.id}>
       <div>
         <h3>{todo.title}</h3>
+        {todo.entity && <p><Link href={todo.entity.kind === "node" ? `/nodes/${todo.entity.slug}` : `/catalog/${todo.entity.kind}/${todo.entity.slug}`}>{todo.entity.name}</Link></p>}
         {todo.notes && <p className="muted todo-notes">{todo.notes}</p>}
         {todo.dueAt !== undefined && <p className="todo-due">Due <time dateTime={new Date(todo.dueAt).toISOString().slice(0, 10)}>{formatDate(todo.dueAt)}</time></p>}
       </div>

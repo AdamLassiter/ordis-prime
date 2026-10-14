@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createPlayerTodo, createWorldStateWatch, deletePlayerTodo, deleteWorldStateWatch, evaluateWorldStateWatches, markPlayerNotificationRead, setPlayerTodoStatus, setWorldStateWatchEnabled, updateWorldStateWatch } from "@ordis-prime/db";
+import { createEntityTodo, createPlayerTodo, createWorldStateWatch, deletePlayerTodo, deleteWorldStateWatch, evaluateWorldStateWatches, markPlayerNotificationRead, setPlayerTodoStatus, setWorldStateWatchEnabled, updateWorldStateWatch } from "@ordis-prime/db";
 import type { WorldStateWindowKind } from "@ordis-prime/domain";
 import { getDatabase } from "@/lib/database";
 import { requireCurrentSession } from "@/lib/session";
@@ -16,6 +16,14 @@ export async function addTodo(form: FormData) {
     dueAt: dueDate ? Date.parse(`${dueDate}T00:00:00.000Z`) : undefined,
   });
   revalidatePath("/todos");
+}
+
+export async function addCatalogTodo(kind: string, slug: string) {
+  const session = await requireCurrentSession();
+  createEntityTodo(getDatabase(), session.user.id, { kind, slug });
+  revalidatePath("/todos");
+  revalidatePath(`/catalog/${kind}/${slug}`);
+  if (kind === "node") revalidatePath(`/nodes/${slug}`);
 }
 
 export async function changeTodoStatus(todoId: string, status: "open" | "completed") {

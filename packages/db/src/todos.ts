@@ -9,31 +9,44 @@ export interface PlayerTodo {
   dueAt?: number;
   createdAt: number;
   updatedAt: number;
+  entity?: { kind: string; slug: string; name: string };
 }
 
-export function createPlayerTodo(sqlite: Database.Database, userId: string, input: { title: string; notes?: string; dueAt?: number }): string {
+export function createPlayerTodo(sqlite: Database.Database, userId: string, input: { title: string; notes?: string; dueAt?: number; entity?: { kind: string; slug: string } }): string {
   assertUser(sqlite, userId);
   const title = input.title.trim();
   const notes = input.notes?.trim() || undefined;
   if (!title || title.length > 160) throw new Error("Todo title must contain between 1 and 160 characters");
   if (notes && notes.length > 4_000) throw new Error("Todo notes cannot exceed 4000 characters");
   if (input.dueAt !== undefined && !Number.isFinite(input.dueAt)) throw new Error("Todo due date is invalid");
+  const entity = input.entity ? findEntity(sqlite, input.entity) : undefined;
   const id = randomUUID();
   const now = Date.now();
-  sqlite.prepare("insert into player_todos (id, user_id, title, notes, status, due_at, created_at, updated_at) values (?, ?, ?, ?, 'open', ?, ?, ?)")
-    .run(id, userId, title, notes ?? null, input.dueAt ?? null, now, now);
+  sqlite.prepare("insert into player_todos (id, user_id, entity_id, title, notes, status, due_at, created_at, updated_at) values (?, ?, ?, ?, ?, 'open', ?, ?, ?)")
+    .run(id, userId, entity?.id ?? null, title, notes ?? null, input.dueAt ?? null, now, now);
   return id;
+}
+
+export function createEntityTodo(sqlite: Database.Database, userId: string, reference: { kind: string; slug: string }): string {
+  const entity = findEntity(sqlite, reference);
+  return createPlayerTodo(sqlite, userId, { title: `Review ${entity.name}`.slice(0, 160), entity: reference });
 }
 
 export function listPlayerTodos(sqlite: Database.Database, userId: string): PlayerTodo[] {
   assertUser(sqlite, userId);
   const rows = sqlite.prepare(`
-    select id, title, notes, status, due_at as dueAt, created_at as createdAt, updated_at as updatedAt
-    from player_todos where user_id = ?
-    order by case status when 'open' then 0 else 1 end,
-      case when due_at is null then 1 else 0 end, due_at, created_at desc
-  `).all(userId) as Array<Omit<PlayerTodo, "notes" | "dueAt"> & { notes: string | null; dueAt: number | null }>;
-  return rows.map(({ notes, dueAt, ...row }) => ({ ...row, notes: notes ?? undefined, dueAt: dueAt ?? undefined }));
+    select todo.id, todo.title, todo.notes, todo.status, todo.due_at as dueAt,
+      todo.created_at as createdAt, todo.updated_at as updatedAt,
+      entity.kind as entityKind, entity.slug as entitySlug, entity.name as entityName
+    from player_todos todo left join entities entity on entity.id = todo.entity_id
+    where todo.user_id = ?
+    order by case todo.status when 'open' then 0 else 1 end,
+      case when todo.due_at is null then 1 else 0 end, todo.due_at, todo.created_at desc
+  `).all(userId) as Array<Omit<PlayerTodo, "notes" | "dueAt" | "entity"> & { notes: string | null; dueAt: number | null; entityKind: string | null; entitySlug: string | null; entityName: string | null }>;
+  return rows.map(({ notes, dueAt, entityKind, entitySlug, entityName, ...row }) => ({
+    ...row, notes: notes ?? undefined, dueAt: dueAt ?? undefined,
+    entity: entityKind && entitySlug && entityName ? { kind: entityKind, slug: entitySlug, name: entityName } : undefined,
+  }));
 }
 
 export function setPlayerTodoStatus(sqlite: Database.Database, userId: string, todoId: string, status: PlayerTodo["status"]): void {
@@ -50,4 +63,10 @@ export function deletePlayerTodo(sqlite: Database.Database, userId: string, todo
 
 function assertUser(sqlite: Database.Database, userId: string): void {
   if (!sqlite.prepare("select 1 from users where id = ?").get(userId)) throw new Error("Unknown user");
+}
+
+function findEntity(sqlite: Database.Database, reference: { kind: string; slug: string }): { id: string; name: string } {
+  const entity = sqlite.prepare("select id, name from entities where kind = ? and slug = ? and retired = 0").get(reference.kind, reference.slug) as { id: string; name: string } | undefined;
+  if (!entity) throw new Error(`Unknown active entity ${reference.kind}:${reference.slug}`);
+  return entity;
 }

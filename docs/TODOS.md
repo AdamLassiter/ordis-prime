@@ -10,7 +10,9 @@ Authenticated players can create, complete, reopen and delete todos with an
 optional note and calendar due date. Due dates are date-only values represented
 at UTC midnight in SQLite; they are not notification instants. Every database
 mutation includes the owning user ID so guessing another todo UUID cannot expose
-or modify it.
+or modify it. Item, discovery-topic, and node detail pages can create a task
+linked to that canonical entity. The task renders an in-app link and carries a
+portable entity reference in profile exports.
 
 ## Dynamic watches and alerts
 
@@ -34,8 +36,8 @@ occurrence keys remain deduplicated after an edit.
 
 - Static todos and watch rules are portable; generated notification history is
   deliberately installation-local.
-- There are no recurring schedules, subtasks, tags, ordering controls or links
-  from a todo to canonical catalog entities.
+- There are no recurring schedules, subtasks, tags or ordering controls. A todo
+  can link to one canonical entity but cannot yet carry multiple targets.
 - Notification retention is not configurable. Web push and webhooks remain
   later opt-in delivery channels.
 

@@ -47,9 +47,9 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   require an explicit CLI import against the mounted data directory.
 - Local email/password accounts, persisted sessions, closed registration, and
   first-administrator bootstrap enforcement are wired at the authentication
-  API, with first-run, sign-in, and sign-out UI. Account administration,
-  password recovery, and authorization checks on player-state mutations are not
-  implemented yet.
+  API, with first-run, sign-in, and sign-out UI. Player-state reads and mutations
+  are scoped by the authenticated user in database queries. Account
+  administration and password recovery are not implemented yet.
 - Validated inventory persistence, authenticated catalog editing, an inventory
   summary, node reward ownership filtering, and portable profile import/export
   with transfer UI exist. Authenticated goals feed a planner that subtracts
@@ -62,10 +62,11 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   recipes, markets, relic refinement, or mission duration.
 - Authenticated players can keep private static todos with optional notes and due
   dates. Source-neutral world-state watches match current window fields and
-  create deduplicated private in-app alerts. Todos and watches are not yet
-  linked to canonical entities; todos cannot recur, and there are no web-push
-  or webhook delivery channels. Watches can be edited, paused and resumed
-  without losing generated alerts.
+  create deduplicated private in-app alerts. Detail pages can create todos linked
+  to one canonical item, discovery topic or node; watches are not yet linked to
+  canonical entities. Todos cannot recur, and there are no web-push or webhook
+  delivery channels. Watches can be edited, paused and resumed without losing
+  generated alerts.
 - Private, revisioned build persistence supports partial equipment loadouts,
   positioned mods, ranks, configuration labels, Forma counts, capacity-upgrade
   flags, notes and immutable unlisted share snapshots. Authenticated

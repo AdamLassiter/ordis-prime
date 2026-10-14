@@ -142,6 +142,7 @@ export const goals = sqliteTable("player_goals", {
 export const playerTodos = sqliteTable("player_todos", {
   id: text().primaryKey(),
   userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  entityId: text("entity_id").references(() => entities.id),
   title: text().notNull(),
   notes: text(),
   status: text({ enum: ["open", "completed"] }).notNull().default("open"),

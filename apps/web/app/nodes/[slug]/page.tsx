@@ -2,6 +2,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { findNode } from "@/lib/catalog";
 import { getCurrentSession } from "@/lib/session";
+import { getDatabase } from "@/lib/database";
+import { listPlayerTodos } from "@ordis-prime/db";
+import { addCatalogTodo } from "@/app/todos/actions";
 
 export default async function NodePage({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<{ needed?: string }> }) {
   const { slug } = await params;
@@ -9,12 +12,14 @@ export default async function NodePage({ params, searchParams }: { params: Promi
   const session = await getCurrentSession();
   const node = await findNode(slug, session?.user.id);
   if (!node) notFound();
+  const openTodo = session ? listPlayerTodos(getDatabase(), session.user.id).find((todo) => todo.status === "open" && todo.entity?.kind === "node" && todo.entity.slug === slug) : undefined;
   const neededOnly = session && needed === "1";
   const drops = neededOnly ? node.drops.filter((drop) => drop.inventory?.needed) : node.drops;
   return <>
     <p className="eyebrow">Star chart node</p>
     <h1>{node.name}</h1>
     {node.description && <p className="lede">{node.description}</p>}
+    {session && <section className="card goal-editor"><h2>Todo</h2>{openTodo ? <p><Link href="/todos">Open task: {openTodo.title}</Link></p> : <form action={addCatalogTodo.bind(null, "node", slug)}><button className="nav-button">Add node to my todos</button></form>}</section>}
     <dl className="facts">
       <dt>Planet</dt><dd>{node.planet ?? "Unknown"}</dd>
       <dt>Mission</dt><dd>{node.missionType ?? "Not recorded"}</dd>
