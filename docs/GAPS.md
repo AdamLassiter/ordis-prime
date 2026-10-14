@@ -36,8 +36,8 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   Snapshots older than a configurable threshold are visibly marked stale without
   hiding their data. Exact unique node names are reconciled to canonical nodes;
   ambiguous or differently spelled labels remain plain source text. Finished
-  job history is count-bounded; job inspection UI and richer alias
-  reconciliation remain.
+  job history is count-bounded and visible to administrators; per-kind job
+  filters, throughput metrics, and richer alias reconciliation remain.
 - The web explorer reads the canonical SQLite catalog and links active recipes,
   drops, nodes, record-level provenance, and editorial rankings. Newly imported
   entity fields and typed relations retain exact source record keys, paths, and

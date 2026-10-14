@@ -62,8 +62,9 @@ disappearing.
 
 - Only the PC English endpoint is configured; platform and language settings are
   not yet exposed.
-- Completed scheduler job history is bounded but is not exposed in the
-  administration UI. Source refresh attempts remain separately visible.
+- The administration UI shows the newest bounded scheduler records. It does not
+  yet provide per-kind history filters or worker throughput metrics. Source
+  refresh attempts remain separately visible.
 - Reconciliation is exact-name based and intentionally does not fuzzy-match
   aliases, relays, open worlds or provider spelling differences.
 - Arbitrations between multiple live world-state providers are not implemented.

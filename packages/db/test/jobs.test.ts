@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { claimDueJob, enqueueJobNow, ensurePendingJob, finishAndRescheduleJob, migrateDatabase, openSqliteDatabase, pruneFinishedJobs } from "../src/index.ts";
+import { claimDueJob, enqueueJobNow, ensurePendingJob, finishAndRescheduleJob, listRecentJobs, migrateDatabase, openSqliteDatabase, pruneFinishedJobs } from "../src/index.ts";
 
 test("database leases serialize recurring jobs and recover expired workers", async (context) => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-jobs-"));
@@ -60,5 +60,10 @@ test("job pruning retains the newest bounded history and never deletes active wo
     { id: "running", status: "running" },
   ]);
   assert.equal(pruneFinishedJobs(database, 1), 0);
+  assert.deepEqual(listRecentJobs(database, 2).map(({ id, status, payload }) => ({ id, status, payload })), [
+    { id: "running", status: "running", payload: {} },
+    { id: "queued", status: "queued", payload: {} },
+  ]);
   assert.throws(() => pruneFinishedJobs(database, -1), /between 0 and 100000/);
+  assert.throws(() => listRecentJobs(database, 0), /between 1 and 200/);
 });

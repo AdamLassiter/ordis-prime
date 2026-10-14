@@ -11,6 +11,13 @@ export interface ClaimedJob {
   runAfter: number;
 }
 
+export interface JobRecord extends ClaimedJob {
+  status: "queued" | "running" | "succeeded" | "failed";
+  leaseOwner?: string;
+  leaseUntil?: number;
+  error?: string;
+}
+
 export function ensurePendingJob(sqlite: Database.Database, input: { kind: string; payload: Record<string, unknown>; runAfter: number }): string {
   const payloadJson = JSON.stringify(input.payload);
   return sqlite.transaction(() => {
@@ -86,6 +93,22 @@ export function pruneFinishedJobs(sqlite: Database.Database, retain = 1_000): nu
     )
   `).run(retain);
   return result.changes;
+}
+
+export function listRecentJobs(sqlite: Database.Database, limit = 50): JobRecord[] {
+  if (!Number.isSafeInteger(limit) || limit < 1 || limit > 200) throw new Error("Job history limit must be between 1 and 200");
+  const rows = sqlite.prepare(`
+    select id, kind, status, payload_json as payloadJson, run_after as runAfter,
+      lease_owner as leaseOwner, lease_until as leaseUntil, error
+    from jobs order by rowid desc limit ?
+  `).all(limit) as Array<Omit<JobRecord, "payload" | "leaseOwner" | "leaseUntil" | "error"> & { payloadJson: string; leaseOwner: string | null; leaseUntil: number | null; error: string | null }>;
+  return rows.map(({ payloadJson, leaseOwner, leaseUntil, error, ...row }) => ({
+    ...row,
+    payload: parsePayload(payloadJson),
+    leaseOwner: leaseOwner ?? undefined,
+    leaseUntil: leaseUntil ?? undefined,
+    error: error ?? undefined,
+  }));
 }
 
 function parsePayload(value: string): Record<string, unknown> {
