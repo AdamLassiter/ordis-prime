@@ -20,6 +20,7 @@ export interface CurrentWorldStateWindow {
   expiry?: number;
   state?: string;
   nodeLabel?: string;
+  node?: { slug: string; name: string };
   metadata: Record<string, string | number | boolean | null>;
   sourceId: string;
   sourceName: string;
@@ -61,13 +62,13 @@ export function promoteWorldState(sqlite: Database.Database, input: PromoteWorld
     `).run(snapshotId, input.source.id, input.version, input.contentHash, Date.parse(input.observedAt), input.snapshotPath);
     const insert = sqlite.prepare(`
       insert into world_state_windows
-        (snapshot_id, external_id, kind, label, activation, expiry, state, node_label, metadata_json, source_record_key, source_path)
-      values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (snapshot_id, external_id, kind, label, activation, expiry, state, node_label, node_entity_id, metadata_json, source_record_key, source_path)
+      values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     for (const window of input.windows) {
       insert.run(snapshotId, window.externalId, window.kind, window.label,
         window.activation ? Date.parse(window.activation) : null, window.expiry ? Date.parse(window.expiry) : null,
-        window.state ?? null, window.nodeLabel ?? null, JSON.stringify(window.metadata ?? {}),
+        window.state ?? null, window.nodeLabel ?? null, resolveWorldStateNode(sqlite, window.nodeLabel) ?? null, JSON.stringify(window.metadata ?? {}),
         window.evidence.sourceRecordKey, window.evidence.path ?? null);
     }
     sqlite.prepare("update world_state_snapshots set active = 0 where source_id = ?").run(input.source.id);
@@ -80,25 +81,45 @@ export function listCurrentWorldState(sqlite: Database.Database, now = Date.now(
   const rows = sqlite.prepare(`
     select window.external_id as externalId, window.kind, window.label, window.activation, window.expiry,
            window.state, window.node_label as nodeLabel, window.metadata_json as metadataJson,
+           node.slug as nodeSlug, node.name as nodeName,
            source.id as sourceId, source.name as sourceName, snapshot.version as snapshotVersion,
            snapshot.observed_at as observedAt, window.source_record_key as sourceRecordKey,
            window.source_path as sourcePath
     from world_state_windows window
     join world_state_snapshots snapshot on snapshot.id = window.snapshot_id and snapshot.active = 1
     join sources source on source.id = snapshot.source_id
+    left join entities node on node.id = window.node_entity_id and node.kind = 'node' and node.retired = 0
     where window.expiry is null or window.expiry > ?
     order by case window.kind when 'cycle' then 0 when 'event' then 1 when 'alert' then 2 when 'fissure' then 3 else 4 end,
              coalesce(window.expiry, 9223372036854775807), window.label collate nocase
-  `).all(now) as Array<Omit<CurrentWorldStateWindow, "activation" | "expiry" | "state" | "nodeLabel" | "metadata" | "sourcePath"> & { activation: number | null; expiry: number | null; state: string | null; nodeLabel: string | null; metadataJson: string; sourcePath: string | null }>;
-  return rows.map(({ activation, expiry, state, nodeLabel, metadataJson, sourcePath, ...row }) => ({
+  `).all(now) as Array<Omit<CurrentWorldStateWindow, "activation" | "expiry" | "state" | "nodeLabel" | "node" | "metadata" | "sourcePath"> & { activation: number | null; expiry: number | null; state: string | null; nodeLabel: string | null; nodeSlug: string | null; nodeName: string | null; metadataJson: string; sourcePath: string | null }>;
+  return rows.map(({ activation, expiry, state, nodeLabel, nodeSlug, nodeName, metadataJson, sourcePath, ...row }) => ({
     ...row,
     activation: activation ?? undefined,
     expiry: expiry ?? undefined,
     state: state ?? undefined,
     nodeLabel: nodeLabel ?? undefined,
+    node: nodeSlug && nodeName ? { slug: nodeSlug, name: nodeName } : undefined,
     metadata: parseMetadata(metadataJson),
     sourcePath: sourcePath ?? undefined,
   }));
+}
+
+function resolveWorldStateNode(sqlite: Database.Database, nodeLabel: string | undefined): string | undefined {
+  if (!nodeLabel) return undefined;
+  const match = /^(.*?)\s*\(([^()]+)\)\s*$/.exec(nodeLabel);
+  const name = (match?.[1] ?? nodeLabel).trim();
+  const planet = match?.[2]?.trim();
+  const candidates = sqlite.prepare("select id from entities where kind = 'node' and retired = 0 and name = ? collate nocase").all(name) as Array<{ id: string }>;
+  if (candidates.length === 1) return candidates[0]!.id;
+  if (!planet || !candidates.length) return undefined;
+  const placeholders = candidates.map(() => "?").join(", ");
+  const narrowed = sqlite.prepare(`
+    select distinct detail.entity_id as id from node_details detail
+    join source_runs run on run.id = detail.source_run_id and run.status = 'active'
+    where detail.entity_id in (${placeholders}) and detail.planet = ? collate nocase
+  `).all(...candidates.map(({ id }) => id), planet) as Array<{ id: string }>;
+  return narrowed.length === 1 ? narrowed[0]!.id : undefined;
 }
 
 export function listWorldStateSourceStatuses(sqlite: Database.Database, now = Date.now()): WorldStateSourceStatus[] {

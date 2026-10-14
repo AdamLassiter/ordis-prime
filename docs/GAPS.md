@@ -30,7 +30,9 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   countdowns and visible snapshot freshness. A database-leased production worker
   polls it every five minutes and retries failures without replacing active data.
   Snapshots older than a configurable threshold are visibly marked stale without
-  hiding their data. Job-history pruning and canonical node reconciliation remain.
+  hiding their data. Exact unique node names are reconciled to canonical nodes;
+  ambiguous or differently spelled labels remain plain source text. Job-history
+  pruning and richer alias reconciliation remain.
 - The web explorer reads the canonical SQLite catalog and links active recipes,
   drops, nodes, record-level provenance, and editorial rankings. Newly imported
   entity fields and typed relations retain exact source record keys, paths, and

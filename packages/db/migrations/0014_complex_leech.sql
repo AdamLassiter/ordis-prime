@@ -1,0 +1,1 @@
+ALTER TABLE `world_state_windows` ADD `node_entity_id` text REFERENCES entities(id);

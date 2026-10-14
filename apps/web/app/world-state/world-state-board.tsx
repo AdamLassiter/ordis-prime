@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import type { CurrentWorldStateWindow } from "@ordis-prime/db";
 
 const kindLabels = {
@@ -42,7 +43,7 @@ function WorldStateCard({ entry, now }: { entry: CurrentWorldStateWindow; now: n
       {entry.state && <span className="state-label">{entry.state}</span>}
     </div>
     <h3>{entry.label}</h3>
-    {entry.nodeLabel && <p className="world-state-node">{entry.nodeLabel}</p>}
+    {entry.nodeLabel && <p className="world-state-node">{entry.node ? <Link href={`/nodes/${entry.node.slug}`}>{entry.nodeLabel}</Link> : entry.nodeLabel}</p>}
     <p className="countdown">{expired ? "Refresh needed" : boundary === undefined ? "No end time supplied" : <><span>{upcoming ? "Starts" : "Ends"} in</span> {formatDuration(boundary - now)}</>}</p>
     {boundary !== undefined && <time className="muted" dateTime={new Date(boundary).toISOString()}>{formatInstant(boundary)}</time>}
   </article>;

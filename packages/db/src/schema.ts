@@ -24,6 +24,7 @@ export const worldStateWindows = sqliteTable("world_state_windows", {
   expiry: integer({ mode: "timestamp_ms" }),
   state: text(),
   nodeLabel: text("node_label"),
+  nodeEntityId: text("node_entity_id").references(() => entities.id),
   metadataJson: text("metadata_json").notNull(),
   sourceRecordKey: text("source_record_key").notNull(),
   sourcePath: text("source_path"),

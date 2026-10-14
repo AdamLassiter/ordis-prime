@@ -9,6 +9,13 @@ API. It currently recognizes landscape and hub cycles, events, alerts, Void
 Fissures and Void Trader visits. Every window retains its provider record key,
 payload path and immutable snapshot version.
 
+During promotion, a provider node label is conservatively linked to a canonical
+node when its name is a unique case-insensitive match. A trailing parenthetical
+planet such as `Mantle (Earth)` is separated from the node name; the planet is
+used only to disambiguate duplicate names with active node metadata. Unresolved
+or ambiguous labels remain visible as source text without a link. Resolved
+labels link timers directly to the node's rewards and player inventory overlay.
+
 ## Persistence and promotion
 
 Dynamic snapshots have a separate lifecycle from static catalog source runs.
@@ -51,6 +58,6 @@ disappearing.
 - Only the PC English endpoint is configured; platform and language settings are
   not yet exposed.
 - Completed job history is not pruned or exposed in the administration UI.
-- Windows use provider node labels until dynamic nodes can be reconciled safely
-  with canonical catalog node identities.
+- Reconciliation is exact-name based and intentionally does not fuzzy-match
+  aliases, relays, open worlds or provider spelling differences.
 - Arbitrations between multiple live world-state providers are not implemented.
