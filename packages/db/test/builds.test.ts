@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { clonePlayerBuild, configureBuildEquipment, createBuildShare, createLocalUser, createPlayerBuild, findSharedBuild, getPlayerBuild, listBuildShares, migrateDatabase, openSqliteDatabase, revokeBuildShare, searchBuildCandidates, setBuildEquipment, setBuildMod, updatePlayerBuild } from "../src/index.ts";
+import { addBuildAcquisitionGoals, clonePlayerBuild, configureBuildEquipment, createBuildShare, createLocalUser, createPlayerBuild, findSharedBuild, getPlayerBuild, listBuildShares, listPlayerGoals, migrateDatabase, openSqliteDatabase, revokeBuildShare, searchBuildCandidates, setBuildEquipment, setBuildMod, setInventoryEntry, setPlayerGoal, updatePlayerBuild } from "../src/index.ts";
 
 test("build drafts are private and share snapshots remain immutable", async (context) => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-builds-"));
@@ -31,6 +31,11 @@ test("build drafts are private and share snapshots remain immutable", async (con
     slot: "primary", entity: { kind: "weapon", slug: "paris", name: "Paris" }, configuration: "Incarnon", formaCount: 3, capacityUpgrade: true,
     notes: undefined, mods: [{ position: 0, rank: 5, entity: { kind: "mod", slug: "serration", name: "Serration" } }],
   });
+  setPlayerGoal(database, owner, { kind: "mod", slug: "serration" }, 3);
+  assert.equal(addBuildAcquisitionGoals(database, owner, buildId), 2);
+  assert.deepEqual(listPlayerGoals(database, owner).map(({ name, targetQuantity }) => ({ name, targetQuantity })), [{ name: "Mag", targetQuantity: 1 }, { name: "Paris", targetQuantity: 1 }, { name: "Serration", targetQuantity: 3 }]);
+  setInventoryEntry(database, owner, "weapon", { ownedCount: 0, builtCount: 1, wantedCount: 0 });
+  assert.equal(addBuildAcquisitionGoals(database, owner, buildId), 0);
 
   const shareKey = createBuildShare(database, owner, buildId);
   const shared = findSharedBuild(database, shareKey)!;

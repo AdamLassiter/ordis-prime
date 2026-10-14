@@ -186,6 +186,38 @@ export function revokeBuildShare(sqlite: Database.Database, userId: string, buil
   if (result.changes !== 1) throw new Error("Build share not found");
 }
 
+export function addBuildAcquisitionGoals(sqlite: Database.Database, userId: string, buildId: string): number {
+  assertBuildOwner(sqlite, userId, buildId);
+  const requirements = sqlite.prepare(`
+    select entity_id as entityId, count(*) as quantity from (
+      select entity_id from build_equipment where build_id = ?
+      union all
+      select mod.entity_id from build_mods mod join build_equipment equipment on equipment.id = mod.equipment_id where equipment.build_id = ?
+    ) group by entity_id
+  `).all(buildId, buildId) as Array<{ entityId: string; quantity: number }>;
+  const inventory = sqlite.prepare("select coalesce(owned_count, 0) + coalesce(built_count, 0) as available from player_inventory where user_id = ? and entity_id = ?");
+  const existingGoal = sqlite.prepare("select target_quantity as targetQuantity from player_goals where user_id = ? and entity_id = ?");
+  const writeGoal = sqlite.prepare(`
+    insert into player_goals (user_id, entity_id, target_quantity, created_at, updated_at)
+    values (?, ?, ?, ?, ?)
+    on conflict(user_id, entity_id) do update set target_quantity = excluded.target_quantity, updated_at = excluded.updated_at
+  `);
+  return sqlite.transaction(() => {
+    let changed = 0;
+    for (const requirement of requirements) {
+      const available = (inventory.get(userId, requirement.entityId) as { available: number } | undefined)?.available ?? 0;
+      if (available >= requirement.quantity) continue;
+      const currentTarget = (existingGoal.get(userId, requirement.entityId) as { targetQuantity: number } | undefined)?.targetQuantity ?? 0;
+      const target = Math.max(currentTarget, requirement.quantity);
+      if (target === currentTarget) continue;
+      const now = Date.now();
+      writeGoal.run(userId, requirement.entityId, target, now, now);
+      changed += 1;
+    }
+    return changed;
+  })();
+}
+
 function hydrateBuild(sqlite: Database.Database, build: { id: string; title: string; category: string | null; notes: string | null; revision: number; createdAt: number; updatedAt: number }): PlayerBuild {
   const equipmentRows = sqlite.prepare(`
     select equipment.id, equipment.slot, equipment.notes, equipment.configuration,

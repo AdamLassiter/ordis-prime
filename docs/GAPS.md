@@ -64,6 +64,9 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   polarity/capacity calculation, arcanes, shards and cloning from public
   snapshots remain. Private drafts are portable and can be cloned; their
   snapshot history can be viewed or revoked.
+  Draft equipment and mods can seed missing-item acquisition goals, but the
+  planner does not yet understand build capacity, alternative mod ranks or
+  configuration-specific requirements.
 - Active cited editorial ranking sets have a public source-and-item comparison
   matrix that preserves unlike scales and disagreement. Source subset controls
   and transparent derived summaries are not implemented.

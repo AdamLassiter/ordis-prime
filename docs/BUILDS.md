@@ -32,6 +32,11 @@ The draft page lists every snapshot it published, can revoke an individual
 capability URL, and can clone the current private draft with its equipment,
 configuration and mods intact.
 
+The editor can project a draft into acquisition goals. It counts repeated mod
+requirements, ignores requirements already covered by owned or built inventory,
+and never reduces a larger existing goal. The regular planner then expands
+recipes and recommends nodes using the same canonical IDs.
+
 ## Current limits
 
 - Forma count, a capacity-upgrade flag, and a configuration label are recorded,

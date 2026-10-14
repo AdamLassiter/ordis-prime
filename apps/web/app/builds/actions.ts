@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { clonePlayerBuild, configureBuildEquipment, createBuildShare, createPlayerBuild, deletePlayerBuild, removeBuildEquipment, removeBuildMod, revokeBuildShare, setBuildEquipment, setBuildMod, updatePlayerBuild, type BuildSlot } from "@ordis-prime/db";
+import { addBuildAcquisitionGoals, clonePlayerBuild, configureBuildEquipment, createBuildShare, createPlayerBuild, deletePlayerBuild, removeBuildEquipment, removeBuildMod, revokeBuildShare, setBuildEquipment, setBuildMod, updatePlayerBuild, type BuildSlot } from "@ordis-prime/db";
 import { getDatabase } from "@/lib/database";
 import { requireCurrentSession } from "@/lib/session";
 
@@ -86,4 +86,11 @@ export async function revokeShare(buildId: string, shareKey: string) {
   revokeBuildShare(getDatabase(), session.user.id, buildId, shareKey);
   revalidatePath(`/builds/${buildId}`);
   revalidatePath(`/builds/shared/${shareKey}`);
+}
+
+export async function planBuildAcquisition(buildId: string) {
+  const session = await requireCurrentSession();
+  addBuildAcquisitionGoals(getDatabase(), session.user.id, buildId);
+  revalidatePath(`/builds/${buildId}`);
+  redirect("/planner");
 }

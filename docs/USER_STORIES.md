@@ -19,12 +19,13 @@
   one private alert per matching occurrence.
 - As a player, I can save partial or complete loadouts with item-specific mods
   and notes, then share an immutable revision without exposing my draft.
+- As a player, I can turn missing equipment and mod quantities in a build into
+  acquisition goals without overwriting larger plans.
 - As a guest, I can compare independently cited tier lists without hidden scale
   conversion or a synthetic consensus.
 
 ## Later consumers of the same graph
 
 - Live events intersect with goals to create expiring todo suggestions.
-- Builds link missing equipment and mods directly into acquisition goals.
 - Quest and mechanic prerequisites surface systems a player has not discovered.
 - A visual star chart uses the same node IDs, edges, filters and planner queries.
