@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { createLocalUser, createWorldStateWatch, evaluateWorldStateWatches, listPlayerNotifications, listWorldStateWatches, markPlayerNotificationRead, migrateDatabase, openSqliteDatabase, promoteWorldState, setWorldStateWatchEnabled } from "../src/index.ts";
+import { createLocalUser, createWorldStateWatch, evaluateWorldStateWatches, listPlayerNotifications, listWorldStateWatches, markPlayerNotificationRead, migrateDatabase, openSqliteDatabase, promoteWorldState, setWorldStateWatchEnabled, updateWorldStateWatch } from "../src/index.ts";
 
 test("world-state watches create private notifications once per normalized occurrence", async (context) => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-watches-"));
@@ -38,4 +38,12 @@ test("world-state watches create private notifications once per normalized occur
   assert.throws(() => markPlayerNotificationRead(database, secondUser, notificationId), /not found/);
   markPlayerNotificationRead(database, firstUser, notificationId);
   assert.notEqual(listPlayerNotifications(database, firstUser)[0]?.readAt, undefined);
+  assert.throws(() => updateWorldStateWatch(database, secondUser, firstWatch, { kind: "cycle", labelContains: "Cetus", trigger: "active", leadMinutes: 0 }), /not found/);
+  updateWorldStateWatch(database, firstUser, firstWatch, { kind: "cycle", labelContains: "  Cetus  ", stateEquals: "night", trigger: "active", leadMinutes: 0 });
+  assert.deepEqual(listWorldStateWatches(database, firstUser)[0], {
+    id: firstWatch, kind: "cycle", labelContains: "Cetus", stateEquals: "night", nodeContains: undefined,
+    trigger: "active", leadMinutes: 0, enabled: true, createdAt: listWorldStateWatches(database, firstUser)[0]!.createdAt,
+  });
+  assert.equal(evaluateWorldStateWatches(database, now + 2_000), 0);
+  assert.equal(listPlayerNotifications(database, firstUser).length, 1);
 });

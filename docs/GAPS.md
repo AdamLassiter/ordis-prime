@@ -62,9 +62,9 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
 - Authenticated players can keep private static todos with optional notes and due
   dates. Source-neutral world-state watches match current window fields and
   create deduplicated private in-app alerts. Todos and watches are not yet
-  linked to canonical entities; todos cannot recur, watches cannot be edited,
-  and there are no web-push or webhook delivery channels. Watches can be paused
-  and resumed without losing generated alerts.
+  linked to canonical entities; todos cannot recur, and there are no web-push
+  or webhook delivery channels. Watches can be edited, paused and resumed
+  without losing generated alerts.
 - Private, revisioned build persistence supports partial equipment loadouts,
   positioned mods, ranks, configuration labels, Forma counts, capacity-upgrade
   flags, notes and immutable unlisted share snapshots. Authenticated

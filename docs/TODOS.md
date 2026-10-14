@@ -26,7 +26,9 @@ creation also evaluates the current snapshot immediately. Notifications are
 private, can be marked read, and do not silently complete static todos. Deleting
 a watch deletes its generated alerts.
 Watches can be paused without losing their definition or existing notification
-history; resuming immediately evaluates the current snapshot.
+history. Editing preserves watch identity and alert history, while resuming or
+saving an enabled watch immediately evaluates the current snapshot. Existing
+occurrence keys remain deduplicated after an edit.
 
 ## Current limits
 
@@ -34,8 +36,8 @@ history; resuming immediately evaluates the current snapshot.
   deliberately installation-local.
 - There are no recurring schedules, subtasks, tags, ordering controls or links
   from a todo to canonical catalog entities.
-- Watches cannot yet be edited, and notification retention is not
-  configurable. Web push and webhooks remain later opt-in delivery channels.
+- Notification retention is not configurable. Web push and webhooks remain
+  later opt-in delivery channels.
 
 The acquisition planner separately surfaces active or upcoming world-state
 windows on recommended nodes. Those are derived, expiring suggestions rather

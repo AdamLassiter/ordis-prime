@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createPlayerTodo, createWorldStateWatch, deletePlayerTodo, deleteWorldStateWatch, evaluateWorldStateWatches, markPlayerNotificationRead, setPlayerTodoStatus, setWorldStateWatchEnabled } from "@ordis-prime/db";
+import { createPlayerTodo, createWorldStateWatch, deletePlayerTodo, deleteWorldStateWatch, evaluateWorldStateWatches, markPlayerNotificationRead, setPlayerTodoStatus, setWorldStateWatchEnabled, updateWorldStateWatch } from "@ordis-prime/db";
 import type { WorldStateWindowKind } from "@ordis-prime/domain";
 import { getDatabase } from "@/lib/database";
 import { requireCurrentSession } from "@/lib/session";
@@ -32,17 +32,16 @@ export async function removeTodo(todoId: string) {
 
 export async function addWatch(form: FormData) {
   const session = await requireCurrentSession();
-  const rawLead = String(form.get("leadMinutes") ?? "");
-  if (!/^\d+$/.test(rawLead)) throw new Error("Lead time must be a non-negative integer");
   const database = getDatabase();
-  createWorldStateWatch(database, session.user.id, {
-    kind: String(form.get("kind") ?? "") as WorldStateWindowKind,
-    labelContains: String(form.get("labelContains") ?? ""),
-    stateEquals: String(form.get("stateEquals") ?? ""),
-    nodeContains: String(form.get("nodeContains") ?? ""),
-    trigger: String(form.get("trigger") ?? "") as "active" | "starting" | "ending",
-    leadMinutes: Number(rawLead),
-  });
+  createWorldStateWatch(database, session.user.id, watchInput(form));
+  evaluateWorldStateWatches(database, Date.now(), session.user.id);
+  revalidatePath("/todos");
+}
+
+export async function editWatch(watchId: string, form: FormData) {
+  const session = await requireCurrentSession();
+  const database = getDatabase();
+  updateWorldStateWatch(database, session.user.id, watchId, watchInput(form));
   evaluateWorldStateWatches(database, Date.now(), session.user.id);
   revalidatePath("/todos");
 }
@@ -65,4 +64,17 @@ export async function readNotification(notificationId: string) {
   const session = await requireCurrentSession();
   markPlayerNotificationRead(getDatabase(), session.user.id, notificationId);
   revalidatePath("/todos");
+}
+
+function watchInput(form: FormData) {
+  const rawLead = String(form.get("leadMinutes") ?? "");
+  if (!/^\d+$/.test(rawLead)) throw new Error("Lead time must be a non-negative integer");
+  return {
+    kind: String(form.get("kind") ?? "") as WorldStateWindowKind,
+    labelContains: String(form.get("labelContains") ?? ""),
+    stateEquals: String(form.get("stateEquals") ?? ""),
+    nodeContains: String(form.get("nodeContains") ?? ""),
+    trigger: String(form.get("trigger") ?? "") as "active" | "starting" | "ending",
+    leadMinutes: Number(rawLead),
+  };
 }

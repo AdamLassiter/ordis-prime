@@ -16,6 +16,7 @@ export interface WorldStateWatch {
   enabled: boolean;
   createdAt: number;
 }
+export type WorldStateWatchInput = Omit<WorldStateWatch, "id" | "enabled" | "createdAt">;
 
 export interface PlayerNotification {
   id: string;
@@ -28,23 +29,26 @@ export interface PlayerNotification {
   readAt?: number;
 }
 
-export function createWorldStateWatch(sqlite: Database.Database, userId: string, input: Omit<WorldStateWatch, "id" | "enabled" | "createdAt">): string {
+export function createWorldStateWatch(sqlite: Database.Database, userId: string, input: WorldStateWatchInput): string {
   assertUser(sqlite, userId);
-  const kind = input.kind;
-  const trigger = input.trigger;
-  if (!(["cycle", "alert", "fissure", "event", "trader"] as string[]).includes(kind)) throw new Error("Watch kind is invalid");
-  if (!(["active", "starting", "ending"] as string[]).includes(trigger)) throw new Error("Watch trigger is invalid");
-  if (!Number.isSafeInteger(input.leadMinutes) || input.leadMinutes < 0 || input.leadMinutes > 10_080) throw new Error("Watch lead time must be between 0 and 10080 minutes");
-  const labelContains = normalizeFilter(input.labelContains, "label");
-  const stateEquals = normalizeFilter(input.stateEquals, "state");
-  const nodeContains = normalizeFilter(input.nodeContains, "node");
+  const watch = validateWatchInput(input);
   const id = randomUUID();
   sqlite.prepare(`
     insert into world_state_watches
       (id, user_id, kind, label_contains, state_equals, node_contains, trigger, lead_minutes, enabled, created_at)
     values (?, ?, ?, ?, ?, ?, ?, ?, 1, ?)
-  `).run(id, userId, kind, labelContains ?? null, stateEquals ?? null, nodeContains ?? null, trigger, input.leadMinutes, Date.now());
+  `).run(id, userId, watch.kind, watch.labelContains ?? null, watch.stateEquals ?? null, watch.nodeContains ?? null, watch.trigger, watch.leadMinutes, Date.now());
   return id;
+}
+
+export function updateWorldStateWatch(sqlite: Database.Database, userId: string, watchId: string, input: WorldStateWatchInput): void {
+  const watch = validateWatchInput(input);
+  const result = sqlite.prepare(`
+    update world_state_watches set kind = ?, label_contains = ?, state_equals = ?,
+      node_contains = ?, trigger = ?, lead_minutes = ?
+    where id = ? and user_id = ?
+  `).run(watch.kind, watch.labelContains ?? null, watch.stateEquals ?? null, watch.nodeContains ?? null, watch.trigger, watch.leadMinutes, watchId, userId);
+  if (result.changes !== 1) throw new Error("Watch not found");
 }
 
 export function listWorldStateWatches(sqlite: Database.Database, userId: string): WorldStateWatch[] {
@@ -146,6 +150,20 @@ function normalizeFilter(value: string | undefined, label: string): string | und
   const normalized = value?.trim() || undefined;
   if (normalized && normalized.length > 120) throw new Error(`Watch ${label} filter cannot exceed 120 characters`);
   return normalized;
+}
+
+function validateWatchInput(input: WorldStateWatchInput): WorldStateWatchInput {
+  if (!(["cycle", "alert", "fissure", "event", "trader"] as string[]).includes(input.kind)) throw new Error("Watch kind is invalid");
+  if (!(["active", "starting", "ending"] as string[]).includes(input.trigger)) throw new Error("Watch trigger is invalid");
+  if (!Number.isSafeInteger(input.leadMinutes) || input.leadMinutes < 0 || input.leadMinutes > 10_080) throw new Error("Watch lead time must be between 0 and 10080 minutes");
+  return {
+    kind: input.kind,
+    labelContains: normalizeFilter(input.labelContains, "label"),
+    stateEquals: normalizeFilter(input.stateEquals, "state"),
+    nodeContains: normalizeFilter(input.nodeContains, "node"),
+    trigger: input.trigger,
+    leadMinutes: input.leadMinutes,
+  };
 }
 
 function assertUser(sqlite: Database.Database, userId: string): void {
