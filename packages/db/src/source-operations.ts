@@ -23,6 +23,15 @@ export interface SourceConflictRecord {
   reason: string;
   candidateIds: string[];
   resolvedAt?: number;
+  reviewEvents: SourceConflictReviewEvent[];
+}
+
+export interface SourceConflictReviewEvent {
+  id: string;
+  action: "reviewed" | "reopened";
+  note: string;
+  createdAt: number;
+  actor: string;
 }
 
 export function beginSourceRefresh(sqlite: Database.Database, source: PromotionSource): string {
@@ -89,12 +98,62 @@ export function listSourceConflicts(sqlite: Database.Database, sourceId: string,
     order by case when conflict.resolved_at is null then 0 else 1 end, run.retrieved_at desc, conflict.rowid desc
     limit ?
   `).all(sourceId, normalizedLimit) as Array<Omit<SourceConflictRecord, "candidateIds" | "snapshotPath" | "resolvedAt"> & { candidatesJson: string; snapshotPath: string | null; resolvedAt: number | null }>;
+  const placeholders = rows.map(() => "?").join(", ");
+  const events = rows.length ? sqlite.prepare(`
+    select event.id, event.conflict_id as conflictId, event.action, event.note,
+           event.created_at as createdAt, user.username as actor
+    from ingestion_conflict_review_events event
+    join users user on user.id = event.user_id
+    where event.conflict_id in (${placeholders})
+    order by event.created_at, event.rowid
+  `).all(...rows.map((row) => row.id)) as Array<SourceConflictReviewEvent & { conflictId: string }> : [];
+  const eventsByConflict = new Map<string, SourceConflictReviewEvent[]>();
+  for (const { conflictId, ...event } of events) eventsByConflict.set(conflictId, [...(eventsByConflict.get(conflictId) ?? []), event]);
   return rows.map(({ candidatesJson, snapshotPath, resolvedAt, ...row }) => ({
     ...row,
     candidateIds: parseCandidateIds(candidatesJson),
     snapshotPath: snapshotPath ?? undefined,
     resolvedAt: resolvedAt ?? undefined,
+    reviewEvents: eventsByConflict.get(row.id) ?? [],
   }));
+}
+
+export function reviewSourceConflict(
+  sqlite: Database.Database,
+  input: { sourceId: string; conflictId: string; userId: string; note: string; now?: number },
+): void {
+  changeConflictReviewState(sqlite, { ...input, action: "reviewed", resolved: true });
+}
+
+export function reopenSourceConflict(
+  sqlite: Database.Database,
+  input: { sourceId: string; conflictId: string; userId: string; note: string; now?: number },
+): void {
+  changeConflictReviewState(sqlite, { ...input, action: "reopened", resolved: false });
+}
+
+function changeConflictReviewState(
+  sqlite: Database.Database,
+  input: { sourceId: string; conflictId: string; userId: string; note: string; now?: number; action: "reviewed" | "reopened"; resolved: boolean },
+): void {
+  const note = input.note.trim();
+  if (!note || note.length > 2_000) throw new Error("Conflict review note must contain 1 to 2000 characters");
+  const now = input.now ?? Date.now();
+  sqlite.transaction(() => {
+    const expectedState = input.resolved ? "conflict.resolved_at is null" : "conflict.resolved_at is not null";
+    const conflict = sqlite.prepare(`
+      select conflict.id from ingestion_conflicts conflict
+      join source_runs run on run.id = conflict.source_run_id
+      where conflict.id = ? and run.source_id = ? and ${expectedState}
+    `).get(input.conflictId, input.sourceId);
+    if (!conflict) throw new Error(`Conflict ${input.conflictId} is not available for ${input.action}`);
+    sqlite.prepare("update ingestion_conflicts set resolved_at = ? where id = ?")
+      .run(input.resolved ? now : null, input.conflictId);
+    sqlite.prepare(`
+      insert into ingestion_conflict_review_events (id, conflict_id, user_id, action, note, created_at)
+      values (?, ?, ?, ?, ?, ?)
+    `).run(randomUUID(), input.conflictId, input.userId, input.action, note, now);
+  })();
 }
 
 function parseCandidateIds(value: string): string[] {

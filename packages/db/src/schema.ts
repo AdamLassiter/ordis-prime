@@ -123,6 +123,14 @@ export const verifications = sqliteTable("verifications", {
   createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
 }, (table) => [index("verifications_identifier").on(table.identifier)]);
+export const conflictReviewEvents = sqliteTable("ingestion_conflict_review_events", {
+  id: text().primaryKey(),
+  conflictId: text("conflict_id").notNull().references(() => conflicts.id, { onDelete: "cascade" }),
+  userId: text("user_id").notNull().references(() => users.id),
+  action: text({ enum: ["reviewed", "reopened"] }).notNull(),
+  note: text().notNull(),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+}, (table) => [index("conflict_review_events_conflict_created").on(table.conflictId, table.createdAt)]);
 export const inventory = sqliteTable("player_inventory", { userId: text("user_id").notNull().references(() => users.id), entityId: text("entity_id").notNull().references(() => entities.id), ownedCount: integer("owned_count").notNull().default(0), builtCount: integer("built_count").notNull().default(0), wantedCount: integer("wanted_count").notNull().default(0), mastered: integer({ mode: "boolean" }), subsumed: integer({ mode: "boolean" }), note: text(), updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull() }, (table) => [primaryKey({ columns: [table.userId, table.entityId] })]);
 export const goals = sqliteTable("player_goals", {
   userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),

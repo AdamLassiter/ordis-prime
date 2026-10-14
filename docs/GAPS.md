@@ -22,7 +22,10 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   overlay YAML use this same path. Refresh attempts and failures are persisted
   without replacing active data. Administrators can inspect recent attempts,
   bounded failure messages, retained snapshot paths, and record-level resolver
-  conflicts. Conflict resolution actions remain to be implemented.
+  conflicts. Administrators can review or reopen conflicts with an append-only
+  audit trail. Review state deliberately does not mutate catalog identity or
+  replay skipped observations; persistent identity overrides remain
+  unimplemented.
   The leased worker schedules WFCD item and drop refreshes daily, and an
   administrator can bring supported source jobs forward from the source UI. A provider-neutral world-state
   pipeline snapshots and transactionally promotes WFCD cycles, events, alerts,

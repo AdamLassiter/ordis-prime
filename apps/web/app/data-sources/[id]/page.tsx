@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { listSourceConflicts, listSourceRefreshes, listSourceStatuses } from "@ordis-prime/db";
 import { getDatabase } from "@/lib/database";
 import { getCurrentSession } from "@/lib/session";
+import { markConflictReviewed, reopenConflict } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +20,7 @@ export default async function SourceOperationsPage({ params }: { params: Promise
     <p className="eyebrow">Administrator · source operations</p>
     <h1>{source.name}</h1>
     <p className="lede">Operational attempts and resolver conflicts remain separate from the active catalog. Paths below refer to retained files inside this installation.</p>
+    <p className="notice">Marking a conflict reviewed records an operator decision; it does not rewrite catalog identity or replay the skipped observation.</p>
     <p><a href={source.homepage}>Upstream source</a> · <Link href="/data-sources">All sources</Link></p>
 
     <section className="planner-section">
@@ -35,11 +37,15 @@ export default async function SourceOperationsPage({ params }: { params: Promise
     <section className="planner-section">
       <h2>Resolver conflicts</h2>
       {conflicts.length ? <div className="operations">{conflicts.map((conflict) => <article className="card" key={conflict.id}>
-        <span className="tag">{conflict.resolvedAt ? "resolved" : "unresolved"}</span>
+        <span className="tag">{conflict.resolvedAt ? "reviewed" : "unresolved"}</span>
         <h3><code>{conflict.recordKey}</code></h3>
         <p>{conflict.reason}</p>
         <p className="muted">Source version <code>{conflict.version}</code>{conflict.snapshotPath ? <> · snapshot <code>{conflict.snapshotPath}</code></> : null}</p>
         {conflict.candidateIds.length > 0 && <p className="muted">Candidate entity IDs: {conflict.candidateIds.join(", ")}</p>}
+        {conflict.reviewEvents.length > 0 && <details><summary>Review history ({conflict.reviewEvents.length})</summary><ul>{conflict.reviewEvents.map((event) => <li key={event.id}><strong>{event.action}</strong> by {event.actor} at {new Date(event.createdAt).toISOString()}: {event.note}</li>)}</ul></details>}
+        {conflict.resolvedAt
+          ? <form className="form-stack compact-form" action={reopenConflict.bind(null, id, conflict.id)}><label>Reason to reopen<textarea name="note" required minLength={1} maxLength={2000} rows={2} /></label><button className="nav-button">Reopen conflict</button></form>
+          : <form className="form-stack compact-form" action={markConflictReviewed.bind(null, id, conflict.id)}><label>Review note<textarea name="note" required minLength={1} maxLength={2000} rows={2} placeholder="Why no catalog change is required" /></label><button className="nav-button">Mark reviewed</button></form>}
       </article>)}</div> : <p className="notice">No conflicts have been recorded for this source.</p>}
     </section>
   </>;
