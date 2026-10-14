@@ -5,7 +5,7 @@ canonical entity IDs inside one installation, while exported profiles use
 provider identifiers so they can be restored into another installation whose
 canonical UUIDs differ.
 
-## Version 5 export
+## Version 6 export
 
 Each inventory entry includes:
 
@@ -21,10 +21,13 @@ Discovery progress uses the same reference and records either `discovered` or
 `completed`; unseen topics are represented by absence. Every entity-keyed
 section is validated and resolved before the transactional write begins.
 
-Static todos and world-state watch rules are portable as user-authored intent;
+Static todos, including due-date recurrence intervals, and world-state watch
+rules are portable as user-authored intent;
 a todo's optional catalog link uses the same portable entity reference. If that
 link cannot resolve during import, the player-authored task is retained without
-the link and the unresolved reference is reported. Generated notifications are
+the link and the unresolved reference is reported. Recurring occurrence chains
+use array-index predecessor references so completed history and an existing next
+occurrence cannot generate duplicates after restoration. Generated notifications are
 not portable. Private build drafts include their details,
 equipment, configurations and positioned mods, with every catalog member using
 the same portable reference. Published share snapshots are intentionally

@@ -147,9 +147,11 @@ export const playerTodos = sqliteTable("player_todos", {
   notes: text(),
   status: text({ enum: ["open", "completed"] }).notNull().default("open"),
   dueAt: integer("due_at", { mode: "timestamp_ms" }),
+  recurrenceDays: integer("recurrence_days"),
+  recurrenceSourceId: text("recurrence_source_id"),
   createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
-}, (table) => [index("player_todos_user_status").on(table.userId, table.status), index("player_todos_due").on(table.dueAt)]);
+}, (table) => [index("player_todos_user_status").on(table.userId, table.status), index("player_todos_due").on(table.dueAt), uniqueIndex("player_todos_recurrence_source").on(table.recurrenceSourceId)]);
 export const worldStateWatches = sqliteTable("world_state_watches", {
   id: text().primaryKey(),
   userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),

@@ -64,9 +64,9 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   dates. Source-neutral world-state watches match current window fields and
   create deduplicated private in-app alerts. Detail pages can create todos linked
   to one canonical item, discovery topic or node; watches are not yet linked to
-  canonical entities. Todos cannot recur, and there are no web-push or webhook
-  delivery channels. Watches can be edited, paused and resumed without losing
-  generated alerts.
+  canonical entities. Todos support fixed-day recurrence but not calendar-rule
+  schedules, and there are no web-push or webhook delivery channels. Watches
+  can be edited, paused and resumed without losing generated alerts.
 - Private, revisioned build persistence supports partial equipment loadouts,
   positioned mods, ranks, configuration labels, Forma counts, capacity-upgrade
   flags, notes and immutable unlisted share snapshots. Authenticated

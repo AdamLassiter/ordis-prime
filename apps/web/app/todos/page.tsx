@@ -39,6 +39,7 @@ export default async function TodosPage() {
       <label>Task<input name="title" required maxLength={160} placeholder="Farm the last Necramech part" /></label>
       <label>Notes<textarea name="notes" maxLength={4000} rows={3} placeholder="Optional context, build link, or checklist" /></label>
       <label>Due date<input name="dueDate" type="date" /></label>
+      <label>Repeat every (days)<input name="recurrenceDays" type="number" min="1" max="3650" step="1" placeholder="Leave blank for one-off" /></label>
       <button className="button">Add task</button>
     </form>
     <TodoSection title="Open" todos={open} />
@@ -76,6 +77,7 @@ function TodoSection({ title, todos }: { title: string; todos: PlayerTodo[] }) {
         {todo.entity && <p><Link href={todo.entity.kind === "node" ? `/nodes/${todo.entity.slug}` : `/catalog/${todo.entity.kind}/${todo.entity.slug}`}>{todo.entity.name}</Link></p>}
         {todo.notes && <p className="muted todo-notes">{todo.notes}</p>}
         {todo.dueAt !== undefined && <p className="todo-due">Due <time dateTime={new Date(todo.dueAt).toISOString().slice(0, 10)}>{formatDate(todo.dueAt)}</time></p>}
+        {todo.recurrenceDays !== undefined && <p className="muted">Repeats every {todo.recurrenceDays} {todo.recurrenceDays === 1 ? "day" : "days"} after its due date</p>}
       </div>
       <div className="todo-actions">
         <form action={changeTodoStatus.bind(null, todo.id, todo.status === "open" ? "completed" : "open")}><button className="button">{todo.status === "open" ? "Complete" : "Reopen"}</button></form>

@@ -10,10 +10,13 @@ export async function addTodo(form: FormData) {
   const session = await requireCurrentSession();
   const dueDate = String(form.get("dueDate") ?? "");
   if (dueDate && !/^\d{4}-\d{2}-\d{2}$/.test(dueDate)) throw new Error("Due date must be a calendar date");
+  const recurrence = String(form.get("recurrenceDays") ?? "");
+  if (recurrence && !/^\d+$/.test(recurrence)) throw new Error("Recurrence must be a positive number of days");
   createPlayerTodo(getDatabase(), session.user.id, {
     title: String(form.get("title") ?? ""),
     notes: String(form.get("notes") ?? ""),
     dueAt: dueDate ? Date.parse(`${dueDate}T00:00:00.000Z`) : undefined,
+    recurrenceDays: recurrence ? Number(recurrence) : undefined,
   });
   revalidatePath("/todos");
 }

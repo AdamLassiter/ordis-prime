@@ -14,6 +14,11 @@ or modify it. Item, discovery-topic, and node detail pages can create a task
 linked to that canonical entity. The task renders an in-app link and carries a
 portable entity reference in profile exports.
 
+A task with a due date may repeat at an explicit interval of 1 to 3,650 days.
+Completing an occurrence preserves it as history and creates the next open task
+from the previous due date. A unique predecessor key makes repeated completion
+requests—and reopening then re-completing an old occurrence—idempotent.
+
 ## Dynamic watches and alerts
 
 World-state watches are rules over normalized window kind, label, state and node
@@ -36,8 +41,9 @@ occurrence keys remain deduplicated after an edit.
 
 - Static todos and watch rules are portable; generated notification history is
   deliberately installation-local.
-- There are no recurring schedules, subtasks, tags or ordering controls. A todo
-  can link to one canonical entity but cannot yet carry multiple targets.
+- Recurrence is a fixed day interval; calendar rules such as weekdays or “first
+  Sunday” are not modeled. There are no subtasks, tags or ordering controls. A
+  todo can link to one canonical entity but cannot yet carry multiple targets.
 - Notification retention is not configurable. Web push and webhooks remain
   later opt-in delivery channels.
 
