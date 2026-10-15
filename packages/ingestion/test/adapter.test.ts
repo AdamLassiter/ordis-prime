@@ -44,6 +44,23 @@ test("WFCD adapter distinguishes arcanes and provider-miscategorised Archon Shar
     ["arcane", "Arcane Barrier"],
     ["shard", "Tauforged Crimson Archon Shard"],
   ]);
+  assert.equal(observations[0]?.type === "entity" && observations[0].fields.arcaneClass, "warframe");
+});
+
+test("WFCD adapter maps arcane classes into source-neutral compatibility facts", async () => {
+  const arcaneSnapshot = {
+    ...snapshot,
+    bytes: new TextEncoder().encode(JSON.stringify([
+      { uniqueName: "/warframe", name: "Arcane Barrier", category: "Arcanes", type: "Warframe Arcane" },
+      { uniqueName: "/operator", name: "Magus Elevate", category: "Arcanes", type: "Operator Arcane" },
+      { uniqueName: "/amp", name: "Virtuos Strike", category: "Arcanes", type: "Amp Arcane" },
+      { uniqueName: "/primary", name: "Primary Merciless", category: "Arcanes", type: "Primary Arcane" },
+      { uniqueName: "/kitgun", name: "Pax Charge", category: "Arcanes", type: "Kitgun Arcane" },
+      { uniqueName: "/zaw", name: "Exodia Contagion", category: "Arcanes", type: "Zaw Arcane" },
+    ])),
+  };
+  const observations = await collect(new WfcdItemsAdapter(), arcaneSnapshot);
+  assert.deepEqual(observations.filter((entry) => entry.type === "entity").map((entry) => entry.fields.arcaneClass), ["warframe", "operator", "amp", "primary", "kitgun", "zaw"]);
 });
 
 test("WFCD node records retain planet and level metadata", async () => {
@@ -73,7 +90,7 @@ test("WFCD adapter defaults to the maintained aggregate endpoint", async () => {
   try {
     const fetched = await new WfcdItemsAdapter().fetch({});
     assert.equal(requestedUrl, DEFAULT_WFCD_ITEMS_URL);
-    assert.equal(fetched.version, "fixture-etag|wfcd-items-v3");
+    assert.equal(fetched.version, "fixture-etag|wfcd-items-v4");
   } finally {
     globalThis.fetch = originalFetch;
   }

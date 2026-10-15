@@ -159,6 +159,22 @@ test("higher-priority cited facts remain field winners across provider refreshes
   assert.deepEqual(sqlite.prepare("select description from entities where slug = 'braton'").get(), { description: "Cited correction" });
 });
 
+test("arcane classes are promoted as cited canonical fields", async (context) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-arcane-class-"));
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const databasePath = path.join(root, "catalog.sqlite");
+  migrateDatabase(databasePath);
+  const sqlite = new Database(databasePath);
+  sqlite.pragma("foreign_keys = ON");
+  context.after(() => sqlite.close());
+  const arcane = { ...entity("barrier", "Arcane Barrier", "arcane"), fields: { name: "Arcane Barrier", slug: "arcane-barrier", arcaneClass: "warframe" as const } };
+
+  promoteSource(sqlite, input("v1", [arcane]));
+
+  assert.deepEqual(sqlite.prepare("select arcane_class as arcaneClass from entities where slug = 'arcane-barrier'").get(), { arcaneClass: "warframe" });
+  assert.deepEqual(sqlite.prepare("select field, source_record_key as recordKey from fact_provenance where field = 'arcaneClass'").get(), { field: "arcaneClass", recordKey: "record" });
+});
+
 test("an overlay targeting an unimported provider becomes a reviewable conflict", async (context) => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-missing-source-"));
   context.after(() => fs.rm(root, { recursive: true, force: true }));

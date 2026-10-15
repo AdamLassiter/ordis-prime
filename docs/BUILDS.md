@@ -17,7 +17,10 @@ Changing an equipment item clears that slot's mods and configuration because
 those assignments are usually item-specific. Every edit increments the build revision. Slot validation
 currently requires Warframe, companion and weapon entity kinds as appropriate;
 mod positions require canonical mod entities, and enhancement slots require
-canonical arcane or shard entities.
+canonical arcane or shard entities. Arcane search and assignment also require
+an active, sourced class compatible with the broad slot family: Warframe,
+Operator, Amp, Primary, Secondary or Melee. Specialized Bow, Shotgun, Kitgun
+and Zaw arcanes are admitted only to their possible weapon-family slots.
 
 ## Share semantics
 
@@ -51,10 +54,12 @@ recipes and recommends nodes using the same canonical IDs.
 ## Current limits
 
 - Forma count, a capacity-upgrade flag, and a configuration label are recorded,
-  but polarities and calculated capacity/drain are not modeled. Arcane subtype
-  compatibility is not enforced because the canonical catalog does not yet
-  retain WFCD's arcane and weapon subtypes. Abilities, schools and structured
-  weapon configuration variants are also absent.
+  but polarities and calculated capacity/drain are not modeled. Broad arcane
+  class compatibility is enforced from cited canonical facts. Specialized Bow,
+  Shotgun, Kitgun and Zaw arcanes are not yet checked against the equipped
+  weapon subtype because canonical weapon-class facts are still absent.
+  Abilities, schools and structured weapon configuration variants are also
+  absent.
 - Private build drafts are included in portable profile export/import. Published
   share snapshots are deliberately installation-local capability URLs.
 - Share keys are unlisted capabilities, not access-controlled invitations.

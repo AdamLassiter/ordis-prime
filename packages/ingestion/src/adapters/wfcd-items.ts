@@ -1,12 +1,25 @@
-import type { EntityKind, EntityObservation, Observation } from "@ordis-prime/domain";
+import type { ArcaneClass, EntityKind, EntityObservation, Observation } from "@ordis-prime/domain";
 import { createSnapshot, type Snapshot, type SourceAdapter } from "../adapter.ts";
 
 interface WfcdItem { uniqueName?: string; name?: string; description?: string; category?: string; type?: string; wikiaUrl?: string; components?: WfcdComponent[]; systemName?: string; minEnemyLevel?: number; maxEnemyLevel?: number; masteryReq?: number; nodeType?: number }
 interface WfcdComponent { uniqueName?: string; name?: string; description?: string; category?: string; type?: string; itemCount?: number }
 const categories: Record<string, EntityKind> = { Warframes: "warframe", Primary: "weapon", Secondary: "weapon", Melee: "weapon", "Arch-Gun": "weapon", "Arch-Melee": "weapon", SentinelWeapons: "weapon", Mods: "mod", Arcanes: "arcane", Resources: "resource", Fish: "resource", Relics: "relic", Node: "node", Quests: "quest", Pets: "companion", Sentinels: "companion", Components: "component", Enemy: "enemy" };
 export const DEFAULT_WFCD_ITEMS_URL = "https://api.warframestat.us/items";
-const PARSER_VERSION = "wfcd-items-v3";
+const PARSER_VERSION = "wfcd-items-v4";
 const ARCHON_SHARD_PREFIX = "/Lotus/Types/Gameplay/NarmerSorties/ArchonCrystal";
+const arcaneClasses: Record<string, ArcaneClass> = {
+  "Arcane": "warframe",
+  "Warframe Arcane": "warframe",
+  "Operator Arcane": "operator",
+  "Amp Arcane": "amp",
+  "Primary Arcane": "primary",
+  "Secondary Arcane": "secondary",
+  "Melee Arcane": "melee",
+  "Kitgun Arcane": "kitgun",
+  "Zaw Arcane": "zaw",
+  "Bow Arcane": "bow",
+  "Shotgun Arcane": "shotgun",
+};
 
 export class WfcdItemsAdapter implements SourceAdapter {
   readonly source = { id: "wfcd-items", name: "WFCD warframe-items", homepage: "https://github.com/WFCD/warframe-items", license: "MIT", priority: 100 };
@@ -27,7 +40,7 @@ export class WfcdItemsAdapter implements SourceAdapter {
       const kind = kindFor(item);
       const evidence = { sourceId: this.source.id, sourceRecordKey: item.uniqueName, snapshotVersion: snapshot.version, retrievedAt: snapshot.retrievedAt, citationUrl: item.wikiaUrl, license: this.source.license, path: `[${index}]` };
       const name = cleanName(item.name);
-      yield { type: "entity", kind, externalIds: [{ sourceId: this.source.id, namespace: "uniqueName", value: item.uniqueName }], fields: { name, slug: slugify(name), description: item.description }, evidence };
+      yield { type: "entity", kind, externalIds: [{ sourceId: this.source.id, namespace: "uniqueName", value: item.uniqueName }], fields: { name, slug: slugify(name), description: item.description, arcaneClass: kind === "arcane" ? arcaneClasses[item.type ?? ""] : undefined }, evidence };
       if (kind === "node" && item.systemName) yield {
         type: "node-detail", nodeExternalId: { sourceId: this.source.id, namespace: "uniqueName", value: item.uniqueName }, planet: item.systemName,
         minimumEnemyLevel: item.minEnemyLevel, maximumEnemyLevel: item.maxEnemyLevel,

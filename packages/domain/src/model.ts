@@ -5,12 +5,16 @@ export type EntityKind =
   | "relic" | "blueprint" | "component" | "node" | "planet"
   | "quest" | "enemy" | "boss" | "mechanic" | "secret";
 
+export const ARCANE_CLASSES = ["warframe", "operator", "amp", "primary", "secondary", "melee", "kitgun", "zaw", "bow", "shotgun"] as const;
+export type ArcaneClass = typeof ARCANE_CLASSES[number];
+
 export interface CanonicalEntity {
   id: EntityId;
   kind: EntityKind;
   name: string;
   slug: string;
   description?: string;
+  arcaneClass?: ArcaneClass;
   retired: boolean;
 }
 
@@ -34,7 +38,7 @@ export interface EntityObservation {
   type: "entity";
   externalIds: ExternalIdentifier[];
   kind: EntityKind;
-  fields: Partial<Pick<CanonicalEntity, "name" | "slug" | "description">>;
+  fields: Partial<Pick<CanonicalEntity, "name" | "slug" | "description" | "arcaneClass">>;
   aliases?: string[];
   tombstone?: boolean;
   evidence: Evidence;

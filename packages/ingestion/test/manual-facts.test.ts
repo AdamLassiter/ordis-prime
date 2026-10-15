@@ -45,6 +45,22 @@ test("manual facts reject empty corrections", async (context) => {
   await assert.rejects(() => ManualFactsAdapter.fromFile(file), /contains no facts/);
 });
 
+test("manual facts validate canonical arcane classes", async () => {
+  const valid = new TextEncoder().encode(`schemaVersion: 1
+source: { id: corrections, title: Corrections, url: https://example.test, licenseNote: Cited }
+entries: [{ target: { sourceId: items, namespace: id, value: barrier }, kind: arcane, arcaneClass: warframe }]
+`);
+  const adapter = ManualFactsAdapter.fromBytes(valid);
+  const observations = await collect(adapter, await adapter.fetch({}));
+  assert.equal(observations[0]?.type === "entity" && observations[0].fields.arcaneClass, "warframe");
+
+  const invalid = new TextEncoder().encode(`schemaVersion: 1
+source: { id: corrections, title: Corrections, url: https://example.test, licenseNote: Cited }
+entries: [{ target: { sourceId: items, namespace: id, value: braton }, kind: weapon, arcaneClass: primary }]
+`);
+  assert.throws(() => ManualFactsAdapter.fromBytes(invalid), /arcaneClass is invalid/);
+});
+
 test("manual facts do not imply that a retired entity can be restored", async (context) => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-manual-facts-"));
   context.after(() => fs.rm(root, { recursive: true, force: true }));

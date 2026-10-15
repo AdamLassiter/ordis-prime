@@ -1,0 +1,1 @@
+ALTER TABLE `entities` ADD `arcane_class` text;

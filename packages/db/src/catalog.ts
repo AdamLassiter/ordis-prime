@@ -1,3 +1,4 @@
+import type { ArcaneClass } from "@ordis-prime/domain";
 import type Database from "better-sqlite3";
 
 export interface CatalogSummary {
@@ -5,6 +6,7 @@ export interface CatalogSummary {
   slug: string;
   name: string;
   description?: string;
+  arcaneClass?: ArcaneClass;
 }
 export const DISCOVERY_KINDS = ["quest", "mechanic", "secret", "enemy", "boss"] as const;
 export type DiscoveryKind = typeof DISCOVERY_KINDS[number];
@@ -145,8 +147,8 @@ function loadDiscoveryNeighbors(sqlite: Database.Database, entityIds: string[]):
 }
 
 export function findCatalogItem(sqlite: Database.Database, kind: string, slug: string): CatalogItem | undefined {
-  const item = sqlite.prepare("select id, kind, slug, name, description from entities where kind = ? and slug = ? and retired = 0")
-    .get(kind, slug) as (CatalogSummary & { id: string }) | undefined;
+  const item = sqlite.prepare("select id, kind, slug, name, description, arcane_class as arcaneClass from entities where kind = ? and slug = ? and retired = 0")
+    .get(kind, slug) as (CatalogSummary & { id: string; arcaneClass: ArcaneClass | null }) | undefined;
   if (!item) return undefined;
 
   const components = sqlite.prepare(`
@@ -263,8 +265,8 @@ export function findCatalogItem(sqlite: Database.Database, kind: string, slug: s
     where relation.from_entity_id = ? or relation.to_entity_id = ?
     order by sourceName, fact, recordKey
   `).all(item.id, item.id, item.id, item.id, item.id, item.id, item.id) as Array<{ fact: string; sourceName: string; version: string; recordKey?: string; citationUrl?: string; sourcePath?: string; snapshotPath?: string }>;
-  const { id: _id, ...summary } = item;
-  return { ...summary, components, drops, sources, rankings, enhancementOptions, relations: relations.map(({ subjectKind, subjectSlug, subjectName, subjectDescription, ...relation }) => ({ ...relation, subject: { kind: subjectKind, slug: subjectSlug, name: subjectName, description: subjectDescription } })), evidence };
+  const { id: _id, arcaneClass, ...summary } = item;
+  return { ...summary, ...(arcaneClass ? { arcaneClass } : {}), components, drops, sources, rankings, enhancementOptions, relations: relations.map(({ subjectKind, subjectSlug, subjectName, subjectDescription, ...relation }) => ({ ...relation, subject: { kind: subjectKind, slug: subjectSlug, name: subjectName, description: subjectDescription } })), evidence };
 }
 
 export function findCatalogNode(sqlite: Database.Database, slug: string, userId?: string): CatalogNode | undefined {

@@ -17,12 +17,15 @@ test("build drafts are private and share snapshots remain immutable", async (con
   seedEntity(database, "frame", "warframe", "Mag", "mag");
   seedEntity(database, "weapon", "weapon", "Paris", "paris");
   seedEntity(database, "mod", "mod", "Serration", "serration");
-  seedEntity(database, "arcane", "arcane", "Arcane Barrier", "arcane-barrier");
+  seedEntity(database, "arcane", "arcane", "Arcane Barrier", "arcane-barrier", "warframe");
+  seedEntity(database, "operator-arcane", "arcane", "Magus Elevate", "magus-elevate", "operator");
   seedEntity(database, "shard", "shard", "Crimson Archon Shard", "crimson-archon-shard");
   seedEnhancementOption(database, "shard", "ability-strength", "Ability Strength");
   assert.deepEqual(searchBuildCandidates(database, "primary", "Par"), [{ kind: "weapon", slug: "paris", name: "Paris" }]);
   assert.deepEqual(searchBuildCandidates(database, "mod", "Serr"), [{ kind: "mod", slug: "serration", name: "Serration" }]);
-  assert.deepEqual(searchBuildEnhancementCandidates(database, "warframe-arcane-1", "Barrier"), [{ kind: "arcane", slug: "arcane-barrier", name: "Arcane Barrier" }]);
+  assert.deepEqual(searchBuildEnhancementCandidates(database, "warframe-arcane-1", "Barrier"), [{ kind: "arcane", slug: "arcane-barrier", name: "Arcane Barrier", arcaneClass: "warframe" }]);
+  assert.deepEqual(searchBuildEnhancementCandidates(database, "warframe-arcane-1", "Elevate"), []);
+  assert.deepEqual(searchBuildEnhancementCandidates(database, "operator-arcane-1", "Elevate"), [{ kind: "arcane", slug: "magus-elevate", name: "Magus Elevate", arcaneClass: "operator" }]);
   assert.deepEqual(searchBuildEnhancementCandidates(database, "archon-shard-1", "Crimson"), [{ kind: "shard", slug: "crimson-archon-shard", name: "Crimson Archon Shard", enhancementOptions: [{ key: "ability-strength", label: "Ability Strength", sourceName: "Shard facts", citationUrl: "https://example.test/shards" }] }]);
   const buildId = createPlayerBuild(database, owner, { title: "Starter setup", category: "beginner" });
   setBuildEquipment(database, owner, buildId, "warframe", { kind: "warframe", slug: "mag" });
@@ -80,6 +83,7 @@ test("build drafts are private and share snapshots remain immutable", async (con
   assert.notEqual(getPlayerBuild(database, owner, buildId)?.revision, shared.revision);
   assert.throws(() => setBuildEquipment(database, other, buildId, "primary", { kind: "weapon", slug: "paris" }), /not found/);
   assert.throws(() => setBuildEnhancement(database, owner, buildId, "archon-shard-3", { kind: "arcane", slug: "arcane-barrier" }), /requires a shard/);
+  assert.throws(() => setBuildEnhancement(database, owner, buildId, "warframe-arcane-2", { kind: "arcane", slug: "magus-elevate" }), /not compatible/);
   assert.throws(() => setBuildEnhancement(database, owner, buildId, "archon-shard-3", { kind: "shard", slug: "crimson-archon-shard" }), /require a sourced effect/);
   assert.throws(() => setBuildEnhancement(database, owner, buildId, "archon-shard-3", { kind: "shard", slug: "crimson-archon-shard" }, undefined, "missing"), /not active/);
   assert.throws(() => cloneSharedBuild(database, other, "missing-share"), /not found/);
@@ -99,8 +103,8 @@ test("cloned build titles stay within the draft title limit", async (context) =>
   assert.match(clone.title, / \(copy\)$/);
 });
 
-function seedEntity(database: ReturnType<typeof openSqliteDatabase>, id: string, kind: string, name: string, slug: string) {
-  database.prepare("insert into entities (id, kind, name, slug, retired, updated_at) values (?, ?, ?, ?, 0, ?)").run(id, kind, name, slug, Date.now());
+function seedEntity(database: ReturnType<typeof openSqliteDatabase>, id: string, kind: string, name: string, slug: string, arcaneClass?: string) {
+  database.prepare("insert into entities (id, kind, name, slug, arcane_class, retired, updated_at) values (?, ?, ?, ?, ?, 0, ?)").run(id, kind, name, slug, arcaneClass ?? null, Date.now());
 }
 
 function seedEnhancementOption(database: ReturnType<typeof openSqliteDatabase>, entityId: string, key: string, label: string) {

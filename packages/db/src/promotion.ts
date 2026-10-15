@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type Database from "better-sqlite3";
 import {
+  ARCANE_CLASSES,
   externalKey,
   normalizedAlias,
   resolveEntity,
@@ -275,15 +276,16 @@ function resolveAndWriteEntity(
     }
     entityId = randomUUID() as EntityId;
     sqlite.prepare(`
-      insert into entities (id, kind, name, slug, description, retired, updated_at)
-      values (?, ?, ?, ?, ?, ?, ?)
-    `).run(entityId, observation.kind, observation.fields.name, observation.fields.slug, observation.fields.description ?? null, observation.tombstone ? 1 : 0, Date.now());
+      insert into entities (id, kind, name, slug, description, arcane_class, retired, updated_at)
+      values (?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(entityId, observation.kind, observation.fields.name, observation.fields.slug, observation.fields.description ?? null, observation.fields.arcaneClass ?? null, observation.tombstone ? 1 : 0, Date.now());
     state.entities.set(entityId, {
       id: entityId,
       kind: observation.kind,
       name: observation.fields.name,
       slug: observation.fields.slug,
       description: observation.fields.description,
+      arcaneClass: observation.fields.arcaneClass,
       retired: observation.tombstone ?? false,
     });
     counts.entitiesCreated += 1;
@@ -321,7 +323,7 @@ function resolveAndWriteEntity(
       citation_url = excluded.citation_url,
       source_path = excluded.source_path
   `);
-  for (const field of ["name", "slug", "description"] as const) {
+  for (const field of ["name", "slug", "description", "arcaneClass"] as const) {
     if (observation.fields[field] !== undefined) {
       writeProvenance.run(entityId, field, sourceRunId, observation.evidence.sourceRecordKey, observation.evidence.citationUrl ?? null, observation.evidence.path ?? null);
     }
@@ -332,7 +334,8 @@ function resolveAndWriteEntity(
 function updateWinningFields(sqlite: Database.Database, entityId: EntityId, observation: EntityObservation, sourcePriority: number): void {
   const updates: string[] = [];
   const values: unknown[] = [];
-  for (const field of ["name", "slug", "description"] as const) {
+  const columns = { name: "name", slug: "slug", description: "description", arcaneClass: "arcane_class" } as const;
+  for (const field of ["name", "slug", "description", "arcaneClass"] as const) {
     const value = observation.fields[field];
     if (value === undefined) continue;
     const winner = sqlite.prepare(`
@@ -343,7 +346,7 @@ function updateWinningFields(sqlite: Database.Database, entityId: EntityId, obse
       where p.entity_id = ? and p.field = ?
     `).get(entityId, field) as { priority: number | null };
     if (winner.priority === null || sourcePriority >= winner.priority) {
-      updates.push(`${field} = ?`);
+      updates.push(`${columns[field]} = ?`);
       values.push(value);
     }
   }
@@ -354,7 +357,7 @@ function updateWinningFields(sqlite: Database.Database, entityId: EntityId, obse
 }
 
 function loadResolutionState(sqlite: Database.Database): ResolutionState {
-  const entityRows = sqlite.prepare("select id, kind, name, slug, description, retired from entities").all() as Array<Omit<CanonicalEntity, "retired"> & { retired: number }>;
+  const entityRows = sqlite.prepare("select id, kind, name, slug, description, arcane_class as arcaneClass, retired from entities").all() as Array<Omit<CanonicalEntity, "retired"> & { retired: number }>;
   const entities = new Map<EntityId, CanonicalEntity>();
   for (const row of entityRows) entities.set(row.id, { ...row, retired: Boolean(row.retired) });
   const externalIds = new Map<string, EntityId>();
@@ -405,6 +408,9 @@ function validateInput(input: PromoteSourceInput): void {
     }
     if (observation.type === "drop" && observation.chance !== undefined && (observation.chance < 0 || observation.chance > 1)) {
       throw new Error(`Drop chance is outside [0, 1]: ${observation.chance}`);
+    }
+    if (observation.type === "entity" && observation.fields.arcaneClass !== undefined && (observation.kind !== "arcane" || !(ARCANE_CLASSES as readonly string[]).includes(observation.fields.arcaneClass))) {
+      throw new Error("Entity arcane class is invalid");
     }
     if (observation.type === "drop" && (!Number.isInteger(observation.quantity ?? 1) || (observation.quantity ?? 1) < 1)) {
       throw new Error("Drop quantity must be a positive integer");

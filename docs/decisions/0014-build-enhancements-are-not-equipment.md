@@ -22,8 +22,7 @@ identity.
 
 - The initial slot vocabulary is intentionally explicit and can change before
   release without a compatibility layer.
-- Arcane subtype compatibility is not yet enforced. WFCD exposes subtypes in its
-  item payload, but the canonical entity model currently retains only the broad
-  arcane kind.
-- A shard records identity and position but not the selected stat effect; that
-  needs a sourced effect model rather than free-form strings.
+- Arcane class compatibility is refined by ADR 0025. Specialized weapon-class
+  checks remain separate from broad enhancement-slot compatibility.
+- Shard effect selection is refined by ADR 0021 and remains a sourced fact
+  rather than a free-form string.

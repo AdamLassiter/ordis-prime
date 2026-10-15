@@ -1,4 +1,5 @@
 import { randomBytes, randomUUID } from "node:crypto";
+import type { ArcaneClass } from "@ordis-prime/domain";
 import type Database from "better-sqlite3";
 
 export const BUILD_SLOTS = ["warframe", "primary", "secondary", "melee", "companion", "companion-weapon", "archwing", "archgun", "archmelee", "operator-amp"] as const;
@@ -27,7 +28,7 @@ export interface SharedBuildSnapshot extends Omit<PlayerBuild, "id" | "createdAt
   sharedAt: number;
 }
 export interface BuildShareSummary { shareKey: string; revision: number; createdAt: number }
-export type BuildCandidate = BuildEntityReference & { enhancementOptions?: BuildEnhancementOption[] };
+export type BuildCandidate = BuildEntityReference & { arcaneClass?: ArcaneClass; enhancementOptions?: BuildEnhancementOption[] };
 
 export function createPlayerBuild(sqlite: Database.Database, userId: string, input: { title: string; category?: string; notes?: string }): string {
   assertUser(sqlite, userId);
@@ -105,13 +106,15 @@ export function searchBuildCandidates(sqlite: Database.Database, slot: BuildSlot
 export function searchBuildEnhancementCandidates(sqlite: Database.Database, slot: BuildEnhancementSlot, query: string, limit = 20): BuildCandidate[] {
   const kind = enhancementKind(slot);
   const normalizedLimit = Math.max(1, Math.min(100, Math.trunc(limit)));
+  const compatibleArcaneClasses = kind === "arcane" ? arcaneClassesForSlot(slot) : [];
+  const classFilter = kind === "arcane" ? `and arcane_class in (${compatibleArcaneClasses.map(() => "?").join(", ")})` : "";
   const candidates = sqlite.prepare(`
-    select id, kind, slug, name from entities
-    where retired = 0 and kind = ? and name like ? escape '\\'
+    select id, kind, slug, name, arcane_class as arcaneClass from entities
+    where retired = 0 and kind = ? ${classFilter} and name like ? escape '\\'
     order by case when lower(name) = lower(?) then 0 else 1 end, name collate nocase
     limit ?
-  `).all(kind, `%${escapeLike(query.trim())}%`, query.trim(), normalizedLimit) as Array<BuildCandidate & { id: string }>;
-  return candidates.map(({ id, ...candidate }) => ({ ...candidate, ...(kind === "shard" ? { enhancementOptions: listEnhancementOptions(sqlite, id) } : {}) }));
+  `).all(kind, ...compatibleArcaneClasses, `%${escapeLike(query.trim())}%`, query.trim(), normalizedLimit) as Array<BuildCandidate & { id: string; arcaneClass: ArcaneClass | null }>;
+  return candidates.map(({ id, arcaneClass, ...candidate }) => ({ ...candidate, ...(arcaneClass ? { arcaneClass } : {}), ...(kind === "shard" ? { enhancementOptions: listEnhancementOptions(sqlite, id) } : {}) }));
 }
 
 export function setBuildEnhancement(sqlite: Database.Database, userId: string, buildId: string, slot: BuildEnhancementSlot, reference: { kind: string; slug: string }, rank?: number, optionKey?: string): void {
@@ -121,6 +124,9 @@ export function setBuildEnhancement(sqlite: Database.Database, userId: string, b
     assertBuildOwner(sqlite, userId, buildId);
     const entity = findEntity(sqlite, reference);
     if (entity.kind !== expectedKind) throw new Error(`${slot} requires a ${expectedKind}, not ${entity.kind}`);
+    if (expectedKind === "arcane" && (!entity.arcaneClass || !arcaneClassesForSlot(slot).includes(entity.arcaneClass))) {
+      throw new Error(`${entity.arcaneClass ?? "Unclassified arcane"} is not compatible with ${slot}`);
+    }
     let option: BuildEnhancementOption | undefined;
     if (expectedKind === "shard") {
       if (!optionKey) throw new Error("Archon Shards require a sourced effect selection");
@@ -320,10 +326,19 @@ function cloneTitle(title: string): string { const suffix = " (copy)"; return `$
 function normalizeText(value: string | undefined, maximum: number, label: string): string | undefined { const text = value?.trim() || undefined; if (text && text.length > maximum) throw new Error(`${label} cannot exceed ${maximum} characters`); return text; }
 function assertUser(sqlite: Database.Database, userId: string): void { if (!sqlite.prepare("select 1 from users where id = ?").get(userId)) throw new Error("Unknown user"); }
 function assertBuildOwner(sqlite: Database.Database, userId: string, buildId: string): void { if (!sqlite.prepare("select 1 from player_builds where id = ? and user_id = ?").get(buildId, userId)) throw new Error("Build not found"); }
-function findEntity(sqlite: Database.Database, reference: { kind: string; slug: string }): { id: string; kind: string } { const entity = sqlite.prepare("select id, kind from entities where kind = ? and slug = ? and retired = 0").get(reference.kind, reference.slug) as { id: string; kind: string } | undefined; if (!entity) throw new Error(`Unknown active entity ${reference.kind}:${reference.slug}`); return entity; }
+function findEntity(sqlite: Database.Database, reference: { kind: string; slug: string }): { id: string; kind: string; arcaneClass?: ArcaneClass } { const entity = sqlite.prepare("select id, kind, arcane_class as arcaneClass from entities where kind = ? and slug = ? and retired = 0").get(reference.kind, reference.slug) as { id: string; kind: string; arcaneClass?: ArcaneClass } | undefined; if (!entity) throw new Error(`Unknown active entity ${reference.kind}:${reference.slug}`); return entity; }
 function enhancementKind(slot: BuildEnhancementSlot): "arcane" | "shard" {
   if (!(BUILD_ENHANCEMENT_SLOTS as readonly string[]).includes(slot)) throw new Error("Build enhancement slot is invalid");
   return slot.startsWith("archon-shard-") ? "shard" : "arcane";
+}
+function arcaneClassesForSlot(slot: BuildEnhancementSlot): ArcaneClass[] {
+  if (slot.startsWith("warframe-arcane-")) return ["warframe"];
+  if (slot.startsWith("operator-arcane-")) return ["operator"];
+  if (slot.startsWith("amp-arcane-")) return ["amp"];
+  if (slot === "primary-arcane") return ["primary", "kitgun", "bow", "shotgun"];
+  if (slot === "secondary-arcane") return ["secondary", "kitgun"];
+  if (slot === "melee-arcane") return ["melee", "zaw"];
+  throw new Error("Build enhancement slot is invalid");
 }
 function listEnhancementOptions(sqlite: Database.Database, entityId: string): BuildEnhancementOption[] {
   return sqlite.prepare(`

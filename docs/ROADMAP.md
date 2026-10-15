@@ -29,10 +29,11 @@ Add partial/full versioned loadouts and immutable share snapshots. Import cited
 editorial rankings as independent observations and show disagreement before any
 derived consensus.
 
-Build drafts, editor/search workflow, typed arcane and effect-selected Archon Shard slots, immutable public snapshots and a
-source-faithful editorial ranking comparison are implemented. Builds retain
-configuration labels, Forma counts and capacity-upgrade state. Calculated
-capacity/polarities, arcane and weapon subtype compatibility, and optional ranking summaries remain.
+Build drafts, editor/search workflow, class-checked arcanes, effect-selected
+Archon Shard slots, immutable public snapshots and a source-faithful editorial
+ranking comparison are implemented. Builds retain configuration labels, Forma
+counts and capacity-upgrade state. Calculated capacity/polarities, specialized
+weapon subtype compatibility, and optional ranking summaries remain.
 
 ## 4. Discovery and spatial navigation
 
