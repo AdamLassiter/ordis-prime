@@ -24,7 +24,7 @@ export default async function Planner() {
     return (
       <>
         <p className="eyebrow">Private workspace</p>
-        <h1>Acquisition planner</h1>
+        <h1>Acquisition <u>planner</u></h1>
         <p className="error">
           The plan could not be expanded:{" "}
           {error instanceof Error ? error.message : "unknown catalog error"}
@@ -35,7 +35,7 @@ export default async function Planner() {
   return (
     <>
       <p className="eyebrow">Private workspace</p>
-      <h1>Acquisition planner</h1>
+      <h1>Acquisition <u>planner</u></h1>
       <p className="lede">
         Set desired final quantities. Your inventory is subtracted before
         recipes are expanded, and every candidate node explains which missing

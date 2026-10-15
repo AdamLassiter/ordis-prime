@@ -14,7 +14,7 @@ export default async function AccountsPage() {
   return (
     <>
       <p className="eyebrow">Administrator</p>
-      <h1>Local accounts</h1>
+      <h1>Local <u>accounts</u></h1>
       <p className="lede">
         Promote or demote local users. Every role change invalidates that
         account&apos;s sessions so new permissions take effect on the next

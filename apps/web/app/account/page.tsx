@@ -10,7 +10,7 @@ export default async function AccountPage() {
   return (
     <>
       <p className="eyebrow">Private workspace</p>
-      <h1>My account</h1>
+      <h1>My <u>account</u></h1>
       <section className="card build-details">
         <h2>{session.user.name}</h2>
         <p>{session.user.email}</p>

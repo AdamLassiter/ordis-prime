@@ -21,11 +21,10 @@ export default function WorldStatePage() {
   return (
     <>
       <p className="eyebrow">Live system intelligence</p>
-      <h1>World-state timers</h1>
+      <h1>World-state <u>timers</u></h1>
       <p className="lede">
-        One view of active and upcoming cycles, events, alerts, fissures and
-        traders. Countdown text is calculated locally from source-provided
-        instants.
+        Comprehensive view of active and upcoming cycles, events, alerts, fissures and
+        traders.
       </p>
       {sources.length > 0 && (
         <div

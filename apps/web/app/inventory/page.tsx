@@ -14,7 +14,7 @@ export default async function InventoryPage() {
   return (
     <>
       <p className="eyebrow">Private collection</p>
-      <h1>Your inventory</h1>
+      <h1>Your <u>inventory</u></h1>
       <p className="lede">
         Recorded ownership, build, and wishlist state. Open an item to edit its
         details.

@@ -22,10 +22,9 @@ export default async function RankingsPage({
   return (
     <>
       <p className="eyebrow">Cited opinions</p>
-      <h1>Tier-list comparison</h1>
+      <h1>Tier-list <u>rankings</u></h1>
       <p className="lede">
-        Compare what each source actually said. Raw scales remain independent;
-        an optional ordinal summary makes its assumptions visible.
+        Compare what each source actually said.
       </p>
       <form className="card form-stack ranking-filters">
         <label>

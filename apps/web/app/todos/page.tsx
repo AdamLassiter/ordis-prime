@@ -34,11 +34,10 @@ export default async function TodosPage() {
   return (
     <>
       <p className="eyebrow">Private workspace</p>
-      <h1>Todo list</h1>
+      <h1><u>Todo</u> list</h1>
       <p className="lede">
         Keep the loose ends from your tabs, farming plans and weekly routine
-        together. World-state watches turn matching live windows into private,
-        deduplicated alerts.
+        together.
       </p>
       {notifications.length > 0 && (
         <NotificationSection notifications={notifications} />

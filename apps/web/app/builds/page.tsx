@@ -14,7 +14,7 @@ export default async function BuildsPage() {
   return (
     <>
       <p className="eyebrow">Private workshop</p>
-      <h1>Builds</h1>
+      <h1><u>Builds</u></h1>
       <p className="lede">
         Compose a partial or complete loadout from the shared catalog, keep your
         reasoning beside it, and publish immutable snapshots when it is ready to

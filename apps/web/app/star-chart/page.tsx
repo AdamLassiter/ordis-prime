@@ -30,7 +30,7 @@ export default async function StarChartPage({
   return (
     <>
       <p className="eyebrow">Spatial acquisition index</p>
-      <h1>Star chart</h1>
+      <h1><u>Star chart</u></h1>
       <p className="lede">
         Browse canonical mission nodes by planet and see where your collection
         still has gaps. Cited connection edges appear when an active source
