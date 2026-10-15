@@ -9,6 +9,7 @@ import {
   type CanonicalEntity,
   type EntityId,
   type EntityObservation,
+  type ExternalIdentifier,
   type Observation,
   type ResolutionState,
 } from "@ordis-prime/domain";
@@ -259,7 +260,7 @@ function resolveAndWriteEntity(
 ): EntityId | undefined {
   const resolution = resolveEntity(observation, state);
   if (resolution.status === "conflict") {
-    writeConflict(sqlite, sourceRunId, observation.evidence.sourceRecordKey, "Entity identity is ambiguous", resolution.candidateIds, counts);
+    writeConflict(sqlite, sourceRunId, observation.evidence.sourceRecordKey, "Entity identity is ambiguous", resolution.candidateIds, counts, observation.externalIds);
     return undefined;
   }
 
@@ -268,11 +269,11 @@ function resolveAndWriteEntity(
     const missingSourceIds = [...new Set(observation.externalIds.map((externalId) => externalId.sourceId))]
       .filter((sourceId) => !sqlite.prepare("select 1 from sources where id = ?").get(sourceId));
     if (missingSourceIds.length) {
-      writeConflict(sqlite, sourceRunId, observation.evidence.sourceRecordKey, `External identifier source is not registered: ${missingSourceIds.join(", ")}`, [], counts);
+      writeConflict(sqlite, sourceRunId, observation.evidence.sourceRecordKey, `External identifier source is not registered: ${missingSourceIds.join(", ")}`, [], counts, observation.externalIds);
       return undefined;
     }
     if (!observation.fields.name || !observation.fields.slug) {
-      writeConflict(sqlite, sourceRunId, observation.evidence.sourceRecordKey, "New entity is missing a name or slug", [], counts);
+      writeConflict(sqlite, sourceRunId, observation.evidence.sourceRecordKey, "New entity is missing a name or slug", [], counts, observation.externalIds);
       return undefined;
     }
     entityId = randomUUID() as EntityId;
@@ -295,7 +296,7 @@ function resolveAndWriteEntity(
     entityId = resolution.entityId;
     const entity = state.entities.get(entityId)!;
     if (entity.kind !== observation.kind && observation.kind !== "unknown" && entity.kind !== "unknown") {
-      writeConflict(sqlite, sourceRunId, observation.evidence.sourceRecordKey, `Entity kind disagrees with ${entity.kind}`, [entityId], counts);
+      writeConflict(sqlite, sourceRunId, observation.evidence.sourceRecordKey, `Entity kind disagrees with ${entity.kind}`, [entityId], counts, observation.externalIds);
       return undefined;
     }
     if (entity.kind === "unknown" && observation.kind !== "unknown") {
@@ -366,6 +367,12 @@ function loadResolutionState(sqlite: Database.Database): ResolutionState {
   for (const row of sqlite.prepare("select entity_id as entityId, source_id as sourceId, namespace, value from external_ids").all() as Array<{ entityId: EntityId; sourceId: string; namespace: string; value: string }>) {
     externalIds.set(externalKey(row), row.entityId);
   }
+  for (const row of sqlite.prepare("select entity_id as entityId, external_source_id as sourceId, namespace, value from entity_identity_overrides").all() as Array<{ entityId: EntityId; sourceId: string; namespace: string; value: string }>) {
+    const key = externalKey(row);
+    const canonical = externalIds.get(key);
+    if (canonical && canonical !== row.entityId) throw new Error("Identity override conflicts with a canonical external identifier");
+    externalIds.set(key, row.entityId);
+  }
   const aliases = new Map<string, EntityId[]>();
   for (const row of sqlite.prepare("select entity_id as entityId, normalized from entity_aliases").all() as Array<{ entityId: EntityId; normalized: string }>) {
     aliases.set(row.normalized, [...(aliases.get(row.normalized) ?? []), row.entityId]);
@@ -390,11 +397,12 @@ function writeConflict(
   reason: string,
   candidates: EntityId[],
   counts: { conflictsCreated: number },
+  externalIds: ExternalIdentifier[] = [],
 ): void {
   sqlite.prepare(`
-    insert into ingestion_conflicts (id, source_run_id, record_key, reason, candidates_json)
-    values (?, ?, ?, ?, ?)
-  `).run(randomUUID(), sourceRunId, recordKey, reason, JSON.stringify(candidates));
+    insert into ingestion_conflicts (id, source_run_id, record_key, reason, candidates_json, external_ids_json)
+    values (?, ?, ?, ?, ?, ?)
+  `).run(randomUUID(), sourceRunId, recordKey, reason, JSON.stringify(candidates), JSON.stringify(externalIds));
   counts.conflictsCreated += 1;
 }
 

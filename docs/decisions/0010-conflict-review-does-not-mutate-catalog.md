@@ -11,7 +11,7 @@ required note and an append-only actor/timestamp audit trail. These actions only
 change review state. They never bind an external identifier, merge entities, or
 rewrite an active source run.
 
-Actual repair remains source-driven: fix a cited manual overlay or provider
-adapter, then promote a new immutable source version. A future persistent
-identity-override mechanism must store an explicit external-ID mapping and
-define safe replay semantics before it can be offered as a conflict action.
+Actual factual repair remains source-driven: fix a cited manual overlay or
+provider adapter, then promote a new immutable source version. ADR 0028 refines
+identity repair only: conflicts now retain external IDs and may create an
+explicit, audited mapping whose revision drives a new immutable replay run.

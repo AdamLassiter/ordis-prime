@@ -1,5 +1,6 @@
-import { beginSourceRefresh, completeSourceRefresh, failSourceRefresh, promoteSource, type PromotionResult } from "@ordis-prime/db";
+import { beginSourceRefresh, completeSourceRefresh, failSourceRefresh, getIdentityOverrideRevision, promoteSource, type PromotionResult } from "@ordis-prime/db";
 import { collect, type SourceAdapter } from "./adapter.ts";
+import type { Snapshot } from "./adapter.ts";
 import { SnapshotStore } from "./snapshot-store.ts";
 
 type PromotionDatabase = Parameters<typeof promoteSource>[0];
@@ -21,11 +22,12 @@ export async function refreshSource(options: RefreshSourceOptions): Promise<Refr
   const refreshId = beginSourceRefresh(options.database, options.adapter.source);
   let snapshotPath: string | undefined;
   try {
-    const snapshot = await options.adapter.fetch({
+    const fetchedSnapshot = await options.adapter.fetch({
       signal: options.signal,
       previousVersion: options.previousVersion,
     });
-    snapshotPath = await options.snapshotStore.put(snapshot);
+    snapshotPath = await options.snapshotStore.put(fetchedSnapshot);
+    const snapshot = versionSnapshotForIdentityOverrides(options.database, options.adapter.source.id, fetchedSnapshot);
     const observations = await collect(options.adapter, snapshot);
     const promotion = promoteSource(options.database, {
       source: options.adapter.source,
@@ -41,4 +43,9 @@ export async function refreshSource(options: RefreshSourceOptions): Promise<Refr
     failSourceRefresh(options.database, refreshId, error, snapshotPath);
     throw error;
   }
+}
+
+export function versionSnapshotForIdentityOverrides(database: PromotionDatabase, sourceId: string, snapshot: Snapshot): Snapshot {
+  const overrideRevision = getIdentityOverrideRevision(database, sourceId);
+  return overrideRevision ? { ...snapshot, version: `${snapshot.version}|identity-overrides:${overrideRevision}` } : snapshot;
 }

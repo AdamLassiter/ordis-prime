@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { migrateDatabase, openSqliteDatabase } from "@ordis-prime/db";
+import { bindSourceIdentityOverride, migrateDatabase, openSqliteDatabase } from "@ordis-prime/db";
 import type { Observation } from "@ordis-prime/domain";
 import { createSnapshot, refreshSource, SnapshotStore, type Snapshot, type SourceAdapter } from "../src/index.ts";
 
@@ -50,6 +50,33 @@ test("refresh failures are persisted without replacing active data", async (cont
   });
 });
 
+test("identity override revisions replay unchanged source snapshots", async (context) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-refresh-override-"));
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const databasePath = path.join(root, "catalog.sqlite");
+  migrateDatabase(databasePath);
+  const database = openSqliteDatabase(databasePath);
+  context.after(() => database.close());
+  const now = 1_800_000_000_000;
+  database.prepare("insert into users (id, username, email, email_verified, role, created_at, updated_at) values ('admin', 'Operator', 'operator@example.test', 1, 'admin', ?, ?)").run(now, now);
+  database.prepare("insert into entities (id, kind, name, slug, retired, updated_at) values ('one', 'resource', 'First', 'first', 0, ?), ('two', 'resource', 'Second', 'second', 0, ?)").run(now, now);
+  database.prepare("insert into entity_aliases (entity_id, normalized, display) values ('one', 'shared', 'Shared'), ('two', 'shared', 'Shared')").run();
+  const adapter = new AmbiguousFixtureAdapter();
+  const snapshotStore = new SnapshotStore(path.join(root, "sources"));
+
+  const first = await refreshSource({ adapter, database, snapshotStore });
+  assert.equal(first.conflictsCreated, 1);
+  const conflict = database.prepare("select id, external_ids_json as externalIdsJson from ingestion_conflicts").get() as { id: string; externalIdsJson: string };
+  const externalId = { sourceId: adapter.source.id, namespace: "fixture", value: "shared" };
+  assert.deepEqual(JSON.parse(conflict.externalIdsJson), [externalId]);
+  bindSourceIdentityOverride(database, { sourceId: adapter.source.id, conflictId: conflict.id, userId: "admin", externalId, entityId: "one", note: "Verified identity", now });
+
+  const second = await refreshSource({ adapter, database, snapshotStore });
+  assert.equal(second.conflictsCreated, 0);
+  assert.match((database.prepare("select version from source_runs where status = 'active'").get() as { version: string }).version, /^fixture-v1\|identity-overrides:1-/);
+  assert.deepEqual(database.prepare("select entity_id as entityId from external_ids where source_id = ? and namespace = 'fixture' and value = 'shared'").get(adapter.source.id), { entityId: "one" });
+});
+
 class FixtureAdapter implements SourceAdapter {
   readonly source = { id: "fixture-refresh", name: "Fixture refresh", homepage: "https://example.test", license: "CC0", priority: 1 };
 
@@ -75,6 +102,17 @@ class FixtureAdapter implements SourceAdapter {
         snapshotVersion: snapshot.version,
         retrievedAt: snapshot.retrievedAt,
       },
+    };
+  }
+}
+
+class AmbiguousFixtureAdapter extends FixtureAdapter {
+  override async *parse(snapshot: Snapshot): AsyncIterable<Observation> {
+    yield {
+      type: "entity", kind: "resource",
+      externalIds: [{ sourceId: this.source.id, namespace: "fixture", value: "shared" }],
+      fields: { name: "Shared", slug: "shared" },
+      evidence: { sourceId: this.source.id, sourceRecordKey: "shared", snapshotVersion: snapshot.version, retrievedAt: snapshot.retrievedAt },
     };
   }
 }

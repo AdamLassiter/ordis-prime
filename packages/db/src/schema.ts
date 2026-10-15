@@ -93,7 +93,7 @@ export const enhancementOptions = sqliteTable("entity_enhancement_options", {
   citationUrl: text("citation_url"),
   sourcePath: text("source_path"),
 }, (table) => [uniqueIndex("enhancement_option_run_key").on(table.sourceRunId, table.entityId, table.key), index("enhancement_option_entity").on(table.entityId)]);
-export const conflicts = sqliteTable("ingestion_conflicts", { id: text().primaryKey(), sourceRunId: text("source_run_id").notNull().references(() => sourceRuns.id), recordKey: text("record_key").notNull(), reason: text().notNull(), candidatesJson: text("candidates_json").notNull(), resolvedAt: integer("resolved_at", { mode: "timestamp_ms" }) });
+export const conflicts = sqliteTable("ingestion_conflicts", { id: text().primaryKey(), sourceRunId: text("source_run_id").notNull().references(() => sourceRuns.id), recordKey: text("record_key").notNull(), reason: text().notNull(), candidatesJson: text("candidates_json").notNull(), externalIdsJson: text("external_ids_json").notNull().default("[]"), resolvedAt: integer("resolved_at", { mode: "timestamp_ms" }) });
 export const rankingSets = sqliteTable("ranking_sets", { id: text().primaryKey(), sourceRunId: text("source_run_id").notNull().references(() => sourceRuns.id), setKey: text("set_key").notNull(), title: text().notNull(), author: text().notNull(), publishedAt: integer("published_at", { mode: "timestamp_ms" }).notNull(), gameVersion: text("game_version"), scope: text().notNull(), scaleJson: text("scale_json").notNull(), licenseNote: text("license_note").notNull(), sourceRecordKey: text("source_record_key"), citationUrl: text("citation_url"), sourcePath: text("source_path") }, (table) => [uniqueIndex("ranking_set_run_key").on(table.sourceRunId, table.setKey)]);
 export const editorialRankings = sqliteTable("editorial_rankings", { id: text().primaryKey(), setId: text("set_id").notNull().references(() => rankingSets.id), entityId: text("entity_id").notNull().references(() => entities.id), tier: text().notNull(), position: integer(), timestampSeconds: integer("timestamp_seconds"), notes: text(), sourceRecordKey: text("source_record_key"), citationUrl: text("citation_url"), sourcePath: text("source_path") }, (table) => [uniqueIndex("ranking_set_entity").on(table.setId, table.entityId), index("ranking_entity").on(table.entityId)]);
 export const users = sqliteTable("users", {
@@ -148,6 +148,32 @@ export const conflictReviewEvents = sqliteTable("ingestion_conflict_review_event
   note: text().notNull(),
   createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
 }, (table) => [index("conflict_review_events_conflict_created").on(table.conflictId, table.createdAt)]);
+export const identityOverrides = sqliteTable("entity_identity_overrides", {
+  ownerSourceId: text("owner_source_id").notNull().references(() => sources.id),
+  externalSourceId: text("external_source_id").notNull().references(() => sources.id),
+  namespace: text().notNull(),
+  value: text().notNull(),
+  entityId: text("entity_id").notNull().references(() => entities.id),
+  conflictId: text("conflict_id").notNull().references(() => conflicts.id),
+  userId: text("user_id").references(() => users.id, { onDelete: "set null" }),
+  actorName: text("actor_name").notNull().default("Deleted account"),
+  note: text().notNull(),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+}, (table) => [primaryKey({ columns: [table.externalSourceId, table.namespace, table.value] }), index("identity_overrides_owner_source").on(table.ownerSourceId)]);
+export const identityOverrideEvents = sqliteTable("entity_identity_override_events", {
+  id: text().primaryKey(),
+  ownerSourceId: text("owner_source_id").notNull().references(() => sources.id),
+  externalSourceId: text("external_source_id").notNull().references(() => sources.id),
+  namespace: text().notNull(),
+  value: text().notNull(),
+  entityId: text("entity_id").notNull().references(() => entities.id),
+  conflictId: text("conflict_id").references(() => conflicts.id, { onDelete: "set null" }),
+  userId: text("user_id").references(() => users.id, { onDelete: "set null" }),
+  actorName: text("actor_name").notNull().default("Deleted account"),
+  action: text({ enum: ["bound", "revoked"] }).notNull(),
+  note: text().notNull(),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+}, (table) => [index("identity_override_events_owner_created").on(table.ownerSourceId, table.createdAt)]);
 export const inventory = sqliteTable("player_inventory", { userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }), entityId: text("entity_id").notNull().references(() => entities.id), ownedCount: integer("owned_count").notNull().default(0), builtCount: integer("built_count").notNull().default(0), wantedCount: integer("wanted_count").notNull().default(0), mastered: integer({ mode: "boolean" }), subsumed: integer({ mode: "boolean" }), note: text(), updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull() }, (table) => [primaryKey({ columns: [table.userId, table.entityId] })]);
 export const goals = sqliteTable("player_goals", {
   userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),

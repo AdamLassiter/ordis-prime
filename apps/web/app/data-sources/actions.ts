@@ -4,7 +4,7 @@ import path from "node:path";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { CATALOG_SOURCE_REFRESH_JOB, enqueueJobNow, previewSourcePromotion, WORLD_STATE_REFRESH_JOB } from "@ordis-prime/db";
-import { collect, ManualDiscoveryAdapter, ManualFactsAdapter, ManualRankingAdapter, refreshSource, SnapshotStore, type SourceAdapter } from "@ordis-prime/ingestion";
+import { collect, ManualDiscoveryAdapter, ManualFactsAdapter, ManualRankingAdapter, refreshSource, SnapshotStore, versionSnapshotForIdentityOverrides, type SourceAdapter } from "@ordis-prime/ingestion";
 import { getDatabase, getDataDirectory } from "@/lib/database";
 import { requireCurrentSession } from "@/lib/session";
 
@@ -38,7 +38,7 @@ export async function previewManualSource(form: FormData) {
   const session = await requireCurrentSession();
   if (session.user.role !== "admin") throw new Error("Administrator access required");
   const adapter = await manualAdapterFromForm(form);
-  const snapshot = await adapter.fetch({});
+  const snapshot = versionSnapshotForIdentityOverrides(getDatabase(), adapter.source.id, await adapter.fetch({}));
   const observations = await collect(adapter, snapshot);
   const result = previewSourcePromotion(getDatabase(), {
     source: adapter.source, version: snapshot.version, contentHash: snapshot.contentHash,
