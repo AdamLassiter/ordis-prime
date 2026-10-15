@@ -1,7 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createEntityTodo, createPlayerTodo, createWorldStateWatch, deletePlayerTodo, deleteWorldStateWatch, evaluateWorldStateWatches, findCatalogItem, findCatalogNode, markPlayerNotificationRead, setPlayerTodoStatus, setWorldStateWatchEnabled, updateWorldStateWatch } from "@ordis-prime/db";
+import { createEntityTodo, createPlayerTodo, createWorldStateWatch, deletePlayerTodo, deleteWorldStateWatch, evaluateWorldStateWatches, findCatalogItem, findCatalogNode, markPlayerNotificationRead, setPlayerTodoStatus, setWorldStateWatchEnabled, todoRecurrenceFromAnchor, updateWorldStateWatch } from "@ordis-prime/db";
+import type { TodoRecurrenceKind } from "@ordis-prime/db";
 import type { WorldStateWindowKind } from "@ordis-prime/domain";
 import { getDatabase } from "@/lib/database";
 import { requireCurrentSession } from "@/lib/session";
@@ -10,13 +11,17 @@ export async function addTodo(form: FormData) {
   const session = await requireCurrentSession();
   const dueDate = String(form.get("dueDate") ?? "");
   if (dueDate && !/^\d{4}-\d{2}-\d{2}$/.test(dueDate)) throw new Error("Due date must be a calendar date");
-  const recurrence = String(form.get("recurrenceDays") ?? "");
-  if (recurrence && !/^\d+$/.test(recurrence)) throw new Error("Recurrence must be a positive number of days");
+  const dueAt = dueDate ? Date.parse(`${dueDate}T00:00:00.000Z`) : undefined;
+  const recurrenceKind = String(form.get("recurrenceKind") ?? "");
+  if (recurrenceKind && !["days", "weekly", "monthly-date", "monthly-weekday", "yearly"].includes(recurrenceKind)) throw new Error("Recurrence kind is invalid");
+  const recurrenceInterval = String(form.get("recurrenceInterval") ?? "1");
+  if (recurrenceKind === "days" && !/^\d+$/.test(recurrenceInterval)) throw new Error("Recurrence must be a positive number of days");
+  if (recurrenceKind && dueAt === undefined) throw new Error("Recurring todos require a due date");
   createPlayerTodo(getDatabase(), session.user.id, {
     title: String(form.get("title") ?? ""),
     notes: String(form.get("notes") ?? ""),
-    dueAt: dueDate ? Date.parse(`${dueDate}T00:00:00.000Z`) : undefined,
-    recurrenceDays: recurrence ? Number(recurrence) : undefined,
+    dueAt,
+    recurrence: recurrenceKind ? todoRecurrenceFromAnchor(recurrenceKind as TodoRecurrenceKind, dueAt!, Number(recurrenceInterval)) : undefined,
   });
   revalidatePath("/todos");
 }

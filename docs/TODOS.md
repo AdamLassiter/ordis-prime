@@ -14,7 +14,12 @@ or modify it. Item, discovery-topic, and node detail pages can create a task
 linked to that canonical entity. The task renders an in-app link and carries a
 portable entity reference in profile exports.
 
-A task with a due date may repeat at an explicit interval of 1 to 3,650 days.
+A task with a due date may repeat every N days, weekly on its weekday, monthly
+on its calendar date, monthly on its weekday occurrence, or yearly on its date.
+Calendar dates are clamped when necessary: a task anchored to the 31st falls on
+February's final day and returns to the 31st in March; a February 29 yearly task
+similarly returns to its original date in leap years. The unchanged rule travels
+with each occurrence, rather than deriving a new rule from a clamped date.
 Completing an occurrence preserves it as history and creates the next open task
 from the previous due date. A unique predecessor key makes repeated completion
 requests—and reopening then re-completing an old occurrence—idempotent.
@@ -52,8 +57,9 @@ occurrence keys remain deduplicated after an edit.
 - Each detail-page shortcut chooses a conservative initial window kind and must
   be edited when the player wants another kind. Non-node links cannot become an
   exact match until world-state reward/subject identities are normalized.
-- Recurrence is a fixed day interval; calendar rules such as weekdays or “first
-  Sunday” are not modeled. There are no subtasks, tags or ordering controls. A
+- Recurrence is date-based and deliberately has no time-of-day or timezone.
+  Rules are anchored by the initial due date; the create form does not offer a
+  separate weekday or month-day picker. There are no subtasks, tags or ordering controls. A
   todo can link to one canonical entity but cannot yet carry multiple targets.
 - Notification retention is not configurable. Web push and webhooks remain
   later opt-in delivery channels.

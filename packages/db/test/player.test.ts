@@ -25,7 +25,9 @@ test("profiles resolve stable source IDs across installations with different can
   const recipeId = (first.sqlite.prepare("select id from recipes where output_id = ?").get(first.entityId) as { id: string }).id;
   setPlayerRecipePreference(first.sqlite, firstUser, { kind: "weapon", slug: "braton" }, recipeId);
   setDiscoveryProgress(first.sqlite, firstUser, { kind: "quest", slug: "awakening" }, "completed");
-  const todoId = createPlayerTodo(first.sqlite, firstUser, { title: "Prepare", notes: "Before reset", dueAt: 1_800_000_000_000, recurrenceDays: 30, entity: { kind: "weapon", slug: "braton" } });
+  const todoDueAt = Date.parse("2027-01-31T00:00:00.000Z");
+  const recurrence = { kind: "monthly-date", day: 31 } as const;
+  const todoId = createPlayerTodo(first.sqlite, firstUser, { title: "Prepare", notes: "Before reset", dueAt: todoDueAt, recurrence, entity: { kind: "weapon", slug: "braton" } });
   setPlayerTodoStatus(first.sqlite, firstUser, todoId, "completed");
   createWorldStateWatch(first.sqlite, firstUser, { kind: "cycle", trigger: "ending", leadMinutes: 15, labelContains: "Cetus", entity: { kind: "weapon", slug: "braton" } });
   const buildId = createPlayerBuild(first.sqlite, firstUser, { title: "Portable build", category: "test", notes: "Moves across catalogs" });
@@ -54,9 +56,9 @@ test("profiles resolve stable source IDs across installations with different can
   assert.deepEqual(listPlayerGoals(second.sqlite, secondUser).map(({ name, targetQuantity }) => ({ name, targetQuantity })), [{ name: "Braton", targetQuantity: 4 }]);
   assert.deepEqual(second.sqlite.prepare("select source_id as sourceId, source_record_key as sourceRecordKey from player_recipe_preferences where user_id = ?").all(secondUser), [{ sourceId: "items", sourceRecordKey: "braton" }]);
   assert.equal(getDiscoveryProgress(second.sqlite, secondUser, { kind: "quest", slug: "awakening" }), "completed");
-  assert.deepEqual(listPlayerTodos(second.sqlite, secondUser).map(({ title, notes, status, dueAt, recurrenceDays, entity }) => ({ title, notes, status, dueAt, recurrenceDays, entity })), [
-    { title: "Prepare", notes: "Before reset", status: "open", dueAt: 1_800_000_000_000 + 30 * 86_400_000, recurrenceDays: 30, entity: { kind: "weapon", slug: "braton", name: "Braton" } },
-    { title: "Prepare", notes: "Before reset", status: "completed", dueAt: 1_800_000_000_000, recurrenceDays: 30, entity: { kind: "weapon", slug: "braton", name: "Braton" } },
+  assert.deepEqual(listPlayerTodos(second.sqlite, secondUser).map(({ title, notes, status, dueAt, recurrence, entity }) => ({ title, notes, status, dueAt, recurrence, entity })), [
+    { title: "Prepare", notes: "Before reset", status: "open", dueAt: Date.parse("2027-02-28T00:00:00.000Z"), recurrence, entity: { kind: "weapon", slug: "braton", name: "Braton" } },
+    { title: "Prepare", notes: "Before reset", status: "completed", dueAt: todoDueAt, recurrence, entity: { kind: "weapon", slug: "braton", name: "Braton" } },
   ]);
   const restoredCompleted = listPlayerTodos(second.sqlite, secondUser).find(({ status }) => status === "completed")!;
   setPlayerTodoStatus(second.sqlite, secondUser, restoredCompleted.id, "open");
@@ -92,7 +94,7 @@ test("profile replacement is transactional and reports missing entities", async 
   const userId = createLocalUser(catalog.sqlite, { username: "Player" });
   setInventoryEntry(catalog.sqlite, userId, catalog.entityId, { ownedCount: 1, builtCount: 0, wantedCount: 0 });
   const missingProfile = {
-    schemaVersion: 10,
+    schemaVersion: 11,
     exportedAt: "2026-10-13T12:00:00.000Z",
     inventory: [{ entity: { externalIds: [{ sourceId: "items", namespace: "id", value: "missing" }], kind: "weapon", slug: "missing", name: "Missing" }, ownedCount: 1, builtCount: 0, wantedCount: 0 }],
     goals: [],
@@ -126,7 +128,16 @@ test("profile replacement is transactional and reports missing entities", async 
     unresolved: [{ section: "watches", index: 0, name: "Missing", reason: "missing" }],
   });
   assert.deepEqual(listWorldStateWatches(catalog.sqlite, userId).map(({ kind, labelContains, entity }) => ({ kind, labelContains, entity })), [{ kind: "event", labelContains: "Missing", entity: undefined }]);
-  assert.throws(() => importPlayerProfile(catalog.sqlite, userId, { ...missingProfile, schemaVersion: 9 }), /schemaVersion 10/);
+  const invalidRecurrenceProfile = {
+    ...missingProfile,
+    inventory: [],
+    todos: [
+      { title: "January", status: "completed", dueAt: Date.parse("2027-01-31T00:00:00.000Z"), recurrence: { kind: "monthly-date", day: 31 } },
+      { title: "March is not next", status: "open", dueAt: Date.parse("2027-03-31T00:00:00.000Z"), recurrence: { kind: "monthly-date", day: 31 }, recurrenceFrom: 0 },
+    ],
+  };
+  assert.throws(() => importPlayerProfile(catalog.sqlite, userId, invalidRecurrenceProfile), /invalid recurrenceFrom/);
+  assert.throws(() => importPlayerProfile(catalog.sqlite, userId, { ...missingProfile, schemaVersion: 10 }), /schemaVersion 11/);
 });
 
 function createCatalog(databasePath: string): { sqlite: Database.Database; entityId: string } {

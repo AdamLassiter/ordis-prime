@@ -5,7 +5,7 @@ canonical entity IDs inside one installation, while exported profiles use
 provider identifiers so they can be restored into another installation whose
 canonical UUIDs differ.
 
-## Version 10 export
+## Version 11 export
 
 Each inventory entry includes:
 
@@ -25,7 +25,7 @@ Discovery progress uses the same reference and records either `discovered` or
 `completed`; unseen topics are represented by absence. Every entity-keyed
 section is validated and resolved before the transactional write begins.
 
-Static todos, including due-date recurrence intervals, and world-state watch
+Static todos, including structured calendar recurrence rules, and world-state watch
 rules are portable as user-authored intent. Their optional catalog links use
 the same portable entity reference. If a todo or watch link cannot resolve
 during import, the player-authored rule is retained without the link and the

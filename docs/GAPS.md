@@ -80,8 +80,8 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   world-state watches linked to one canonical item, discovery topic or node.
   Node watches match exact reconciled node identity; other linked entities
   remain contextual because world-state subjects are not normalized yet. Todos
-  support fixed-day recurrence but not calendar-rule
-  schedules, and there are no web-push or webhook delivery channels. Watches
+  support fixed-day, weekly, monthly-date, monthly-weekday and yearly calendar
+  recurrence while remaining date-only; there are no web-push or webhook delivery channels. Watches
   can be edited, paused and resumed without losing generated alerts.
 - Private, revisioned build persistence supports partial equipment loadouts,
   positioned mods, ranks, configuration labels, Forma counts, capacity-upgrade

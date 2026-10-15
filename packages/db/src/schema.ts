@@ -198,7 +198,7 @@ export const playerTodos = sqliteTable("player_todos", {
   notes: text(),
   status: text({ enum: ["open", "completed"] }).notNull().default("open"),
   dueAt: integer("due_at", { mode: "timestamp_ms" }),
-  recurrenceDays: integer("recurrence_days"),
+  recurrenceRule: text("recurrence_rule"),
   recurrenceSourceId: text("recurrence_source_id"),
   createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),

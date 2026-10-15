@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type Database from "better-sqlite3";
 import { BUILD_ENHANCEMENT_SLOTS, BUILD_SLOTS, configureBuildEquipment, createPlayerBuild, listPlayerBuilds, setBuildEnhancement, setBuildEquipment, setBuildMod, type BuildEnhancementSlot, type BuildSlot } from "./builds.ts";
-import { createPlayerTodo, listPlayerTodos, type PlayerTodo } from "./todos.ts";
+import { createPlayerTodo, listPlayerTodos, nextTodoDueAt, todoRecurrenceIncludesDate, validateTodoRecurrence, type PlayerTodo } from "./todos.ts";
 import { createWorldStateWatch, listWorldStateWatches, type WorldStateWatch, type WorldStateWatchTrigger } from "./world-state-watches.ts";
 import type { WorldStateWindowKind } from "@ordis-prime/domain";
 
@@ -69,13 +69,13 @@ export interface PortableEntityReference {
 }
 
 export interface ProfileExport {
-  schemaVersion: 10;
+  schemaVersion: 11;
   exportedAt: string;
   inventory: Array<InventoryValues & { entity: PortableEntityReference }>;
   goals: Array<{ entity: PortableEntityReference; targetQuantity: number }>;
   recipePreferences: Array<{ output: PortableEntityReference; sourceId: string; sourceRecordKey: string }>;
   discoveryProgress: Array<{ entity: PortableEntityReference; state: "discovered" | "completed" }>;
-  todos: Array<Pick<PlayerTodo, "title" | "notes" | "status" | "dueAt" | "recurrenceDays"> & { entity?: PortableEntityReference; recurrenceFrom?: number }>;
+  todos: Array<Pick<PlayerTodo, "title" | "notes" | "status" | "dueAt" | "recurrence"> & { entity?: PortableEntityReference; recurrenceFrom?: number }>;
   watches: Array<Omit<WorldStateWatch, "id" | "createdAt" | "entity"> & { entity?: PortableEntityReference }>;
   builds: PortableBuild[];
 }
@@ -176,7 +176,7 @@ export function exportPlayerProfile(sqlite: Database.Database, userId: string): 
              source_id, namespace, value
   `);
   return {
-    schemaVersion: 10,
+    schemaVersion: 11,
     exportedAt: new Date().toISOString(),
     inventory: inventory.map(({ entityId, kind, slug, name, ...values }) => ({
       entity: { externalIds: identifiers.all(entityId) as PortableEntityReference["externalIds"], kind, slug, name },
@@ -205,8 +205,8 @@ export function exportPlayerProfile(sqlite: Database.Database, userId: string): 
     `).all(userId) as Array<{ entityId: string; kind: string; slug: string; name: string; state: "discovered" | "completed" }>).map(({ entityId, kind, slug, name, state }) => ({
       entity: { externalIds: identifiers.all(entityId) as PortableEntityReference["externalIds"], kind, slug, name }, state,
     })),
-    todos: playerTodos.map(({ title, notes, status, dueAt, recurrenceDays, recurrenceSourceId, entity }) => ({
-      title, notes, status, dueAt, recurrenceDays,
+    todos: playerTodos.map(({ title, notes, status, dueAt, recurrence, recurrenceSourceId, entity }) => ({
+      title, notes, status, dueAt, recurrence,
       entity: entity ? portableReferenceForCatalogEntity(sqlite, identifiers, entity) : undefined,
       recurrenceFrom: recurrenceSourceId === undefined ? undefined : todoIndices.get(recurrenceSourceId),
     })),
@@ -411,7 +411,7 @@ export function importPlayerProfile(
 }
 
 function parseProfile(value: unknown): ProfileExport {
-  if (!isRecord(value) || value.schemaVersion !== 10 || !Array.isArray(value.inventory) || !Array.isArray(value.goals) || !Array.isArray(value.recipePreferences) || !Array.isArray(value.discoveryProgress) || !Array.isArray(value.todos) || !Array.isArray(value.watches) || !Array.isArray(value.builds)) throw new Error("Profile must use schemaVersion 10 and contain every portable state array");
+  if (!isRecord(value) || value.schemaVersion !== 11 || !Array.isArray(value.inventory) || !Array.isArray(value.goals) || !Array.isArray(value.recipePreferences) || !Array.isArray(value.discoveryProgress) || !Array.isArray(value.todos) || !Array.isArray(value.watches) || !Array.isArray(value.builds)) throw new Error("Profile must use schemaVersion 11 and contain every portable state array");
   const inventory = value.inventory.map((entry, index) => {
     if (!isRecord(entry)) throw new Error(`Profile inventory entry ${index} is invalid`);
     const entity = parsePortableEntity(entry.entity, `inventory entry ${index}`);
@@ -434,23 +434,30 @@ function parseProfile(value: unknown): ProfileExport {
   for (const [index, todo] of todos.entries()) {
     if (todo.recurrenceFrom === undefined) continue;
     const predecessor = todos[todo.recurrenceFrom];
-    if (!predecessor || todo.recurrenceFrom === index || predecessor.recurrenceDays !== todo.recurrenceDays || predecessor.dueAt === undefined || todo.dueAt !== predecessor.dueAt + predecessor.recurrenceDays! * 86_400_000) {
+    if (!predecessor || todo.recurrenceFrom === index || predecessor.recurrence === undefined || todo.recurrence === undefined || JSON.stringify(predecessor.recurrence) !== JSON.stringify(todo.recurrence) || predecessor.dueAt === undefined || todo.dueAt !== nextTodoDueAt(predecessor.recurrence, predecessor.dueAt)) {
       throw new Error(`Profile todo entry ${index} has an invalid recurrenceFrom`);
     }
   }
   const watches = value.watches.map((entry, index) => parsePortableWatch(entry, index));
   const builds = value.builds.map((entry, index) => parsePortableBuild(entry, index));
-  return { schemaVersion: 10, exportedAt: typeof value.exportedAt === "string" ? value.exportedAt : "", inventory, goals, recipePreferences, discoveryProgress, todos, watches, builds };
+  return { schemaVersion: 11, exportedAt: typeof value.exportedAt === "string" ? value.exportedAt : "", inventory, goals, recipePreferences, discoveryProgress, todos, watches, builds };
 }
 
 function parsePortableTodo(value: unknown, index: number): ProfileExport["todos"][number] {
   if (!isRecord(value) || typeof value.title !== "string" || !value.title.trim() || value.title.length > 160 || (value.status !== "open" && value.status !== "completed")) throw new Error(`Profile todo entry ${index} is invalid`);
   const notes = optionalText(value.notes, 4_000, `todo entry ${index} notes`);
-  if (value.dueAt !== undefined && (!Number.isSafeInteger(value.dueAt) || (value.dueAt as number) < 0)) throw new Error(`Profile todo entry ${index} has an invalid dueAt`);
-  if (value.recurrenceDays !== undefined && (!Number.isSafeInteger(value.recurrenceDays) || (value.recurrenceDays as number) < 1 || (value.recurrenceDays as number) > 3_650 || value.dueAt === undefined)) throw new Error(`Profile todo entry ${index} has an invalid recurrenceDays`);
+  if (value.dueAt !== undefined && (!Number.isSafeInteger(value.dueAt) || (value.dueAt as number) < 0 || (value.dueAt as number) % 86_400_000 !== 0)) throw new Error(`Profile todo entry ${index} has an invalid dueAt`);
+  let recurrence: PlayerTodo["recurrence"];
+  if (value.recurrence !== undefined) {
+    if (value.dueAt === undefined) throw new Error(`Profile todo entry ${index} has a recurrence without dueAt`);
+    try {
+      recurrence = validateTodoRecurrence(value.recurrence);
+      if (!todoRecurrenceIncludesDate(recurrence, value.dueAt as number)) throw new Error("mismatch");
+    } catch { throw new Error(`Profile todo entry ${index} has an invalid recurrence`); }
+  }
   const entity = value.entity === undefined ? undefined : parsePortableEntity(value.entity, `todo entry ${index}`);
   if (value.recurrenceFrom !== undefined && (!Number.isSafeInteger(value.recurrenceFrom) || (value.recurrenceFrom as number) < 0)) throw new Error(`Profile todo entry ${index} has an invalid recurrenceFrom`);
-  return { title: value.title, notes, status: value.status, dueAt: value.dueAt as number | undefined, recurrenceDays: value.recurrenceDays as number | undefined, entity, recurrenceFrom: value.recurrenceFrom as number | undefined };
+  return { title: value.title, notes, status: value.status, dueAt: value.dueAt as number | undefined, recurrence, entity, recurrenceFrom: value.recurrenceFrom as number | undefined };
 }
 
 function parsePortableWatch(value: unknown, index: number): ProfileExport["watches"][number] {
