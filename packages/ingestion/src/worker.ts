@@ -1,4 +1,4 @@
-import { CATALOG_SOURCE_REFRESH_JOB, claimDueJob, ensurePendingJob, evaluateWorldStateWatches, finishAndRescheduleJob, pruneFinishedJobs, WORLD_STATE_REFRESH_JOB } from "@ordis-prime/db";
+import { CATALOG_SOURCE_REFRESH_JOB, claimDueJob, ensurePendingJob, evaluateWorldStateWatches, finishAndRescheduleJob, pruneFinishedJobs, pruneInactiveWorldStateSnapshots, WORLD_STATE_REFRESH_JOB } from "@ordis-prime/db";
 import { SnapshotStore } from "./snapshot-store.ts";
 import { refreshWorldState, type WorldStateAdapter } from "./world-state.ts";
 import { refreshSource } from "./refresh.ts";
@@ -19,6 +19,7 @@ export async function runWorkerCycle(options: {
   catalogRefreshIntervalMilliseconds?: number;
   catalogRequestTimeoutMilliseconds?: number;
   jobHistoryLimit?: number;
+  worldStateSnapshotHistoryLimit?: number;
 }): Promise<{ status: "idle" | "succeeded" | "failed"; sourceId?: string; notificationsCreated?: number; error?: string }> {
   const now = options.now ?? Date.now();
   const refreshInterval = options.refreshIntervalMilliseconds ?? 5 * 60_000;
@@ -27,6 +28,7 @@ export async function runWorkerCycle(options: {
   const catalogRefreshInterval = options.catalogRefreshIntervalMilliseconds ?? 24 * 60 * 60_000;
   const catalogRequestTimeout = options.catalogRequestTimeoutMilliseconds ?? 5 * 60_000;
   const jobHistoryLimit = options.jobHistoryLimit ?? 1_000;
+  const worldStateSnapshotHistoryLimit = options.worldStateSnapshotHistoryLimit ?? 288;
   const payload = { source: options.worldStateAdapter.source.id };
   ensurePendingJob(options.database, { kind: WORLD_STATE_REFRESH_JOB, payload, runAfter: now });
   for (const adapter of options.catalogAdapters ?? []) ensurePendingJob(options.database, { kind: CATALOG_SOURCE_REFRESH_JOB, payload: { source: adapter.source.id }, runAfter: now });
@@ -38,6 +40,7 @@ export async function runWorkerCycle(options: {
     if (job.kind === WORLD_STATE_REFRESH_JOB) {
       if (sourceId !== options.worldStateAdapter.source.id) throw new Error(`Unsupported world-state source ${String(job.payload.source)}`);
       await refreshWorldState({ adapter: options.worldStateAdapter, database: options.database, snapshotStore: options.snapshotStore, signal: AbortSignal.timeout(requestTimeout) });
+      pruneInactiveWorldStateSnapshots(options.database, worldStateSnapshotHistoryLimit);
       const notificationsCreated = evaluateWorldStateWatches(options.database, now);
       finishAndRescheduleJob(options.database, { id: job.id, owner: options.owner, succeeded: true, kind: job.kind, payload: job.payload, nextRunAfter: now + refreshInterval });
       return { status: "succeeded", sourceId, notificationsCreated };

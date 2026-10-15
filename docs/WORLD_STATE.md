@@ -26,10 +26,12 @@ let item-linked watches match canonical identity rather than substrings.
 ## Persistence and promotion
 
 Dynamic snapshots have a separate lifecycle from static catalog source runs.
-Each provider has one active world-state snapshot, while older snapshots remain
-available for diagnostics. A refresh validates and inserts the complete new
-snapshot in one transaction before making it active. Fetch, parse or promotion
-failure leaves the previous snapshot active and is recorded in the shared source
+Each provider has one active world-state snapshot. The worker retains the newest
+288 inactive normalized snapshots per provider by default, then removes older
+window rows while preserving refresh timing, status, record count and snapshot
+path as audit metadata. A refresh validates and inserts the complete new snapshot
+in one transaction before making it active. Fetch, parse or promotion failure
+leaves the previous snapshot active and is recorded in the shared source
 operations log.
 
 The stored `observed_at` value is the timestamp declared by the provider payload;
@@ -56,7 +58,9 @@ Failed calls retain the previous active snapshot and retry after one minute.
 cadence and its larger request budget. The worker retains the newest 1,000
 finished scheduler jobs by default and prunes older successes and failures;
 `ORDIS_JOB_HISTORY_LIMIT` changes that bound without touching queued or leased
-work.
+work. `ORDIS_WORLD_STATE_HISTORY_LIMIT` changes the per-provider inactive
+normalized-snapshot bound; zero retains only the active snapshot. Raw immutable
+source payloads and source refresh records are not deleted by this policy.
 
 The public `/world-state` route reads the currently promoted snapshots and shows
 countdowns that advance in the browser. It labels future windows separately and

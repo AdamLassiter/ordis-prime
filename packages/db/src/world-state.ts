@@ -41,6 +41,34 @@ export interface WorldStateSourceStatus {
   currentWindowCount: number;
 }
 
+export function pruneInactiveWorldStateSnapshots(sqlite: Database.Database, keepPerSource: number): number {
+  if (!Number.isSafeInteger(keepPerSource) || keepPerSource < 0 || keepPerSource > 100_000) {
+    throw new Error("World-state snapshot history limit must be an integer between 0 and 100000");
+  }
+  return sqlite.transaction(() => {
+    const rows = sqlite.prepare(`
+      select id, source_id as sourceId
+      from world_state_snapshots
+      where active = 0
+      order by source_id, observed_at desc, id desc
+    `).all() as Array<{ id: string; sourceId: string }>;
+    const retainedBySource = new Map<string, number>();
+    const remove: string[] = [];
+    for (const row of rows) {
+      const retained = retainedBySource.get(row.sourceId) ?? 0;
+      if (retained < keepPerSource) retainedBySource.set(row.sourceId, retained + 1);
+      else remove.push(row.id);
+    }
+    const detachRefresh = sqlite.prepare("update source_refreshes set world_state_snapshot_id = null where world_state_snapshot_id = ?");
+    const deleteSnapshot = sqlite.prepare("delete from world_state_snapshots where id = ? and active = 0");
+    for (const id of remove) {
+      detachRefresh.run(id);
+      deleteSnapshot.run(id);
+    }
+    return remove.length;
+  })();
+}
+
 export function promoteWorldState(sqlite: Database.Database, input: PromoteWorldStateInput): { snapshotId: string; windowCount: number } {
   validateWorldState(input);
   return sqlite.transaction(() => {

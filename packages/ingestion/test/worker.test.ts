@@ -15,15 +15,16 @@ test("worker refreshes once, waits for its interval, and retries failures sooner
   context.after(() => database.close());
   const parser = new WfcdWorldStateAdapter("https://example.test");
   let shouldFail = false;
+  let snapshotTimestamp = "2026-10-13T21:00:00.000Z";
   const adapter: WorldStateAdapter = {
     source: parser.source,
     fetch: async () => {
       if (shouldFail) throw new Error("provider unavailable");
-      return fixtureSnapshot();
+      return fixtureSnapshot(snapshotTimestamp);
     },
     parse: (snapshot) => parser.parse(snapshot),
   };
-  const options = { database, snapshotStore: new SnapshotStore(path.join(root, "sources")), worldStateAdapter: adapter, owner: "worker-test", refreshIntervalMilliseconds: 300, retryIntervalMilliseconds: 50, jobHistoryLimit: 1 };
+  const options = { database, snapshotStore: new SnapshotStore(path.join(root, "sources")), worldStateAdapter: adapter, owner: "worker-test", refreshIntervalMilliseconds: 300, retryIntervalMilliseconds: 50, jobHistoryLimit: 1, worldStateSnapshotHistoryLimit: 0 };
 
   assert.deepEqual(await runWorkerCycle({ ...options, now: 100 }), { status: "succeeded", sourceId: "wfcd-worldstate", notificationsCreated: 0 });
   assert.deepEqual(await runWorkerCycle({ ...options, now: 399 }), { status: "idle" });
@@ -31,7 +32,9 @@ test("worker refreshes once, waits for its interval, and retries failures sooner
   assert.deepEqual(await runWorkerCycle({ ...options, now: 400 }), { status: "failed", sourceId: "wfcd-worldstate", error: "provider unavailable" });
   assert.deepEqual(await runWorkerCycle({ ...options, now: 449 }), { status: "idle" });
   shouldFail = false;
+  snapshotTimestamp = "2026-10-13T21:05:00.000Z";
   assert.deepEqual(await runWorkerCycle({ ...options, now: 450 }), { status: "succeeded", sourceId: "wfcd-worldstate", notificationsCreated: 0 });
+  assert.equal((database.prepare("select count(*) as count from world_state_snapshots").get() as { count: number }).count, 1);
   assert.equal((database.prepare("select count(*) as count from jobs where status = 'running'").get() as { count: number }).count, 0);
   await runWorkerCycle({ ...options, now: 451 });
   assert.equal((database.prepare("select count(*) as count from jobs where status in ('succeeded', 'failed')").get() as { count: number }).count, 1);
@@ -59,8 +62,7 @@ test("worker schedules static catalog adapters independently of world state", as
   assert.deepEqual(database.prepare("select name from entities where slug = 'sample'").get(), { name: "Sample" });
 });
 
-function fixtureSnapshot(): Snapshot {
-  const timestamp = "2026-10-13T21:00:00.000Z";
+function fixtureSnapshot(timestamp = "2026-10-13T21:00:00.000Z"): Snapshot {
   return createSnapshot({
     sourceId: "wfcd-worldstate",
     version: timestamp,

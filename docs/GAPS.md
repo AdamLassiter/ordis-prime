@@ -39,7 +39,8 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   countdowns and visible snapshot freshness. A database-leased production worker
   polls it every five minutes and retries failures without replacing active data.
   Snapshots older than a configurable threshold are visibly marked stale without
-  hiding their data. Exact unique node names are reconciled to canonical nodes;
+  hiding their data. Normalized world-state history is bounded per source, while
+  raw immutable payloads and refresh-operation rows remain unbounded. Exact unique node names are reconciled to canonical nodes;
   ambiguous or differently spelled labels remain plain source text. Finished
   job history is count-bounded and filterable by kind, status and source.
   Source operation pages report persisted record counts, durations and aggregate

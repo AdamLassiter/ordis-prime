@@ -16,6 +16,7 @@ const requestTimeout = positiveInteger(process.env.ORDIS_WORLD_STATE_TIMEOUT_MS,
 const catalogRefreshInterval = positiveInteger(process.env.ORDIS_CATALOG_INTERVAL_MS, 24 * 60 * 60_000);
 const catalogRequestTimeout = positiveInteger(process.env.ORDIS_CATALOG_TIMEOUT_MS, 5 * 60_000);
 const jobHistoryLimit = nonNegativeInteger(process.env.ORDIS_JOB_HISTORY_LIMIT, 1_000);
+const worldStateSnapshotHistoryLimit = nonNegativeInteger(process.env.ORDIS_WORLD_STATE_HISTORY_LIMIT, 288);
 const owner = `${hostname()}:${process.pid}`;
 const abortController = new AbortController();
 for (const signal of ["SIGINT", "SIGTERM"] as const) process.once(signal, () => abortController.abort());
@@ -25,11 +26,11 @@ const database = openSqliteDatabase(databasePath);
 const snapshotStore = new SnapshotStore(path.join(dataDirectory, "sources"));
 const adapter = new WfcdWorldStateAdapter();
 const catalogAdapters = [new WfcdItemsAdapter(), new WfcdDropsAdapter()];
-process.stdout.write(`${JSON.stringify({ event: "worker-started", owner, databasePath, refreshInterval, catalogRefreshInterval, jobHistoryLimit })}\n`);
+process.stdout.write(`${JSON.stringify({ event: "worker-started", owner, databasePath, refreshInterval, catalogRefreshInterval, jobHistoryLimit, worldStateSnapshotHistoryLimit })}\n`);
 
 try {
   while (!abortController.signal.aborted) {
-    const result = await runWorkerCycle({ database, snapshotStore, worldStateAdapter: adapter, catalogAdapters, owner, refreshIntervalMilliseconds: refreshInterval, retryIntervalMilliseconds: retryInterval, requestTimeoutMilliseconds: requestTimeout, catalogRefreshIntervalMilliseconds: catalogRefreshInterval, catalogRequestTimeoutMilliseconds: catalogRequestTimeout, jobHistoryLimit });
+    const result = await runWorkerCycle({ database, snapshotStore, worldStateAdapter: adapter, catalogAdapters, owner, refreshIntervalMilliseconds: refreshInterval, retryIntervalMilliseconds: retryInterval, requestTimeoutMilliseconds: requestTimeout, catalogRefreshIntervalMilliseconds: catalogRefreshInterval, catalogRequestTimeoutMilliseconds: catalogRequestTimeout, jobHistoryLimit, worldStateSnapshotHistoryLimit });
     if (result.status !== "idle") process.stdout.write(`${JSON.stringify({ event: "source-refresh", ...result, at: new Date().toISOString() })}\n`);
     await delay(pollInterval, abortController.signal);
   }
