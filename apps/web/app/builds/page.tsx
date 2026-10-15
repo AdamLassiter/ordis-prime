@@ -11,18 +11,65 @@ export default async function BuildsPage() {
   const session = await getCurrentSession();
   if (!session) redirect("/sign-in");
   const builds = listPlayerBuilds(getDatabase(), session.user.id);
-  return <>
-    <p className="eyebrow">Private workshop</p><h1>Builds</h1>
-    <p className="lede">Compose a partial or complete loadout from the shared catalog, keep your reasoning beside it, and publish immutable snapshots when it is ready to share.</p>
-    <form className="card form-stack build-create" action={addBuild}>
-      <h2>New build</h2>
-      <label>Title<input name="title" maxLength={160} required placeholder="Steel Path Mesa" /></label>
-      <label>Category<input name="category" maxLength={80} placeholder="Steel Path, farming, beginner…" /></label>
-      <label>Notes<textarea name="notes" maxLength={10000} rows={4} /></label>
-      <button className="button">Create build</button>
-    </form>
-    <section className="planner-section"><h2>Your drafts</h2>
-      {builds.length ? <div className="grid">{builds.map((build) => <Link className="card" href={`/builds/${build.id}`} key={build.id}>{build.category && <span className="tag">{build.category}</span>}<h3>{build.title}</h3><p className="muted">Revision {build.revision} · {build.equipment.length} equipped slots</p></Link>)}</div> : <p className="notice">No builds yet.</p>}
-    </section>
-  </>;
+  return (
+    <>
+      <p className="eyebrow">Private workshop</p>
+      <h1>Builds</h1>
+      <p className="lede">
+        Compose a partial or complete loadout from the shared catalog, keep your
+        reasoning beside it, and publish immutable snapshots when it is ready to
+        share.
+      </p>
+      <form className="card form-stack build-create" action={addBuild}>
+        <h2>New build</h2>
+        <label>
+          Title
+          <input
+            name="title"
+            maxLength={160}
+            required
+            placeholder="Steel Path Mesa"
+          />
+        </label>
+        <label>
+          Category
+          <input
+            name="category"
+            maxLength={80}
+            placeholder="Steel Path, farming, beginner…"
+          />
+        </label>
+        <label>
+          Notes
+          <textarea name="notes" maxLength={10000} rows={4} />
+        </label>
+        <button className="button">Create build</button>
+      </form>
+      <section className="planner-section">
+        <h2>Your drafts</h2>
+        {builds.length ? (
+          <div className="grid">
+            {builds.map((build) => (
+              <Link
+                className="card"
+                href={`/builds/${build.id}`}
+                key={build.id}
+              >
+                {build.category && (
+                  <span className="tag">{build.category}</span>
+                )}
+                <h3>{build.title}</h3>
+                <p className="muted">
+                  Revision {build.revision} · {build.equipment.length} equipped
+                  slots
+                </p>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <p className="notice">No builds yet.</p>
+        )}
+      </section>
+    </>
+  );
 }

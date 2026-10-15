@@ -1,15 +1,54 @@
 export type EntityId = string & { readonly __entityId: unique symbol };
 
 export type EntityKind =
-  | "unknown" | "warframe" | "weapon" | "companion" | "mod" | "arcane" | "shard" | "resource"
-  | "relic" | "blueprint" | "component" | "node" | "planet"
-  | "quest" | "enemy" | "boss" | "mechanic" | "secret" | "archwing";
+  | "unknown"
+  | "warframe"
+  | "weapon"
+  | "companion"
+  | "mod"
+  | "arcane"
+  | "shard"
+  | "resource"
+  | "relic"
+  | "blueprint"
+  | "component"
+  | "node"
+  | "planet"
+  | "quest"
+  | "enemy"
+  | "boss"
+  | "mechanic"
+  | "secret"
+  | "archwing";
 
-export const ARCANE_CLASSES = ["warframe", "operator", "amp", "primary", "secondary", "melee", "kitgun", "zaw", "bow", "shotgun"] as const;
-export type ArcaneClass = typeof ARCANE_CLASSES[number];
+export const ARCANE_CLASSES = [
+  "warframe",
+  "operator",
+  "amp",
+  "primary",
+  "secondary",
+  "melee",
+  "kitgun",
+  "zaw",
+  "bow",
+  "shotgun",
+] as const;
+export type ArcaneClass = (typeof ARCANE_CLASSES)[number];
 
-export const WEAPON_CLASSES = ["primary", "secondary", "melee", "bow", "shotgun", "kitgun", "zaw", "archgun", "archmelee", "companion", "amp"] as const;
-export type WeaponClass = typeof WEAPON_CLASSES[number];
+export const WEAPON_CLASSES = [
+  "primary",
+  "secondary",
+  "melee",
+  "bow",
+  "shotgun",
+  "kitgun",
+  "zaw",
+  "archgun",
+  "archmelee",
+  "companion",
+  "amp",
+] as const;
+export type WeaponClass = (typeof WEAPON_CLASSES)[number];
 
 export interface CanonicalEntity {
   id: EntityId;
@@ -42,7 +81,12 @@ export interface EntityObservation {
   type: "entity";
   externalIds: ExternalIdentifier[];
   kind: EntityKind;
-  fields: Partial<Pick<CanonicalEntity, "name" | "slug" | "description" | "arcaneClass" | "weaponClass">>;
+  fields: Partial<
+    Pick<
+      CanonicalEntity,
+      "name" | "slug" | "description" | "arcaneClass" | "weaponClass"
+    >
+  >;
   aliases?: string[];
   tombstone?: boolean;
   evidence: Evidence;
@@ -80,8 +124,15 @@ export interface NodeDetailObservation {
   evidence: Evidence;
 }
 
-export const RELATION_KINDS = ["requires", "unlocks", "occurs-at", "involves", "rewards", "connects-to"] as const;
-export type RelationKind = typeof RELATION_KINDS[number];
+export const RELATION_KINDS = [
+  "requires",
+  "unlocks",
+  "occurs-at",
+  "involves",
+  "rewards",
+  "connects-to",
+] as const;
+export type RelationKind = (typeof RELATION_KINDS)[number];
 
 export interface EntityRelationObservation {
   type: "entity-relation";
@@ -124,7 +175,15 @@ export interface RankingObservation {
   evidence: Evidence;
 }
 
-export type Observation = EntityObservation | DropObservation | RecipeObservation | NodeDetailObservation | EntityRelationObservation | EnhancementOptionObservation | RankingSetObservation | RankingObservation;
+export type Observation =
+  | EntityObservation
+  | DropObservation
+  | RecipeObservation
+  | NodeDetailObservation
+  | EntityRelationObservation
+  | EnhancementOptionObservation
+  | RankingSetObservation
+  | RankingObservation;
 
 export interface InventoryEntry {
   entityId: EntityId;

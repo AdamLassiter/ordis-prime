@@ -16,7 +16,10 @@ export function SignInForm() {
     const response = await fetch("/api/auth/sign-in/email", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ email: form.get("email"), password: form.get("password") }),
+      body: JSON.stringify({
+        email: form.get("email"),
+        password: form.get("password"),
+      }),
     });
     if (response.ok) {
       router.push("/");
@@ -27,10 +30,29 @@ export function SignInForm() {
     setPending(false);
   }
 
-  return <form className="form-stack" onSubmit={submit}>
-    <label>Email<input name="email" type="email" required autoComplete="email" /></label>
-    <label>Password<input name="password" type="password" required autoComplete="current-password" /></label>
-    {error && <p className="error" role="alert">{error}</p>}
-    <button className="button" disabled={pending}>{pending ? "Signing in…" : "Sign in"}</button>
-  </form>;
+  return (
+    <form className="form-stack" onSubmit={submit}>
+      <label>
+        Email
+        <input name="email" type="email" required autoComplete="email" />
+      </label>
+      <label>
+        Password
+        <input
+          name="password"
+          type="password"
+          required
+          autoComplete="current-password"
+        />
+      </label>
+      {error && (
+        <p className="error" role="alert">
+          {error}
+        </p>
+      )}
+      <button className="button" disabled={pending} type="submit">
+        {pending ? "Signing in…" : "Sign in"}
+      </button>
+    </form>
+  );
 }

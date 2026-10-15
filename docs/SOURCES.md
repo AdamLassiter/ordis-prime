@@ -43,6 +43,14 @@ the active run of every static source at that instant. The data-source page
 shows the current release ID and versions, so a composed catalog can be audited
 without reconstructing membership from later mutable run status.
 
+The worker retains the active release and 20 inactive releases by default.
+After older releases are removed, clean inactive source runs that no retained
+release references are deleted with their normalized facts. Runs containing a
+resolver conflict remain available for review even after their release ages
+out. `ORDIS_CATALOG_HISTORY_LIMIT` changes the inactive-release count; zero
+keeps only the active release. Immutable raw payloads and refresh-operation rows
+are retained independently and are not deleted by catalog pruning.
+
 Before staging begins, promotion validates invariants that require the complete
 candidate set: one external identifier cannot declare contradictory entity
 identity, a kind/slug cannot carry conflicting names, singleton node details

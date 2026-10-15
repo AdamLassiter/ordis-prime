@@ -1,7 +1,13 @@
 import fs from "node:fs/promises";
 import { parse } from "yaml";
 import type { Observation } from "@ordis-prime/domain";
-import { contentHash, type FetchContext, type Snapshot, type SourceAdapter, type SourceDescriptor } from "../adapter.ts";
+import {
+  contentHash,
+  type FetchContext,
+  type Snapshot,
+  type SourceAdapter,
+  type SourceDescriptor,
+} from "../adapter.ts";
 
 interface ManualRankingDocument {
   schemaVersion: 1;
@@ -31,7 +37,11 @@ export class ManualRankingAdapter implements SourceAdapter {
   private readonly filePath?: string;
   private readonly providedBytes?: Uint8Array;
 
-  private constructor(document: ManualRankingDocument, filePath?: string, providedBytes?: Uint8Array) {
+  private constructor(
+    document: ManualRankingDocument,
+    filePath?: string,
+    providedBytes?: Uint8Array,
+  ) {
     this.filePath = filePath;
     this.providedBytes = providedBytes;
     this.source = {
@@ -49,11 +59,17 @@ export class ManualRankingAdapter implements SourceAdapter {
   }
 
   static fromBytes(bytes: Uint8Array): ManualRankingAdapter {
-    return new ManualRankingAdapter(parseDocument(bytes), undefined, bytes.slice());
+    return new ManualRankingAdapter(
+      parseDocument(bytes),
+      undefined,
+      bytes.slice(),
+    );
   }
 
   async fetch(_context: FetchContext): Promise<Snapshot> {
-    const bytes = this.providedBytes?.slice() ?? new Uint8Array(await fs.readFile(this.filePath!));
+    const bytes =
+      this.providedBytes?.slice() ??
+      new Uint8Array(await fs.readFile(this.filePath!));
     const hash = contentHash(bytes);
     return {
       sourceId: this.source.id,
@@ -67,7 +83,10 @@ export class ManualRankingAdapter implements SourceAdapter {
 
   async *parse(snapshot: Snapshot): AsyncIterable<Observation> {
     const document = parseDocument(snapshot.bytes);
-    if (document.source.id !== this.source.id) throw new Error("Manual source ID changed between adapter creation and fetch");
+    if (document.source.id !== this.source.id)
+      throw new Error(
+        "Manual source ID changed between adapter creation and fetch",
+      );
     const baseEvidence = {
       sourceId: this.source.id,
       sourceRecordKey: document.source.id,
@@ -92,12 +111,20 @@ export class ManualRankingAdapter implements SourceAdapter {
       yield {
         type: "ranking",
         setKey: document.source.id,
-        subjectExternalId: { sourceId: "wfcd-items", namespace: "uniqueName", value: entry.externalId },
+        subjectExternalId: {
+          sourceId: "wfcd-items",
+          namespace: "uniqueName",
+          value: entry.externalId,
+        },
         tier: entry.rank,
         position: entry.position,
         timestampSeconds: entry.timestampSeconds,
         notes: entry.notes,
-        evidence: { ...baseEvidence, sourceRecordKey: entry.externalId, path: `entries[${index}]` },
+        evidence: {
+          ...baseEvidence,
+          sourceRecordKey: entry.externalId,
+          path: `entries[${index}]`,
+        },
       };
     }
   }
@@ -105,27 +132,78 @@ export class ManualRankingAdapter implements SourceAdapter {
 
 function parseDocument(bytes: Uint8Array): ManualRankingDocument {
   const value = parse(new TextDecoder().decode(bytes)) as unknown;
-  if (!isRecord(value) || value.schemaVersion !== 1 || !isRecord(value.source)) throw new Error("Manual ranking must use schemaVersion 1 and include source metadata");
+  if (!isRecord(value) || value.schemaVersion !== 1 || !isRecord(value.source))
+    throw new Error(
+      "Manual ranking must use schemaVersion 1 and include source metadata",
+    );
   const source = value.source;
-  const requiredSourceStrings = ["id", "title", "author", "url", "publishedAt", "scope", "licenseNote"] as const;
-  for (const field of requiredSourceStrings) if (typeof source[field] !== "string" || !source[field]) throw new Error(`Manual ranking source.${field} is required`);
-  if (source.gameVersion !== undefined && typeof source.gameVersion !== "string") throw new Error("Manual ranking source.gameVersion must be a string");
-  if (source.priority !== undefined && (!Number.isInteger(source.priority) || (source.priority as number) < 0)) throw new Error("Manual ranking source.priority must be a non-negative integer");
-  if (!Array.isArray(value.scale) || !value.scale.length || value.scale.some((tier) => typeof tier !== "string" || !tier)) throw new Error("Manual ranking scale must contain tier names");
+  const requiredSourceStrings = [
+    "id",
+    "title",
+    "author",
+    "url",
+    "publishedAt",
+    "scope",
+    "licenseNote",
+  ] as const;
+  for (const field of requiredSourceStrings)
+    if (typeof source[field] !== "string" || !source[field])
+      throw new Error(`Manual ranking source.${field} is required`);
+  if (
+    source.gameVersion !== undefined &&
+    typeof source.gameVersion !== "string"
+  )
+    throw new Error("Manual ranking source.gameVersion must be a string");
+  if (
+    source.priority !== undefined &&
+    (!Number.isInteger(source.priority) || (source.priority as number) < 0)
+  )
+    throw new Error(
+      "Manual ranking source.priority must be a non-negative integer",
+    );
+  if (
+    !Array.isArray(value.scale) ||
+    !value.scale.length ||
+    value.scale.some((tier) => typeof tier !== "string" || !tier)
+  )
+    throw new Error("Manual ranking scale must contain tier names");
   const scale = value.scale as string[];
-  if (new Set(scale).size !== scale.length) throw new Error("Manual ranking scale contains duplicate tiers");
-  if (!Array.isArray(value.entries) || !value.entries.length) throw new Error("Manual ranking must contain entries");
+  if (new Set(scale).size !== scale.length)
+    throw new Error("Manual ranking scale contains duplicate tiers");
+  if (!Array.isArray(value.entries) || !value.entries.length)
+    throw new Error("Manual ranking must contain entries");
 
   const entries = value.entries.map((entry, index) => {
-    if (!isRecord(entry) || typeof entry.externalId !== "string" || !entry.externalId || typeof entry.rank !== "string" || !entry.rank) throw new Error(`Manual ranking entry ${index} is invalid`);
-    if (!scale.includes(entry.rank)) throw new Error(`Manual ranking entry ${index} uses undeclared tier ${entry.rank}`);
+    if (
+      !isRecord(entry) ||
+      typeof entry.externalId !== "string" ||
+      !entry.externalId ||
+      typeof entry.rank !== "string" ||
+      !entry.rank
+    )
+      throw new Error(`Manual ranking entry ${index} is invalid`);
+    if (!scale.includes(entry.rank))
+      throw new Error(
+        `Manual ranking entry ${index} uses undeclared tier ${entry.rank}`,
+      );
     for (const field of ["position", "timestampSeconds"] as const) {
-      if (entry[field] !== undefined && (!Number.isInteger(entry[field]) || (entry[field] as number) < (field === "position" ? 1 : 0))) throw new Error(`Manual ranking entry ${index} has invalid ${field}`);
+      if (
+        entry[field] !== undefined &&
+        (!Number.isInteger(entry[field]) ||
+          (entry[field] as number) < (field === "position" ? 1 : 0))
+      )
+        throw new Error(`Manual ranking entry ${index} has invalid ${field}`);
     }
-    if (entry.notes !== undefined && typeof entry.notes !== "string") throw new Error(`Manual ranking entry ${index} has invalid notes`);
+    if (entry.notes !== undefined && typeof entry.notes !== "string")
+      throw new Error(`Manual ranking entry ${index} has invalid notes`);
     return entry as ManualRankingDocument["entries"][number];
   });
-  return { schemaVersion: 1, source: source as unknown as ManualRankingDocument["source"], scale, entries };
+  return {
+    schemaVersion: 1,
+    source: source as unknown as ManualRankingDocument["source"],
+    scale,
+    entries,
+  };
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

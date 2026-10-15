@@ -102,17 +102,12 @@
       "indexes": {
         "accounts_user_id": {
           "name": "accounts_user_id",
-          "columns": [
-            "user_id"
-          ],
+          "columns": ["user_id"],
           "isUnique": false
         },
         "accounts_provider_account_unique": {
           "name": "accounts_provider_account_unique",
-          "columns": [
-            "provider_id",
-            "account_id"
-          ],
+          "columns": ["provider_id", "account_id"],
           "isUnique": true
         }
       },
@@ -121,12 +116,8 @@
           "name": "accounts_user_id_users_id_fk",
           "tableFrom": "accounts",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -163,9 +154,7 @@
       "indexes": {
         "alias_lookup": {
           "name": "alias_lookup",
-          "columns": [
-            "normalized"
-          ],
+          "columns": ["normalized"],
           "isUnique": false
         }
       },
@@ -174,22 +163,15 @@
           "name": "entity_aliases_entity_id_entities_id_fk",
           "tableFrom": "entity_aliases",
           "tableTo": "entities",
-          "columnsFrom": [
-            "entity_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["entity_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
         "entity_aliases_entity_id_normalized_pk": {
-          "columns": [
-            "entity_id",
-            "normalized"
-          ],
+          "columns": ["entity_id", "normalized"],
           "name": "entity_aliases_entity_id_normalized_pk"
         }
       },
@@ -261,10 +243,7 @@
       "indexes": {
         "build_equipment_slot": {
           "name": "build_equipment_slot",
-          "columns": [
-            "build_id",
-            "slot"
-          ],
+          "columns": ["build_id", "slot"],
           "isUnique": true
         }
       },
@@ -273,12 +252,8 @@
           "name": "build_equipment_build_id_player_builds_id_fk",
           "tableFrom": "build_equipment",
           "tableTo": "player_builds",
-          "columnsFrom": [
-            "build_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["build_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -286,12 +261,8 @@
           "name": "build_equipment_entity_id_entities_id_fk",
           "tableFrom": "build_equipment",
           "tableTo": "entities",
-          "columnsFrom": [
-            "entity_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["entity_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -342,10 +313,7 @@
       "indexes": {
         "build_mod_position": {
           "name": "build_mod_position",
-          "columns": [
-            "equipment_id",
-            "position"
-          ],
+          "columns": ["equipment_id", "position"],
           "isUnique": true
         }
       },
@@ -354,12 +322,8 @@
           "name": "build_mods_equipment_id_build_equipment_id_fk",
           "tableFrom": "build_mods",
           "tableTo": "build_equipment",
-          "columnsFrom": [
-            "equipment_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["equipment_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -367,12 +331,8 @@
           "name": "build_mods_entity_id_entities_id_fk",
           "tableFrom": "build_mods",
           "tableTo": "entities",
-          "columnsFrom": [
-            "entity_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["entity_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -437,16 +397,12 @@
       "indexes": {
         "build_share_key": {
           "name": "build_share_key",
-          "columns": [
-            "share_key"
-          ],
+          "columns": ["share_key"],
           "isUnique": true
         },
         "build_share_source": {
           "name": "build_share_source",
-          "columns": [
-            "source_build_id"
-          ],
+          "columns": ["source_build_id"],
           "isUnique": false
         }
       },
@@ -455,12 +411,8 @@
           "name": "build_share_snapshots_source_build_id_player_builds_id_fk",
           "tableFrom": "build_share_snapshots",
           "tableTo": "player_builds",
-          "columnsFrom": [
-            "source_build_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["source_build_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -557,10 +509,7 @@
       "indexes": {
         "conflict_review_events_conflict_created": {
           "name": "conflict_review_events_conflict_created",
-          "columns": [
-            "conflict_id",
-            "created_at"
-          ],
+          "columns": ["conflict_id", "created_at"],
           "isUnique": false
         }
       },
@@ -569,12 +518,8 @@
           "name": "ingestion_conflict_review_events_conflict_id_ingestion_conflicts_id_fk",
           "tableFrom": "ingestion_conflict_review_events",
           "tableTo": "ingestion_conflicts",
-          "columnsFrom": [
-            "conflict_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["conflict_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -582,12 +527,8 @@
           "name": "ingestion_conflict_review_events_user_id_users_id_fk",
           "tableFrom": "ingestion_conflict_review_events",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -648,12 +589,8 @@
           "name": "ingestion_conflicts_source_run_id_source_runs_id_fk",
           "tableFrom": "ingestion_conflicts",
           "tableTo": "source_runs",
-          "columnsFrom": [
-            "source_run_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["source_run_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -697,10 +634,7 @@
       "indexes": {
         "player_discovery_progress_state": {
           "name": "player_discovery_progress_state",
-          "columns": [
-            "user_id",
-            "state"
-          ],
+          "columns": ["user_id", "state"],
           "isUnique": false
         }
       },
@@ -709,12 +643,8 @@
           "name": "player_discovery_progress_user_id_users_id_fk",
           "tableFrom": "player_discovery_progress",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -722,22 +652,15 @@
           "name": "player_discovery_progress_entity_id_entities_id_fk",
           "tableFrom": "player_discovery_progress",
           "tableTo": "entities",
-          "columnsFrom": [
-            "entity_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["entity_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
         "player_discovery_progress_user_id_entity_id_pk": {
-          "columns": [
-            "user_id",
-            "entity_id"
-          ],
+          "columns": ["user_id", "entity_id"],
           "name": "player_discovery_progress_user_id_entity_id_pk"
         }
       },
@@ -829,16 +752,12 @@
       "indexes": {
         "drop_reward": {
           "name": "drop_reward",
-          "columns": [
-            "reward_id"
-          ],
+          "columns": ["reward_id"],
           "isUnique": false
         },
         "drop_node": {
           "name": "drop_node",
-          "columns": [
-            "node_id"
-          ],
+          "columns": ["node_id"],
           "isUnique": false
         }
       },
@@ -847,12 +766,8 @@
           "name": "drops_reward_id_entities_id_fk",
           "tableFrom": "drops",
           "tableTo": "entities",
-          "columnsFrom": [
-            "reward_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["reward_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -860,12 +775,8 @@
           "name": "drops_node_id_entities_id_fk",
           "tableFrom": "drops",
           "tableTo": "entities",
-          "columnsFrom": [
-            "node_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["node_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -873,12 +784,8 @@
           "name": "drops_source_run_id_source_runs_id_fk",
           "tableFrom": "drops",
           "tableTo": "source_runs",
-          "columnsFrom": [
-            "source_run_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["source_run_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -964,17 +871,12 @@
       "indexes": {
         "ranking_set_entity": {
           "name": "ranking_set_entity",
-          "columns": [
-            "set_id",
-            "entity_id"
-          ],
+          "columns": ["set_id", "entity_id"],
           "isUnique": true
         },
         "ranking_entity": {
           "name": "ranking_entity",
-          "columns": [
-            "entity_id"
-          ],
+          "columns": ["entity_id"],
           "isUnique": false
         }
       },
@@ -983,12 +885,8 @@
           "name": "editorial_rankings_set_id_ranking_sets_id_fk",
           "tableFrom": "editorial_rankings",
           "tableTo": "ranking_sets",
-          "columnsFrom": [
-            "set_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["set_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -996,12 +894,8 @@
           "name": "editorial_rankings_entity_id_entities_id_fk",
           "tableFrom": "editorial_rankings",
           "tableTo": "entities",
-          "columnsFrom": [
-            "entity_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["entity_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1067,17 +961,12 @@
       "indexes": {
         "entity_kind_slug": {
           "name": "entity_kind_slug",
-          "columns": [
-            "kind",
-            "slug"
-          ],
+          "columns": ["kind", "slug"],
           "isUnique": true
         },
         "entity_name": {
           "name": "entity_name",
-          "columns": [
-            "name"
-          ],
+          "columns": ["name"],
           "isUnique": false
         }
       },
@@ -1156,16 +1045,12 @@
       "indexes": {
         "entity_relations_from": {
           "name": "entity_relations_from",
-          "columns": [
-            "from_entity_id"
-          ],
+          "columns": ["from_entity_id"],
           "isUnique": false
         },
         "entity_relations_to": {
           "name": "entity_relations_to",
-          "columns": [
-            "to_entity_id"
-          ],
+          "columns": ["to_entity_id"],
           "isUnique": false
         }
       },
@@ -1174,12 +1059,8 @@
           "name": "entity_relations_from_entity_id_entities_id_fk",
           "tableFrom": "entity_relations",
           "tableTo": "entities",
-          "columnsFrom": [
-            "from_entity_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["from_entity_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1187,12 +1068,8 @@
           "name": "entity_relations_to_entity_id_entities_id_fk",
           "tableFrom": "entity_relations",
           "tableTo": "entities",
-          "columnsFrom": [
-            "to_entity_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["to_entity_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1200,12 +1077,8 @@
           "name": "entity_relations_source_run_id_source_runs_id_fk",
           "tableFrom": "entity_relations",
           "tableTo": "source_runs",
-          "columnsFrom": [
-            "source_run_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["source_run_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1249,9 +1122,7 @@
       "indexes": {
         "external_entity": {
           "name": "external_entity",
-          "columns": [
-            "entity_id"
-          ],
+          "columns": ["entity_id"],
           "isUnique": false
         }
       },
@@ -1260,12 +1131,8 @@
           "name": "external_ids_entity_id_entities_id_fk",
           "tableFrom": "external_ids",
           "tableTo": "entities",
-          "columnsFrom": [
-            "entity_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["entity_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1273,23 +1140,15 @@
           "name": "external_ids_source_id_sources_id_fk",
           "tableFrom": "external_ids",
           "tableTo": "sources",
-          "columnsFrom": [
-            "source_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["source_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
         "external_ids_source_id_namespace_value_pk": {
-          "columns": [
-            "source_id",
-            "namespace",
-            "value"
-          ],
+          "columns": ["source_id", "namespace", "value"],
           "name": "external_ids_source_id_namespace_value_pk"
         }
       },
@@ -1338,9 +1197,7 @@
       "indexes": {
         "player_goals_entity": {
           "name": "player_goals_entity",
-          "columns": [
-            "entity_id"
-          ],
+          "columns": ["entity_id"],
           "isUnique": false
         }
       },
@@ -1349,12 +1206,8 @@
           "name": "player_goals_user_id_users_id_fk",
           "tableFrom": "player_goals",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1362,22 +1215,15 @@
           "name": "player_goals_entity_id_entities_id_fk",
           "tableFrom": "player_goals",
           "tableTo": "entities",
-          "columnsFrom": [
-            "entity_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["entity_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
         "player_goals_user_id_entity_id_pk": {
-          "columns": [
-            "user_id",
-            "entity_id"
-          ],
+          "columns": ["user_id", "entity_id"],
           "name": "player_goals_user_id_entity_id_pk"
         }
       },
@@ -1460,12 +1306,8 @@
           "name": "player_inventory_user_id_users_id_fk",
           "tableFrom": "player_inventory",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1473,22 +1315,15 @@
           "name": "player_inventory_entity_id_entities_id_fk",
           "tableFrom": "player_inventory",
           "tableTo": "entities",
-          "columnsFrom": [
-            "entity_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["entity_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
         "player_inventory_user_id_entity_id_pk": {
-          "columns": [
-            "user_id",
-            "entity_id"
-          ],
+          "columns": ["user_id", "entity_id"],
           "name": "player_inventory_user_id_entity_id_pk"
         }
       },
@@ -1659,16 +1494,12 @@
       "indexes": {
         "node_details_entity": {
           "name": "node_details_entity",
-          "columns": [
-            "entity_id"
-          ],
+          "columns": ["entity_id"],
           "isUnique": false
         },
         "node_details_planet": {
           "name": "node_details_planet",
-          "columns": [
-            "planet"
-          ],
+          "columns": ["planet"],
           "isUnique": false
         }
       },
@@ -1677,12 +1508,8 @@
           "name": "node_details_entity_id_entities_id_fk",
           "tableFrom": "node_details",
           "tableTo": "entities",
-          "columnsFrom": [
-            "entity_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["entity_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1690,12 +1517,8 @@
           "name": "node_details_source_run_id_source_runs_id_fk",
           "tableFrom": "node_details",
           "tableTo": "source_runs",
-          "columnsFrom": [
-            "source_run_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["source_run_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1768,10 +1591,7 @@
       "indexes": {
         "player_builds_user_updated": {
           "name": "player_builds_user_updated",
-          "columns": [
-            "user_id",
-            "updated_at"
-          ],
+          "columns": ["user_id", "updated_at"],
           "isUnique": false
         }
       },
@@ -1780,12 +1600,8 @@
           "name": "player_builds_user_id_users_id_fk",
           "tableFrom": "player_builds",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1871,18 +1687,12 @@
       "indexes": {
         "player_notification_occurrence": {
           "name": "player_notification_occurrence",
-          "columns": [
-            "watch_id",
-            "occurrence_key"
-          ],
+          "columns": ["watch_id", "occurrence_key"],
           "isUnique": true
         },
         "player_notifications_user_read": {
           "name": "player_notifications_user_read",
-          "columns": [
-            "user_id",
-            "read_at"
-          ],
+          "columns": ["user_id", "read_at"],
           "isUnique": false
         }
       },
@@ -1891,12 +1701,8 @@
           "name": "player_notifications_user_id_users_id_fk",
           "tableFrom": "player_notifications",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1904,12 +1710,8 @@
           "name": "player_notifications_watch_id_world_state_watches_id_fk",
           "tableFrom": "player_notifications",
           "tableTo": "world_state_watches",
-          "columnsFrom": [
-            "watch_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["watch_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1982,17 +1784,12 @@
       "indexes": {
         "player_todos_user_status": {
           "name": "player_todos_user_status",
-          "columns": [
-            "user_id",
-            "status"
-          ],
+          "columns": ["user_id", "status"],
           "isUnique": false
         },
         "player_todos_due": {
           "name": "player_todos_due",
-          "columns": [
-            "due_at"
-          ],
+          "columns": ["due_at"],
           "isUnique": false
         }
       },
@@ -2001,12 +1798,8 @@
           "name": "player_todos_user_id_users_id_fk",
           "tableFrom": "player_todos",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2067,12 +1860,8 @@
           "name": "fact_provenance_entity_id_entities_id_fk",
           "tableFrom": "fact_provenance",
           "tableTo": "entities",
-          "columnsFrom": [
-            "entity_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["entity_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2080,23 +1869,15 @@
           "name": "fact_provenance_source_run_id_source_runs_id_fk",
           "tableFrom": "fact_provenance",
           "tableTo": "source_runs",
-          "columnsFrom": [
-            "source_run_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["source_run_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
         "fact_provenance_entity_id_field_source_run_id_pk": {
-          "columns": [
-            "entity_id",
-            "field",
-            "source_run_id"
-          ],
+          "columns": ["entity_id", "field", "source_run_id"],
           "name": "fact_provenance_entity_id_field_source_run_id_pk"
         }
       },
@@ -2201,10 +1982,7 @@
       "indexes": {
         "ranking_set_run_key": {
           "name": "ranking_set_run_key",
-          "columns": [
-            "source_run_id",
-            "set_key"
-          ],
+          "columns": ["source_run_id", "set_key"],
           "isUnique": true
         }
       },
@@ -2213,12 +1991,8 @@
           "name": "ranking_sets_source_run_id_source_runs_id_fk",
           "tableFrom": "ranking_sets",
           "tableTo": "source_runs",
-          "columnsFrom": [
-            "source_run_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["source_run_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -2258,12 +2032,8 @@
           "name": "recipe_ingredients_recipe_id_recipes_id_fk",
           "tableFrom": "recipe_ingredients",
           "tableTo": "recipes",
-          "columnsFrom": [
-            "recipe_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["recipe_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2271,22 +2041,15 @@
           "name": "recipe_ingredients_entity_id_entities_id_fk",
           "tableFrom": "recipe_ingredients",
           "tableTo": "entities",
-          "columnsFrom": [
-            "entity_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["entity_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
         "recipe_ingredients_recipe_id_entity_id_pk": {
-          "columns": [
-            "recipe_id",
-            "entity_id"
-          ],
+          "columns": ["recipe_id", "entity_id"],
           "name": "recipe_ingredients_recipe_id_entity_id_pk"
         }
       },
@@ -2353,12 +2116,8 @@
           "name": "recipes_output_id_entities_id_fk",
           "tableFrom": "recipes",
           "tableTo": "entities",
-          "columnsFrom": [
-            "output_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["output_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2366,12 +2125,8 @@
           "name": "recipes_source_run_id_source_runs_id_fk",
           "tableFrom": "recipes",
           "tableTo": "source_runs",
-          "columnsFrom": [
-            "source_run_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["source_run_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -2443,16 +2198,12 @@
       "indexes": {
         "sessions_token_unique": {
           "name": "sessions_token_unique",
-          "columns": [
-            "token"
-          ],
+          "columns": ["token"],
           "isUnique": true
         },
         "sessions_user_id": {
           "name": "sessions_user_id",
-          "columns": [
-            "user_id"
-          ],
+          "columns": ["user_id"],
           "isUnique": false
         }
       },
@@ -2461,12 +2212,8 @@
           "name": "sessions_user_id_users_id_fk",
           "tableFrom": "sessions",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2545,10 +2292,7 @@
       "indexes": {
         "source_refreshes_source_started": {
           "name": "source_refreshes_source_started",
-          "columns": [
-            "source_id",
-            "started_at"
-          ],
+          "columns": ["source_id", "started_at"],
           "isUnique": false
         }
       },
@@ -2557,12 +2301,8 @@
           "name": "source_refreshes_source_id_sources_id_fk",
           "tableFrom": "source_refreshes",
           "tableTo": "sources",
-          "columnsFrom": [
-            "source_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["source_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2570,12 +2310,8 @@
           "name": "source_refreshes_source_run_id_source_runs_id_fk",
           "tableFrom": "source_refreshes",
           "tableTo": "source_runs",
-          "columnsFrom": [
-            "source_run_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["source_run_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2583,12 +2319,8 @@
           "name": "source_refreshes_world_state_snapshot_id_world_state_snapshots_id_fk",
           "tableFrom": "source_refreshes",
           "tableTo": "world_state_snapshots",
-          "columnsFrom": [
-            "world_state_snapshot_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["world_state_snapshot_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -2660,10 +2392,7 @@
       "indexes": {
         "source_run_version": {
           "name": "source_run_version",
-          "columns": [
-            "source_id",
-            "version"
-          ],
+          "columns": ["source_id", "version"],
           "isUnique": true
         }
       },
@@ -2672,12 +2401,8 @@
           "name": "source_runs_source_id_sources_id_fk",
           "tableFrom": "source_runs",
           "tableTo": "sources",
-          "columnsFrom": [
-            "source_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["source_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -2805,9 +2530,7 @@
       "indexes": {
         "users_email_unique": {
           "name": "users_email_unique",
-          "columns": [
-            "email"
-          ],
+          "columns": ["email"],
           "isUnique": true
         }
       },
@@ -2865,9 +2588,7 @@
       "indexes": {
         "verifications_identifier": {
           "name": "verifications_identifier",
-          "columns": [
-            "identifier"
-          ],
+          "columns": ["identifier"],
           "isUnique": false
         }
       },
@@ -2933,17 +2654,12 @@
       "indexes": {
         "world_state_source_version": {
           "name": "world_state_source_version",
-          "columns": [
-            "source_id",
-            "version"
-          ],
+          "columns": ["source_id", "version"],
           "isUnique": true
         },
         "world_state_active": {
           "name": "world_state_active",
-          "columns": [
-            "active"
-          ],
+          "columns": ["active"],
           "isUnique": false
         }
       },
@@ -2952,12 +2668,8 @@
           "name": "world_state_snapshots_source_id_sources_id_fk",
           "tableFrom": "world_state_snapshots",
           "tableTo": "sources",
-          "columnsFrom": [
-            "source_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["source_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -3045,10 +2757,7 @@
       "indexes": {
         "world_state_watches_user": {
           "name": "world_state_watches_user",
-          "columns": [
-            "user_id",
-            "enabled"
-          ],
+          "columns": ["user_id", "enabled"],
           "isUnique": false
         }
       },
@@ -3057,12 +2766,8 @@
           "name": "world_state_watches_user_id_users_id_fk",
           "tableFrom": "world_state_watches",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -3162,9 +2867,7 @@
       "indexes": {
         "world_state_window_expiry": {
           "name": "world_state_window_expiry",
-          "columns": [
-            "expiry"
-          ],
+          "columns": ["expiry"],
           "isUnique": false
         }
       },
@@ -3173,12 +2876,8 @@
           "name": "world_state_windows_snapshot_id_world_state_snapshots_id_fk",
           "tableFrom": "world_state_windows",
           "tableTo": "world_state_snapshots",
-          "columnsFrom": [
-            "snapshot_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["snapshot_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -3186,22 +2885,15 @@
           "name": "world_state_windows_node_entity_id_entities_id_fk",
           "tableFrom": "world_state_windows",
           "tableTo": "entities",
-          "columnsFrom": [
-            "node_entity_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["node_entity_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
         "world_state_windows_snapshot_id_external_id_pk": {
-          "columns": [
-            "snapshot_id",
-            "external_id"
-          ],
+          "columns": ["snapshot_id", "external_id"],
           "name": "world_state_windows_snapshot_id_external_id_pk"
         }
       },

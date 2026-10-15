@@ -65,5 +65,7 @@ The intended refresh model stages and promotes source data in one transaction,
 so a failed refresh cannot replace the active source run. User inventory is
 stored separately against stable canonical IDs, and portable exports prefer
 provider identifiers so a profile can resolve against a different installation.
-Catalog-wide candidate releases and pruning of superseded relation rows remain
-documented gaps.
+Each promotion records complete active source membership, and the worker bounds
+inactive normalized release history. Catalog-wide candidate validation,
+cross-source completeness checks, and raw snapshot retention remain documented
+gaps.

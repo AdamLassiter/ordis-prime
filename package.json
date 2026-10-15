@@ -2,7 +2,9 @@
   "name": "ordis-prime",
   "private": true,
   "packageManager": "pnpm@10.18.0",
-  "engines": { "node": ">=22.16" },
+  "engines": {
+    "node": ">=22.16"
+  },
   "scripts": {
     "dev": "pnpm --filter @ordis-prime/web dev",
     "build": "pnpm -r build",
@@ -11,10 +13,13 @@
     "db:generate": "pnpm --filter @ordis-prime/db generate",
     "db:migrate": "pnpm --filter @ordis-prime/db migrate",
     "data:refresh": "pnpm --filter @ordis-prime/ingestion refresh",
-    "data:worker": "pnpm --filter @ordis-prime/ingestion worker"
+    "data:worker": "pnpm --filter @ordis-prime/ingestion worker",
+    "prettier:check": "prettier --check app/**/* packages/**/*",
+    "prettier:fix": "prettier --write apps/**/* packages/**/*"
   },
   "devDependencies": {
     "@types/node": "^24.10.0",
+    "prettier": "^3.9.10",
     "typescript": "^5.9.3"
   }
 }

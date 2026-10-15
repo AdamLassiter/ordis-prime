@@ -32,9 +32,7 @@
       "indexes": {
         "alias_lookup": {
           "name": "alias_lookup",
-          "columns": [
-            "normalized"
-          ],
+          "columns": ["normalized"],
           "isUnique": false
         }
       },
@@ -43,22 +41,15 @@
           "name": "entity_aliases_entity_id_entities_id_fk",
           "tableFrom": "entity_aliases",
           "tableTo": "entities",
-          "columnsFrom": [
-            "entity_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["entity_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
         "entity_aliases_entity_id_normalized_pk": {
-          "columns": [
-            "entity_id",
-            "normalized"
-          ],
+          "columns": ["entity_id", "normalized"],
           "name": "entity_aliases_entity_id_normalized_pk"
         }
       },
@@ -156,12 +147,8 @@
           "name": "ingestion_conflicts_source_run_id_source_runs_id_fk",
           "tableFrom": "ingestion_conflicts",
           "tableTo": "source_runs",
-          "columnsFrom": [
-            "source_run_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["source_run_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -234,16 +221,12 @@
       "indexes": {
         "drop_reward": {
           "name": "drop_reward",
-          "columns": [
-            "reward_id"
-          ],
+          "columns": ["reward_id"],
           "isUnique": false
         },
         "drop_node": {
           "name": "drop_node",
-          "columns": [
-            "node_id"
-          ],
+          "columns": ["node_id"],
           "isUnique": false
         }
       },
@@ -252,12 +235,8 @@
           "name": "drops_reward_id_entities_id_fk",
           "tableFrom": "drops",
           "tableTo": "entities",
-          "columnsFrom": [
-            "reward_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["reward_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -265,12 +244,8 @@
           "name": "drops_node_id_entities_id_fk",
           "tableFrom": "drops",
           "tableTo": "entities",
-          "columnsFrom": [
-            "node_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["node_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -278,12 +253,8 @@
           "name": "drops_source_run_id_source_runs_id_fk",
           "tableFrom": "drops",
           "tableTo": "source_runs",
-          "columnsFrom": [
-            "source_run_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["source_run_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -349,17 +320,12 @@
       "indexes": {
         "entity_kind_slug": {
           "name": "entity_kind_slug",
-          "columns": [
-            "kind",
-            "slug"
-          ],
+          "columns": ["kind", "slug"],
           "isUnique": true
         },
         "entity_name": {
           "name": "entity_name",
-          "columns": [
-            "name"
-          ],
+          "columns": ["name"],
           "isUnique": false
         }
       },
@@ -403,9 +369,7 @@
       "indexes": {
         "external_entity": {
           "name": "external_entity",
-          "columns": [
-            "entity_id"
-          ],
+          "columns": ["entity_id"],
           "isUnique": false
         }
       },
@@ -414,12 +378,8 @@
           "name": "external_ids_entity_id_entities_id_fk",
           "tableFrom": "external_ids",
           "tableTo": "entities",
-          "columnsFrom": [
-            "entity_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["entity_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -427,23 +387,15 @@
           "name": "external_ids_source_id_sources_id_fk",
           "tableFrom": "external_ids",
           "tableTo": "sources",
-          "columnsFrom": [
-            "source_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["source_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
         "external_ids_source_id_namespace_value_pk": {
-          "columns": [
-            "source_id",
-            "namespace",
-            "value"
-          ],
+          "columns": ["source_id", "namespace", "value"],
           "name": "external_ids_source_id_namespace_value_pk"
         }
       },
@@ -526,12 +478,8 @@
           "name": "player_inventory_user_id_users_id_fk",
           "tableFrom": "player_inventory",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -539,22 +487,15 @@
           "name": "player_inventory_entity_id_entities_id_fk",
           "tableFrom": "player_inventory",
           "tableTo": "entities",
-          "columnsFrom": [
-            "entity_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["entity_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
         "player_inventory_user_id_entity_id_pk": {
-          "columns": [
-            "user_id",
-            "entity_id"
-          ],
+          "columns": ["user_id", "entity_id"],
           "name": "player_inventory_user_id_entity_id_pk"
         }
       },
@@ -665,12 +606,8 @@
           "name": "player_node_progress_user_id_users_id_fk",
           "tableFrom": "player_node_progress",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -678,22 +615,15 @@
           "name": "player_node_progress_node_id_entities_id_fk",
           "tableFrom": "player_node_progress",
           "tableTo": "entities",
-          "columnsFrom": [
-            "node_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["node_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
         "player_node_progress_user_id_node_id_pk": {
-          "columns": [
-            "user_id",
-            "node_id"
-          ],
+          "columns": ["user_id", "node_id"],
           "name": "player_node_progress_user_id_node_id_pk"
         }
       },
@@ -752,12 +682,8 @@
           "name": "fact_provenance_entity_id_entities_id_fk",
           "tableFrom": "fact_provenance",
           "tableTo": "entities",
-          "columnsFrom": [
-            "entity_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["entity_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -765,23 +691,15 @@
           "name": "fact_provenance_source_run_id_source_runs_id_fk",
           "tableFrom": "fact_provenance",
           "tableTo": "source_runs",
-          "columnsFrom": [
-            "source_run_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["source_run_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
         "fact_provenance_entity_id_field_source_run_id_pk": {
-          "columns": [
-            "entity_id",
-            "field",
-            "source_run_id"
-          ],
+          "columns": ["entity_id", "field", "source_run_id"],
           "name": "fact_provenance_entity_id_field_source_run_id_pk"
         }
       },
@@ -819,12 +737,8 @@
           "name": "recipe_ingredients_recipe_id_recipes_id_fk",
           "tableFrom": "recipe_ingredients",
           "tableTo": "recipes",
-          "columnsFrom": [
-            "recipe_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["recipe_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -832,22 +746,15 @@
           "name": "recipe_ingredients_entity_id_entities_id_fk",
           "tableFrom": "recipe_ingredients",
           "tableTo": "entities",
-          "columnsFrom": [
-            "entity_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["entity_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
         "recipe_ingredients_recipe_id_entity_id_pk": {
-          "columns": [
-            "recipe_id",
-            "entity_id"
-          ],
+          "columns": ["recipe_id", "entity_id"],
           "name": "recipe_ingredients_recipe_id_entity_id_pk"
         }
       },
@@ -893,12 +800,8 @@
           "name": "recipes_output_id_entities_id_fk",
           "tableFrom": "recipes",
           "tableTo": "entities",
-          "columnsFrom": [
-            "output_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["output_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -906,12 +809,8 @@
           "name": "recipes_source_run_id_source_runs_id_fk",
           "tableFrom": "recipes",
           "tableTo": "source_runs",
-          "columnsFrom": [
-            "source_run_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["source_run_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -976,10 +875,7 @@
       "indexes": {
         "source_run_version": {
           "name": "source_run_version",
-          "columns": [
-            "source_id",
-            "version"
-          ],
+          "columns": ["source_id", "version"],
           "isUnique": true
         }
       },
@@ -988,12 +884,8 @@
           "name": "source_runs_source_id_sources_id_fk",
           "tableFrom": "source_runs",
           "tableTo": "sources",
-          "columnsFrom": [
-            "source_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["source_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1092,9 +984,7 @@
       "indexes": {
         "users_username_unique": {
           "name": "users_username_unique",
-          "columns": [
-            "username"
-          ],
+          "columns": ["username"],
           "isUnique": true
         }
       },

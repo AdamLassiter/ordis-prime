@@ -23,7 +23,9 @@ discovery links that do not require domain-specific attributes.
 
 Every promoted catalog release records the exact active run for every static
 source. Source-run `active` flags remain the efficient read selector, while the
-immutable membership rows make the composed release inspectable and reproducible.
+immutable membership rows make retained composed releases inspectable and
+reproducible. Retention is explicitly bounded; raw snapshots remain the longer-lived
+audit artifact after an old normalized release is pruned.
 World-state snapshots remain a separate, faster-moving release stream.
 
 ## Runtime

@@ -39,6 +39,12 @@ test("snapshot store rejects corrupted and unsafe snapshots", async (context) =>
     bytes: new Uint8Array([1, 2, 3]),
   });
 
-  await assert.rejects(() => store.put({ ...valid, bytes: new Uint8Array([4]) }), /hash mismatch/);
-  await assert.rejects(() => store.put({ ...valid, sourceId: "../escape" }), /Unsafe source ID/);
+  await assert.rejects(
+    () => store.put({ ...valid, bytes: new Uint8Array([4]) }),
+    /hash mismatch/,
+  );
+  await assert.rejects(
+    () => store.put({ ...valid, sourceId: "../escape" }),
+    /Unsafe source ID/,
+  );
 });
