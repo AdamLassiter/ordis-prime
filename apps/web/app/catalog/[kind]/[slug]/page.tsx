@@ -27,6 +27,7 @@ export default async function ItemPage({ params }: { params: Promise<{ kind: str
     {item.description && <p className="lede">{item.description}</p>}
     <dl className="facts">
       {item.arcaneClass && <><dt>Arcane class</dt><dd>{item.arcaneClass}</dd></>}
+      {item.weaponClass && <><dt>Weapon class</dt><dd>{item.weaponClass}</dd></>}
       <dt>Components</dt>
       <dd>{item.components.length ? item.components.map((component) => <div key={`${component.kind}:${component.slug}`}><Link href={`/catalog/${component.kind}/${component.slug}`}>{component.quantity} × {component.name}</Link></div>) : "No crafting components recorded"}</dd>
       <dt>Acquisition</dt>

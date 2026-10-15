@@ -2,7 +2,7 @@
 
 | Source | Initial use | Policy |
 | --- | --- | --- |
-| WFCD warframe-items | identities, items, components, arcanes and their classes, Archon Shards, node levels/planets, quests | Fetch the maintained aggregate API endpoint; snapshot, validate, retain version/hash and MIT attribution |
+| WFCD warframe-items | identities, items, weapon and arcane classes, modular weapon representatives/components, Archwings, Archon Shards, node levels/planets, quests | Fetch the maintained aggregate API endpoint; snapshot, validate, retain version/hash and MIT attribution |
 | WFCD warframe-drop-data | mission metadata, enemy, relic and rotation drops | Snapshot mission rewards with payload and retain upstream attribution |
 | WFCD WarframeStat.us | live cycles, events, alerts, fissures and traders | Snapshot the PC English aggregate response; normalize absolute availability windows and retain MIT attribution |
 | Manual YAML | published editorial rankings; curated discovery facts and relations; factual overlays | Require source-specific citations and licence notes; retain each source as an independent versioned set and resolve overlays by explicit external ID |

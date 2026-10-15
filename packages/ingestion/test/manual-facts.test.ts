@@ -61,6 +61,22 @@ entries: [{ target: { sourceId: items, namespace: id, value: braton }, kind: wea
   assert.throws(() => ManualFactsAdapter.fromBytes(invalid), /arcaneClass is invalid/);
 });
 
+test("manual facts validate canonical weapon classes", async () => {
+  const valid = new TextEncoder().encode(`schemaVersion: 1
+source: { id: corrections, title: Corrections, url: https://example.test, licenseNote: Cited }
+entries: [{ target: { sourceId: items, namespace: id, value: dread }, kind: weapon, weaponClass: bow }]
+`);
+  const adapter = ManualFactsAdapter.fromBytes(valid);
+  const observations = await collect(adapter, await adapter.fetch({}));
+  assert.equal(observations[0]?.type === "entity" && observations[0].fields.weaponClass, "bow");
+
+  const invalid = new TextEncoder().encode(`schemaVersion: 1
+source: { id: corrections, title: Corrections, url: https://example.test, licenseNote: Cited }
+entries: [{ target: { sourceId: items, namespace: id, value: dread }, kind: weapon, weaponClass: warframe }]
+`);
+  assert.throws(() => ManualFactsAdapter.fromBytes(invalid), /weaponClass is invalid/);
+});
+
 test("manual facts do not imply that a retired entity can be restored", async (context) => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-manual-facts-"));
   context.after(() => fs.rm(root, { recursive: true, force: true }));

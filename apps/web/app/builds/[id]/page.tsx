@@ -22,7 +22,7 @@ export default async function BuildEditor({ params, searchParams }: { params: Pr
   const equipmentCandidates = query.q ? searchBuildCandidates(database, selectedSlot, query.q) : [];
   const modCandidates = query.modq && modSlot ? searchBuildCandidates(database, "mod", query.modq) : [];
   const enhancementSlot = isBuildEnhancementSlot(query.enhancementslot) ? query.enhancementslot : "warframe-arcane-1";
-  const enhancementCandidates = query.enhancementq ? searchBuildEnhancementCandidates(database, enhancementSlot, query.enhancementq) : [];
+  const enhancementCandidates = query.enhancementq ? searchBuildEnhancementCandidates(database, enhancementSlot, query.enhancementq, id) : [];
   return <>
     <p className="eyebrow">Build draft · revision {build.revision}</p><h1>{build.title}</h1>
     <p><Link className="muted" href="/builds">← All builds</Link></p>

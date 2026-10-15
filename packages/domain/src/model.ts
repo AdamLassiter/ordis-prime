@@ -3,10 +3,13 @@ export type EntityId = string & { readonly __entityId: unique symbol };
 export type EntityKind =
   | "unknown" | "warframe" | "weapon" | "companion" | "mod" | "arcane" | "shard" | "resource"
   | "relic" | "blueprint" | "component" | "node" | "planet"
-  | "quest" | "enemy" | "boss" | "mechanic" | "secret";
+  | "quest" | "enemy" | "boss" | "mechanic" | "secret" | "archwing";
 
 export const ARCANE_CLASSES = ["warframe", "operator", "amp", "primary", "secondary", "melee", "kitgun", "zaw", "bow", "shotgun"] as const;
 export type ArcaneClass = typeof ARCANE_CLASSES[number];
+
+export const WEAPON_CLASSES = ["primary", "secondary", "melee", "bow", "shotgun", "kitgun", "zaw", "archgun", "archmelee", "companion", "amp"] as const;
+export type WeaponClass = typeof WEAPON_CLASSES[number];
 
 export interface CanonicalEntity {
   id: EntityId;
@@ -15,6 +18,7 @@ export interface CanonicalEntity {
   slug: string;
   description?: string;
   arcaneClass?: ArcaneClass;
+  weaponClass?: WeaponClass;
   retired: boolean;
 }
 
@@ -38,7 +42,7 @@ export interface EntityObservation {
   type: "entity";
   externalIds: ExternalIdentifier[];
   kind: EntityKind;
-  fields: Partial<Pick<CanonicalEntity, "name" | "slug" | "description" | "arcaneClass">>;
+  fields: Partial<Pick<CanonicalEntity, "name" | "slug" | "description" | "arcaneClass" | "weaponClass">>;
   aliases?: string[];
   tombstone?: boolean;
   evidence: Evidence;

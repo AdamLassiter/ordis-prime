@@ -63,6 +63,37 @@ test("WFCD adapter maps arcane classes into source-neutral compatibility facts",
   assert.deepEqual(observations.filter((entry) => entry.type === "entity").map((entry) => entry.fields.arcaneClass), ["warframe", "operator", "amp", "primary", "kitgun", "zaw"]);
 });
 
+test("WFCD adapter maps equipment classes and modular weapon representatives", async () => {
+  const weaponSnapshot = {
+    ...snapshot,
+    bytes: new TextEncoder().encode(JSON.stringify([
+      { uniqueName: "/rifle", name: "Braton", category: "Primary", type: "Rifle", productCategory: "LongGuns" },
+      { uniqueName: "/bow", name: "Dread", category: "Primary", type: "Bow", productCategory: "LongGuns" },
+      { uniqueName: "/shotgun", name: "Boar", category: "Primary", type: "Shotgun", productCategory: "LongGuns" },
+      { uniqueName: "/pistol", name: "Lex", category: "Secondary", type: "Pistol", productCategory: "Pistols" },
+      { uniqueName: "/amp", name: "Sirocco", category: "Primary", type: "Pistol", productCategory: "OperatorAmps" },
+      { uniqueName: "/Lotus/Weapons/SolarisUnited/Secondary/Set/Barrel/Catchmoon", name: "Catchmoon", category: "Misc", type: "Kitgun Component" },
+      { uniqueName: "/Lotus/Weapons/SolarisUnited/Secondary/Set/Handle/Haymaker", name: "Haymaker", category: "Misc", type: "Kitgun Component" },
+      { uniqueName: "/Lotus/Weapons/Ostron/Melee/Set/Tip/Balla", name: "Balla", category: "Melee", type: "Zaw Component" },
+      { uniqueName: "/Lotus/Weapons/Ostron/Melee/Set/Handle/Peye", name: "Peye", category: "Melee", type: "Zaw Component" },
+      { uniqueName: "/archwing", name: "Odonata", category: "Archwing", type: "Archwing" },
+    ])),
+  };
+  const observations = await collect(new WfcdItemsAdapter(), weaponSnapshot);
+  assert.deepEqual(observations.filter((entry) => entry.type === "entity").map((entry) => [entry.fields.name, entry.kind, entry.fields.weaponClass]), [
+    ["Braton", "weapon", "primary"],
+    ["Dread", "weapon", "bow"],
+    ["Boar", "weapon", "shotgun"],
+    ["Lex", "weapon", "secondary"],
+    ["Sirocco", "weapon", "amp"],
+    ["Catchmoon", "weapon", "kitgun"],
+    ["Haymaker", "component", undefined],
+    ["Balla", "weapon", "zaw"],
+    ["Peye", "component", undefined],
+    ["Odonata", "archwing", undefined],
+  ]);
+});
+
 test("WFCD node records retain planet and level metadata", async () => {
   const nodeSnapshot = {
     ...snapshot,
@@ -90,7 +121,7 @@ test("WFCD adapter defaults to the maintained aggregate endpoint", async () => {
   try {
     const fetched = await new WfcdItemsAdapter().fetch({});
     assert.equal(requestedUrl, DEFAULT_WFCD_ITEMS_URL);
-    assert.equal(fetched.version, "fixture-etag|wfcd-items-v4");
+    assert.equal(fetched.version, "fixture-etag|wfcd-items-v5");
   } finally {
     globalThis.fetch = originalFetch;
   }

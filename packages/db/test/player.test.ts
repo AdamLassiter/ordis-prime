@@ -134,7 +134,7 @@ function createCatalog(databasePath: string): { sqlite: Database.Database; entit
   const sqlite = openSqliteDatabase(databasePath);
   const evidence = { sourceId: "items", sourceRecordKey: "braton", snapshotVersion: "v1", retrievedAt: "2026-10-13T12:00:00.000Z" };
   const observations: Observation[] = [
-    { type: "entity", kind: "weapon", externalIds: [{ sourceId: "items", namespace: "id", value: "braton" }], fields: { name: "Braton", slug: "braton" }, evidence },
+    { type: "entity", kind: "weapon", externalIds: [{ sourceId: "items", namespace: "id", value: "braton" }], fields: { name: "Braton", slug: "braton", weaponClass: "primary" }, evidence },
     { type: "entity", kind: "quest", externalIds: [{ sourceId: "items", namespace: "id", value: "awakening" }], fields: { name: "Awakening", slug: "awakening" }, evidence: { ...evidence, sourceRecordKey: "awakening" } },
     { type: "entity", kind: "mod", externalIds: [{ sourceId: "items", namespace: "id", value: "serration" }], fields: { name: "Serration", slug: "serration" }, evidence: { ...evidence, sourceRecordKey: "serration" } },
     { type: "entity", kind: "arcane", externalIds: [{ sourceId: "items", namespace: "id", value: "arcane-barrier" }], fields: { name: "Arcane Barrier", slug: "arcane-barrier", arcaneClass: "warframe" }, evidence: { ...evidence, sourceRecordKey: "arcane-barrier" } },

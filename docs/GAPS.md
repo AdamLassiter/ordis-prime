@@ -86,9 +86,11 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   editor and public snapshot routes use canonical catalog links. Advanced
   polarity/capacity calculation remains. Builds can assign ranked arcanes and
   positioned Archon Shards with sourced effect selections. Arcane candidates
-  and assignments enforce a sourced broad slot class. Specialized Bow,
-  Shotgun, Kitgun and Zaw compatibility still needs canonical weapon-class
-  facts before it can validate the equipped weapon. Private drafts are
+  and assignments enforce sourced broad and specialized weapon classes against
+  equipped items in either assignment order. Equipment slots also enforce
+  sourced weapon classes. Kitgun chambers and Zaw strikes act as the current
+  modular weapon representatives; full part composition is not modeled. Private
+  drafts are
   portable and can be cloned; their snapshot history can be viewed or revoked.
   Authenticated recipients can clone a public snapshot into a private draft.
   Draft equipment and mods can seed missing-item acquisition goals, but the

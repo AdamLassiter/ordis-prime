@@ -183,6 +183,13 @@
       "when": 1792053116029,
       "tag": "0025_white_virginia_dare",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "6",
+      "when": 1792053910541,
+      "tag": "0026_wise_slyde",
+      "breakpoints": true
     }
   ]
 }

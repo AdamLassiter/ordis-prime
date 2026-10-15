@@ -50,7 +50,7 @@ export const catalogReleaseSources = sqliteTable("catalog_release_sources", {
   sourceRunId: text("source_run_id").notNull().references(() => sourceRuns.id),
 }, (table) => [primaryKey({ columns: [table.releaseId, table.sourceId] }), uniqueIndex("catalog_release_source_run").on(table.releaseId, table.sourceRunId)]);
 export const entities = sqliteTable("entities", {
-  id: text().primaryKey(), kind: text().notNull(), name: text().notNull(), slug: text().notNull(), description: text(), arcaneClass: text("arcane_class"), retired: integer({ mode: "boolean" }).notNull().default(false), updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
+  id: text().primaryKey(), kind: text().notNull(), name: text().notNull(), slug: text().notNull(), description: text(), arcaneClass: text("arcane_class"), weaponClass: text("weapon_class"), retired: integer({ mode: "boolean" }).notNull().default(false), updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
 }, (table) => [uniqueIndex("entity_kind_slug").on(table.kind, table.slug), index("entity_name").on(table.name)]);
 export const externalIds = sqliteTable("external_ids", {
   entityId: text("entity_id").notNull().references(() => entities.id), sourceId: text("source_id").notNull().references(() => sources.id), namespace: text().notNull(), value: text().notNull(),

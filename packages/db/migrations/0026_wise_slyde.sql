@@ -1,0 +1,1 @@
+ALTER TABLE `entities` ADD `weapon_class` text;

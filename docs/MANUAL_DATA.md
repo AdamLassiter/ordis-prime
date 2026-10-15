@@ -76,8 +76,8 @@ Factual overlays correct or enrich canonical entity fields without modifying a
 provider snapshot. Version 1 YAML declares an independently cited source and
 targets every entry by an explicit `{ sourceId, namespace, value }` identifier.
 Display names are never used to guess the correction target. An entry can
-provide a name, slug, description, canonical `arcaneClass`, aliases, sourced
-`enhancementOptions`, or the explicit tombstone
+provide a name, slug, description, canonical `arcaneClass` or `weaponClass`,
+aliases, sourced `enhancementOptions`, or the explicit tombstone
 `retired: true`; `retired: false` is rejected because restoration needs a
 separate reviewed operation. See `data/manual/facts.example.yaml`.
 
@@ -88,8 +88,8 @@ pnpm data:refresh wfcd-items
 pnpm data:refresh manual-facts:data/manual/facts.example.yaml
 ```
 
-Source priority determines the active value for name, slug, description, and
-arcane class.
+Source priority determines the active value for name, slug, description, arcane
+class, and weapon class.
 The default manual priority is 300, above the bundled providers, while each
 field retains the overlay's source record, YAML path, snapshot, and citation.
 Later provider refreshes therefore cannot silently erase an accepted
@@ -100,6 +100,11 @@ canonical field.
 `melee`, `kitgun`, `zaw`, `bow`, or `shotgun`, and is valid only on an `arcane`
 entry. WFCD normally supplies this field; an overlay can cite a correction
 without teaching build consumers about provider-specific type labels.
+
+`weaponClass` accepts `primary`, `secondary`, `melee`, `bow`, `shotgun`,
+`kitgun`, `zaw`, `archgun`, `archmelee`, `companion`, or `amp`, and is valid
+only on a `weapon` entry. The normalized class drives equipment-slot and
+specialized-arcane validation.
 
 Enhancement options contain a stable lowercase-hyphen key and a concise label.
 They are immutable source-run facts rather than fields copied onto an entity.

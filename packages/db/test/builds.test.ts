@@ -15,13 +15,17 @@ test("build drafts are private and share snapshots remain immutable", async (con
   const owner = createLocalUser(database, { username: "Builder" });
   const other = createLocalUser(database, { username: "Other" });
   seedEntity(database, "frame", "warframe", "Mag", "mag");
-  seedEntity(database, "weapon", "weapon", "Paris", "paris");
+  seedEntity(database, "weapon", "weapon", "Paris", "paris", undefined, "primary");
+  seedEntity(database, "bow", "weapon", "Dread", "dread", undefined, "bow");
+  seedEntity(database, "secondary", "weapon", "Lex", "lex", undefined, "secondary");
   seedEntity(database, "mod", "mod", "Serration", "serration");
   seedEntity(database, "arcane", "arcane", "Arcane Barrier", "arcane-barrier", "warframe");
   seedEntity(database, "operator-arcane", "arcane", "Magus Elevate", "magus-elevate", "operator");
+  seedEntity(database, "bow-arcane", "arcane", "Longbow Sharpshot", "longbow-sharpshot", "bow");
   seedEntity(database, "shard", "shard", "Crimson Archon Shard", "crimson-archon-shard");
   seedEnhancementOption(database, "shard", "ability-strength", "Ability Strength");
-  assert.deepEqual(searchBuildCandidates(database, "primary", "Par"), [{ kind: "weapon", slug: "paris", name: "Paris" }]);
+  assert.deepEqual(searchBuildCandidates(database, "primary", "Par"), [{ kind: "weapon", slug: "paris", name: "Paris", weaponClass: "primary" }]);
+  assert.deepEqual(searchBuildCandidates(database, "secondary", "Par"), []);
   assert.deepEqual(searchBuildCandidates(database, "mod", "Serr"), [{ kind: "mod", slug: "serration", name: "Serration" }]);
   assert.deepEqual(searchBuildEnhancementCandidates(database, "warframe-arcane-1", "Barrier"), [{ kind: "arcane", slug: "arcane-barrier", name: "Arcane Barrier", arcaneClass: "warframe" }]);
   assert.deepEqual(searchBuildEnhancementCandidates(database, "warframe-arcane-1", "Elevate"), []);
@@ -33,6 +37,7 @@ test("build drafts are private and share snapshots remain immutable", async (con
   configureBuildEquipment(database, owner, buildId, "primary", { configuration: "Incarnon", formaCount: 3, capacityUpgrade: true });
   setBuildMod(database, owner, buildId, "primary", 0, { kind: "mod", slug: "serration" }, 5);
   setBuildEnhancement(database, owner, buildId, "warframe-arcane-1", { kind: "arcane", slug: "arcane-barrier" }, 5);
+  assert.deepEqual(searchBuildEnhancementCandidates(database, "primary-arcane", "Longbow", buildId), []);
   setBuildEnhancement(database, owner, buildId, "archon-shard-1", { kind: "shard", slug: "crimson-archon-shard" }, undefined, "ability-strength");
   setBuildEnhancement(database, owner, buildId, "archon-shard-2", { kind: "shard", slug: "crimson-archon-shard" }, undefined, "ability-strength");
   assert.equal(getPlayerBuild(database, other, buildId), undefined);
@@ -84,9 +89,30 @@ test("build drafts are private and share snapshots remain immutable", async (con
   assert.throws(() => setBuildEquipment(database, other, buildId, "primary", { kind: "weapon", slug: "paris" }), /not found/);
   assert.throws(() => setBuildEnhancement(database, owner, buildId, "archon-shard-3", { kind: "arcane", slug: "arcane-barrier" }), /requires a shard/);
   assert.throws(() => setBuildEnhancement(database, owner, buildId, "warframe-arcane-2", { kind: "arcane", slug: "magus-elevate" }), /not compatible/);
+  assert.throws(() => setBuildEnhancement(database, owner, buildId, "primary-arcane", { kind: "arcane", slug: "longbow-sharpshot" }), /not compatible/);
+  assert.throws(() => setBuildEquipment(database, owner, buildId, "primary", { kind: "weapon", slug: "lex" }), /not compatible/);
   assert.throws(() => setBuildEnhancement(database, owner, buildId, "archon-shard-3", { kind: "shard", slug: "crimson-archon-shard" }), /require a sourced effect/);
   assert.throws(() => setBuildEnhancement(database, owner, buildId, "archon-shard-3", { kind: "shard", slug: "crimson-archon-shard" }, undefined, "missing"), /not active/);
   assert.throws(() => cloneSharedBuild(database, other, "missing-share"), /not found/);
+});
+
+test("specialized weapon arcanes remain valid regardless of assignment order", async (context) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-specialized-arcane-"));
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const databasePath = path.join(root, "builds.sqlite");
+  migrateDatabase(databasePath);
+  const database = openSqliteDatabase(databasePath);
+  context.after(() => database.close());
+  const owner = createLocalUser(database, { username: "Builder" });
+  seedEntity(database, "rifle", "weapon", "Braton", "braton", undefined, "primary");
+  seedEntity(database, "bow", "weapon", "Dread", "dread", undefined, "bow");
+  seedEntity(database, "bow-arcane", "arcane", "Longbow Sharpshot", "longbow-sharpshot", "bow");
+  const buildId = createPlayerBuild(database, owner, { title: "Bow setup" });
+
+  setBuildEnhancement(database, owner, buildId, "primary-arcane", { kind: "arcane", slug: "longbow-sharpshot" });
+  assert.throws(() => setBuildEquipment(database, owner, buildId, "primary", { kind: "weapon", slug: "braton" }), /not compatible with Braton/);
+  setBuildEquipment(database, owner, buildId, "primary", { kind: "weapon", slug: "dread" });
+  assert.equal(getPlayerBuild(database, owner, buildId)?.equipment[0]?.entity.name, "Dread");
 });
 
 test("cloned build titles stay within the draft title limit", async (context) => {
@@ -103,8 +129,8 @@ test("cloned build titles stay within the draft title limit", async (context) =>
   assert.match(clone.title, / \(copy\)$/);
 });
 
-function seedEntity(database: ReturnType<typeof openSqliteDatabase>, id: string, kind: string, name: string, slug: string, arcaneClass?: string) {
-  database.prepare("insert into entities (id, kind, name, slug, arcane_class, retired, updated_at) values (?, ?, ?, ?, ?, 0, ?)").run(id, kind, name, slug, arcaneClass ?? null, Date.now());
+function seedEntity(database: ReturnType<typeof openSqliteDatabase>, id: string, kind: string, name: string, slug: string, arcaneClass?: string, weaponClass?: string) {
+  database.prepare("insert into entities (id, kind, name, slug, arcane_class, weapon_class, retired, updated_at) values (?, ?, ?, ?, ?, ?, 0, ?)").run(id, kind, name, slug, arcaneClass ?? null, weaponClass ?? null, Date.now());
 }
 
 function seedEnhancementOption(database: ReturnType<typeof openSqliteDatabase>, entityId: string, key: string, label: string) {

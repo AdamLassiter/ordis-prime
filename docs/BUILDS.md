@@ -20,7 +20,10 @@ mod positions require canonical mod entities, and enhancement slots require
 canonical arcane or shard entities. Arcane search and assignment also require
 an active, sourced class compatible with the broad slot family: Warframe,
 Operator, Amp, Primary, Secondary or Melee. Specialized Bow, Shotgun, Kitgun
-and Zaw arcanes are admitted only to their possible weapon-family slots.
+and Zaw arcanes additionally require matching equipped weapon classes whenever
+that equipment is present. Equipment searches and assignments likewise enforce
+Primary, Secondary, Melee, companion-weapon, Archgun, Archmelee, Amp and
+Archwing slot semantics.
 
 ## Share semantics
 
@@ -55,11 +58,11 @@ recipes and recommends nodes using the same canonical IDs.
 
 - Forma count, a capacity-upgrade flag, and a configuration label are recorded,
   but polarities and calculated capacity/drain are not modeled. Broad arcane
-  class compatibility is enforced from cited canonical facts. Specialized Bow,
-  Shotgun, Kitgun and Zaw arcanes are not yet checked against the equipped
-  weapon subtype because canonical weapon-class facts are still absent.
-  Abilities, schools and structured weapon configuration variants are also
-  absent.
+  and specialized weapon compatibility are enforced from cited canonical
+  facts. A Kitgun chamber or Zaw strike is currently the representative
+  canonical weapon; the other modular parts and their stat composition are not
+  structured in a build. Abilities, schools and structured weapon configuration
+  variants are also absent.
 - Private build drafts are included in portable profile export/import. Published
   share snapshots are deliberately installation-local capability URLs.
 - Share keys are unlisted capabilities, not access-controlled invitations.

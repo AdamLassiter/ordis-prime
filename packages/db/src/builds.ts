@@ -1,5 +1,5 @@
 import { randomBytes, randomUUID } from "node:crypto";
-import type { ArcaneClass } from "@ordis-prime/domain";
+import type { ArcaneClass, WeaponClass } from "@ordis-prime/domain";
 import type Database from "better-sqlite3";
 
 export const BUILD_SLOTS = ["warframe", "primary", "secondary", "melee", "companion", "companion-weapon", "archwing", "archgun", "archmelee", "operator-amp"] as const;
@@ -28,7 +28,7 @@ export interface SharedBuildSnapshot extends Omit<PlayerBuild, "id" | "createdAt
   sharedAt: number;
 }
 export interface BuildShareSummary { shareKey: string; revision: number; createdAt: number }
-export type BuildCandidate = BuildEntityReference & { arcaneClass?: ArcaneClass; enhancementOptions?: BuildEnhancementOption[] };
+export type BuildCandidate = BuildEntityReference & { arcaneClass?: ArcaneClass; weaponClass?: WeaponClass; enhancementOptions?: BuildEnhancementOption[] };
 
 export function createPlayerBuild(sqlite: Database.Database, userId: string, input: { title: string; category?: string; notes?: string }): string {
   assertUser(sqlite, userId);
@@ -93,20 +93,23 @@ function cloneBuildSnapshot(sqlite: Database.Database, userId: string, source: P
 
 export function searchBuildCandidates(sqlite: Database.Database, slot: BuildSlot | "mod", query: string, limit = 20): BuildCandidate[] {
   if (slot !== "mod" && !(BUILD_SLOTS as readonly string[]).includes(slot)) throw new Error("Build slot is invalid");
-  const kind = slot === "mod" ? "mod" : slot === "warframe" ? "warframe" : slot === "companion" ? "companion" : "weapon";
+  const { kind, weaponClasses } = equipmentRule(slot);
+  const classFilter = weaponClasses.length ? `and weapon_class in (${weaponClasses.map(() => "?").join(", ")})` : "";
   const normalizedLimit = Math.max(1, Math.min(100, Math.trunc(limit)));
-  return sqlite.prepare(`
-    select kind, slug, name from entities
-    where retired = 0 and kind = ? and name like ? escape '\\'
+  const candidates = sqlite.prepare(`
+    select kind, slug, name, weapon_class as weaponClass from entities
+    where retired = 0 and kind = ? ${classFilter} and name like ? escape '\\'
     order by case when lower(name) = lower(?) then 0 else 1 end, name collate nocase
     limit ?
-  `).all(kind, `%${escapeLike(query.trim())}%`, query.trim(), normalizedLimit) as BuildCandidate[];
+  `).all(kind, ...weaponClasses, `%${escapeLike(query.trim())}%`, query.trim(), normalizedLimit) as Array<Omit<BuildCandidate, "weaponClass"> & { weaponClass: WeaponClass | null }>;
+  return candidates.map(({ weaponClass, ...candidate }) => ({ ...candidate, ...(weaponClass ? { weaponClass } : {}) }));
 }
 
-export function searchBuildEnhancementCandidates(sqlite: Database.Database, slot: BuildEnhancementSlot, query: string, limit = 20): BuildCandidate[] {
+export function searchBuildEnhancementCandidates(sqlite: Database.Database, slot: BuildEnhancementSlot, query: string, buildId?: string, limit = 20): BuildCandidate[] {
   const kind = enhancementKind(slot);
   const normalizedLimit = Math.max(1, Math.min(100, Math.trunc(limit)));
-  const compatibleArcaneClasses = kind === "arcane" ? arcaneClassesForSlot(slot) : [];
+  const weaponClass = buildId ? equippedWeaponClass(sqlite, buildId, slot) : undefined;
+  const compatibleArcaneClasses = kind === "arcane" ? arcaneClassesForSlot(slot, weaponClass) : [];
   const classFilter = kind === "arcane" ? `and arcane_class in (${compatibleArcaneClasses.map(() => "?").join(", ")})` : "";
   const candidates = sqlite.prepare(`
     select id, kind, slug, name, arcane_class as arcaneClass from entities
@@ -124,7 +127,8 @@ export function setBuildEnhancement(sqlite: Database.Database, userId: string, b
     assertBuildOwner(sqlite, userId, buildId);
     const entity = findEntity(sqlite, reference);
     if (entity.kind !== expectedKind) throw new Error(`${slot} requires a ${expectedKind}, not ${entity.kind}`);
-    if (expectedKind === "arcane" && (!entity.arcaneClass || !arcaneClassesForSlot(slot).includes(entity.arcaneClass))) {
+    const weaponClass = equippedWeaponClass(sqlite, buildId, slot);
+    if (expectedKind === "arcane" && (!entity.arcaneClass || !arcaneClassesForSlot(slot, weaponClass).includes(entity.arcaneClass))) {
       throw new Error(`${entity.arcaneClass ?? "Unclassified arcane"} is not compatible with ${slot}`);
     }
     let option: BuildEnhancementOption | undefined;
@@ -158,8 +162,20 @@ export function setBuildEquipment(sqlite: Database.Database, userId: string, bui
   sqlite.transaction(() => {
     assertBuildOwner(sqlite, userId, buildId);
     const entity = findEntity(sqlite, reference);
-    const expectedKind = slot === "warframe" ? "warframe" : slot === "companion" ? "companion" : "weapon";
+    const { kind: expectedKind, weaponClasses } = equipmentRule(slot);
     if (entity.kind !== expectedKind) throw new Error(`${slot} requires a ${expectedKind}, not ${entity.kind}`);
+    if (weaponClasses.length && (!entity.weaponClass || !weaponClasses.includes(entity.weaponClass))) throw new Error(`${entity.weaponClass ?? "Unclassified weapon"} is not compatible with ${slot}`);
+    const arcaneSlot = weaponArcaneSlot(slot);
+    if (arcaneSlot) {
+      const assignedArcane = sqlite.prepare(`
+        select arcane.arcane_class as arcaneClass
+        from build_enhancements enhancement join entities arcane on arcane.id = enhancement.entity_id
+        where enhancement.build_id = ? and enhancement.slot = ?
+      `).get(buildId, arcaneSlot) as { arcaneClass: ArcaneClass | null } | undefined;
+      if (assignedArcane && (!assignedArcane.arcaneClass || !arcaneClassesForSlot(arcaneSlot, entity.weaponClass).includes(assignedArcane.arcaneClass))) {
+        throw new Error(`${assignedArcane.arcaneClass ?? "Unclassified arcane"} is not compatible with ${entity.name}`);
+      }
+    }
     const existing = sqlite.prepare("select id, entity_id as entityId from build_equipment where build_id = ? and slot = ?").get(buildId, slot) as { id: string; entityId: string } | undefined;
     if (existing) {
       if (existing.entityId !== entity.id) {
@@ -326,19 +342,50 @@ function cloneTitle(title: string): string { const suffix = " (copy)"; return `$
 function normalizeText(value: string | undefined, maximum: number, label: string): string | undefined { const text = value?.trim() || undefined; if (text && text.length > maximum) throw new Error(`${label} cannot exceed ${maximum} characters`); return text; }
 function assertUser(sqlite: Database.Database, userId: string): void { if (!sqlite.prepare("select 1 from users where id = ?").get(userId)) throw new Error("Unknown user"); }
 function assertBuildOwner(sqlite: Database.Database, userId: string, buildId: string): void { if (!sqlite.prepare("select 1 from player_builds where id = ? and user_id = ?").get(buildId, userId)) throw new Error("Build not found"); }
-function findEntity(sqlite: Database.Database, reference: { kind: string; slug: string }): { id: string; kind: string; arcaneClass?: ArcaneClass } { const entity = sqlite.prepare("select id, kind, arcane_class as arcaneClass from entities where kind = ? and slug = ? and retired = 0").get(reference.kind, reference.slug) as { id: string; kind: string; arcaneClass?: ArcaneClass } | undefined; if (!entity) throw new Error(`Unknown active entity ${reference.kind}:${reference.slug}`); return entity; }
+function findEntity(sqlite: Database.Database, reference: { kind: string; slug: string }): { id: string; kind: string; name: string; arcaneClass?: ArcaneClass; weaponClass?: WeaponClass } { const entity = sqlite.prepare("select id, kind, name, arcane_class as arcaneClass, weapon_class as weaponClass from entities where kind = ? and slug = ? and retired = 0").get(reference.kind, reference.slug) as { id: string; kind: string; name: string; arcaneClass?: ArcaneClass; weaponClass?: WeaponClass } | undefined; if (!entity) throw new Error(`Unknown active entity ${reference.kind}:${reference.slug}`); return entity; }
 function enhancementKind(slot: BuildEnhancementSlot): "arcane" | "shard" {
   if (!(BUILD_ENHANCEMENT_SLOTS as readonly string[]).includes(slot)) throw new Error("Build enhancement slot is invalid");
   return slot.startsWith("archon-shard-") ? "shard" : "arcane";
 }
-function arcaneClassesForSlot(slot: BuildEnhancementSlot): ArcaneClass[] {
+function arcaneClassesForSlot(slot: BuildEnhancementSlot, weaponClass?: WeaponClass): ArcaneClass[] {
   if (slot.startsWith("warframe-arcane-")) return ["warframe"];
   if (slot.startsWith("operator-arcane-")) return ["operator"];
   if (slot.startsWith("amp-arcane-")) return ["amp"];
-  if (slot === "primary-arcane") return ["primary", "kitgun", "bow", "shotgun"];
-  if (slot === "secondary-arcane") return ["secondary", "kitgun"];
-  if (slot === "melee-arcane") return ["melee", "zaw"];
+  if (slot === "primary-arcane") return weaponClass === undefined ? ["primary", "kitgun", "bow", "shotgun"] : ["primary", ...(weaponClass === "kitgun" || weaponClass === "bow" || weaponClass === "shotgun" ? [weaponClass] : [])];
+  if (slot === "secondary-arcane") return weaponClass === undefined ? ["secondary", "kitgun"] : ["secondary", ...(weaponClass === "kitgun" ? ["kitgun" as const] : [])];
+  if (slot === "melee-arcane") return weaponClass === undefined ? ["melee", "zaw"] : ["melee", ...(weaponClass === "zaw" ? ["zaw" as const] : [])];
   throw new Error("Build enhancement slot is invalid");
+}
+function equipmentRule(slot: BuildSlot | "mod"): { kind: string; weaponClasses: WeaponClass[] } {
+  if (slot === "mod") return { kind: "mod", weaponClasses: [] };
+  if (slot === "warframe") return { kind: "warframe", weaponClasses: [] };
+  if (slot === "companion") return { kind: "companion", weaponClasses: [] };
+  if (slot === "archwing") return { kind: "archwing", weaponClasses: [] };
+  return { kind: "weapon", weaponClasses: weaponClassesForSlot(slot) };
+}
+function weaponClassesForSlot(slot: BuildSlot): WeaponClass[] {
+  if (slot === "primary") return ["primary", "bow", "shotgun", "kitgun"];
+  if (slot === "secondary") return ["secondary", "kitgun"];
+  if (slot === "melee") return ["melee", "zaw"];
+  if (slot === "companion-weapon") return ["companion"];
+  if (slot === "archgun") return ["archgun"];
+  if (slot === "archmelee") return ["archmelee"];
+  if (slot === "operator-amp") return ["amp"];
+  return [];
+}
+function weaponArcaneSlot(slot: BuildSlot): BuildEnhancementSlot | undefined {
+  if (slot === "primary" || slot === "secondary" || slot === "melee") return `${slot}-arcane`;
+  return undefined;
+}
+function equippedWeaponClass(sqlite: Database.Database, buildId: string, slot: BuildEnhancementSlot): WeaponClass | undefined {
+  const equipmentSlot = slot === "primary-arcane" ? "primary" : slot === "secondary-arcane" ? "secondary" : slot === "melee-arcane" ? "melee" : undefined;
+  if (!equipmentSlot) return undefined;
+  const row = sqlite.prepare(`
+    select entity.weapon_class as weaponClass
+    from build_equipment equipment join entities entity on entity.id = equipment.entity_id
+    where equipment.build_id = ? and equipment.slot = ?
+  `).get(buildId, equipmentSlot) as { weaponClass: WeaponClass | null } | undefined;
+  return row?.weaponClass ?? undefined;
 }
 function listEnhancementOptions(sqlite: Database.Database, entityId: string): BuildEnhancementOption[] {
   return sqlite.prepare(`

@@ -32,6 +32,4 @@ and direct server calls.
   arcanes can be newly assigned or cloned.
 - The catalog detail page exposes the chosen class and its regular field
   evidence.
-- This does not prove that a specialized arcane matches the equipped weapon.
-  That needs separately sourced canonical weapon-class facts; until then the
-  build only guarantees broad slot compatibility.
+- Specialized arcane-to-weapon validation is refined by ADR 0026.
