@@ -84,6 +84,14 @@ export interface EntityRelationObservation {
   evidence: Evidence;
 }
 
+export interface EnhancementOptionObservation {
+  type: "enhancement-option";
+  subjectExternalId: ExternalIdentifier;
+  key: string;
+  label: string;
+  evidence: Evidence;
+}
+
 export interface RankingSetObservation {
   type: "ranking-set";
   key: string;
@@ -108,7 +116,7 @@ export interface RankingObservation {
   evidence: Evidence;
 }
 
-export type Observation = EntityObservation | DropObservation | RecipeObservation | NodeDetailObservation | EntityRelationObservation | RankingSetObservation | RankingObservation;
+export type Observation = EntityObservation | DropObservation | RecipeObservation | NodeDetailObservation | EntityRelationObservation | EnhancementOptionObservation | RankingSetObservation | RankingObservation;
 
 export interface InventoryEntry {
   entityId: EntityId;

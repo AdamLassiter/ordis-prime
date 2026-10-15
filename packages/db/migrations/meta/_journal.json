@@ -162,6 +162,13 @@
       "when": 1792008161663,
       "tag": "0022_many_otto_octavius",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "6",
+      "when": 1792051858794,
+      "tag": "0023_chemical_callisto",
+      "breakpoints": true
     }
   ]
 }

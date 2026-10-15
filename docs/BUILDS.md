@@ -7,7 +7,11 @@ up to twenty positioned mods with optional ranks. It can also record a freeform
 configuration label (for example, an Incarnon or named config), Forma count, and
 whether an Orokin capacity upgrade is installed.
 Build-level enhancement slots record Warframe, operator/amp and weapon arcanes
-plus five positioned Archon Shards. Arcanes can retain an optional rank.
+plus five positioned Archon Shards. Arcanes can retain an optional rank. Every
+new shard assignment chooses one active, cited effect option; the build stores
+the stable option key and the label shown at selection time. If a later source
+version removes that option, the draft keeps its historical choice and marks it
+unavailable rather than silently substituting another effect.
 
 Changing an equipment item clears that slot's mods and configuration because
 those assignments are usually item-specific. Every edit increments the build revision. Slot validation
@@ -49,7 +53,7 @@ recipes and recommends nodes using the same canonical IDs.
 - Forma count, a capacity-upgrade flag, and a configuration label are recorded,
   but polarities and calculated capacity/drain are not modeled. Arcane subtype
   compatibility is not enforced because the canonical catalog does not yet
-  retain WFCD's arcane subtype. Shard effects, abilities, schools and structured
+  retain WFCD's arcane and weapon subtypes. Abilities, schools and structured
   weapon configuration variants are also absent.
 - Private build drafts are included in portable profile export/import. Published
   share snapshots are deliberately installation-local capability URLs.

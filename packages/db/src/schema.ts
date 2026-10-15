@@ -82,6 +82,16 @@ export const entityRelations = sqliteTable("entity_relations", {
   citationUrl: text("citation_url"),
   sourcePath: text("source_path"),
 }, (table) => [index("entity_relations_from").on(table.fromEntityId), index("entity_relations_to").on(table.toEntityId)]);
+export const enhancementOptions = sqliteTable("entity_enhancement_options", {
+  id: text().primaryKey(),
+  entityId: text("entity_id").notNull().references(() => entities.id),
+  key: text().notNull(),
+  label: text().notNull(),
+  sourceRunId: text("source_run_id").notNull().references(() => sourceRuns.id),
+  sourceRecordKey: text("source_record_key").notNull(),
+  citationUrl: text("citation_url"),
+  sourcePath: text("source_path"),
+}, (table) => [uniqueIndex("enhancement_option_run_key").on(table.sourceRunId, table.entityId, table.key), index("enhancement_option_entity").on(table.entityId)]);
 export const conflicts = sqliteTable("ingestion_conflicts", { id: text().primaryKey(), sourceRunId: text("source_run_id").notNull().references(() => sourceRuns.id), recordKey: text("record_key").notNull(), reason: text().notNull(), candidatesJson: text("candidates_json").notNull(), resolvedAt: integer("resolved_at", { mode: "timestamp_ms" }) });
 export const rankingSets = sqliteTable("ranking_sets", { id: text().primaryKey(), sourceRunId: text("source_run_id").notNull().references(() => sourceRuns.id), setKey: text("set_key").notNull(), title: text().notNull(), author: text().notNull(), publishedAt: integer("published_at", { mode: "timestamp_ms" }).notNull(), gameVersion: text("game_version"), scope: text().notNull(), scaleJson: text("scale_json").notNull(), licenseNote: text("license_note").notNull(), sourceRecordKey: text("source_record_key"), citationUrl: text("citation_url"), sourcePath: text("source_path") }, (table) => [uniqueIndex("ranking_set_run_key").on(table.sourceRunId, table.setKey)]);
 export const editorialRankings = sqliteTable("editorial_rankings", { id: text().primaryKey(), setId: text("set_id").notNull().references(() => rankingSets.id), entityId: text("entity_id").notNull().references(() => entities.id), tier: text().notNull(), position: integer(), timestampSeconds: integer("timestamp_seconds"), notes: text(), sourceRecordKey: text("source_record_key"), citationUrl: text("citation_url"), sourcePath: text("source_path") }, (table) => [uniqueIndex("ranking_set_entity").on(table.setId, table.entityId), index("ranking_entity").on(table.entityId)]);
@@ -224,6 +234,8 @@ export const buildEnhancements = sqliteTable("build_enhancements", {
   slot: text().notNull(),
   entityId: text("entity_id").notNull().references(() => entities.id),
   rank: integer(),
+  optionKey: text("option_key"),
+  optionLabel: text("option_label"),
 }, (table) => [uniqueIndex("build_enhancement_slot").on(table.buildId, table.slot)]);
 export const buildShareSnapshots = sqliteTable("build_share_snapshots", {
   id: text().primaryKey(),

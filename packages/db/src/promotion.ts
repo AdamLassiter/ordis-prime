@@ -37,6 +37,7 @@ export interface PromotionResult {
   dropsCreated: number;
   nodeDetailsCreated: number;
   relationsCreated: number;
+  enhancementOptionsCreated: number;
   rankingSetsCreated: number;
   rankingsCreated: number;
   conflictsCreated: number;
@@ -63,7 +64,7 @@ function promoteInTransaction(sqlite: Database.Database, input: PromoteSourceInp
     }
     if (existing.status === "active") {
       const release = sqlite.prepare("select id from catalog_releases where active = 1 order by promoted_at desc limit 1").get() as { id: string } | undefined;
-      return { sourceRunId: existing.id, releaseId: release?.id ?? "unchanged", entitiesCreated: 0, entitiesMatched: 0, recipesCreated: 0, dropsCreated: 0, nodeDetailsCreated: 0, relationsCreated: 0, rankingSetsCreated: 0, rankingsCreated: 0, conflictsCreated: 0 };
+      return { sourceRunId: existing.id, releaseId: release?.id ?? "unchanged", entitiesCreated: 0, entitiesMatched: 0, recipesCreated: 0, dropsCreated: 0, nodeDetailsCreated: 0, relationsCreated: 0, enhancementOptionsCreated: 0, rankingSetsCreated: 0, rankingsCreated: 0, conflictsCreated: 0 };
     }
     throw new Error(`Source version ${input.source.id}@${input.version} has already been imported and is not active`);
   }
@@ -88,7 +89,7 @@ function promoteInTransaction(sqlite: Database.Database, input: PromoteSourceInp
   `).run(sourceRunId, input.source.id, input.version, input.contentHash, retrievedAt.getTime(), input.snapshotPath ?? null);
 
   const state = loadResolutionState(sqlite);
-  const counts = { entitiesCreated: 0, entitiesMatched: 0, recipesCreated: 0, dropsCreated: 0, nodeDetailsCreated: 0, relationsCreated: 0, rankingSetsCreated: 0, rankingsCreated: 0, conflictsCreated: 0 };
+  const counts = { entitiesCreated: 0, entitiesMatched: 0, recipesCreated: 0, dropsCreated: 0, nodeDetailsCreated: 0, relationsCreated: 0, enhancementOptionsCreated: 0, rankingSetsCreated: 0, rankingsCreated: 0, conflictsCreated: 0 };
 
   for (const observation of input.observations) {
     if (observation.type !== "entity") continue;
@@ -129,6 +130,20 @@ function promoteInTransaction(sqlite: Database.Database, input: PromoteSourceInp
   }
 
   for (const observation of input.observations) {
+    if (observation.type === "enhancement-option") {
+      const entityId = state.externalIds.get(externalKey(observation.subjectExternalId));
+      if (!entityId) {
+        writeConflict(sqlite, sourceRunId, observation.evidence.sourceRecordKey, "Enhancement option refers to an unresolved entity", [], counts);
+        continue;
+      }
+      sqlite.prepare(`
+        insert into entity_enhancement_options
+          (id, entity_id, key, label, source_run_id, source_record_key, citation_url, source_path)
+        values (?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(randomUUID(), entityId, observation.key, observation.label, sourceRunId,
+        observation.evidence.sourceRecordKey, observation.evidence.citationUrl ?? null, observation.evidence.path ?? null);
+      counts.enhancementOptionsCreated += 1;
+    }
     if (observation.type === "entity-relation") {
       const fromEntityId = state.externalIds.get(externalKey(observation.fromExternalId));
       const toEntityId = state.externalIds.get(externalKey(observation.toExternalId));
@@ -198,6 +213,9 @@ function promoteInTransaction(sqlite: Database.Database, input: PromoteSourceInp
       const insertIngredient = sqlite.prepare("insert into recipe_ingredients (recipe_id, entity_id, quantity) values (?, ?, ?)");
       for (const [entityId, quantity] of quantities) insertIngredient.run(recipeId, entityId, quantity);
       counts.recipesCreated += 1;
+    }
+    if (observation.type === "enhancement-option" && (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(observation.key) || !observation.label.trim() || observation.label.length > 240)) {
+      throw new Error("Enhancement option key or label is invalid");
     }
   }
 

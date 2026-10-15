@@ -26,7 +26,8 @@ export class WfcdItemsAdapter implements SourceAdapter {
       if (!item.uniqueName || !item.name) continue;
       const kind = kindFor(item);
       const evidence = { sourceId: this.source.id, sourceRecordKey: item.uniqueName, snapshotVersion: snapshot.version, retrievedAt: snapshot.retrievedAt, citationUrl: item.wikiaUrl, license: this.source.license, path: `[${index}]` };
-      yield { type: "entity", kind, externalIds: [{ sourceId: this.source.id, namespace: "uniqueName", value: item.uniqueName }], fields: { name: item.name, slug: slugify(item.name), description: item.description }, evidence };
+      const name = cleanName(item.name);
+      yield { type: "entity", kind, externalIds: [{ sourceId: this.source.id, namespace: "uniqueName", value: item.uniqueName }], fields: { name, slug: slugify(name), description: item.description }, evidence };
       if (kind === "node" && item.systemName) yield {
         type: "node-detail", nodeExternalId: { sourceId: this.source.id, namespace: "uniqueName", value: item.uniqueName }, planet: item.systemName,
         minimumEnemyLevel: item.minEnemyLevel, maximumEnemyLevel: item.maxEnemyLevel,
@@ -46,4 +47,5 @@ function kindFor(item: Pick<WfcdItem, "uniqueName" | "category" | "type">, fallb
   if (item.uniqueName?.startsWith(ARCHON_SHARD_PREFIX)) return "shard";
   return categories[item.category ?? ""] ?? (item.type === "Blueprint" ? "blueprint" : fallback);
 }
+function cleanName(value: string): string { return value.replace(/^<[^>]+>\s*/, "").trim(); }
 function slugify(value: string) { return value.toLocaleLowerCase("en").normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""); }

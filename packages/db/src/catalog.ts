@@ -19,6 +19,7 @@ export interface CatalogItem extends CatalogSummary {
   drops: Array<{ nodeSlug?: string; node: string; chance?: number; rotation?: string }>;
   sources: Array<{ name: string; homepage: string }>;
   rankings: Array<{ title: string; author: string; tier: string; timestampSeconds?: number; sourceUrl: string }>;
+  enhancementOptions: Array<{ key: string; label: string; sourceName: string; citationUrl?: string }>;
   relations: Array<{ direction: "outgoing" | "incoming"; kind: string; subject: CatalogSummary; notes?: string; sourceName: string; citationUrl?: string }>;
   evidence: Array<{ fact: string; sourceName: string; version: string; recordKey?: string; citationUrl?: string; sourcePath?: string; snapshotPath?: string }>;
 }
@@ -183,6 +184,20 @@ export function findCatalogItem(sqlite: Database.Database, kind: string, slug: s
     where ranking.entity_id = ?
     order by ranking_set.published_at desc, ranking_set.title
   `).all(item.id) as CatalogItem["rankings"];
+  const enhancementOptions = sqlite.prepare(`
+    with ranked as (
+      select option.key, option.label, source.name as sourceName, option.citation_url as citationUrl,
+        row_number() over (partition by option.key order by source.priority desc, run.retrieved_at desc, option.id) as preference
+      from entity_enhancement_options option
+      join source_runs run on run.id = option.source_run_id and run.status = 'active'
+      join sources source on source.id = run.source_id
+      where option.entity_id = ?
+    )
+    select key, label, sourceName, citationUrl from ranked where preference = 1 order by label collate nocase, key
+  `).all(item.id).map((row) => {
+    const option = row as { key: string; label: string; sourceName: string; citationUrl: string | null };
+    return { ...option, citationUrl: option.citationUrl ?? undefined };
+  });
   const relations = sqlite.prepare(`
     select 'outgoing' as direction, relation.kind, target.kind as subjectKind, target.slug as subjectSlug,
       target.name as subjectName, target.description as subjectDescription, relation.notes,
@@ -233,6 +248,13 @@ export function findCatalogItem(sqlite: Database.Database, kind: string, slug: s
     join sources source on source.id = run.source_id
     where ranking.entity_id = ?
     union all
+    select 'enhancement-option.' || option.key as fact, source.name, run.version, option.source_record_key,
+           option.citation_url, option.source_path, run.snapshot_path
+    from entity_enhancement_options option
+    join source_runs run on run.id = option.source_run_id and run.status = 'active'
+    join sources source on source.id = run.source_id
+    where option.entity_id = ?
+    union all
     select 'relation.' || relation.kind as fact, source.name, run.version, relation.source_record_key,
            relation.citation_url, relation.source_path, run.snapshot_path
     from entity_relations relation
@@ -240,9 +262,9 @@ export function findCatalogItem(sqlite: Database.Database, kind: string, slug: s
     join sources source on source.id = run.source_id
     where relation.from_entity_id = ? or relation.to_entity_id = ?
     order by sourceName, fact, recordKey
-  `).all(item.id, item.id, item.id, item.id, item.id, item.id) as Array<{ fact: string; sourceName: string; version: string; recordKey?: string; citationUrl?: string; sourcePath?: string; snapshotPath?: string }>;
+  `).all(item.id, item.id, item.id, item.id, item.id, item.id, item.id) as Array<{ fact: string; sourceName: string; version: string; recordKey?: string; citationUrl?: string; sourcePath?: string; snapshotPath?: string }>;
   const { id: _id, ...summary } = item;
-  return { ...summary, components, drops, sources, rankings, relations: relations.map(({ subjectKind, subjectSlug, subjectName, subjectDescription, ...relation }) => ({ ...relation, subject: { kind: subjectKind, slug: subjectSlug, name: subjectName, description: subjectDescription } })), evidence };
+  return { ...summary, components, drops, sources, rankings, enhancementOptions, relations: relations.map(({ subjectKind, subjectSlug, subjectName, subjectDescription, ...relation }) => ({ ...relation, subject: { kind: subjectKind, slug: subjectSlug, name: subjectName, description: subjectDescription } })), evidence };
 }
 
 export function findCatalogNode(sqlite: Database.Database, slug: string, userId?: string): CatalogNode | undefined {

@@ -36,7 +36,7 @@ test("WFCD adapter distinguishes arcanes and provider-miscategorised Archon Shar
     ...snapshot,
     bytes: new TextEncoder().encode(JSON.stringify([
       { uniqueName: "/Lotus/Upgrades/CosmeticEnhancers/Defensive/GolemArcaneBarrier", name: "Arcane Barrier", category: "Arcanes", type: "Warframe Arcane" },
-      { uniqueName: "/Lotus/Types/Gameplay/NarmerSorties/ArchonCrystalAmarMythic", name: "Tauforged Crimson Archon Shard", category: "Misc", type: "Misc" },
+      { uniqueName: "/Lotus/Types/Gameplay/NarmerSorties/ArchonCrystalAmarMythic", name: "<Shard_red_simple> Tauforged Crimson Archon Shard", category: "Misc", type: "Misc" },
     ])),
   };
   const observations = await collect(new WfcdItemsAdapter(), specialItemSnapshot);

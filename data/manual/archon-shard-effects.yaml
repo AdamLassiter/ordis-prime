@@ -1,0 +1,71 @@
+schemaVersion: 1
+source:
+  id: warframe-wiki-archon-shard-effects
+  title: WARFRAME Wiki Archon Shard effects
+  url: https://wiki.warframe.com/w/Archon_Shard#Shard_Buffs
+  licenseNote: CC BY-NC-SA 3.0; effect labels are concise paraphrases of the Shard Buffs table.
+  priority: 200
+entries:
+  - target: { sourceId: wfcd-items, namespace: uniqueName, value: /Lotus/Types/Gameplay/NarmerSorties/ArchonCrystalAmar }
+    kind: shard
+    enhancementOptions: &crimson
+      - { key: melee-critical-damage, label: Melee Critical Damage }
+      - { key: primary-status-chance, label: Primary Status Chance }
+      - { key: secondary-critical-chance, label: Secondary Critical Chance }
+      - { key: ability-strength, label: Ability Strength }
+      - { key: ability-duration, label: Ability Duration }
+  - target: { sourceId: wfcd-items, namespace: uniqueName, value: /Lotus/Types/Gameplay/NarmerSorties/ArchonCrystalAmarMythic }
+    kind: shard
+    enhancementOptions: *crimson
+  - target: { sourceId: wfcd-items, namespace: uniqueName, value: /Lotus/Types/Gameplay/NarmerSorties/ArchonCrystalNira }
+    kind: shard
+    enhancementOptions: &amber
+      - { key: starting-energy, label: Starting Energy }
+      - { key: health-orb-effectiveness, label: Health Orb Effectiveness }
+      - { key: energy-orb-effectiveness, label: Energy Orb Effectiveness }
+      - { key: casting-speed, label: Casting Speed }
+      - { key: parkour-velocity, label: Parkour Velocity }
+  - target: { sourceId: wfcd-items, namespace: uniqueName, value: /Lotus/Types/Gameplay/NarmerSorties/ArchonCrystalNiraMythic }
+    kind: shard
+    enhancementOptions: *amber
+  - target: { sourceId: wfcd-items, namespace: uniqueName, value: /Lotus/Types/Gameplay/NarmerSorties/ArchonCrystalBoreal }
+    kind: shard
+    enhancementOptions: &azure
+      - { key: maximum-health, label: Maximum Health }
+      - { key: shield-capacity, label: Shield Capacity }
+      - { key: maximum-energy, label: Maximum Energy }
+      - { key: armor, label: Armor }
+      - { key: health-regeneration, label: Health Regeneration }
+  - target: { sourceId: wfcd-items, namespace: uniqueName, value: /Lotus/Types/Gameplay/NarmerSorties/ArchonCrystalBorealMythic }
+    kind: shard
+    enhancementOptions: *azure
+  - target: { sourceId: wfcd-items, namespace: uniqueName, value: /Lotus/Types/Gameplay/NarmerSorties/ArchonCrystalGreen }
+    kind: shard
+    enhancementOptions: &emerald
+      - { key: toxin-status-damage, label: Toxin Status Damage }
+      - { key: toxin-health-recovery, label: Health from Toxin Status Damage }
+      - { key: corrosive-ability-damage, label: Ability Damage vs Corroded Enemies }
+      - { key: corrosive-maximum-stacks, label: Maximum Corrosion Status Stacks }
+  - target: { sourceId: wfcd-items, namespace: uniqueName, value: /Lotus/Types/Gameplay/NarmerSorties/ArchonCrystalGreenMythic }
+    kind: shard
+    enhancementOptions: *emerald
+  - target: { sourceId: wfcd-items, namespace: uniqueName, value: /Lotus/Types/Gameplay/NarmerSorties/ArchonCrystalOrange }
+    kind: shard
+    enhancementOptions: &topaz
+      - { key: blast-maximum-health, label: Maximum Health from Blast Kills }
+      - { key: blast-shield-regeneration, label: Shields from Blast Kills }
+      - { key: heat-secondary-critical-chance, label: Secondary Critical Chance from Heat-Affected Kills }
+      - { key: radiation-ability-damage, label: Ability Damage vs Irradiated Enemies }
+  - target: { sourceId: wfcd-items, namespace: uniqueName, value: /Lotus/Types/Gameplay/NarmerSorties/ArchonCrystalOrangeMythic }
+    kind: shard
+    enhancementOptions: *topaz
+  - target: { sourceId: wfcd-items, namespace: uniqueName, value: /Lotus/Types/Gameplay/NarmerSorties/ArchonCrystalViolet }
+    kind: shard
+    enhancementOptions: &violet
+      - { key: electricity-ability-damage, label: Ability Damage vs Electrified Enemies }
+      - { key: primary-electricity-damage, label: Primary Electricity Damage }
+      - { key: melee-critical-damage, label: Melee Critical Damage }
+      - { key: pickup-conversion, label: Health and Energy Pickup Conversion }
+  - target: { sourceId: wfcd-items, namespace: uniqueName, value: /Lotus/Types/Gameplay/NarmerSorties/ArchonCrystalVioletMythic }
+    kind: shard
+    enhancementOptions: *violet

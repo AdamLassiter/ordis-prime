@@ -15,6 +15,7 @@ interface ManualFactsDocument {
     slug?: string;
     description?: string;
     aliases?: string[];
+    enhancementOptions?: Array<{ key: string; label: string }>;
     retired?: boolean;
     citationUrl?: string;
   }>;
@@ -58,6 +59,15 @@ export class ManualFactsAdapter implements SourceAdapter {
           citationUrl: entry.citationUrl ?? document.source.url, license: document.source.licenseNote, path: `entries[${index}]`,
         },
       };
+      for (const [optionIndex, option] of (entry.enhancementOptions ?? []).entries()) yield {
+        type: "enhancement-option", subjectExternalId: entry.target, key: option.key, label: option.label,
+        evidence: {
+          sourceId: this.source.id, sourceRecordKey: `${entry.target.sourceId}:${entry.target.namespace}:${entry.target.value}:enhancement-option:${option.key}`,
+          snapshotVersion: snapshot.version, retrievedAt: snapshot.retrievedAt,
+          citationUrl: entry.citationUrl ?? document.source.url, license: document.source.licenseNote,
+          path: `entries[${index}].enhancementOptions[${optionIndex}]`,
+        },
+      };
     }
   }
 }
@@ -72,8 +82,10 @@ function parseDocument(bytes: Uint8Array): ManualFactsDocument {
     if (!isRecord(entry) || !isExternalIdentifier(entry.target) || typeof entry.kind !== "string" || !(ENTITY_KINDS as readonly string[]).includes(entry.kind)) throw new Error(`Manual facts entry ${index} is invalid`);
     for (const field of ["name", "slug", "description", "citationUrl"] as const) if (entry[field] !== undefined && typeof entry[field] !== "string") throw new Error(`Manual facts entry ${index}.${field} must be a string`);
     if (entry.aliases !== undefined && (!Array.isArray(entry.aliases) || entry.aliases.some((alias) => typeof alias !== "string" || !alias))) throw new Error(`Manual facts entry ${index}.aliases must contain strings`);
+    if (entry.enhancementOptions !== undefined && (!Array.isArray(entry.enhancementOptions) || entry.enhancementOptions.some((option) => !isRecord(option) || typeof option.key !== "string" || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(option.key) || typeof option.label !== "string" || !option.label.trim() || option.label.length > 240))) throw new Error(`Manual facts entry ${index}.enhancementOptions is invalid`);
+    if (entry.enhancementOptions && new Set(entry.enhancementOptions.map((option) => (option as { key: string }).key)).size !== entry.enhancementOptions.length) throw new Error(`Manual facts entry ${index}.enhancementOptions contains duplicate keys`);
     if (entry.retired !== undefined && entry.retired !== true) throw new Error(`Manual facts entry ${index}.retired must be true when present`);
-    if (![entry.name, entry.slug, entry.description, entry.aliases, entry.retired].some((field) => field !== undefined)) throw new Error(`Manual facts entry ${index} contains no facts`);
+    if (![entry.name, entry.slug, entry.description, entry.aliases, entry.enhancementOptions, entry.retired].some((field) => field !== undefined)) throw new Error(`Manual facts entry ${index} contains no facts`);
     return entry as unknown as ManualFactsDocument["entries"][number];
   });
   return { schemaVersion: 1, source: value.source as unknown as ManualFactsDocument["source"], entries };

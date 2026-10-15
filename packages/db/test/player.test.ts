@@ -33,7 +33,7 @@ test("profiles resolve stable source IDs across installations with different can
   configureBuildEquipment(first.sqlite, firstUser, buildId, "primary", { configuration: "A", formaCount: 2, capacityUpgrade: true });
   setBuildMod(first.sqlite, firstUser, buildId, "primary", 0, { kind: "mod", slug: "serration" }, 5);
   setBuildEnhancement(first.sqlite, firstUser, buildId, "warframe-arcane-1", { kind: "arcane", slug: "arcane-barrier" }, 5);
-  setBuildEnhancement(first.sqlite, firstUser, buildId, "archon-shard-1", { kind: "shard", slug: "crimson-archon-shard" });
+  setBuildEnhancement(first.sqlite, firstUser, buildId, "archon-shard-1", { kind: "shard", slug: "crimson-archon-shard" }, undefined, "ability-strength");
   const profile = exportPlayerProfile(first.sqlite, firstUser);
   const secondUser = createLocalUser(second.sqlite, { username: "Importer" });
   const result = importPlayerProfile(second.sqlite, secondUser, profile);
@@ -67,7 +67,7 @@ test("profiles resolve stable source IDs across installations with different can
   assert.equal(importedBuild.title, "Portable build");
   assert.deepEqual(importedBuild.equipment[0], { id: importedBuild.equipment[0]?.id, slot: "primary", entity: { kind: "weapon", slug: "braton", name: "Braton" }, notes: "Main weapon", configuration: "A", formaCount: 2, capacityUpgrade: true, mods: [{ position: 0, rank: 5, entity: { kind: "mod", slug: "serration", name: "Serration" } }] });
   assert.deepEqual(importedBuild.enhancements, [
-    { slot: "archon-shard-1", entity: { kind: "shard", slug: "crimson-archon-shard", name: "Crimson Archon Shard" }, rank: undefined },
+    { slot: "archon-shard-1", entity: { kind: "shard", slug: "crimson-archon-shard", name: "Crimson Archon Shard" }, rank: undefined, option: { key: "ability-strength", label: "Ability Strength", available: true } },
     { slot: "warframe-arcane-1", entity: { kind: "arcane", slug: "arcane-barrier", name: "Arcane Barrier" }, rank: 5 },
   ]);
 });
@@ -92,7 +92,7 @@ test("profile replacement is transactional and reports missing entities", async 
   const userId = createLocalUser(catalog.sqlite, { username: "Player" });
   setInventoryEntry(catalog.sqlite, userId, catalog.entityId, { ownedCount: 1, builtCount: 0, wantedCount: 0 });
   const missingProfile = {
-    schemaVersion: 9,
+    schemaVersion: 10,
     exportedAt: "2026-10-13T12:00:00.000Z",
     inventory: [{ entity: { externalIds: [{ sourceId: "items", namespace: "id", value: "missing" }], kind: "weapon", slug: "missing", name: "Missing" }, ownedCount: 1, builtCount: 0, wantedCount: 0 }],
     goals: [],
@@ -126,7 +126,7 @@ test("profile replacement is transactional and reports missing entities", async 
     unresolved: [{ section: "watches", index: 0, name: "Missing", reason: "missing" }],
   });
   assert.deepEqual(listWorldStateWatches(catalog.sqlite, userId).map(({ kind, labelContains, entity }) => ({ kind, labelContains, entity })), [{ kind: "event", labelContains: "Missing", entity: undefined }]);
-  assert.throws(() => importPlayerProfile(catalog.sqlite, userId, { ...missingProfile, schemaVersion: 8 }), /schemaVersion 9/);
+  assert.throws(() => importPlayerProfile(catalog.sqlite, userId, { ...missingProfile, schemaVersion: 9 }), /schemaVersion 10/);
 });
 
 function createCatalog(databasePath: string): { sqlite: Database.Database; entityId: string } {
@@ -139,6 +139,7 @@ function createCatalog(databasePath: string): { sqlite: Database.Database; entit
     { type: "entity", kind: "mod", externalIds: [{ sourceId: "items", namespace: "id", value: "serration" }], fields: { name: "Serration", slug: "serration" }, evidence: { ...evidence, sourceRecordKey: "serration" } },
     { type: "entity", kind: "arcane", externalIds: [{ sourceId: "items", namespace: "id", value: "arcane-barrier" }], fields: { name: "Arcane Barrier", slug: "arcane-barrier" }, evidence: { ...evidence, sourceRecordKey: "arcane-barrier" } },
     { type: "entity", kind: "shard", externalIds: [{ sourceId: "items", namespace: "id", value: "crimson-shard" }], fields: { name: "Crimson Archon Shard", slug: "crimson-archon-shard" }, evidence: { ...evidence, sourceRecordKey: "crimson-shard" } },
+    { type: "enhancement-option", subjectExternalId: { sourceId: "items", namespace: "id", value: "crimson-shard" }, key: "ability-strength", label: "Ability Strength", evidence: { ...evidence, sourceRecordKey: "crimson-shard:ability-strength" } },
     { type: "entity", kind: "resource", externalIds: [{ sourceId: "items", namespace: "id", value: "alloy" }], fields: { name: "Alloy Plate", slug: "alloy-plate" }, evidence: { ...evidence, sourceRecordKey: "alloy" } },
     { type: "recipe", outputExternalId: { sourceId: "items", namespace: "id", value: "braton" }, ingredients: [{ externalId: { sourceId: "items", namespace: "id", value: "alloy" }, quantity: 10 }], evidence },
   ];

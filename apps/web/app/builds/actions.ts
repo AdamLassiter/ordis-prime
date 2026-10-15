@@ -67,7 +67,8 @@ export async function assignEnhancement(buildId: string, slot: BuildEnhancementS
   const session = await requireCurrentSession();
   const rawRank = String(form.get("rank") ?? "");
   if (rawRank && !/^\d+$/.test(rawRank)) throw new Error("Enhancement rank must be a non-negative integer");
-  setBuildEnhancement(getDatabase(), session.user.id, buildId, slot, { kind, slug }, rawRank ? Number(rawRank) : undefined);
+  const optionKey = String(form.get("optionKey") ?? "") || undefined;
+  setBuildEnhancement(getDatabase(), session.user.id, buildId, slot, { kind, slug }, rawRank ? Number(rawRank) : undefined, optionKey);
   revalidatePath(`/builds/${buildId}`);
 }
 

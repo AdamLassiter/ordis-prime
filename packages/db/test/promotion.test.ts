@@ -220,6 +220,28 @@ test("typed relations resolve both endpoints and preserve their evidence", async
   assert.deepEqual(sqlite.prepare("select kind, notes, source_record_key as recordKey, citation_url as citationUrl from entity_relations").get(), { kind: "occurs-at", notes: "First step", recordKey: "quest:node", citationUrl: "https://example.test/relation" });
 });
 
+test("sourced enhancement options resolve canonical entities and rotate with source runs", async (context) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-enhancement-options-"));
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const databasePath = path.join(root, "catalog.sqlite");
+  migrateDatabase(databasePath);
+  const sqlite = new Database(databasePath);
+  sqlite.pragma("foreign_keys = ON");
+  context.after(() => sqlite.close());
+  const first = [
+    entity("shard", "Crimson Archon Shard", "shard"),
+    { type: "enhancement-option", subjectExternalId: { sourceId: "fixture", namespace: "id", value: "shard" }, key: "ability-strength", label: "Ability Strength", evidence: { ...evidence(), sourceRecordKey: "shard:ability-strength", citationUrl: "https://example.test/shards" } },
+  ] satisfies Observation[];
+  assert.equal(promoteSource(sqlite, input("v1", first)).enhancementOptionsCreated, 1);
+  const second = first.map((observation) => ({ ...observation, evidence: { ...observation.evidence, snapshotVersion: "v2" } })) as Observation[];
+  promoteSource(sqlite, input("v2", second));
+  assert.deepEqual(sqlite.prepare(`
+    select option.key, option.label, option.source_record_key as recordKey
+    from entity_enhancement_options option join source_runs run on run.id = option.source_run_id
+    where run.status = 'active'
+  `).get(), { key: "ability-strength", label: "Ability Strength", recordKey: "shard:ability-strength" });
+});
+
 function input(version: string, observations: Observation[]) {
   return { source, version, contentHash: `sha256:${version.padEnd(64, "0")}`, retrievedAt: "2026-10-13T12:00:00.000Z", observations };
 }
@@ -228,7 +250,7 @@ function evidence(version = "v1", sourceId = "fixture") {
   return { sourceId, sourceRecordKey: "record", snapshotVersion: version, retrievedAt: "2026-10-13T12:00:00.000Z" };
 }
 
-function entity(id: string, name: string, kind: "unknown" | "component" | "mod" | "node" | "weapon" | "quest", version = "v1", sourceId = "fixture"): Observation {
+function entity(id: string, name: string, kind: "unknown" | "component" | "mod" | "node" | "weapon" | "quest" | "shard", version = "v1", sourceId = "fixture"): Observation {
   return { type: "entity", kind, externalIds: [{ sourceId, namespace: "id", value: id }], fields: { name, slug: name.toLowerCase().replaceAll(" ", "-") }, evidence: evidence(version, sourceId) };
 }
 

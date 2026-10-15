@@ -71,7 +71,7 @@ Factual overlays correct or enrich canonical entity fields without modifying a
 provider snapshot. Version 1 YAML declares an independently cited source and
 targets every entry by an explicit `{ sourceId, namespace, value }` identifier.
 Display names are never used to guess the correction target. An entry can
-provide a name, slug, description, aliases, or the explicit tombstone
+provide a name, slug, description, aliases, sourced `enhancementOptions`, or the explicit tombstone
 `retired: true`; `retired: false` is rejected because restoration needs a
 separate reviewed operation. See `data/manual/facts.example.yaml`.
 
@@ -88,6 +88,16 @@ field retains the overlay's source record, YAML path, snapshot, and citation.
 Later provider refreshes therefore cannot silently erase an accepted
 correction. Aliases supplement identity matching rather than replacing a
 canonical field.
+
+Enhancement options contain a stable lowercase-hyphen key and a concise label.
+They are immutable source-run facts rather than fields copied onto an entity.
+The checked-in `data/manual/archon-shard-effects.yaml` file provides cited
+normal and Tauforged Archon Shard choices from the official WARFRAME Wiki. It
+must be imported after `wfcd-items` so all explicit targets resolve:
+
+```sh
+pnpm data:refresh manual-facts:data/manual/archon-shard-effects.yaml
+```
 
 An unresolved target, mismatched entity kind, or unregistered target source is
 recorded as an ingestion conflict. It is never redirected by a similar display

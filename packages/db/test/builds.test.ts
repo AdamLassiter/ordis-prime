@@ -19,18 +19,19 @@ test("build drafts are private and share snapshots remain immutable", async (con
   seedEntity(database, "mod", "mod", "Serration", "serration");
   seedEntity(database, "arcane", "arcane", "Arcane Barrier", "arcane-barrier");
   seedEntity(database, "shard", "shard", "Crimson Archon Shard", "crimson-archon-shard");
+  seedEnhancementOption(database, "shard", "ability-strength", "Ability Strength");
   assert.deepEqual(searchBuildCandidates(database, "primary", "Par"), [{ kind: "weapon", slug: "paris", name: "Paris" }]);
   assert.deepEqual(searchBuildCandidates(database, "mod", "Serr"), [{ kind: "mod", slug: "serration", name: "Serration" }]);
   assert.deepEqual(searchBuildEnhancementCandidates(database, "warframe-arcane-1", "Barrier"), [{ kind: "arcane", slug: "arcane-barrier", name: "Arcane Barrier" }]);
-  assert.deepEqual(searchBuildEnhancementCandidates(database, "archon-shard-1", "Crimson"), [{ kind: "shard", slug: "crimson-archon-shard", name: "Crimson Archon Shard" }]);
+  assert.deepEqual(searchBuildEnhancementCandidates(database, "archon-shard-1", "Crimson"), [{ kind: "shard", slug: "crimson-archon-shard", name: "Crimson Archon Shard", enhancementOptions: [{ key: "ability-strength", label: "Ability Strength", sourceName: "Shard facts", citationUrl: "https://example.test/shards" }] }]);
   const buildId = createPlayerBuild(database, owner, { title: "Starter setup", category: "beginner" });
   setBuildEquipment(database, owner, buildId, "warframe", { kind: "warframe", slug: "mag" });
   setBuildEquipment(database, owner, buildId, "primary", { kind: "weapon", slug: "paris" });
   configureBuildEquipment(database, owner, buildId, "primary", { configuration: "Incarnon", formaCount: 3, capacityUpgrade: true });
   setBuildMod(database, owner, buildId, "primary", 0, { kind: "mod", slug: "serration" }, 5);
   setBuildEnhancement(database, owner, buildId, "warframe-arcane-1", { kind: "arcane", slug: "arcane-barrier" }, 5);
-  setBuildEnhancement(database, owner, buildId, "archon-shard-1", { kind: "shard", slug: "crimson-archon-shard" });
-  setBuildEnhancement(database, owner, buildId, "archon-shard-2", { kind: "shard", slug: "crimson-archon-shard" });
+  setBuildEnhancement(database, owner, buildId, "archon-shard-1", { kind: "shard", slug: "crimson-archon-shard" }, undefined, "ability-strength");
+  setBuildEnhancement(database, owner, buildId, "archon-shard-2", { kind: "shard", slug: "crimson-archon-shard" }, undefined, "ability-strength");
   assert.equal(getPlayerBuild(database, other, buildId), undefined);
   assert.equal(getPlayerBuild(database, owner, buildId)?.equipment.find(({ slot }) => slot === "primary")?.mods[0]?.entity.name, "Serration");
   assert.deepEqual(getPlayerBuild(database, owner, buildId)?.equipment.find(({ slot }) => slot === "primary"), {
@@ -50,8 +51,8 @@ test("build drafts are private and share snapshots remain immutable", async (con
   assert.equal(shared.title, "Starter setup");
   assert.equal(shared.equipment.find(({ slot }) => slot === "primary")?.configuration, "Incarnon");
   assert.deepEqual(shared.enhancements, [
-    { slot: "archon-shard-1", entity: { kind: "shard", slug: "crimson-archon-shard", name: "Crimson Archon Shard" } },
-    { slot: "archon-shard-2", entity: { kind: "shard", slug: "crimson-archon-shard", name: "Crimson Archon Shard" } },
+    { slot: "archon-shard-1", entity: { kind: "shard", slug: "crimson-archon-shard", name: "Crimson Archon Shard" }, option: { key: "ability-strength", label: "Ability Strength", available: true } },
+    { slot: "archon-shard-2", entity: { kind: "shard", slug: "crimson-archon-shard", name: "Crimson Archon Shard" }, option: { key: "ability-strength", label: "Ability Strength", available: true } },
     { slot: "warframe-arcane-1", entity: { kind: "arcane", slug: "arcane-barrier", name: "Arcane Barrier" }, rank: 5 },
   ]);
   assert.deepEqual(listBuildShares(database, owner, buildId).map(({ shareKey: _shareKey, ...entry }) => entry), [{ revision: shared.revision, createdAt: shared.sharedAt }]);
@@ -79,6 +80,8 @@ test("build drafts are private and share snapshots remain immutable", async (con
   assert.notEqual(getPlayerBuild(database, owner, buildId)?.revision, shared.revision);
   assert.throws(() => setBuildEquipment(database, other, buildId, "primary", { kind: "weapon", slug: "paris" }), /not found/);
   assert.throws(() => setBuildEnhancement(database, owner, buildId, "archon-shard-3", { kind: "arcane", slug: "arcane-barrier" }), /requires a shard/);
+  assert.throws(() => setBuildEnhancement(database, owner, buildId, "archon-shard-3", { kind: "shard", slug: "crimson-archon-shard" }), /require a sourced effect/);
+  assert.throws(() => setBuildEnhancement(database, owner, buildId, "archon-shard-3", { kind: "shard", slug: "crimson-archon-shard" }, undefined, "missing"), /not active/);
   assert.throws(() => cloneSharedBuild(database, other, "missing-share"), /not found/);
 });
 
@@ -98,4 +101,10 @@ test("cloned build titles stay within the draft title limit", async (context) =>
 
 function seedEntity(database: ReturnType<typeof openSqliteDatabase>, id: string, kind: string, name: string, slug: string) {
   database.prepare("insert into entities (id, kind, name, slug, retired, updated_at) values (?, ?, ?, ?, 0, ?)").run(id, kind, name, slug, Date.now());
+}
+
+function seedEnhancementOption(database: ReturnType<typeof openSqliteDatabase>, entityId: string, key: string, label: string) {
+  database.prepare("insert into sources (id, name, homepage, priority, enabled) values ('shard-facts', 'Shard facts', 'https://example.test/shards', 100, 1)").run();
+  database.prepare("insert into source_runs (id, source_id, version, content_hash, retrieved_at, status) values ('shard-run', 'shard-facts', 'v1', 'hash', ?, 'active')").run(Date.now());
+  database.prepare("insert into entity_enhancement_options (id, entity_id, key, label, source_run_id, source_record_key, citation_url) values ('option', ?, ?, ?, 'shard-run', 'record', 'https://example.test/shards')").run(entityId, key, label);
 }

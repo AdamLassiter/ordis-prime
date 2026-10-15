@@ -6,7 +6,7 @@ the compromises between that target and the current implementation.
 - [Architecture](ARCHITECTURE.md) defines system boundaries and the intended data flow.
 - [User stories](USER_STORIES.md) defines player and administrator outcomes.
 - [Sources](SOURCES.md) records provider and licence policy.
-- [Manual data](MANUAL_DATA.md) defines cited editorial and discovery import formats.
+- [Manual data](MANUAL_DATA.md) defines cited editorial, discovery, factual overlay, and enhancement-option import formats.
 - [Profile data](PROFILE_DATA.md) defines portable player-state identity and import behavior.
 - [Acquisition planner](ACQUISITION_PLANNER.md) defines goal and recommendation semantics.
 - [World state](WORLD_STATE.md) defines dynamic availability and snapshot semantics.

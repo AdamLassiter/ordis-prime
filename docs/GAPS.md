@@ -66,8 +66,9 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   Generated alerts and published share snapshots are deliberately excluded.
   Live windows on reconciled recommended nodes surface as expiring acquisition
   opportunities. Players can inspect and persist alternative recipe choices by
-  stable source record identity. Planning does not yet account for node access,
-  markets, relic refinement, or mission duration.
+  stable source record identity. Planning composes cited discovery prerequisites
+  into available, blocked and unknown node access states, but does not yet account
+  for conditional gates, markets, relic refinement, or mission duration.
 - Authenticated players can keep private static todos with optional notes and due
   dates. Source-neutral world-state watches match current window fields and
   create deduplicated private in-app alerts. Detail pages can create todos and
@@ -82,8 +83,8 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   flags, notes and immutable unlisted share snapshots. Authenticated
   editor and public snapshot routes use canonical catalog links. Advanced
   polarity/capacity calculation remains. Builds can assign ranked arcanes and
-  positioned Archon Shards, but do not yet validate arcane subtype compatibility
-  or record selected shard effects. Private drafts are
+  positioned Archon Shards with sourced effect selections, but do not yet
+  validate arcane subtype compatibility. Private drafts are
   portable and can be cloned; their snapshot history can be viewed or revoked.
   Authenticated recipients can clone a public snapshot into a private draft.
   Draft equipment and mods can seed missing-item acquisition goals, but the

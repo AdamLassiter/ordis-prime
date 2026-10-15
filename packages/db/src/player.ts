@@ -69,7 +69,7 @@ export interface PortableEntityReference {
 }
 
 export interface ProfileExport {
-  schemaVersion: 9;
+  schemaVersion: 10;
   exportedAt: string;
   inventory: Array<InventoryValues & { entity: PortableEntityReference }>;
   goals: Array<{ entity: PortableEntityReference; targetQuantity: number }>;
@@ -93,7 +93,7 @@ export interface PortableBuild {
     capacityUpgrade: boolean;
     mods: Array<{ position: number; rank?: number; entity: PortableEntityReference }>;
   }>;
-  enhancements: Array<{ slot: BuildEnhancementSlot; rank?: number; entity: PortableEntityReference }>;
+  enhancements: Array<{ slot: BuildEnhancementSlot; rank?: number; optionKey?: string; entity: PortableEntityReference }>;
 }
 
 export interface ProfileImportResult {
@@ -176,7 +176,7 @@ export function exportPlayerProfile(sqlite: Database.Database, userId: string): 
              source_id, namespace, value
   `);
   return {
-    schemaVersion: 9,
+    schemaVersion: 10,
     exportedAt: new Date().toISOString(),
     inventory: inventory.map(({ entityId, kind, slug, name, ...values }) => ({
       entity: { externalIds: identifiers.all(entityId) as PortableEntityReference["externalIds"], kind, slug, name },
@@ -217,7 +217,7 @@ export function exportPlayerProfile(sqlite: Database.Database, userId: string): 
         slot, entity: portableReferenceForCatalogEntity(sqlite, identifiers, entity), notes: equipmentNotes, configuration, formaCount, capacityUpgrade,
         mods: mods.map(({ position, rank, entity: mod }) => ({ position, rank, entity: portableReferenceForCatalogEntity(sqlite, identifiers, mod) })),
       })),
-      enhancements: enhancements.map(({ slot, rank, entity }) => ({ slot, rank, entity: portableReferenceForCatalogEntity(sqlite, identifiers, entity) })),
+      enhancements: enhancements.map(({ slot, rank, option, entity }) => ({ slot, rank, optionKey: option?.key, entity: portableReferenceForCatalogEntity(sqlite, identifiers, entity) })),
     })),
   };
 }
@@ -236,7 +236,7 @@ export function importPlayerProfile(
   const resolvedDiscoveryProgress: Array<{ entityId: string; state: "discovered" | "completed" }> = [];
   const resolvedTodos: Array<Omit<ProfileExport["todos"][number], "entity"> & { entity?: { kind: string; slug: string } }> = [];
   const resolvedWatches: Array<Omit<ProfileExport["watches"][number], "entity"> & { entity?: { kind: string; slug: string } }> = [];
-  const resolvedBuilds: Array<{ build: PortableBuild; equipment: Array<{ slot: BuildSlot; reference: { kind: string; slug: string }; notes?: string; configuration?: string; formaCount: number; capacityUpgrade: boolean; mods: Array<{ position: number; rank?: number; reference: { kind: string; slug: string } }> }>; enhancements: Array<{ slot: BuildEnhancementSlot; rank?: number; reference: { kind: string; slug: string } }> }> = [];
+  const resolvedBuilds: Array<{ build: PortableBuild; equipment: Array<{ slot: BuildSlot; reference: { kind: string; slug: string }; notes?: string; configuration?: string; formaCount: number; capacityUpgrade: boolean; mods: Array<{ position: number; rank?: number; reference: { kind: string; slug: string } }> }>; enhancements: Array<{ slot: BuildEnhancementSlot; rank?: number; optionKey?: string; reference: { kind: string; slug: string } }> }> = [];
   const unresolved: ProfileImportResult["unresolved"] = [];
 
   for (const [index, entry] of profile.inventory.entries()) {
@@ -331,7 +331,15 @@ export function importPlayerProfile(
         unresolved.push({ section: "builds", index, name: `${build.title}: ${entry.entity.name}`, reason: resolution.reason });
         complete = false;
       }
-      return { slot: entry.slot, rank: entry.rank, reference: resolution.entityId ? catalogReferenceById(sqlite, resolution.entityId) : { kind: entry.entity.kind, slug: entry.entity.slug } };
+      if (resolution.entityId && entry.optionKey && !sqlite.prepare(`
+        select 1 from entity_enhancement_options option
+        join source_runs run on run.id = option.source_run_id and run.status = 'active'
+        where option.entity_id = ? and option.key = ? limit 1
+      `).get(resolution.entityId, entry.optionKey)) {
+        unresolved.push({ section: "builds", index, name: `${build.title}: ${entry.entity.name} effect ${entry.optionKey}`, reason: "missing" });
+        complete = false;
+      }
+      return { slot: entry.slot, rank: entry.rank, optionKey: entry.optionKey, reference: resolution.entityId ? catalogReferenceById(sqlite, resolution.entityId) : { kind: entry.entity.kind, slug: entry.entity.slug } };
     });
     if (complete) resolvedBuilds.push({ build, equipment, enhancements });
   }
@@ -393,7 +401,7 @@ export function importPlayerProfile(
         configureBuildEquipment(sqlite, userId, buildId, entry.slot, entry);
         for (const mod of entry.mods) setBuildMod(sqlite, userId, buildId, entry.slot, mod.position, mod.reference, mod.rank);
       }
-      for (const enhancement of enhancements) setBuildEnhancement(sqlite, userId, buildId, enhancement.slot, enhancement.reference, enhancement.rank);
+      for (const enhancement of enhancements) setBuildEnhancement(sqlite, userId, buildId, enhancement.slot, enhancement.reference, enhancement.rank, enhancement.optionKey);
     }
   })();
   return {
@@ -403,7 +411,7 @@ export function importPlayerProfile(
 }
 
 function parseProfile(value: unknown): ProfileExport {
-  if (!isRecord(value) || value.schemaVersion !== 9 || !Array.isArray(value.inventory) || !Array.isArray(value.goals) || !Array.isArray(value.recipePreferences) || !Array.isArray(value.discoveryProgress) || !Array.isArray(value.todos) || !Array.isArray(value.watches) || !Array.isArray(value.builds)) throw new Error("Profile must use schemaVersion 9 and contain every portable state array");
+  if (!isRecord(value) || value.schemaVersion !== 10 || !Array.isArray(value.inventory) || !Array.isArray(value.goals) || !Array.isArray(value.recipePreferences) || !Array.isArray(value.discoveryProgress) || !Array.isArray(value.todos) || !Array.isArray(value.watches) || !Array.isArray(value.builds)) throw new Error("Profile must use schemaVersion 10 and contain every portable state array");
   const inventory = value.inventory.map((entry, index) => {
     if (!isRecord(entry)) throw new Error(`Profile inventory entry ${index} is invalid`);
     const entity = parsePortableEntity(entry.entity, `inventory entry ${index}`);
@@ -432,7 +440,7 @@ function parseProfile(value: unknown): ProfileExport {
   }
   const watches = value.watches.map((entry, index) => parsePortableWatch(entry, index));
   const builds = value.builds.map((entry, index) => parsePortableBuild(entry, index));
-  return { schemaVersion: 9, exportedAt: typeof value.exportedAt === "string" ? value.exportedAt : "", inventory, goals, recipePreferences, discoveryProgress, todos, watches, builds };
+  return { schemaVersion: 10, exportedAt: typeof value.exportedAt === "string" ? value.exportedAt : "", inventory, goals, recipePreferences, discoveryProgress, todos, watches, builds };
 }
 
 function parsePortableTodo(value: unknown, index: number): ProfileExport["todos"][number] {
@@ -484,7 +492,11 @@ function parsePortableBuild(value: unknown, index: number): PortableBuild {
     if (!isRecord(entry) || typeof entry.slot !== "string" || !(BUILD_ENHANCEMENT_SLOTS as readonly string[]).includes(entry.slot) || (entry.rank !== undefined && (!Number.isSafeInteger(entry.rank) || (entry.rank as number) < 0 || (entry.rank as number) > 100))) throw new Error(`Profile ${label} is invalid`);
     if (enhancementSlots.has(entry.slot)) throw new Error(`Profile build entry ${index} contains duplicate enhancement slot ${entry.slot}`);
     enhancementSlots.add(entry.slot);
-    return { slot: entry.slot as BuildEnhancementSlot, rank: entry.rank as number | undefined, entity: parsePortableEntity(entry.entity, label) };
+    const entity = parsePortableEntity(entry.entity, label);
+    const optionKey = optionalText(entry.optionKey, 120, `${label} optionKey`);
+    if (entity.kind === "shard" && !optionKey) throw new Error(`Profile ${label} requires an effect option`);
+    if (entity.kind !== "shard" && optionKey) throw new Error(`Profile ${label} cannot contain an effect option`);
+    return { slot: entry.slot as BuildEnhancementSlot, rank: entry.rank as number | undefined, optionKey, entity };
   });
   return { title: value.title, category: optionalText(value.category, 80, `build entry ${index} category`), notes: optionalText(value.notes, 10_000, `build entry ${index} notes`), equipment, enhancements };
 }
