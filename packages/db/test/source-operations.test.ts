@@ -17,10 +17,73 @@ import {
   migrateDatabase,
   openSqliteDatabase,
   promoteSource,
+  pruneFinishedSourceRefreshes,
   reopenSourceConflict,
   revokeSourceIdentityOverride,
   reviewSourceConflict,
 } from "../src/index.ts";
+
+test("source refresh pruning is bounded per source and preserves running attempts", async (context) => {
+  const root = await fs.mkdtemp(
+    path.join(os.tmpdir(), "ordis-source-refresh-prune-"),
+  );
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const databasePath = path.join(root, "catalog.sqlite");
+  migrateDatabase(databasePath);
+  const sqlite = openSqliteDatabase(databasePath);
+  context.after(() => sqlite.close());
+  const source = {
+    id: "one",
+    name: "One",
+    homepage: "https://example.test/one",
+    priority: 1,
+  };
+  for (const startedAt of [1, 2, 3]) {
+    const id = beginSourceRefresh(sqlite, source, startedAt);
+    failSourceRefresh(sqlite, id, new Error(`failure ${startedAt}`));
+  }
+  const running = beginSourceRefresh(sqlite, source, 4);
+  const other = { ...source, id: "two", name: "Two" };
+  for (const startedAt of [1, 2]) {
+    const id = beginSourceRefresh(sqlite, other, startedAt);
+    failSourceRefresh(sqlite, id, new Error(`other ${startedAt}`));
+  }
+
+  assert.equal(pruneFinishedSourceRefreshes(sqlite, 1), 3);
+  assert.deepEqual(
+    sqlite
+      .prepare(
+        "select source_id as sourceId, status, started_at as startedAt from source_refreshes order by source_id, started_at",
+      )
+      .all(),
+    [
+      { sourceId: "one", status: "failed", startedAt: 3 },
+      { sourceId: "one", status: "running", startedAt: 4 },
+      { sourceId: "two", status: "failed", startedAt: 2 },
+    ],
+  );
+  assert.equal(
+    (
+      sqlite
+        .prepare("select id from source_refreshes where status = 'running'")
+        .get() as { id: string }
+    ).id,
+    running,
+  );
+  assert.equal(pruneFinishedSourceRefreshes(sqlite, 0), 2);
+  assert.equal(
+    (
+      sqlite
+        .prepare("select count(*) as count from source_refreshes")
+        .get() as { count: number }
+    ).count,
+    1,
+  );
+  assert.throws(
+    () => pruneFinishedSourceRefreshes(sqlite, -1),
+    /between 0 and 100000/,
+  );
+});
 
 test("source status exposes the latest persisted refresh failure", async (context) => {
   const root = await fs.mkdtemp(

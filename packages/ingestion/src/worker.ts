@@ -5,6 +5,7 @@ import {
   evaluateWorldStateWatches,
   finishAndRescheduleJob,
   pruneFinishedJobs,
+  pruneFinishedSourceRefreshes,
   pruneInactiveCatalogHistory,
   pruneInactiveWorldStateSnapshots,
   pruneReadExpiredPlayerNotifications,
@@ -33,6 +34,7 @@ export async function runWorkerCycle(options: {
   worldStateSnapshotHistoryLimit?: number;
   notificationRetentionMilliseconds?: number;
   catalogReleaseHistoryLimit?: number;
+  sourceRefreshHistoryLimit?: number;
 }): Promise<{
   status: "idle" | "succeeded" | "failed";
   sourceId?: string;
@@ -53,6 +55,7 @@ export async function runWorkerCycle(options: {
   const notificationRetentionMilliseconds =
     options.notificationRetentionMilliseconds ?? 30 * 24 * 60 * 60_000;
   const catalogReleaseHistoryLimit = options.catalogReleaseHistoryLimit ?? 20;
+  const sourceRefreshHistoryLimit = options.sourceRefreshHistoryLimit ?? 1_000;
   const payload = { source: options.worldStateAdapter.source.id };
   ensurePendingJob(options.database, {
     kind: WORLD_STATE_REFRESH_JOB,
@@ -66,6 +69,7 @@ export async function runWorkerCycle(options: {
       runAfter: now,
     });
   pruneFinishedJobs(options.database, jobHistoryLimit);
+  pruneFinishedSourceRefreshes(options.database, sourceRefreshHistoryLimit);
   const job = claimDueJob(options.database, {
     owner: options.owner,
     now,

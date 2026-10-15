@@ -191,6 +191,42 @@ export function failSourceRefresh(
     throw new Error(`Refresh ${refreshId} is not running`);
 }
 
+export function pruneFinishedSourceRefreshes(
+  sqlite: Database.Database,
+  keepPerSource: number,
+): number {
+  if (
+    !Number.isSafeInteger(keepPerSource) ||
+    keepPerSource < 0 ||
+    keepPerSource > 100_000
+  )
+    throw new Error(
+      "Source refresh history limit must be an integer between 0 and 100000",
+    );
+  return sqlite.transaction(() => {
+    const rows = sqlite
+      .prepare(
+        `select id, source_id as sourceId from source_refreshes
+         where status != 'running'
+         order by source_id, started_at desc, rowid desc`,
+      )
+      .all() as Array<{ id: string; sourceId: string }>;
+    const retained = new Map<string, number>();
+    const remove: string[] = [];
+    for (const row of rows) {
+      const count = retained.get(row.sourceId) ?? 0;
+      if (count < keepPerSource) retained.set(row.sourceId, count + 1);
+      else remove.push(row.id);
+    }
+    const statement = sqlite.prepare(
+      "delete from source_refreshes where id = ? and status != 'running'",
+    );
+    let deleted = 0;
+    for (const id of remove) deleted += statement.run(id).changes;
+    return deleted;
+  })();
+}
+
 export function listSourceRefreshes(
   sqlite: Database.Database,
   sourceId: string,

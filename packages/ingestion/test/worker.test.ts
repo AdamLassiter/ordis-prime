@@ -41,6 +41,7 @@ test("worker refreshes once, waits for its interval, and retries failures sooner
     retryIntervalMilliseconds: 50,
     jobHistoryLimit: 1,
     worldStateSnapshotHistoryLimit: 0,
+    sourceRefreshHistoryLimit: 0,
   };
 
   assert.deepEqual(await runWorkerCycle({ ...options, now: 100 }), {
@@ -51,6 +52,16 @@ test("worker refreshes once, waits for its interval, and retries failures sooner
   assert.deepEqual(await runWorkerCycle({ ...options, now: 399 }), {
     status: "idle",
   });
+  assert.equal(
+    (
+      database
+        .prepare("select count(*) as count from source_refreshes")
+        .get() as {
+        count: number;
+      }
+    ).count,
+    0,
+  );
   shouldFail = true;
   assert.deepEqual(await runWorkerCycle({ ...options, now: 400 }), {
     status: "failed",

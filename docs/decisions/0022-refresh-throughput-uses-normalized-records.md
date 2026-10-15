@@ -28,5 +28,5 @@ not inspect error strings or infer provider identity from job kind.
 - Cross-provider rate comparisons need context because observation complexity
   differs.
 - Existing refresh rows show no count rather than a fabricated zero.
-- Metrics cover retained refresh history; a future retention policy must state
-  whether aggregates are lifetime or windowed.
+- Metrics cover the bounded retained refresh-operation window and are not
+  lifetime aggregates.

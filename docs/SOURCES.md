@@ -1,12 +1,12 @@
 # Source policy
 
-| Source | Initial use | Policy |
-| --- | --- | --- |
-| WFCD warframe-items | identities, items, weapon and arcane classes, modular weapon representatives/components, Archwings, Archon Shards, node levels/planets, quests | Fetch the maintained aggregate API endpoint; snapshot, validate, retain version/hash and MIT attribution |
-| WFCD warframe-drop-data | mission metadata, enemy, relic and rotation drops | Snapshot mission rewards with payload and retain upstream attribution |
-| WFCD WarframeStat.us | live cycles, events, alerts, fissures and traders | Snapshot the PC English aggregate response; normalize absolute availability windows and retain MIT attribution |
-| Manual YAML | published editorial rankings; curated discovery facts and relations; factual overlays | Require source-specific citations and licence notes; retain each source as an independent versioned set and resolve overlays by explicit external ID |
-| Warframe Wiki | external detail links and a curated Archon Shard effect vocabulary | No automated fetching; the checked-in effect source is a cited CC BY-NC-SA 3.0 manual snapshot, and future facts remain segregated and attributable |
+| Source                  | Initial use                                                                                                                                    | Policy                                                                                                                                               |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| WFCD warframe-items     | identities, items, weapon and arcane classes, modular weapon representatives/components, Archwings, Archon Shards, node levels/planets, quests | Fetch the maintained aggregate API endpoint; snapshot, validate, retain version/hash and MIT attribution                                             |
+| WFCD warframe-drop-data | mission metadata, enemy, relic and rotation drops                                                                                              | Snapshot mission rewards with payload and retain upstream attribution                                                                                |
+| WFCD WarframeStat.us    | live cycles, events, alerts, fissures and traders                                                                                              | Snapshot the PC English aggregate response; normalize absolute availability windows and retain MIT attribution                                       |
+| Manual YAML             | published editorial rankings; curated discovery facts and relations; factual overlays                                                          | Require source-specific citations and licence notes; retain each source as an independent versioned set and resolve overlays by explicit external ID |
+| Warframe Wiki           | external detail links and a curated Archon Shard effect vocabulary                                                                             | No automated fetching; the checked-in effect source is a cited CC BY-NC-SA 3.0 manual snapshot, and future facts remain segregated and attributable  |
 
 Provider absence never means deletion. Removals require an explicit tombstone,
 and records referenced by player data are retired rather than physically deleted.
@@ -50,6 +50,12 @@ resolver conflict remain available for review even after their release ages
 out. `ORDIS_CATALOG_HISTORY_LIMIT` changes the inactive-release count; zero
 keeps only the active release. Immutable raw payloads and refresh-operation rows
 are retained independently and are not deleted by catalog pruning.
+
+The worker keeps the newest 1,000 finished source-refresh operations per source
+by default and never prunes a running attempt. `ORDIS_SOURCE_REFRESH_HISTORY_LIMIT`
+changes that per-source bound; operational counts and throughput therefore
+describe the retained window rather than lifetime history. This does not delete
+the immutable payload directories named by expired operation rows.
 
 Before staging begins, promotion validates invariants that require the complete
 candidate set: one external identifier cannot declare contradictory entity
