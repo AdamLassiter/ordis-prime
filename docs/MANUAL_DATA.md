@@ -34,17 +34,26 @@ independently queryable rather than being collapsed into a consensus score.
 
 The public `/rankings` view shows each active source's declared scale, scope,
 game version and citation beside a matrix of its entries. Values remain verbatim
-and blank cells remain blank; the application does not pretend unlike scales are
-numerically equivalent. The table can be filtered by canonical item name and
-source subset, reports source coverage per item, and currently shows at most 200
-matching items.
+and blank cells remain blank. The table can be filtered by canonical item name
+and source subset, reports source coverage per item, and currently shows at most
+200 matching items.
+
+An opt-in derived ordinal column maps each source's ordered scale from 0% at its
+best tier to 100% at its worst, spaces intermediate tiers evenly, then displays
+the median and full range for an item. It requires at least two covered sources
+whose scales contain at least two tiers. Every source has equal weight; missing
+entries are excluded. Within-tier position, publication date, game version and
+scope differences are deliberately not adjusted. Raw tiers and citations stay
+visible beside the derived result so the calculation can be inspected rather
+than mistaken for source truth.
 
 ## Editorial compromise
 
-The editorial v1 format handles tier sets only. The comparison UI does not
-compute per-scale summaries because unlike verbal scales do not have an honest
-shared numeric meaning. Before stable release, `schemaVersion: 1` may be
-replaced rather than migrated; there is no pre-release compatibility promise.
+The editorial v1 format handles tier sets only. Its derived view is an ordinal
+comparison, not a claim that unlike verbal tiers have shared cardinal meaning.
+It does not weight source expertise, recency, patch relevance, scope, or
+coverage. Before stable release, `schemaVersion: 1` may be replaced rather than
+migrated; there is no pre-release compatibility promise.
 
 ## Discovery format
 

@@ -98,8 +98,9 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   configuration-specific requirements.
 - Active cited editorial ranking sets have a public source-and-item comparison
   matrix with source-subset controls and coverage counts that preserve unlike
-  scales and disagreement. Cross-scale numerical summaries are deliberately not
-  fabricated; a future derived summary needs an explicit, inspectable method.
+  scales and disagreement. An opt-in derived ordinal summary exposes its exact
+  scale-position median and range method beside the raw tiers. It deliberately
+  does not model source authority, recency, scope alignment or patch relevance.
 - WFCD item and drop observations compose planet, mission and level metadata in
   a public planet-grouped star-chart explorer with a player-needed overlay. The
   imported WFCD sources do not provide connection edges or coordinates, so it is

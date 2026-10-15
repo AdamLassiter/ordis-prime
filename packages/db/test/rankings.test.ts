@@ -30,8 +30,10 @@ test("ranking comparison preserves independent scales, citations, and disagreeme
     { title: "creator-two", scale: ["Top", "Mid", "Low"], citationUrl: "https://creator-two.test/video" },
   ]);
   assert.deepEqual(Object.values(comparison.rows[0]!.rankings).map(({ tier }) => tier).sort(), ["Low", "S"]);
+  assert.deepEqual(comparison.rows[0]!.summary, { medianScalePosition: 0.5, minimumScalePosition: 0, maximumScalePosition: 1, sourceCount: 2 });
   const selected = compareEditorialRankings(database, { setIds: [comparison.sets[0]!.id] });
   assert.equal(selected.sets.length, 1);
   assert.deepEqual(Object.values(selected.rows[0]!.rankings).map(({ tier }) => tier), ["S"]);
+  assert.equal(selected.rows[0]!.summary, undefined);
   assert.equal(compareEditorialRankings(database, { query: "%" }).rows.length, 0);
 });

@@ -14,6 +14,7 @@ export interface EditorialRankingSetSummary {
 export interface EditorialRankingComparisonRow {
   entity: { kind: string; slug: string; name: string };
   rankings: Record<string, { tier: string; position?: number; timestampSeconds?: number; notes?: string }>;
+  summary?: { medianScalePosition: number; minimumScalePosition: number; maximumScalePosition: number; sourceCount: number };
 }
 export interface EditorialRankingComparison { sets: EditorialRankingSetSummary[]; rows: EditorialRankingComparisonRow[] }
 
@@ -55,7 +56,25 @@ export function compareEditorialRankings(sqlite: Database.Database, input: { que
   `).all(...entityRows.map(({ id }) => id), ...sets.map(({ id }) => id)) as Array<{ entityId: string; setId: string; tier: string; position: number | null; timestampSeconds: number | null; notes: string | null }>;
   const byEntity = new Map<string, EditorialRankingComparisonRow["rankings"]>();
   for (const ranking of rankings) byEntity.set(ranking.entityId, { ...(byEntity.get(ranking.entityId) ?? {}), [ranking.setId]: { tier: ranking.tier, position: ranking.position ?? undefined, timestampSeconds: ranking.timestampSeconds ?? undefined, notes: ranking.notes ?? undefined } });
-  return { sets, rows: entityRows.map(({ id, ...entity }) => ({ entity, rankings: byEntity.get(id) ?? {} })) };
+  const scales = new Map(sets.map(({ id, scale }) => [id, scale]));
+  return { sets, rows: entityRows.map(({ id, ...entity }) => {
+    const entityRankings = byEntity.get(id) ?? {};
+    const summary = summarizeRankings(entityRankings, scales);
+    return { entity, rankings: entityRankings, ...(summary ? { summary } : {}) };
+  }) };
+}
+
+function summarizeRankings(rankings: EditorialRankingComparisonRow["rankings"], scales: Map<string, string[]>): EditorialRankingComparisonRow["summary"] {
+  const positions = Object.entries(rankings).flatMap(([setId, ranking]) => {
+    const scale = scales.get(setId) ?? [];
+    const tierIndex = scale.indexOf(ranking.tier);
+    if (tierIndex < 0 || scale.length < 2) return [];
+    return [tierIndex / (scale.length - 1)];
+  }).sort((left, right) => left - right);
+  if (positions.length < 2) return undefined;
+  const middle = Math.floor(positions.length / 2);
+  const median = positions.length % 2 ? positions[middle]! : (positions[middle - 1]! + positions[middle]!) / 2;
+  return { medianScalePosition: median, minimumScalePosition: positions[0]!, maximumScalePosition: positions.at(-1)!, sourceCount: positions.length };
 }
 
 function parseScale(value: string): string[] { const parsed: unknown = JSON.parse(value); return Array.isArray(parsed) && parsed.every((entry) => typeof entry === "string") ? parsed : []; }
