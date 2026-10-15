@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 interface ImportResult {
   inventoryImported: number;
   goalsImported: number;
+  recipePreferencesImported: number;
   discoveryProgressImported: number;
   todosImported: number;
   watchesImported: number;
@@ -35,7 +36,7 @@ export function ProfileTransfer() {
     if (!response.ok) {
       setError(true); setMessage(result.message ?? "Import failed."); setPending(false); return;
     }
-    setMessage(`Imported ${result.inventoryImported} inventory, ${result.goalsImported} goals, ${result.discoveryProgressImported} discovery states, ${result.todosImported} todos, ${result.watchesImported} watches, and ${result.buildsImported} builds.${result.unresolved.length ? ` ${result.unresolved.length} references could not be matched: ${result.unresolved.map((entry) => entry.name).join(", ")}.` : ""}`);
+    setMessage(`Imported ${result.inventoryImported} inventory, ${result.goalsImported} goals, ${result.recipePreferencesImported} recipe preferences, ${result.discoveryProgressImported} discovery states, ${result.todosImported} todos, ${result.watchesImported} watches, and ${result.buildsImported} builds.${result.unresolved.length ? ` ${result.unresolved.length} references could not be matched: ${result.unresolved.map((entry) => entry.name).join(", ")}.` : ""}`);
     setPending(false);
     router.refresh();
   }
