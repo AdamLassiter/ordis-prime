@@ -19,6 +19,16 @@ export interface AcquisitionPlan {
     locationLabel: string;
     neededRewards: Array<{ entityId: string; kind: string; slug: string; name: string; quantity: number; chance?: number; rotation?: string }>;
     reasons: string[];
+    accessStatus: "available" | "blocked" | "unknown";
+    accessRequirements: Array<{
+      entityId: string;
+      kind: string;
+      slug: string;
+      name: string;
+      state: "unseen" | "discovered" | "completed";
+      relationKinds: Array<"requires" | "unlocks">;
+      sources: Array<{ name: string; citationUrl?: string }>;
+    }>;
   }>;
   recipeChoices: Array<{
     output: { entityId: string; kind: string; slug: string; name: string };
@@ -174,8 +184,11 @@ export function buildAcquisitionPlan(sqlite: Database.Database, userId: string):
   const entityIds = new Set([...missingRequirements.map((entry) => entry.entityId), ...drops.map((drop) => drop.nodeId).filter(Boolean) as EntityId[], ...recipeGroups.keys() as Iterable<EntityId>, ...recipeRows.map((row) => row.entityId as EntityId)]);
   const entities = loadEntityNames(sqlite, entityIds);
   const missing = missingRequirements.map((entry) => ({ ...entityDetails(entities, entry.entityId), entityId: entry.entityId, quantity: entry.quantity }));
-  const recommendations = recommendNodes(missingRequirements, drops).map((recommendation) => {
+  const recommendedNodes = recommendNodes(missingRequirements, drops);
+  const nodeAccess = loadNodeAccess(sqlite, userId, new Set(recommendedNodes.flatMap(({ nodeId }) => nodeId ? [nodeId] : [])));
+  const recommendations = recommendedNodes.map((recommendation) => {
     const node = recommendation.nodeId ? entities.get(recommendation.nodeId) : undefined;
+    const accessRequirements = recommendation.nodeId ? nodeAccess.get(recommendation.nodeId) ?? [] : [];
     const neededRewards = recommendation.neededRewards.map((reward) => ({
       ...entityDetails(entities, reward.entityId), entityId: reward.entityId, quantity: reward.quantity,
       chance: reward.chance, rotation: reward.rotation,
@@ -185,12 +198,14 @@ export function buildAcquisitionPlan(sqlite: Database.Database, userId: string):
       nodeSlug: node?.slug,
       locationLabel: recommendation.locationLabel,
       neededRewards,
+      accessStatus: accessRequirements.length === 0 ? "unknown" as const : accessRequirements.every(({ state }) => state === "completed") ? "available" as const : "blocked" as const,
+      accessRequirements,
       reasons: [
         `Drops ${neededRewards.length} missing goal ${neededRewards.length === 1 ? "item" : "items"}`,
         ...neededRewards.map((reward) => `${reward.name}: need ${reward.quantity}${reward.chance === undefined ? "" : `, ${(reward.chance * 100).toFixed(2)}% documented chance`}${reward.rotation ? `, rotation ${reward.rotation}` : ""}`),
       ],
     };
-  });
+  }).sort((left, right) => accessRank(left.accessStatus) - accessRank(right.accessStatus));
   const plannedOutputs = new Set<string>([...goals.map(({ entityId }) => entityId), ...missingRequirements.flatMap(({ via }) => via)]);
   const recipeChoices = [...recipeGroups.entries()].filter(([outputId, options]) => options.length > 1 && plannedOutputs.has(outputId)).map(([outputId, options]) => ({
     output: { entityId: outputId, ...entityDetails(entities, outputId) },
@@ -202,6 +217,60 @@ export function buildAcquisitionPlan(sqlite: Database.Database, userId: string):
     })),
   }));
   return { goals, missing, recommendations, recipeChoices };
+}
+
+function loadNodeAccess(sqlite: Database.Database, userId: string, nodeIds: Set<EntityId>): Map<string, AcquisitionPlan["recommendations"][number]["accessRequirements"]> {
+  const result = new Map<string, AcquisitionPlan["recommendations"][number]["accessRequirements"]>();
+  if (nodeIds.size === 0) return result;
+  const ids = [...nodeIds];
+  const placeholders = ids.map(() => "?").join(", ");
+  const rows = sqlite.prepare(`
+    select relation.from_entity_id as nodeId, prerequisite.id as entityId, prerequisite.kind, prerequisite.slug, prerequisite.name,
+      'requires' as relationKind, source.name as sourceName, relation.citation_url as citationUrl,
+      coalesce(progress.state, 'unseen') as state
+    from entity_relations relation
+    join source_runs run on run.id = relation.source_run_id and run.status = 'active'
+    join sources source on source.id = run.source_id
+    join entities prerequisite on prerequisite.id = relation.to_entity_id and prerequisite.retired = 0
+    left join player_discovery_progress progress on progress.entity_id = prerequisite.id and progress.user_id = ?
+    where relation.kind = 'requires' and relation.from_entity_id in (${placeholders})
+      and prerequisite.kind in ('quest', 'mechanic', 'secret', 'enemy', 'boss')
+    union all
+    select relation.to_entity_id, prerequisite.id, prerequisite.kind, prerequisite.slug, prerequisite.name,
+      'unlocks', source.name, relation.citation_url, coalesce(progress.state, 'unseen')
+    from entity_relations relation
+    join source_runs run on run.id = relation.source_run_id and run.status = 'active'
+    join sources source on source.id = run.source_id
+    join entities prerequisite on prerequisite.id = relation.from_entity_id and prerequisite.retired = 0
+    left join player_discovery_progress progress on progress.entity_id = prerequisite.id and progress.user_id = ?
+    where relation.kind = 'unlocks' and relation.to_entity_id in (${placeholders})
+      and prerequisite.kind in ('quest', 'mechanic', 'secret', 'enemy', 'boss')
+    order by 1, 5, 2, 6, 7
+  `).all(userId, ...ids, userId, ...ids) as Array<{
+    nodeId: string; entityId: string; kind: string; slug: string; name: string;
+    relationKind: "requires" | "unlocks"; sourceName: string; citationUrl: string | null;
+    state: "unseen" | "discovered" | "completed";
+  }>;
+  const indexed = new Map<string, Map<string, AcquisitionPlan["recommendations"][number]["accessRequirements"][number]>>();
+  for (const row of rows) {
+    const requirements = indexed.get(row.nodeId) ?? new Map();
+    const requirement: AcquisitionPlan["recommendations"][number]["accessRequirements"][number] = requirements.get(row.entityId) ?? {
+      entityId: row.entityId, kind: row.kind, slug: row.slug, name: row.name, state: row.state,
+      relationKinds: [], sources: [],
+    };
+    if (!requirement.relationKinds.includes(row.relationKind)) requirement.relationKinds.push(row.relationKind);
+    if (!requirement.sources.some(({ name, citationUrl }) => name === row.sourceName && citationUrl === (row.citationUrl ?? undefined))) {
+      requirement.sources.push({ name: row.sourceName, citationUrl: row.citationUrl ?? undefined });
+    }
+    requirements.set(row.entityId, requirement);
+    indexed.set(row.nodeId, requirements);
+  }
+  for (const [nodeId, requirements] of indexed) result.set(nodeId, [...requirements.values()]);
+  return result;
+}
+
+function accessRank(status: AcquisitionPlan["recommendations"][number]["accessStatus"]): number {
+  return status === "available" ? 0 : status === "unknown" ? 1 : 2;
 }
 
 export function findLiveAcquisitionOpportunities(sqlite: Database.Database, plan: AcquisitionPlan, now = Date.now()): LiveAcquisitionOpportunity[] {

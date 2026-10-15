@@ -106,6 +106,10 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   and filter the atlas by that state. Richer boss classification, quest-step
   progress and conditional relations remain. Atlas cards preview up to three
   cited neighbors; a spatial graph view remains.
+- Acquisition recommendations compose active `requires` and `unlocks` relations
+  with private discovery completion to show cited node blockers. Nodes without
+  access evidence stay unknown. Mastery-rank gates, junction conditions and
+  other conditional access rules still need typed models.
 
 ## Deliberate compromises
 

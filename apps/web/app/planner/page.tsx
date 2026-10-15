@@ -44,10 +44,11 @@ export default async function Planner() {
 
     {plan.missing.length > 0 && <section className="planner-section">
       <h2>Candidate nodes</h2>
-      <p className="muted">Ordered by how many different missing items a node covers. Chance is displayed as evidence, not converted into a time estimate.</p>
+      <p className="muted">Documented accessible nodes come first, then unknown and blocked nodes; each group is ordered by missing-item coverage. Chance is evidence, not a time estimate.</p>
       {plan.recommendations.length ? <div className="grid">{plan.recommendations.map((recommendation) => <article className="card" key={`${recommendation.nodeId ?? "label"}:${recommendation.locationLabel}`}>
-        <h3>{recommendation.nodeSlug ? <Link href={`/nodes/${recommendation.nodeSlug}`}>{recommendation.locationLabel}</Link> : recommendation.locationLabel}</h3>
+        <span className="tag">access {recommendation.accessStatus}</span><h3>{recommendation.nodeSlug ? <Link href={`/nodes/${recommendation.nodeSlug}`}>{recommendation.locationLabel}</Link> : recommendation.locationLabel}</h3>
         <ul>{recommendation.reasons.map((reason) => <li key={reason}>{reason}</li>)}</ul>
+        {recommendation.accessStatus === "unknown" ? <p className="muted">No active source documents access requirements for this node.</p> : <><p><strong>{recommendation.accessStatus === "available" ? "Documented requirements completed" : "Documented blockers"}</strong></p><ul>{recommendation.accessRequirements.map((requirement) => <li key={requirement.entityId}><Link href={`/catalog/${requirement.kind}/${requirement.slug}`}>{requirement.name}</Link>: {requirement.state} <span className="muted">({requirement.sources.map((source, index) => <span key={`${source.name}:${source.citationUrl ?? index}`}>{index > 0 ? ", " : ""}{source.citationUrl ? <a href={source.citationUrl} rel="noreferrer">{source.name}</a> : source.name}</span>)})</span></li>)}</ul></>}
       </article>)}</div> : <p className="notice">No active drop source is linked to the remaining requirements.</p>}
     </section>}
   </>;
