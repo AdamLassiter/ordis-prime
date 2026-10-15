@@ -319,6 +319,75 @@ test("each catalog release records its complete active source-run composition", 
   );
 });
 
+test("composed validation rejects retirement of entities referenced by another active source", async (context) => {
+  const root = await fs.mkdtemp(
+    path.join(os.tmpdir(), "ordis-composed-validation-"),
+  );
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const databasePath = path.join(root, "catalog.sqlite");
+  migrateDatabase(databasePath);
+  const sqlite = new Database(databasePath);
+  sqlite.pragma("foreign_keys = ON");
+  context.after(() => sqlite.close());
+
+  const first = promoteSource(
+    sqlite,
+    input("a-v1", [entity("reward", "Shared Reward", "component", "a-v1")]),
+  );
+  const sourceB = { ...source, id: "fixture-b", name: "Fixture B" };
+  const crossSourceDrop: Observation = {
+    type: "drop",
+    rewardExternalId: { sourceId: "fixture", namespace: "id", value: "reward" },
+    locationLabel: "External location",
+    chance: 0.1,
+    evidence: evidence("b-v1", "fixture-b"),
+  };
+  promoteSource(sqlite, {
+    ...input("b-v1", [crossSourceDrop]),
+    source: sourceB,
+  });
+
+  const tombstone: Observation = {
+    type: "entity",
+    kind: "component",
+    externalIds: [{ sourceId: "fixture", namespace: "id", value: "reward" }],
+    fields: {},
+    tombstone: true,
+    evidence: evidence("a-v2"),
+  };
+  assert.throws(
+    () => promoteSource(sqlite, input("a-v2", [tombstone])),
+    /Composed catalog drop reward record references retired component:shared-reward/,
+  );
+  assert.deepEqual(
+    sqlite
+      .prepare(
+        "select source_id as sourceId, version, status from source_runs order by source_id",
+      )
+      .all(),
+    [
+      { sourceId: "fixture", version: "a-v1", status: "active" },
+      { sourceId: "fixture-b", version: "b-v1", status: "active" },
+    ],
+  );
+  assert.equal(
+    (
+      sqlite
+        .prepare("select retired from entities where slug = 'shared-reward'")
+        .get() as { retired: number }
+    ).retired,
+    0,
+  );
+  assert.equal(
+    first.sourceRunId,
+    (
+      sqlite
+        .prepare("select id from source_runs where source_id = 'fixture'")
+        .get() as { id: string }
+    ).id,
+  );
+});
+
 test("catalog pruning retains active and recent releases while protecting conflict runs", async (context) => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-release-prune-"));
   context.after(() => fs.rm(root, { recursive: true, force: true }));

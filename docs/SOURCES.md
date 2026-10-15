@@ -65,6 +65,14 @@ declared set, tier, and member per subject. These are source-authoring errors,
 not resolver ambiguity, so they fail the refresh before a source run is written.
 Actual ambiguity against the composed catalog remains a reviewable conflict.
 
+After the incoming source replaces its prior active run, promotion validates
+the composed catalog before publishing the release. Every active recipe, drop,
+node detail, typed relation, enhancement option and ranking member must still
+refer to a non-retired canonical entity. A source therefore cannot tombstone an
+identity still used by another active source; the entire promotion rolls back.
+This is referential liveness validation, not a claim that every expected game
+record is present.
+
 The WFCD item adapter also performs a payload-wide identity pass. Shared recipe
 materials keep their intrinsic name instead of being repeatedly parent-qualified;
 one-off generic components remain qualified. Same-kind display-name collisions

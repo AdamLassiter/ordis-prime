@@ -486,6 +486,7 @@ function promoteInTransaction(
   sqlite
     .prepare("update source_runs set status = 'active' where id = ?")
     .run(sourceRunId);
+  validateComposedCatalog(sqlite);
   sqlite
     .prepare("update catalog_releases set active = 0 where active = 1")
     .run();
@@ -504,6 +505,64 @@ function promoteInTransaction(
     .run(releaseId);
 
   return { sourceRunId, releaseId, ...counts };
+}
+
+function validateComposedCatalog(sqlite: Database.Database): void {
+  const duplicateActiveSource = sqlite
+    .prepare(
+      `select source_id as sourceId, count(*) as count from source_runs
+       where status = 'active' group by source_id having count(*) != 1 limit 1`,
+    )
+    .get() as { sourceId: string; count: number } | undefined;
+  if (duplicateActiveSource)
+    throw new Error(
+      `Composed catalog has ${duplicateActiveSource.count} active runs for source ${duplicateActiveSource.sourceId}`,
+    );
+
+  const retiredReference = sqlite
+    .prepare(
+      `with active_refs as (
+        select 'recipe output' as factType, recipe.source_record_key as recordKey, recipe.output_id as entityId
+          from recipes recipe join source_runs run on run.id = recipe.source_run_id and run.status = 'active'
+        union all
+        select 'recipe ingredient', recipe.source_record_key, ingredient.entity_id
+          from recipe_ingredients ingredient join recipes recipe on recipe.id = ingredient.recipe_id
+          join source_runs run on run.id = recipe.source_run_id and run.status = 'active'
+        union all
+        select 'drop reward', item_drop.source_record_key, item_drop.reward_id
+          from drops item_drop join source_runs run on run.id = item_drop.source_run_id and run.status = 'active'
+        union all
+        select 'drop node', item_drop.source_record_key, item_drop.node_id
+          from drops item_drop join source_runs run on run.id = item_drop.source_run_id and run.status = 'active'
+          where item_drop.node_id is not null
+        union all
+        select 'node detail', detail.source_record_key, detail.entity_id
+          from node_details detail join source_runs run on run.id = detail.source_run_id and run.status = 'active'
+        union all
+        select 'relation origin', relation.source_record_key, relation.from_entity_id
+          from entity_relations relation join source_runs run on run.id = relation.source_run_id and run.status = 'active'
+        union all
+        select 'relation target', relation.source_record_key, relation.to_entity_id
+          from entity_relations relation join source_runs run on run.id = relation.source_run_id and run.status = 'active'
+        union all
+        select 'enhancement option', option.source_record_key, option.entity_id
+          from entity_enhancement_options option join source_runs run on run.id = option.source_run_id and run.status = 'active'
+        union all
+        select 'ranking member', ranking.source_record_key, ranking.entity_id
+          from editorial_rankings ranking join ranking_sets ranking_set on ranking_set.id = ranking.set_id
+          join source_runs run on run.id = ranking_set.source_run_id and run.status = 'active'
+      )
+      select active_refs.factType, active_refs.recordKey, entity.kind, entity.slug
+      from active_refs join entities entity on entity.id = active_refs.entityId
+      where entity.retired = 1 limit 1`,
+    )
+    .get() as
+    | { factType: string; recordKey: string | null; kind: string; slug: string }
+    | undefined;
+  if (retiredReference)
+    throw new Error(
+      `Composed catalog ${retiredReference.factType} ${retiredReference.recordKey ?? "without record key"} references retired ${retiredReference.kind}:${retiredReference.slug}`,
+    );
 }
 
 function resolveAndWriteEntity(
