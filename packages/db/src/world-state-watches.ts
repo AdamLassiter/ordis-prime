@@ -119,6 +119,17 @@ export function markPlayerNotificationRead(sqlite: Database.Database, userId: st
   if (result.changes !== 1) throw new Error("Notification not found");
 }
 
+export function pruneReadExpiredPlayerNotifications(sqlite: Database.Database, now: number, retentionMilliseconds: number): number {
+  if (!Number.isSafeInteger(now) || now < 0) throw new Error("Notification pruning time is invalid");
+  if (!Number.isSafeInteger(retentionMilliseconds) || retentionMilliseconds < 0) throw new Error("Notification retention must be a non-negative integer");
+  const cutoff = now - retentionMilliseconds;
+  if (!Number.isSafeInteger(cutoff)) throw new Error("Notification retention cutoff is invalid");
+  return sqlite.prepare(`
+    delete from player_notifications
+    where read_at is not null and expires_at is not null and expires_at <= ?
+  `).run(cutoff).changes;
+}
+
 function watchMatches(watch: { kind: WorldStateWindowKind; labelContains: string | null; stateEquals: string | null; nodeContains: string | null; entityId: string | null; entityKind: string | null; entitySlug: string | null }, window: CurrentWorldStateWindow): boolean {
   return watch.kind === window.kind
     && (watch.entityKind !== "node" || window.node?.slug === watch.entitySlug)

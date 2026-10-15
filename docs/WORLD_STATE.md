@@ -61,6 +61,8 @@ finished scheduler jobs by default and prunes older successes and failures;
 work. `ORDIS_WORLD_STATE_HISTORY_LIMIT` changes the per-provider inactive
 normalized-snapshot bound; zero retains only the active snapshot. Raw immutable
 source payloads and source refresh records are not deleted by this policy.
+`ORDIS_NOTIFICATION_RETENTION_MS` controls how long read player alerts remain
+after their matching window expires; unread and non-expiring alerts are exempt.
 
 The public `/world-state` route reads the currently promoted snapshots and shows
 countdowns that advance in the browser. It labels future windows separately and

@@ -86,6 +86,8 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   support fixed-day, weekly, monthly-date, monthly-weekday and yearly calendar
   recurrence while remaining date-only; there are no web-push or webhook delivery channels. Watches
   can be edited, paused and resumed without losing generated alerts.
+  Read, expired alerts have configurable time-based retention; unread and
+  non-expiring alert history is deliberately not pruned automatically.
 - Private, revisioned build persistence supports partial equipment loadouts,
   positioned mods, ranks, configuration labels, Forma counts, capacity-upgrade
   flags, notes and immutable unlisted share snapshots. Authenticated

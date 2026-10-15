@@ -51,6 +51,14 @@ history. Editing preserves watch identity and alert history, while resuming or
 saving an enabled watch immediately evaluates the current snapshot. Existing
 occurrence keys remain deduplicated after an edit.
 
+Read notifications with a finite expiry are retained for 30 days after that
+expiry by default, then pruned by the worker. Unread notifications and notices
+without an expiry are never removed automatically. This restriction ensures
+cleanup cannot delete the occurrence key while its window could still match and
+therefore cannot generate a duplicate notification. The retention duration is
+configurable with `ORDIS_NOTIFICATION_RETENTION_MS`; zero removes read notices
+on the first worker pass after they expire.
+
 ## Current limits
 
 - Static todos and watch rules are portable; generated notification history is
@@ -62,8 +70,7 @@ occurrence keys remain deduplicated after an edit.
   Rules are anchored by the initial due date; the create form does not offer a
   separate weekday or month-day picker. There are no subtasks, tags or ordering controls. A
   todo can link to one canonical entity but cannot yet carry multiple targets.
-- Notification retention is not configurable. Web push and webhooks remain
-  later opt-in delivery channels.
+- Web push and webhooks remain later opt-in delivery channels.
 
 The acquisition planner separately surfaces active or upcoming world-state
 windows on recommended nodes. Those are derived, expiring suggestions rather
