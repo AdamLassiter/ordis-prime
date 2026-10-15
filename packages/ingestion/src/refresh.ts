@@ -35,7 +35,7 @@ export async function refreshSource(options: RefreshSourceOptions): Promise<Refr
       snapshotPath,
       observations,
     });
-    completeSourceRefresh(options.database, refreshId, { sourceRunId: promotion.sourceRunId, snapshotPath });
+    completeSourceRefresh(options.database, refreshId, { sourceRunId: promotion.sourceRunId, snapshotPath, recordsProcessed: observations.length });
     return { ...promotion, snapshotPath, observationCount: observations.length };
   } catch (error) {
     failSourceRefresh(options.database, refreshId, error, snapshotPath);

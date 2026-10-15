@@ -60,10 +60,27 @@ test("job pruning retains the newest bounded history and never deletes active wo
     { id: "running", status: "running" },
   ]);
   assert.equal(pruneFinishedJobs(database, 1), 0);
-  assert.deepEqual(listRecentJobs(database, 2).map(({ id, status, payload }) => ({ id, status, payload })), [
+  assert.deepEqual(listRecentJobs(database, { limit: 2 }).map(({ id, status, payload }) => ({ id, status, payload })), [
     { id: "running", status: "running", payload: {} },
     { id: "queued", status: "queued", payload: {} },
   ]);
   assert.throws(() => pruneFinishedJobs(database, -1), /between 0 and 100000/);
-  assert.throws(() => listRecentJobs(database, 0), /between 1 and 200/);
+  assert.throws(() => listRecentJobs(database, { limit: 0 }), /between 1 and 200/);
+});
+
+test("job history filters by kind, status, and source payload", async (context) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-jobs-filter-"));
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const databasePath = path.join(root, "jobs.sqlite");
+  migrateDatabase(databasePath);
+  const database = openSqliteDatabase(databasePath);
+  context.after(() => database.close());
+  const insert = database.prepare("insert into jobs (id, kind, status, payload_json, run_after) values (?, ?, ?, ?, ?)");
+  insert.run("items-ok", "refresh-catalog-source", "succeeded", JSON.stringify({ source: "wfcd-items" }), 1);
+  insert.run("drops-failed", "refresh-catalog-source", "failed", JSON.stringify({ source: "wfcd-drops" }), 2);
+  insert.run("world-failed", "refresh-world-state", "failed", JSON.stringify({ source: "wfcd-worldstate" }), 3);
+
+  assert.deepEqual(listRecentJobs(database, { kind: "refresh-catalog-source", status: "failed" }).map(({ id }) => id), ["drops-failed"]);
+  assert.deepEqual(listRecentJobs(database, { sourceId: "wfcd-worldstate" }).map(({ id }) => id), ["world-failed"]);
+  assert.throws(() => listRecentJobs(database, { status: "invalid" as "failed" }), /status filter/);
 });

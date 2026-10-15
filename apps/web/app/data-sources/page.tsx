@@ -6,13 +6,22 @@ import { importManualSource, queueSourceRefresh } from "./actions";
 
 export const dynamic = "force-dynamic";
 
-export default async function Sources() {
+const JOB_KINDS = ["refresh-world-state", "refresh-catalog-source"] as const;
+const JOB_STATUSES = ["queued", "running", "succeeded", "failed"] as const;
+const AUTOMATIC_SOURCES = ["wfcd-items", "wfcd-drops", "wfcd-worldstate"] as const;
+
+export default async function Sources({ searchParams }: { searchParams: Promise<{ jobKind?: string; jobStatus?: string; jobSource?: string }> }) {
+  const filters = await searchParams;
   const database = getDatabase();
   const sources = listSourceStatuses(database);
   const release = getActiveCatalogRelease(database);
   const session = await getCurrentSession();
   const isAdmin = session?.user.role === "admin";
-  const jobs = isAdmin ? listRecentJobs(database, 30) : [];
+  const jobKind = (JOB_KINDS as readonly string[]).includes(filters.jobKind ?? "") ? filters.jobKind as typeof JOB_KINDS[number] : undefined;
+  const jobStatus = (JOB_STATUSES as readonly string[]).includes(filters.jobStatus ?? "") ? filters.jobStatus as typeof JOB_STATUSES[number] : undefined;
+  const jobSources = AUTOMATIC_SOURCES.map((id) => ({ id, name: sources.find((source) => source.id === id)?.name ?? id }));
+  const jobSource = jobSources.some(({ id }) => id === filters.jobSource) ? filters.jobSource : undefined;
+  const jobs = isAdmin ? listRecentJobs(database, { limit: 30, kind: jobKind, status: jobStatus, sourceId: jobSource }) : [];
   return <>
     <p className="eyebrow">Trust and provenance</p>
     <h1>Data sources</h1>
@@ -20,7 +29,7 @@ export default async function Sources() {
     {release && <section className="card source-controls"><h2>Active catalog release</h2><p><code>{release.id}</code> · promoted {new Date(release.promotedAt).toISOString()}</p><div className="filters">{release.sources.map((member) => <span className="tag" key={member.sourceId}>{member.sourceName}: {member.version}</span>)}</div></section>}
     {isAdmin && <section className="card source-controls"><h2>Refresh controls</h2><p className="muted">Queue work for the leased background worker. Existing queued work is brought forward instead of duplicated.</p><div className="filters">{[["wfcd-items", "WFCD items"], ["wfcd-drops", "WFCD drops"], ["wfcd-worldstate", "World state"]].map(([id, label]) => <form action={queueSourceRefresh.bind(null, id!)} key={id}><button className="button">Queue {label}</button></form>)}</div></section>}
     {isAdmin && <section className="card source-controls"><h2>Import cited manual data</h2><p className="muted">Upload a validated YAML document through the same immutable snapshot and promotion pipeline. Maximum 1 MB.</p><form className="inline-form" action={importManualSource}><label>Document type<select name="type" defaultValue="ranking"><option value="ranking">Editorial ranking</option><option value="discovery">Discovery facts</option><option value="facts">Factual overlay</option></select></label><label>YAML file<input name="file" type="file" accept=".yaml,.yml,application/yaml,text/yaml" required /></label><button className="button">Validate and import</button></form></section>}
-    {isAdmin && <section className="planner-section"><h2>Recent worker jobs</h2>{jobs.length ? <div className="operations">{jobs.map((job) => <article className="card" key={job.id}><span className={`tag ${job.status === "failed" ? "danger" : ""}`}>{job.status}</span><h3>{job.kind}</h3><p>Source <code>{typeof job.payload.source === "string" ? job.payload.source : "unknown"}</code> · due {new Date(job.runAfter).toISOString()}</p>{job.leaseOwner && <p className="muted">Lease {job.leaseOwner}{job.leaseUntil ? ` until ${new Date(job.leaseUntil).toISOString()}` : ""}</p>}{job.error && <pre className="error-block">{job.error}</pre>}</article>)}</div> : <p className="notice">No worker jobs have been recorded.</p>}</section>}
+    {isAdmin && <section className="planner-section"><h2>Recent worker jobs</h2><form className="inline-form"><label>Kind<select name="jobKind" defaultValue={jobKind ?? ""}><option value="">All kinds</option>{JOB_KINDS.map((kind) => <option key={kind}>{kind}</option>)}</select></label><label>Status<select name="jobStatus" defaultValue={jobStatus ?? ""}><option value="">All statuses</option>{JOB_STATUSES.map((status) => <option key={status}>{status}</option>)}</select></label><label>Source<select name="jobSource" defaultValue={jobSource ?? ""}><option value="">All sources</option>{jobSources.map((source) => <option value={source.id} key={source.id}>{source.name}</option>)}</select></label><button className="nav-button">Filter jobs</button></form>{jobs.length ? <div className="operations">{jobs.map((job) => <article className="card" key={job.id}><span className={`tag ${job.status === "failed" ? "danger" : ""}`}>{job.status}</span><h3>{job.kind}</h3><p>Source <code>{typeof job.payload.source === "string" ? job.payload.source : "unknown"}</code> · due {new Date(job.runAfter).toISOString()}</p>{job.leaseOwner && <p className="muted">Lease {job.leaseOwner}{job.leaseUntil ? ` until ${new Date(job.leaseUntil).toISOString()}` : ""}</p>}{job.error && <pre className="error-block">{job.error}</pre>}</article>)}</div> : <p className="notice">No worker jobs match these filters.</p>}</section>}
     {sources.length
       ? <section className="grid">{sources.map((source) => <article className="card" key={source.id}>
           <h2><a href={source.homepage}>{source.name}</a></h2>

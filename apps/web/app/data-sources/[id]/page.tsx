@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { listSourceConflicts, listSourceRefreshes, listSourceStatuses } from "@ordis-prime/db";
+import { getSourceRefreshMetrics, listSourceConflicts, listSourceRefreshes, listSourceStatuses } from "@ordis-prime/db";
 import { getDatabase } from "@/lib/database";
 import { getCurrentSession } from "@/lib/session";
 import { markConflictReviewed, reopenConflict } from "./actions";
@@ -15,6 +15,7 @@ export default async function SourceOperationsPage({ params }: { params: Promise
   const source = listSourceStatuses(database).find((entry) => entry.id === id);
   if (!source) notFound();
   const refreshes = listSourceRefreshes(database, id);
+  const metrics = getSourceRefreshMetrics(database, id);
   const conflicts = listSourceConflicts(database, id);
   return <>
     <p className="eyebrow">Administrator · source operations</p>
@@ -25,9 +26,11 @@ export default async function SourceOperationsPage({ params }: { params: Promise
 
     <section className="planner-section">
       <h2>Recent refreshes</h2>
+      <p className="muted">{metrics.attempts} attempts · {metrics.succeeded} succeeded · {metrics.failed} failed · {metrics.recordsProcessed.toLocaleString()} records processed{metrics.averageDurationMilliseconds === undefined ? "" : ` · ${(metrics.averageDurationMilliseconds / 1000).toFixed(2)}s average`}{metrics.recordsPerSecond === undefined ? "" : ` · ${metrics.recordsPerSecond.toFixed(1)} records/s`}</p>
       {refreshes.length ? <div className="operations">{refreshes.map((refresh) => <article className="card" key={refresh.id}>
         <span className={`tag ${refresh.status === "failed" ? "danger" : ""}`}>{refresh.status}</span>
         <p>Started {new Date(refresh.startedAt).toISOString()}{refresh.finishedAt ? ` · finished ${new Date(refresh.finishedAt).toISOString()}` : ""}</p>
+        {refresh.recordsProcessed !== undefined && <p>{refresh.recordsProcessed.toLocaleString()} records{refresh.finishedAt ? ` · ${((refresh.finishedAt - refresh.startedAt) / 1000).toFixed(2)}s` : ""}{refresh.finishedAt && refresh.finishedAt > refresh.startedAt ? ` · ${(refresh.recordsProcessed * 1000 / (refresh.finishedAt - refresh.startedAt)).toFixed(1)} records/s` : ""}</p>}
         {refresh.version && <p>Version <code>{refresh.version}</code></p>}
         {refresh.snapshotPath && <p className="muted">Snapshot <code>{refresh.snapshotPath}</code></p>}
         {refresh.error && <pre className="error-block">{refresh.error}</pre>}

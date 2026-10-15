@@ -76,7 +76,7 @@ export async function refreshWorldState(options: { adapter: WorldStateAdapter; d
     snapshotPath = await options.snapshotStore.put(snapshot);
     const windows = options.adapter.parse(snapshot);
     const result = promoteWorldState(options.database, { source: options.adapter.source, version: snapshot.version, contentHash: snapshot.contentHash, observedAt: snapshot.version, snapshotPath, windows });
-    completeSourceRefresh(options.database, refreshId, { worldStateSnapshotId: result.snapshotId, snapshotPath });
+    completeSourceRefresh(options.database, refreshId, { worldStateSnapshotId: result.snapshotId, snapshotPath, recordsProcessed: windows.length });
     return { ...result, snapshotPath };
   } catch (error) {
     failSourceRefresh(options.database, refreshId, error, snapshotPath);

@@ -11,7 +11,17 @@ export interface SourceRefreshRecord {
   worldStateSnapshotId?: string;
   version?: string;
   snapshotPath?: string;
+  recordsProcessed?: number;
   error?: string;
+}
+
+export interface SourceRefreshMetrics {
+  attempts: number;
+  succeeded: number;
+  failed: number;
+  recordsProcessed: number;
+  averageDurationMilliseconds?: number;
+  recordsPerSecond?: number;
 }
 
 export interface SourceConflictRecord {
@@ -55,7 +65,7 @@ export function getActiveCatalogRelease(sqlite: Database.Database): ActiveCatalo
   return { ...release, sources };
 }
 
-export function beginSourceRefresh(sqlite: Database.Database, source: PromotionSource): string {
+export function beginSourceRefresh(sqlite: Database.Database, source: PromotionSource, now = Date.now()): string {
   const id = randomUUID();
   sqlite.transaction(() => {
     sqlite.prepare(`
@@ -65,17 +75,18 @@ export function beginSourceRefresh(sqlite: Database.Database, source: PromotionS
         license = excluded.license, priority = excluded.priority, enabled = 1
     `).run(source.id, source.name, source.homepage, source.license ?? null, source.priority);
     sqlite.prepare("insert into source_refreshes (id, source_id, status, started_at) values (?, ?, 'running', ?)")
-      .run(id, source.id, Date.now());
+      .run(id, source.id, now);
   })();
   return id;
 }
 
-export function completeSourceRefresh(sqlite: Database.Database, refreshId: string, input: { sourceRunId?: string; worldStateSnapshotId?: string; snapshotPath: string }): void {
+export function completeSourceRefresh(sqlite: Database.Database, refreshId: string, input: { sourceRunId?: string; worldStateSnapshotId?: string; snapshotPath: string; recordsProcessed: number; finishedAt?: number }): void {
   if (Boolean(input.sourceRunId) === Boolean(input.worldStateSnapshotId)) throw new Error("A completed refresh must link exactly one promoted snapshot");
+  if (!Number.isSafeInteger(input.recordsProcessed) || input.recordsProcessed < 0) throw new Error("Completed refresh record count must be a non-negative safe integer");
   const result = sqlite.prepare(`
-    update source_refreshes set status = 'succeeded', source_run_id = ?, world_state_snapshot_id = ?, snapshot_path = ?, finished_at = ?, error = null
+    update source_refreshes set status = 'succeeded', source_run_id = ?, world_state_snapshot_id = ?, snapshot_path = ?, records_processed = ?, finished_at = ?, error = null
     where id = ? and status = 'running'
-  `).run(input.sourceRunId ?? null, input.worldStateSnapshotId ?? null, input.snapshotPath, Date.now(), refreshId);
+  `).run(input.sourceRunId ?? null, input.worldStateSnapshotId ?? null, input.snapshotPath, input.recordsProcessed, input.finishedAt ?? Date.now(), refreshId);
   if (result.changes !== 1) throw new Error(`Refresh ${refreshId} is not running`);
 }
 
@@ -93,18 +104,34 @@ export function listSourceRefreshes(sqlite: Database.Database, sourceId: string,
   const rows = sqlite.prepare(`
     select refresh.id, refresh.status, refresh.started_at as startedAt, refresh.finished_at as finishedAt,
            refresh.source_run_id as sourceRunId, refresh.world_state_snapshot_id as worldStateSnapshotId,
-           coalesce(run.version, world.version) as version, refresh.snapshot_path as snapshotPath, refresh.error
+           coalesce(run.version, world.version) as version, refresh.snapshot_path as snapshotPath,
+           refresh.records_processed as recordsProcessed, refresh.error
     from source_refreshes refresh
     left join source_runs run on run.id = refresh.source_run_id
     left join world_state_snapshots world on world.id = refresh.world_state_snapshot_id
     where refresh.source_id = ?
     order by refresh.started_at desc, refresh.rowid desc limit ?
-  `).all(sourceId, normalizedLimit) as Array<Omit<SourceRefreshRecord, "finishedAt" | "sourceRunId" | "worldStateSnapshotId" | "version" | "snapshotPath" | "error"> & { finishedAt: number | null; sourceRunId: string | null; worldStateSnapshotId: string | null; version: string | null; snapshotPath: string | null; error: string | null }>;
+  `).all(sourceId, normalizedLimit) as Array<Omit<SourceRefreshRecord, "finishedAt" | "sourceRunId" | "worldStateSnapshotId" | "version" | "snapshotPath" | "recordsProcessed" | "error"> & { finishedAt: number | null; sourceRunId: string | null; worldStateSnapshotId: string | null; version: string | null; snapshotPath: string | null; recordsProcessed: number | null; error: string | null }>;
   return rows.map((row) => ({
     id: row.id, status: row.status, startedAt: row.startedAt,
     finishedAt: row.finishedAt ?? undefined, sourceRunId: row.sourceRunId ?? undefined, worldStateSnapshotId: row.worldStateSnapshotId ?? undefined,
-    version: row.version ?? undefined, snapshotPath: row.snapshotPath ?? undefined, error: row.error ?? undefined,
+    version: row.version ?? undefined, snapshotPath: row.snapshotPath ?? undefined, recordsProcessed: row.recordsProcessed ?? undefined, error: row.error ?? undefined,
   }));
+}
+
+export function getSourceRefreshMetrics(sqlite: Database.Database, sourceId: string): SourceRefreshMetrics {
+  const row = sqlite.prepare(`
+    select count(*) as attempts,
+      coalesce(sum(case when status = 'succeeded' then 1 else 0 end), 0) as succeeded,
+      coalesce(sum(case when status = 'failed' then 1 else 0 end), 0) as failed,
+      coalesce(sum(case when status = 'succeeded' then records_processed else 0 end), 0) as recordsProcessed,
+      avg(case when status = 'succeeded' then finished_at - started_at end) as averageDurationMilliseconds,
+      sum(case when status = 'succeeded' then records_processed else 0 end) * 1000.0 /
+        nullif(sum(case when status = 'succeeded' then finished_at - started_at else 0 end), 0) as recordsPerSecond
+    from source_refreshes where source_id = ?
+  `).get(sourceId) as { attempts: number; succeeded: number; failed: number; recordsProcessed: number; averageDurationMilliseconds: number | null; recordsPerSecond: number | null };
+  return { attempts: row.attempts, succeeded: row.succeeded, failed: row.failed, recordsProcessed: row.recordsProcessed,
+    averageDurationMilliseconds: row.averageDurationMilliseconds ?? undefined, recordsPerSecond: row.recordsPerSecond ?? undefined };
 }
 
 export function listSourceConflicts(sqlite: Database.Database, sourceId: string, limit = 100): SourceConflictRecord[] {

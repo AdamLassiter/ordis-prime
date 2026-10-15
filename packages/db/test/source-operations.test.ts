@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { beginSourceRefresh, failSourceRefresh, listSourceConflicts, listSourceRefreshes, listSourceStatuses, migrateDatabase, openSqliteDatabase, reopenSourceConflict, reviewSourceConflict } from "../src/index.ts";
+import { beginSourceRefresh, completeSourceRefresh, failSourceRefresh, getSourceRefreshMetrics, listSourceConflicts, listSourceRefreshes, listSourceStatuses, migrateDatabase, openSqliteDatabase, reopenSourceConflict, reviewSourceConflict } from "../src/index.ts";
 
 test("source status exposes the latest persisted refresh failure", async (context) => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-source-operations-"));
@@ -28,6 +28,29 @@ test("source status exposes the latest persisted refresh failure", async (contex
     id: "conflict", sourceRunId: "run", version: "v1", snapshotPath: "/snapshots/fixture/v1",
     recordKey: "records[4]", reason: "Ambiguous identity", candidateIds: ["one", "two"], resolvedAt: undefined, reviewEvents: [],
   }]);
+});
+
+test("source refresh records expose deterministic throughput metrics", async (context) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-source-metrics-"));
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const databasePath = path.join(root, "catalog.sqlite");
+  migrateDatabase(databasePath);
+  const sqlite = openSqliteDatabase(databasePath);
+  context.after(() => sqlite.close());
+  const source = { id: "fixture", name: "Fixture", homepage: "https://example.test", priority: 10 };
+  assert.deepEqual(getSourceRefreshMetrics(sqlite, source.id), { attempts: 0, succeeded: 0, failed: 0, recordsProcessed: 0, averageDurationMilliseconds: undefined, recordsPerSecond: undefined });
+  const refreshId = beginSourceRefresh(sqlite, source, 1_000);
+  sqlite.prepare("insert into source_runs (id, source_id, version, content_hash, retrieved_at, status) values ('run', 'fixture', 'v1', 'hash', 1000, 'active')").run();
+  completeSourceRefresh(sqlite, refreshId, { sourceRunId: "run", snapshotPath: "/snapshot", recordsProcessed: 250, finishedAt: 3_000 });
+  const failedId = beginSourceRefresh(sqlite, source, 4_000);
+  failSourceRefresh(sqlite, failedId, new Error("nope"));
+
+  assert.equal(listSourceRefreshes(sqlite, source.id)[1]?.recordsProcessed, 250);
+  assert.deepEqual(getSourceRefreshMetrics(sqlite, source.id), {
+    attempts: 2, succeeded: 1, failed: 1, recordsProcessed: 250,
+    averageDurationMilliseconds: 2_000, recordsPerSecond: 125,
+  });
+  assert.throws(() => completeSourceRefresh(sqlite, "missing", { sourceRunId: "run", snapshotPath: "/snapshot", recordsProcessed: -1 }), /record count/);
 });
 
 test("administrator conflict reviews are source-scoped, reversible, and audited", async (context) => {

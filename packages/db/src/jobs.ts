@@ -95,13 +95,22 @@ export function pruneFinishedJobs(sqlite: Database.Database, retain = 1_000): nu
   return result.changes;
 }
 
-export function listRecentJobs(sqlite: Database.Database, limit = 50): JobRecord[] {
+export function listRecentJobs(sqlite: Database.Database, input: { limit?: number; kind?: string; sourceId?: string; status?: JobRecord["status"] } = {}): JobRecord[] {
+  const limit = input.limit ?? 50;
   if (!Number.isSafeInteger(limit) || limit < 1 || limit > 200) throw new Error("Job history limit must be between 1 and 200");
+  if (input.kind !== undefined && (!input.kind || input.kind.length > 100)) throw new Error("Job kind filter is invalid");
+  if (input.sourceId !== undefined && (!input.sourceId || input.sourceId.length > 200)) throw new Error("Job source filter is invalid");
+  if (input.status !== undefined && !(["queued", "running", "succeeded", "failed"] as const).includes(input.status)) throw new Error("Job status filter is invalid");
+  const filters: string[] = [];
+  const parameters: unknown[] = [];
+  if (input.kind) { filters.push("kind = ?"); parameters.push(input.kind); }
+  if (input.sourceId) { filters.push("json_extract(payload_json, '$.source') = ?"); parameters.push(input.sourceId); }
+  if (input.status) { filters.push("status = ?"); parameters.push(input.status); }
   const rows = sqlite.prepare(`
     select id, kind, status, payload_json as payloadJson, run_after as runAfter,
       lease_owner as leaseOwner, lease_until as leaseUntil, error
-    from jobs order by rowid desc limit ?
-  `).all(limit) as Array<Omit<JobRecord, "payload" | "leaseOwner" | "leaseUntil" | "error"> & { payloadJson: string; leaseOwner: string | null; leaseUntil: number | null; error: string | null }>;
+    from jobs ${filters.length ? `where ${filters.join(" and ")}` : ""} order by rowid desc limit ?
+  `).all(...parameters, limit) as Array<Omit<JobRecord, "payload" | "leaseOwner" | "leaseUntil" | "error"> & { payloadJson: string; leaseOwner: string | null; leaseUntil: number | null; error: string | null }>;
   return rows.map(({ payloadJson, leaseOwner, leaseUntil, error, ...row }) => ({
     ...row,
     payload: parsePayload(payloadJson),

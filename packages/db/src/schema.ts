@@ -38,6 +38,7 @@ export const sourceRefreshes = sqliteTable("source_refreshes", {
   startedAt: integer("started_at", { mode: "timestamp_ms" }).notNull(),
   finishedAt: integer("finished_at", { mode: "timestamp_ms" }),
   snapshotPath: text("snapshot_path"),
+  recordsProcessed: integer("records_processed"),
   error: text(),
 }, (table) => [index("source_refreshes_source_started").on(table.sourceId, table.startedAt)]);
 export const catalogReleases = sqliteTable("catalog_releases", {

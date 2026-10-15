@@ -1,0 +1,1 @@
+ALTER TABLE `source_refreshes` ADD `records_processed` integer;

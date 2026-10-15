@@ -16,6 +16,10 @@ attempt records success or a bounded error message and links successful imports
 to their promoted source run or world-state snapshot. If a snapshot was retained
 before parsing or promotion failed, its path remains attached to the failed
 attempt. A failure never changes the previously active data.
+Successful attempts also persist the number of normalized observations or
+world-state windows processed. Source operation pages derive duration and
+throughput from those authoritative counts and timestamps. Worker history can
+be filtered independently by job kind, status and source payload.
 
 Entity fields, enhancement options, recipes, drops, ranking sets, and individual editorial rankings
 retain the source record key plus optional citation URL and source path. The
