@@ -4,7 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { migrateDatabase, openSqliteDatabase } from "@ordis-prime/db";
-import { createAuth } from "../lib/auth-factory.ts";
+import { createAuth, verifyLocalPassword } from "../lib/auth-factory.ts";
 
 const baseURL = "http://localhost:3000";
 const secret = "test-only-auth-secret-that-is-long-enough";
@@ -24,7 +24,10 @@ test("setup token creates only the first administrator and sessions round-trip",
 
   const created = await signUp(auth, "admin@example.test", "Administrator", setupToken);
   assert.equal(created.status, 200);
-  assert.equal((database.prepare("select role from users where email = ?").get("admin@example.test") as { role: string }).role, "admin");
+  const administrator = database.prepare("select id, role from users where email = ?").get("admin@example.test") as { id: string; role: string };
+  assert.equal(administrator.role, "admin");
+  assert.equal(await verifyLocalPassword(database, administrator.id, "wrong password"), false);
+  assert.equal(await verifyLocalPassword(database, administrator.id, "correct horse battery staple"), true);
 
   const second = await signUp(auth, "player@example.test", "Player", setupToken);
   assert.equal(second.status, 403);

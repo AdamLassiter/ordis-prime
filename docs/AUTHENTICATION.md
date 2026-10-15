@@ -36,6 +36,8 @@ account. The final administrator cannot self-delete until another administrator
 exists. Conflict-review audit entries retain the actor's recorded display name
 after the account foreign key is cleared.
 
-Deletion trusts the active authenticated session and confirmation phrase; it
-does not currently require password re-entry. Password recovery remains a gap
-until an outbound email provider and token-delivery policy are selected.
+Deletion requires the active authenticated session, the account's current
+password, and the exact confirmation phrase. Password verification uses the
+same local credential hash implementation as sign-in; plaintext passwords do
+not cross into the database package. Password recovery remains a gap until an
+outbound email provider and token-delivery policy are selected.

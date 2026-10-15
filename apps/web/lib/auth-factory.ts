@@ -1,6 +1,7 @@
 import { timingSafeEqual } from "node:crypto";
 import type { openSqliteDatabase } from "@ordis-prime/db";
 import { APIError, betterAuth } from "better-auth";
+import { verifyPassword } from "better-auth/crypto";
 
 type SqliteDatabase = ReturnType<typeof openSqliteDatabase>;
 
@@ -51,6 +52,14 @@ export function createAuth(database: SqliteDatabase, configuration: AuthConfigur
     },
     telemetry: { enabled: false },
   });
+}
+
+export async function verifyLocalPassword(database: SqliteDatabase, userId: string, password: string): Promise<boolean> {
+  if (!password || password.length > 128) return false;
+  const credential = database.prepare("select password from accounts where user_id = ? and provider_id = 'credential' limit 1")
+    .get(userId) as { password: string | null } | undefined;
+  if (!credential?.password) return false;
+  return verifyPassword({ hash: credential.password, password });
 }
 
 function tokensMatch(received: string | null | undefined, expected: string | undefined): boolean {

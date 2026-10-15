@@ -57,8 +57,8 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   list local accounts and safely change roles with session invalidation.
   Players can transactionally delete their own account and revoke its public
   build shares, with final-administrator protection and retained audit labels.
-  Deletion does not require password re-entry. Password recovery is not
-  implemented yet.
+  Deletion requires the current local password and an exact confirmation
+  phrase. Password recovery is not implemented yet.
 - Validated inventory persistence, authenticated catalog editing, an inventory
   summary, node reward ownership filtering, and portable profile import/export
   with transfer UI exist. Authenticated goals feed a planner that subtracts

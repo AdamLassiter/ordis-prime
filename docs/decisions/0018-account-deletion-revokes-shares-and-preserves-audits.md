@@ -25,7 +25,7 @@ minimal identifying context.
 - A deleted account and its private state cannot be restored; profile export is
   the player's recovery path before deletion.
 - Historical audit rows show the actor name but no longer link to an account.
-- The active session plus an exact `DELETE` phrase authorizes deletion. Password
-  re-entry remains a documented hardening gap.
+- The active session, current password and an exact `DELETE` phrase authorize
+  deletion, as refined by ADR 0024.
 - Inventory now cascades with user deletion consistently with other private
   player tables.
