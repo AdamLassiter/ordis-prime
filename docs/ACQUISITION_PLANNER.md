@@ -26,6 +26,11 @@ requirements are listed first, nodes without access evidence remain explicitly
 unknown, and documented blocked nodes remain visible with their blockers. The
 planner does not infer access from graph connectivity or from an absent fact.
 
+The highest-priority active node-detail fact may also provide a numeric Mastery
+Rank gate. A private, portable player rank marks that gate met or blocked. If
+the gate is documented but the player has not recorded a rank, the node is
+shown as conditional rather than guessed available or collapsed into unknown.
+
 The planner also joins current and upcoming world-state windows whose
 conservatively reconciled canonical node appears in its recommendations. These
 are shown as expiring live opportunities with the missing rewards they cover.
@@ -33,8 +38,8 @@ This is a node intersection, not a claim that the live modifier improves the
 documented drop chance. Unresolved provider node labels cannot produce an
 opportunity.
 
-Node access currently covers only curated quest, mechanic, secret, enemy and
-boss relations. Mastery-rank gates, junction rules and other conditional access,
+Node access currently covers curated quest, mechanic, secret, enemy and boss
+relations plus sourced numeric Mastery Rank gates. Junction rules and other conditional access,
 market acquisition, relic refinement, and rotation-specific mission duration
 are not yet modeled.
 Those inputs should extend the planning read model rather than becoming UI-only

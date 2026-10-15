@@ -8,6 +8,7 @@ import {
   type Recipe,
 } from "@ordis-prime/domain";
 import { listCurrentWorldState } from "./world-state.ts";
+import { getPlayerSettings } from "./player.ts";
 
 export interface PlayerGoal {
   entityId: string;
@@ -18,6 +19,7 @@ export interface PlayerGoal {
 }
 
 export interface AcquisitionPlan {
+  playerMasteryRank?: number;
   goals: PlayerGoal[];
   missing: Array<{
     entityId: string;
@@ -40,7 +42,13 @@ export interface AcquisitionPlan {
       rotation?: string;
     }>;
     reasons: string[];
-    accessStatus: "available" | "blocked" | "unknown";
+    accessStatus: "available" | "conditional" | "blocked" | "unknown";
+    masteryRequirement?: {
+      required: number;
+      playerRank?: number;
+      state: "met" | "blocked" | "unknown";
+      source: { name: string; citationUrl?: string };
+    };
     accessRequirements: Array<{
       entityId: string;
       kind: string;
@@ -198,6 +206,7 @@ export function buildAcquisitionPlan(
   sqlite: Database.Database,
   userId: string,
 ): AcquisitionPlan {
+  const playerMasteryRank = getPlayerSettings(sqlite, userId).masteryRank;
   const goals = listPlayerGoals(sqlite, userId);
   const inventoryRows = sqlite
     .prepare(
@@ -360,6 +369,11 @@ export function buildAcquisitionPlan(
     userId,
     new Set(recommendedNodes.flatMap(({ nodeId }) => (nodeId ? [nodeId] : []))),
   );
+  const masteryRequirements = loadNodeMasteryRequirements(
+    sqlite,
+    new Set(recommendedNodes.flatMap(({ nodeId }) => (nodeId ? [nodeId] : []))),
+    playerMasteryRank,
+  );
   const recommendations = recommendedNodes
     .map((recommendation) => {
       const node = recommendation.nodeId
@@ -368,6 +382,9 @@ export function buildAcquisitionPlan(
       const accessRequirements = recommendation.nodeId
         ? (nodeAccess.get(recommendation.nodeId) ?? [])
         : [];
+      const masteryRequirement = recommendation.nodeId
+        ? masteryRequirements.get(recommendation.nodeId)
+        : undefined;
       const neededRewards = recommendation.neededRewards.map((reward) => ({
         ...entityDetails(entities, reward.entityId),
         entityId: reward.entityId,
@@ -380,13 +397,9 @@ export function buildAcquisitionPlan(
         nodeSlug: node?.slug,
         locationLabel: recommendation.locationLabel,
         neededRewards,
-        accessStatus:
-          accessRequirements.length === 0
-            ? ("unknown" as const)
-            : accessRequirements.every(({ state }) => state === "completed")
-              ? ("available" as const)
-              : ("blocked" as const),
+        accessStatus: accessStatus(accessRequirements, masteryRequirement),
         accessRequirements,
+        masteryRequirement,
         reasons: [
           `Drops ${neededRewards.length} missing goal ${neededRewards.length === 1 ? "item" : "items"}`,
           ...neededRewards.map(
@@ -426,7 +439,74 @@ export function buildAcquisitionPlan(
         })),
       })),
     }));
-  return { goals, missing, recommendations, recipeChoices };
+  return { playerMasteryRank, goals, missing, recommendations, recipeChoices };
+}
+
+function loadNodeMasteryRequirements(
+  sqlite: Database.Database,
+  nodeIds: Set<EntityId>,
+  playerRank: number | undefined,
+): Map<
+  string,
+  NonNullable<AcquisitionPlan["recommendations"][number]["masteryRequirement"]>
+> {
+  if (nodeIds.size === 0) return new Map();
+  const ids = [...nodeIds];
+  const placeholders = ids.map(() => "?").join(", ");
+  const rows = sqlite
+    .prepare(
+      `
+    with ranked as (
+      select detail.entity_id as nodeId, detail.mastery_requirement as required,
+        source.name as sourceName, detail.citation_url as citationUrl,
+        row_number() over (partition by detail.entity_id order by source.priority desc, run.retrieved_at desc, detail.id) as preference
+      from node_details detail
+      join source_runs run on run.id = detail.source_run_id and run.status = 'active'
+      join sources source on source.id = run.source_id
+      where detail.entity_id in (${placeholders}) and detail.mastery_requirement is not null
+    )
+    select nodeId, required, sourceName, citationUrl from ranked where preference = 1
+  `,
+    )
+    .all(...ids) as Array<{
+    nodeId: string;
+    required: number;
+    sourceName: string;
+    citationUrl: string | null;
+  }>;
+  return new Map(
+    rows.map((row) => [
+      row.nodeId,
+      {
+        required: row.required,
+        playerRank,
+        state:
+          playerRank === undefined
+            ? ("unknown" as const)
+            : playerRank >= row.required
+              ? ("met" as const)
+              : ("blocked" as const),
+        source: {
+          name: row.sourceName,
+          citationUrl: row.citationUrl ?? undefined,
+        },
+      },
+    ]),
+  );
+}
+
+function accessStatus(
+  requirements: AcquisitionPlan["recommendations"][number]["accessRequirements"],
+  mastery: AcquisitionPlan["recommendations"][number]["masteryRequirement"],
+): AcquisitionPlan["recommendations"][number]["accessStatus"] {
+  if (
+    requirements.some(({ state }) => state !== "completed") ||
+    mastery?.state === "blocked"
+  )
+    return "blocked";
+  if (mastery?.state === "unknown") return "conditional";
+  if (requirements.length || mastery) return "available";
+  return "unknown";
 }
 
 function loadNodeAccess(
@@ -525,7 +605,13 @@ function loadNodeAccess(
 function accessRank(
   status: AcquisitionPlan["recommendations"][number]["accessStatus"],
 ): number {
-  return status === "available" ? 0 : status === "unknown" ? 1 : 2;
+  return status === "available"
+    ? 0
+    : status === "conditional"
+      ? 1
+      : status === "unknown"
+        ? 2
+        : 3;
 }
 
 export function findLiveAcquisitionOpportunities(

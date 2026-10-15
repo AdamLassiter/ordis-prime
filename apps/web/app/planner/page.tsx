@@ -24,7 +24,9 @@ export default async function Planner() {
     return (
       <>
         <p className="eyebrow">Private workspace</p>
-        <h1>Acquisition <u>planner</u></h1>
+        <h1>
+          Acquisition <u>planner</u>
+        </h1>
         <p className="error">
           The plan could not be expanded:{" "}
           {error instanceof Error ? error.message : "unknown catalog error"}
@@ -35,7 +37,9 @@ export default async function Planner() {
   return (
     <>
       <p className="eyebrow">Private workspace</p>
-      <h1>Acquisition <u>planner</u></h1>
+      <h1>
+        Acquisition <u>planner</u>
+      </h1>
       <p className="lede">
         Set desired final quantities. Your inventory is subtracted before
         recipes are expanded, and every candidate node explains which missing
@@ -215,9 +219,9 @@ export default async function Planner() {
         <section className="planner-section">
           <h2>Candidate nodes</h2>
           <p className="muted">
-            Documented accessible nodes come first, then unknown and blocked
-            nodes; each group is ordered by missing-item coverage. Chance is
-            evidence, not a time estimate.
+            Documented accessible nodes come first, followed by conditional,
+            unknown, and blocked nodes. Each group is ordered by missing-item
+            coverage. Chance is evidence, not a time estimate.
           </p>
           {plan.recommendations.length ? (
             <div className="grid">
@@ -254,44 +258,78 @@ export default async function Planner() {
                         <strong>
                           {recommendation.accessStatus === "available"
                             ? "Documented requirements completed"
-                            : "Documented blockers"}
+                            : recommendation.accessStatus === "conditional"
+                              ? "Documented condition"
+                              : "Documented blockers"}
                         </strong>
                       </p>
-                      <ul>
-                        {recommendation.accessRequirements.map(
-                          (requirement) => (
-                            <li key={requirement.entityId}>
-                              <Link
-                                href={`/catalog/${requirement.kind}/${requirement.slug}`}
+                      {recommendation.masteryRequirement && (
+                        <p>
+                          Mastery Rank{" "}
+                          {recommendation.masteryRequirement.required}:{" "}
+                          {recommendation.masteryRequirement.state === "met"
+                            ? "met"
+                            : recommendation.masteryRequirement.state ===
+                                "blocked"
+                              ? `blocked at your rank ${recommendation.masteryRequirement.playerRank}`
+                              : "your rank is not recorded"}{" "}
+                          <span className="muted">
+                            (
+                            {recommendation.masteryRequirement.source
+                              .citationUrl ? (
+                              <a
+                                href={
+                                  recommendation.masteryRequirement.source
+                                    .citationUrl
+                                }
+                                rel="noreferrer"
                               >
-                                {requirement.name}
-                              </Link>
-                              : {requirement.state}{" "}
-                              <span className="muted">
-                                (
-                                {requirement.sources.map((source, index) => (
-                                  <span
-                                    key={`${source.name}:${source.citationUrl ?? index}`}
-                                  >
-                                    {index > 0 ? ", " : ""}
-                                    {source.citationUrl ? (
-                                      <a
-                                        href={source.citationUrl}
-                                        rel="noreferrer"
-                                      >
-                                        {source.name}
-                                      </a>
-                                    ) : (
-                                      source.name
-                                    )}
-                                  </span>
-                                ))}
-                                )
-                              </span>
-                            </li>
-                          ),
-                        )}
-                      </ul>
+                                {recommendation.masteryRequirement.source.name}
+                              </a>
+                            ) : (
+                              recommendation.masteryRequirement.source.name
+                            )}
+                            )
+                          </span>
+                        </p>
+                      )}
+                      {recommendation.accessRequirements.length > 0 && (
+                        <ul>
+                          {recommendation.accessRequirements.map(
+                            (requirement) => (
+                              <li key={requirement.entityId}>
+                                <Link
+                                  href={`/catalog/${requirement.kind}/${requirement.slug}`}
+                                >
+                                  {requirement.name}
+                                </Link>
+                                : {requirement.state}{" "}
+                                <span className="muted">
+                                  (
+                                  {requirement.sources.map((source, index) => (
+                                    <span
+                                      key={`${source.name}:${source.citationUrl ?? index}`}
+                                    >
+                                      {index > 0 ? ", " : ""}
+                                      {source.citationUrl ? (
+                                        <a
+                                          href={source.citationUrl}
+                                          rel="noreferrer"
+                                        >
+                                          {source.name}
+                                        </a>
+                                      ) : (
+                                        source.name
+                                      )}
+                                    </span>
+                                  ))}
+                                  )
+                                </span>
+                              </li>
+                            ),
+                          )}
+                        </ul>
+                      )}
                     </>
                   )}
                 </article>

@@ -44,6 +44,46 @@ export interface PlayerInventoryEntry extends InventoryValues {
   name: string;
 }
 
+export interface PlayerSettings {
+  masteryRank?: number;
+}
+
+export function getPlayerSettings(
+  sqlite: Database.Database,
+  userId: string,
+): PlayerSettings {
+  assertUser(sqlite, userId);
+  const row = sqlite
+    .prepare(
+      "select mastery_rank as masteryRank from player_profiles where user_id = ?",
+    )
+    .get(userId) as { masteryRank: number | null } | undefined;
+  return { masteryRank: row?.masteryRank ?? undefined };
+}
+
+export function setPlayerMasteryRank(
+  sqlite: Database.Database,
+  userId: string,
+  masteryRank?: number,
+): void {
+  assertUser(sqlite, userId);
+  if (
+    masteryRank !== undefined &&
+    (!Number.isSafeInteger(masteryRank) || masteryRank < 0 || masteryRank > 30)
+  )
+    throw new Error("Mastery rank must be an integer between 0 and 30");
+  if (masteryRank === undefined) {
+    sqlite.prepare("delete from player_profiles where user_id = ?").run(userId);
+    return;
+  }
+  sqlite
+    .prepare(
+      `insert into player_profiles (user_id, mastery_rank, updated_at) values (?, ?, ?)
+       on conflict(user_id) do update set mastery_rank = excluded.mastery_rank, updated_at = excluded.updated_at`,
+    )
+    .run(userId, masteryRank, Date.now());
+}
+
 export function findPlayerInventoryEntry(
   sqlite: Database.Database,
   userId: string,
@@ -108,8 +148,9 @@ export interface PortableEntityReference {
 }
 
 export interface ProfileExport {
-  schemaVersion: 11;
+  schemaVersion: 12;
   exportedAt: string;
+  player: PlayerSettings;
   inventory: Array<InventoryValues & { entity: PortableEntityReference }>;
   goals: Array<{ entity: PortableEntityReference; targetQuantity: number }>;
   recipePreferences: Array<{
@@ -293,8 +334,9 @@ export function exportPlayerProfile(
              source_id, namespace, value
   `);
   return {
-    schemaVersion: 11,
+    schemaVersion: 12,
     exportedAt: new Date().toISOString(),
+    player: getPlayerSettings(sqlite, userId),
     inventory: inventory.map(({ entityId, kind, slug, name, ...values }) => ({
       entity: {
         externalIds: identifiers.all(
@@ -764,7 +806,12 @@ export function importPlayerProfile(
         .prepare("delete from world_state_watches where user_id = ?")
         .run(userId);
       sqlite.prepare("delete from player_builds where user_id = ?").run(userId);
+      sqlite
+        .prepare("delete from player_profiles where user_id = ?")
+        .run(userId);
     }
+    if (profile.player.masteryRank !== undefined)
+      setPlayerMasteryRank(sqlite, userId, profile.player.masteryRank);
     for (const entry of resolvedInventory)
       setInventoryEntry(sqlite, userId, entry.entityId, entry.values);
     const writeGoal = sqlite.prepare(`
@@ -881,7 +928,8 @@ export function importPlayerProfile(
 function parseProfile(value: unknown): ProfileExport {
   if (
     !isRecord(value) ||
-    value.schemaVersion !== 11 ||
+    value.schemaVersion !== 12 ||
+    !isRecord(value.player) ||
     !Array.isArray(value.inventory) ||
     !Array.isArray(value.goals) ||
     !Array.isArray(value.recipePreferences) ||
@@ -891,7 +939,17 @@ function parseProfile(value: unknown): ProfileExport {
     !Array.isArray(value.builds)
   )
     throw new Error(
-      "Profile must use schemaVersion 11 and contain every portable state array",
+      "Profile must use schemaVersion 12 and contain player settings plus every portable state array",
+    );
+  const masteryRank = value.player.masteryRank;
+  if (
+    masteryRank !== undefined &&
+    (!Number.isSafeInteger(masteryRank) ||
+      (masteryRank as number) < 0 ||
+      (masteryRank as number) > 30)
+  )
+    throw new Error(
+      "Profile player masteryRank must be an integer between 0 and 30",
     );
   const inventory = value.inventory.map((entry, index) => {
     if (!isRecord(entry))
@@ -979,8 +1037,9 @@ function parseProfile(value: unknown): ProfileExport {
     parsePortableBuild(entry, index),
   );
   return {
-    schemaVersion: 11,
+    schemaVersion: 12,
     exportedAt: typeof value.exportedAt === "string" ? value.exportedAt : "",
+    player: { masteryRank: masteryRank as number | undefined },
     inventory,
     goals,
     recipePreferences,

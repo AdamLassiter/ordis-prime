@@ -5,7 +5,11 @@ canonical entity IDs inside one installation, while exported profiles use
 provider identifiers so they can be restored into another installation whose
 canonical UUIDs differ.
 
-## Version 11 export
+## Version 12 export
+
+The player section carries the optional Mastery Rank used to evaluate sourced
+star-chart gates. Legendary players record rank 30 because all current numeric
+Mastery Rank gates are satisfied at that point.
 
 Each inventory entry includes:
 
@@ -42,8 +46,8 @@ excluded because they are server-hosted immutable artifacts and capability URLs.
 Imports resolve external identifiers first and only fall back to the kind/slug
 pair when no identifier is present in the destination catalog. Ambiguous or
 missing entries are reported rather than guessed. Merge mode is the default;
-replace mode explicitly clears portable state inside the same transaction that
-writes resolved entries.
+replace mode explicitly clears portable state, including player progression
+settings, inside the same transaction that writes resolved entries.
 
 The parser treats profile files as untrusted input and rejects invalid counts,
 flags, identifiers, and oversized notes before changing player state. Earlier
@@ -52,8 +56,8 @@ no pre-release backwards-compatibility requirement.
 
 Signed-in players can export from the inventory screen or import in merge or
 replace mode. The HTTP import boundary limits files to 5 MB. Replace mode clears
-all portable state—inventory, goals, discovery progress, todos, watches and
-private build drafts—and writes all resolvable entries in one transaction.
+all portable state—progression settings, inventory, goals, discovery progress,
+todos, watches and private build drafts—and writes all resolvable entries in one transaction.
 Deleting watches also deletes their derived notifications. Merge mode upserts
 identity-keyed state and appends todos, watches and builds. Unresolved build
 members skip that whole build; unresolved entries are reported and never guessed.

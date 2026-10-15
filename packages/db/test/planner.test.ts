@@ -15,6 +15,7 @@ import {
   setDiscoveryProgress,
   setInventoryEntryByReference,
   setPlayerGoal,
+  setPlayerMasteryRank,
   setPlayerRecipePreference,
 } from "../src/index.ts";
 
@@ -96,6 +97,13 @@ test("persisted goals expand through active recipes and produce named node reaso
       evidence: { ...evidence, sourceRecordKey: "node:quest" },
     },
     {
+      type: "node-detail",
+      nodeExternalId: external("node"),
+      planet: "Earth",
+      masteryRequirement: 10,
+      evidence: { ...evidence, sourceRecordKey: "node:details" },
+    },
+    {
       type: "entity-relation",
       fromExternalId: external("mechanic"),
       toExternalId: external("node"),
@@ -139,6 +147,12 @@ test("persisted goals expand through active recipes and produce named node reaso
     "Test Chassis: need 3, 25.00% documented chance, rotation C",
   ]);
   assert.equal(plan.recommendations[0]?.accessStatus, "blocked");
+  assert.deepEqual(plan.recommendations[0]?.masteryRequirement, {
+    required: 10,
+    playerRank: undefined,
+    state: "unknown",
+    source: { name: "Items", citationUrl: undefined },
+  });
   assert.deepEqual(
     plan.recommendations[0]?.accessRequirements.map(
       ({ name, state, relationKinds, sources }) => ({
@@ -185,6 +199,16 @@ test("persisted goals expand through active recipes and produce named node reaso
     { kind: "quest", slug: "test-quest" },
     "completed",
   );
+  assert.equal(
+    buildAcquisitionPlan(sqlite, userId).recommendations[0]?.accessStatus,
+    "conditional",
+  );
+  setPlayerMasteryRank(sqlite, userId, 9);
+  assert.equal(
+    buildAcquisitionPlan(sqlite, userId).recommendations[0]?.accessStatus,
+    "blocked",
+  );
+  setPlayerMasteryRank(sqlite, userId, 10);
   assert.equal(
     buildAcquisitionPlan(sqlite, userId).recommendations[0]?.accessStatus,
     "available",

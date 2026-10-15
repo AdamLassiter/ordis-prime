@@ -76,9 +76,12 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   Generated alerts and published share snapshots are deliberately excluded.
   Live windows on reconciled recommended nodes surface as expiring acquisition
   opportunities. Players can inspect and persist alternative recipe choices by
-  stable source record identity. Planning composes cited discovery prerequisites
-  into available, blocked and unknown node access states, but does not yet account
-  for conditional gates, markets, relic refinement, or mission duration.
+  stable source record identity. Profiles also carry the player's optional
+  Mastery Rank as private progression input. Planning composes cited discovery prerequisites
+  into available, conditional, blocked and unknown node access states. Sourced
+  numeric Mastery Rank gates compose with a private portable player rank, but
+  other conditional gates, markets, relic refinement, and mission duration are
+  not yet modeled.
 - Authenticated players can keep private static todos with optional notes and due
   dates. Source-neutral world-state watches match current window fields and
   create deduplicated private in-app alerts. Detail pages can create todos and
@@ -126,9 +129,9 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   progress and conditional relations remain. Atlas cards preview up to three
   cited neighbors; a spatial graph view remains.
 - Acquisition recommendations compose active `requires` and `unlocks` relations
-  with private discovery completion to show cited node blockers. Nodes without
-  access evidence stay unknown. Mastery-rank gates, junction conditions and
-  other conditional access rules still need typed models.
+  with private discovery completion and sourced node Mastery Rank requirements
+  to show cited blockers. Nodes without access evidence stay unknown. Junction
+  conditions and other conditional access rules still need typed models.
 
 ## Deliberate compromises
 

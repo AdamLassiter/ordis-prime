@@ -51,3 +51,5 @@ a searchable canonical discovery atlas, and cited typed discovery relations are
 implemented. Private discovery progress and filtering are also implemented.
 Cited star-chart connection edges compose into node reads when supplied. Stable
 coordinates, an attributed complete edge dataset, and richer quest-step progress remain.
+Sourced Mastery Rank gates now compose with portable private player progression;
+junction and other structured conditional gates remain.

@@ -424,6 +424,13 @@ export const users = sqliteTable(
   },
   (table) => [uniqueIndex("users_email_unique").on(table.email)],
 );
+export const playerProfiles = sqliteTable("player_profiles", {
+  userId: text("user_id")
+    .primaryKey()
+    .references(() => users.id, { onDelete: "cascade" }),
+  masteryRank: integer("mastery_rank"),
+  updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
+});
 export const sessions = sqliteTable(
   "sessions",
   {

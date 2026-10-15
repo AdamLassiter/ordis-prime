@@ -14,6 +14,7 @@ import {
   exportPlayerProfile,
   findPlayerInventoryEntry,
   getDiscoveryProgress,
+  getPlayerSettings,
   importPlayerProfile,
   listPlayerBuilds,
   listPlayerGoals,
@@ -30,6 +31,7 @@ import {
   setInventoryEntry,
   setInventoryEntryByReference,
   setPlayerGoal,
+  setPlayerMasteryRank,
   setPlayerRecipePreference,
   setPlayerTodoStatus,
 } from "../src/index.ts";
@@ -54,6 +56,7 @@ test("profiles resolve stable source IDs across installations with different can
   assert.notEqual(first.entityId, second.entityId);
 
   const firstUser = createLocalUser(first.sqlite, { username: "Exporter" });
+  setPlayerMasteryRank(first.sqlite, firstUser, 18);
   assert.deepEqual(
     findPlayerInventoryEntry(first.sqlite, firstUser, "weapon", "braton"),
     {
@@ -168,6 +171,9 @@ test("profiles resolve stable source IDs across installations with different can
     watchesImported: 1,
     buildsImported: 1,
     unresolved: [],
+  });
+  assert.deepEqual(getPlayerSettings(second.sqlite, secondUser), {
+    masteryRank: 18,
   });
   assert.deepEqual(listPlayerInventory(second.sqlite, secondUser), [
     {
@@ -356,8 +362,9 @@ test("profile replacement is transactional and reports missing entities", async 
     wantedCount: 0,
   });
   const missingProfile = {
-    schemaVersion: 11,
+    schemaVersion: 12,
     exportedAt: "2026-10-13T12:00:00.000Z",
+    player: {},
     inventory: [
       {
         entity: {
@@ -543,7 +550,7 @@ test("profile replacement is transactional and reports missing entities", async 
         ...missingProfile,
         schemaVersion: 10,
       }),
-    /schemaVersion 11/,
+    /schemaVersion 12/,
   );
 });
 
