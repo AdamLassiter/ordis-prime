@@ -31,13 +31,14 @@ fields, not raw WFCD JSON. A watch triggers when a matching window is active,
 approaching activation, or approaching expiry. Lead time is configurable from
 zero to seven days.
 
-A watch may link to one canonical entity. Item pages create an editable event
-watch whose label initially contains that item's name. Node pages create a Void
-Fissure watch tied to the exact canonical node; it matches only when world-state
-normalization reconciles the window to that node, avoiding substring collisions.
-The linked entity is visible from the watch and portable across installations.
-For non-node entities the link is context, while the normalized text fields
-remain the explicit matching rule.
+A watch may link to one canonical entity. Item pages use a currently matching
+window's kind when one exists, otherwise creating an alert watch—or an event
+watch for discovery entities—tied to that exact canonical subject.
+Node pages create a Void Fissure watch tied to the exact canonical node. Both
+match only when world-state normalization reconciles the window to that entity,
+avoiding substring collisions. The linked entity is visible from the watch and
+portable across installations. Optional normalized text fields further narrow
+an exact entity watch; they remain the whole matching rule for unlinked watches.
 
 The worker evaluates enabled rules after every successful snapshot promotion.
 It hashes the normalized occurrence fields and creates at most one notification
@@ -55,8 +56,8 @@ occurrence keys remain deduplicated after an edit.
 - Static todos and watch rules are portable; generated notification history is
   deliberately installation-local.
 - Each detail-page shortcut chooses a conservative initial window kind and must
-  be edited when the player wants another kind. Non-node links cannot become an
-  exact match until world-state reward/subject identities are normalized.
+  be edited when the player wants another kind. Only provider windows that
+  expose a subject label or identifier can match non-node links.
 - Recurrence is date-based and deliberately has no time-of-day or timezone.
   Rules are anchored by the initial due date; the create form does not offer a
   separate weekday or month-day picker. There are no subtasks, tags or ordering controls. A

@@ -81,10 +81,10 @@ export function evaluateWorldStateWatches(sqlite: Database.Database, now = Date.
   const watches = sqlite.prepare(`
     select watch.id, watch.user_id as userId, watch.kind, watch.label_contains as labelContains,
       state_equals as stateEquals, node_contains as nodeContains, trigger,
-      lead_minutes as leadMinutes, entity.kind as entityKind, entity.slug as entitySlug
+      lead_minutes as leadMinutes, watch.entity_id as entityId, entity.kind as entityKind, entity.slug as entitySlug
     from world_state_watches watch left join entities entity on entity.id = watch.entity_id
     where watch.enabled = 1 ${userId ? "and watch.user_id = ?" : ""}
-  `).all(...(userId ? [userId] : [])) as Array<{ id: string; userId: string; kind: WorldStateWindowKind; labelContains: string | null; stateEquals: string | null; nodeContains: string | null; trigger: WorldStateWatchTrigger; leadMinutes: number; entityKind: string | null; entitySlug: string | null }>;
+  `).all(...(userId ? [userId] : [])) as Array<{ id: string; userId: string; kind: WorldStateWindowKind; labelContains: string | null; stateEquals: string | null; nodeContains: string | null; trigger: WorldStateWatchTrigger; leadMinutes: number; entityId: string | null; entityKind: string | null; entitySlug: string | null }>;
   const windows = listCurrentWorldState(sqlite, now);
   const insert = sqlite.prepare(`
     insert or ignore into player_notifications
@@ -119,9 +119,10 @@ export function markPlayerNotificationRead(sqlite: Database.Database, userId: st
   if (result.changes !== 1) throw new Error("Notification not found");
 }
 
-function watchMatches(watch: { kind: WorldStateWindowKind; labelContains: string | null; stateEquals: string | null; nodeContains: string | null; entityKind: string | null; entitySlug: string | null }, window: CurrentWorldStateWindow): boolean {
+function watchMatches(watch: { kind: WorldStateWindowKind; labelContains: string | null; stateEquals: string | null; nodeContains: string | null; entityId: string | null; entityKind: string | null; entitySlug: string | null }, window: CurrentWorldStateWindow): boolean {
   return watch.kind === window.kind
     && (watch.entityKind !== "node" || window.node?.slug === watch.entitySlug)
+    && (!watch.entityId || watch.entityKind === "node" || window.subjects.some(({ kind, slug }) => kind === watch.entityKind && slug === watch.entitySlug))
     && contains(window.label, watch.labelContains)
     && (!watch.stateEquals || window.state?.toLocaleLowerCase() === watch.stateEquals.toLocaleLowerCase())
     && contains(window.nodeLabel, watch.nodeContains);

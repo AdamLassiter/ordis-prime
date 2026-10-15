@@ -14,6 +14,7 @@ test("WFCD world state normalizes availability windows and promotes one active s
   const database = openSqliteDatabase(databasePath);
   context.after(() => database.close());
   database.prepare("insert into entities (id, kind, name, slug, retired, updated_at) values ('mantle', 'node', 'Mantle', 'earth-mantle', 0, ?)").run(Date.now());
+  database.prepare("insert into entities (id, kind, name, slug, retired, updated_at) values ('forma', 'resource', 'Forma', 'forma', 0, ?)").run(Date.now());
   const parser = new WfcdWorldStateAdapter("https://example.test");
   let version = 1;
   const adapter: WorldStateAdapter = {
@@ -28,6 +29,8 @@ test("WFCD world state normalizes availability windows and promotes one active s
   const current = listCurrentWorldState(database, Date.parse("2026-10-13T21:00:00.000Z"));
   assert.deepEqual(current.map(({ kind }) => kind).sort(), ["alert", "cycle", "event", "fissure", "trader"]);
   assert.equal(current.find(({ kind }) => kind === "alert")?.label, "Alert: Forma");
+  assert.deepEqual(current.find(({ kind }) => kind === "alert")?.subjectLabels, ["Forma"]);
+  assert.deepEqual(current.find(({ kind }) => kind === "alert")?.subjects, [{ kind: "resource", slug: "forma", name: "Forma" }]);
   assert.deepEqual(current.find(({ kind }) => kind === "alert")?.node, { slug: "earth-mantle", name: "Mantle" });
   assert.equal(current.find(({ kind }) => kind === "fissure")?.node, undefined);
   const second = await refreshWorldState({ adapter, database, snapshotStore });

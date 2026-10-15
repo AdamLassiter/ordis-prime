@@ -16,6 +16,13 @@ used only to disambiguate duplicate names with active node metadata. Unresolved
 or ambiguous labels remain visible as source text without a link. Resolved
 labels link timers directly to the node's rewards and player inventory overlay.
 
+Windows can also carry source-neutral subjects. The WFCD adapter emits alert
+rewards, event names and rewards, and Void Trader inventory entries. WFCD item
+`uniqueName` identifiers resolve first; an exact, unique canonical name or alias
+is the conservative fallback. Every raw subject label remains on the snapshot
+even when it cannot be reconciled. Resolved subjects link from timer cards and
+let item-linked watches match canonical identity rather than substrings.
+
 ## Persistence and promotion
 
 Dynamic snapshots have a separate lifecycle from static catalog source runs.
@@ -62,9 +69,11 @@ disappearing.
 
 - Only the PC English endpoint is configured; platform and language settings are
   not yet exposed.
-- The administration UI shows the newest bounded scheduler records. It does not
-  yet provide per-kind history filters or worker throughput metrics. Source
-  refresh attempts remain separately visible.
-- Reconciliation is exact-name based and intentionally does not fuzzy-match
-  aliases, relays, open worlds or provider spelling differences.
+- The administration UI shows the newest bounded scheduler records with kind,
+  status and source filters. Source refresh attempts and normalized throughput
+  remain separately visible.
+- Reconciliation uses provider identifiers where supplied, then exact unique
+  names or aliases. It intentionally does not fuzzy-match relays, open worlds,
+  reward labels or provider spelling differences. Event reward extraction does
+  not yet cover every possible provider-specific nested reward shape.
 - Arbitrations between multiple live world-state providers are not implemented.

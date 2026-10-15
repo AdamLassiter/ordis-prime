@@ -71,3 +71,29 @@ test("node-linked watches match canonical reconciled nodes rather than similar l
   assert.deepEqual(listWorldStateWatches(database, userId)[0]?.entity, { kind: "node", slug: "tessera", name: "Tessera" });
   assert.throws(() => updateWorldStateWatch(database, userId, watchId, { kind: "fissure", trigger: "active", leadMinutes: 0, entity: { kind: "node", slug: "missing" } }), /Unknown active entity/);
 });
+
+test("item-linked watches match exact reconciled window subjects", async (context) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-subject-watch-"));
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const databasePath = path.join(root, "watches.sqlite");
+  migrateDatabase(databasePath);
+  const database = openSqliteDatabase(databasePath);
+  context.after(() => database.close());
+  const userId = createLocalUser(database, { username: "Item watcher" });
+  database.prepare("insert into entities (id, kind, name, slug, retired, updated_at) values ('forma', 'resource', 'Forma', 'forma', 0, ?)").run(Date.now());
+  database.prepare("insert into entities (id, kind, name, slug, retired, updated_at) values ('forma-cosmetic', 'cosmetic', 'Forma', 'forma-cosmetic', 0, ?)").run(Date.now());
+  database.prepare("insert into sources (id, name, homepage, priority, enabled) values ('wfcd-items', 'WFCD items', 'https://example.test/items', 1, 1)").run();
+  database.prepare("insert into external_ids (entity_id, source_id, namespace, value) values ('forma', 'wfcd-items', 'uniqueName', '/Lotus/StoreItems/Types/Recipes/Components/FormaBlueprint')").run();
+  createWorldStateWatch(database, userId, { kind: "alert", trigger: "active", leadMinutes: 0, entity: { kind: "resource", slug: "forma" } });
+  promoteWorldState(database, {
+    source: { id: "test-world", name: "Test world", homepage: "https://example.test", priority: 1 },
+    version: "subject-window-v1", contentHash: "subject-hash", observedAt: "2026-10-13T20:30:00.000Z", snapshotPath: "/snapshot",
+    windows: [
+      { externalId: "alert:forma", kind: "alert", label: "Alert: Forma", subjects: [{ label: "Forma", externalIds: [{ sourceId: "wfcd-items", namespace: "uniqueName", value: "/Lotus/StoreItems/Types/Recipes/Components/FormaBlueprint" }] }], expiry: "2026-10-13T22:00:00.000Z", evidence: { sourceId: "test-world", sourceRecordKey: "forma", snapshotVersion: "subject-window-v1", retrievedAt: "2026-10-13T20:30:00.000Z" } },
+      { externalId: "alert:forma-blueprint", kind: "alert", label: "Alert: Forma Blueprint", subjects: [{ label: "Forma Blueprint" }], expiry: "2026-10-13T22:00:00.000Z", evidence: { sourceId: "test-world", sourceRecordKey: "forma-blueprint", snapshotVersion: "subject-window-v1", retrievedAt: "2026-10-13T20:30:00.000Z" } },
+    ],
+  });
+
+  assert.equal(evaluateWorldStateWatches(database, Date.parse("2026-10-13T21:00:00.000Z")), 1);
+  assert.deepEqual(listPlayerNotifications(database, userId).map(({ title }) => title), ["Alert: Forma is active"]);
+});

@@ -25,6 +25,7 @@ export const worldStateWindows = sqliteTable("world_state_windows", {
   state: text(),
   nodeLabel: text("node_label"),
   nodeEntityId: text("node_entity_id").references(() => entities.id),
+  subjectLabelsJson: text("subject_labels_json").notNull().default("[]"),
   metadataJson: text("metadata_json").notNull(),
   sourceRecordKey: text("source_record_key").notNull(),
   sourcePath: text("source_path"),
@@ -52,6 +53,11 @@ export const catalogReleaseSources = sqliteTable("catalog_release_sources", {
 export const entities = sqliteTable("entities", {
   id: text().primaryKey(), kind: text().notNull(), name: text().notNull(), slug: text().notNull(), description: text(), arcaneClass: text("arcane_class"), weaponClass: text("weapon_class"), retired: integer({ mode: "boolean" }).notNull().default(false), updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
 }, (table) => [uniqueIndex("entity_kind_slug").on(table.kind, table.slug), index("entity_name").on(table.name)]);
+export const worldStateWindowSubjects = sqliteTable("world_state_window_subjects", {
+  snapshotId: text("snapshot_id").notNull().references(() => worldStateSnapshots.id, { onDelete: "cascade" }),
+  windowExternalId: text("window_external_id").notNull(),
+  entityId: text("entity_id").notNull().references(() => entities.id),
+}, (table) => [primaryKey({ columns: [table.snapshotId, table.windowExternalId, table.entityId] }), index("world_state_subject_entity").on(table.entityId)]);
 export const externalIds = sqliteTable("external_ids", {
   entityId: text("entity_id").notNull().references(() => entities.id), sourceId: text("source_id").notNull().references(() => sources.id), namespace: text().notNull(), value: text().notNull(),
 }, (table) => [primaryKey({ columns: [table.sourceId, table.namespace, table.value] }), index("external_entity").on(table.entityId)]);

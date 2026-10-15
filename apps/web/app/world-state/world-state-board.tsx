@@ -43,6 +43,7 @@ function WorldStateCard({ entry, now }: { entry: CurrentWorldStateWindow; now: n
       {entry.state && <span className="state-label">{entry.state}</span>}
     </div>
     <h3>{entry.label}</h3>
+    {entry.subjects.length > 0 && <p className="muted">Related: {entry.subjects.map((subject, index) => <span key={`${subject.kind}:${subject.slug}`}>{index > 0 ? ", " : ""}<Link href={`/catalog/${subject.kind}/${subject.slug}`}>{subject.name}</Link></span>)}</p>}
     {entry.nodeLabel && <p className="world-state-node">{entry.node ? <Link href={`/nodes/${entry.node.slug}`}>{entry.nodeLabel}</Link> : entry.nodeLabel}</p>}
     <p className="countdown">{expired ? "Refresh needed" : boundary === undefined ? "No end time supplied" : <><span>{upcoming ? "Starts" : "Ends"} in</span> {formatDuration(boundary - now)}</>}</p>
     {boundary !== undefined && <time className="muted" dateTime={new Date(boundary).toISOString()}>{formatInstant(boundary)}</time>}

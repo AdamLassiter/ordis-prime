@@ -78,8 +78,9 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   dates. Source-neutral world-state watches match current window fields and
   create deduplicated private in-app alerts. Detail pages can create todos and
   world-state watches linked to one canonical item, discovery topic or node.
-  Node watches match exact reconciled node identity; other linked entities
-  remain contextual because world-state subjects are not normalized yet. Todos
+  Node and item watches match exact reconciled canonical identity. World-state
+  subjects currently cover WFCD alert rewards, event names/rewards, and trader
+  inventory; unexposed or ambiguous subjects remain unmatched. Todos
   support fixed-day, weekly, monthly-date, monthly-weekday and yearly calendar
   recurrence while remaining date-only; there are no web-push or webhook delivery channels. Watches
   can be edited, paused and resumed without losing generated alerts.
