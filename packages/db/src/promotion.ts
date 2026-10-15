@@ -451,4 +451,67 @@ function validateInput(input: PromoteSourceInput): void {
       if (observation.minimumEnemyLevel !== undefined && observation.maximumEnemyLevel !== undefined && observation.maximumEnemyLevel < observation.minimumEnemyLevel) throw new Error("Node detail level range is inverted");
     }
   }
+  validateCandidateSet(input.observations);
+}
+
+function validateCandidateSet(observations: Observation[]): void {
+  const externalEntities = new Map<string, EntityObservation>();
+  const slugs = new Map<string, EntityObservation>();
+  const rankingSets = new Map<string, Extract<Observation, { type: "ranking-set" }>>();
+  const uniqueFacts = new Map<string, Observation>();
+
+  for (const observation of observations) {
+    if (observation.type === "entity") {
+      for (const externalId of observation.externalIds) {
+        const key = externalKey(externalId);
+        const prior = externalEntities.get(key);
+        if (prior && incompatibleEntityDeclarations(prior, observation)) {
+          throw new Error(`Candidate external identifier ${key} has conflicting entity declarations in ${prior.evidence.sourceRecordKey} and ${observation.evidence.sourceRecordKey}`);
+        }
+        externalEntities.set(key, prior ?? observation);
+      }
+      if (observation.fields.slug) {
+        const key = `${observation.kind}:${observation.fields.slug}`;
+        const prior = slugs.get(key);
+        if (prior?.fields.name && observation.fields.name && prior.fields.name !== observation.fields.name) {
+          throw new Error(`Candidate slug ${key} has conflicting names in ${prior.evidence.sourceRecordKey} and ${observation.evidence.sourceRecordKey}`);
+        }
+        slugs.set(key, prior ?? observation);
+      }
+      continue;
+    }
+    if (observation.type === "ranking-set") {
+      const prior = rankingSets.get(observation.key);
+      if (prior) throw new Error(`Candidate ranking set ${observation.key} is declared more than once in ${prior.evidence.sourceRecordKey} and ${observation.evidence.sourceRecordKey}`);
+      rankingSets.set(observation.key, observation);
+      continue;
+    }
+    let factKey: string | undefined;
+    if (observation.type === "node-detail") factKey = `node-detail:${externalKey(observation.nodeExternalId)}`;
+    if (observation.type === "enhancement-option") factKey = `enhancement-option:${externalKey(observation.subjectExternalId)}:${observation.key}`;
+    if (factKey) {
+      const prior = uniqueFacts.get(factKey);
+      if (prior) throw new Error(`Candidate fact ${factKey} is declared more than once in ${prior.evidence.sourceRecordKey} and ${observation.evidence.sourceRecordKey}`);
+      uniqueFacts.set(factKey, observation);
+    }
+  }
+
+  for (const observation of observations) {
+    if (observation.type !== "ranking") continue;
+    const set = rankingSets.get(observation.setKey);
+    if (!set) throw new Error(`Candidate ranking ${observation.evidence.sourceRecordKey} refers to undeclared set ${observation.setKey}`);
+    if (!set.scale.includes(observation.tier)) throw new Error(`Candidate ranking ${observation.evidence.sourceRecordKey} uses tier ${observation.tier} outside set ${observation.setKey}`);
+    const factKey = `ranking:${observation.setKey}:${externalKey(observation.subjectExternalId)}`;
+    const prior = uniqueFacts.get(factKey);
+    if (prior) throw new Error(`Candidate ranking member ${factKey} is declared more than once in ${prior.evidence.sourceRecordKey} and ${observation.evidence.sourceRecordKey}`);
+    uniqueFacts.set(factKey, observation);
+  }
+}
+
+function incompatibleEntityDeclarations(first: EntityObservation, second: EntityObservation): boolean {
+  if (first.kind !== second.kind && first.kind !== "unknown" && second.kind !== "unknown") return true;
+  for (const field of ["name", "slug", "arcaneClass", "weaponClass"] as const) {
+    if (first.fields[field] !== undefined && second.fields[field] !== undefined && first.fields[field] !== second.fields[field]) return true;
+  }
+  return Boolean(first.tombstone) !== Boolean(second.tombstone);
 }

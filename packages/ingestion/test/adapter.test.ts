@@ -31,6 +31,40 @@ test("WFCD component references retain trustworthy item kinds and qualified part
   ]);
 });
 
+test("WFCD shared recipe materials retain one intrinsic identity", async () => {
+  const sharedSnapshot = {
+    ...snapshot,
+    bytes: new TextEncoder().encode(JSON.stringify([
+      { uniqueName: "/weapon-a", name: "Weapon A", category: "Primary", components: [{ uniqueName: "/forma", name: "Forma", category: "Misc", itemCount: 1 }] },
+      { uniqueName: "/weapon-b", name: "Weapon B", category: "Primary", components: [{ uniqueName: "/forma", name: "Forma", category: "Misc", itemCount: 2 }] },
+    ])),
+  };
+  const observations = await collect(new WfcdItemsAdapter(), sharedSnapshot);
+  assert.deepEqual(observations.flatMap((entry) => entry.type === "entity" && entry.externalIds[0]?.value === "/forma" ? [[entry.kind, entry.fields.name, entry.fields.slug]] : []), [
+    ["resource", "Forma", "forma"],
+    ["resource", "Forma", "forma"],
+  ]);
+});
+
+test("WFCD same-kind display collisions receive stable provider-derived qualifiers", async () => {
+  const collisionSnapshot = {
+    ...snapshot,
+    bytes: new TextEncoder().encode(JSON.stringify([
+      { uniqueName: "/trophy", name: "The Steel Path - 1999", category: "Skins", type: "Ship Decoration" },
+      { uniqueName: "/emote", name: "The Steel Path: 1999", category: "Skins", type: "Emotes" },
+      { uniqueName: "/forma", name: "Forma", category: "Misc", type: "Equipment Adapter" },
+      { uniqueName: "/store-forma", name: "Forma", category: "Misc", type: "Equipment Adapter" },
+    ])),
+  };
+  const observations = await collect(new WfcdItemsAdapter(), collisionSnapshot);
+  assert.deepEqual(observations.filter((entry) => entry.type === "entity").map((entry) => [entry.kind, entry.fields.name, entry.fields.slug]), [
+    ["unknown", "The Steel Path - 1999 (Ship Decoration)", "the-steel-path-1999-ship-decoration"],
+    ["unknown", "The Steel Path: 1999 (Emotes)", "the-steel-path-1999-emotes"],
+    ["resource", "Forma", "forma"],
+    ["resource", "Forma", "forma"],
+  ]);
+});
+
 test("WFCD adapter distinguishes arcanes and provider-miscategorised Archon Shards", async () => {
   const specialItemSnapshot = {
     ...snapshot,
@@ -121,7 +155,7 @@ test("WFCD adapter defaults to the maintained aggregate endpoint", async () => {
   try {
     const fetched = await new WfcdItemsAdapter().fetch({});
     assert.equal(requestedUrl, DEFAULT_WFCD_ITEMS_URL);
-    assert.equal(fetched.version, "fixture-etag|wfcd-items-v5");
+    assert.equal(fetched.version, "fixture-etag|wfcd-items-v6");
   } finally {
     globalThis.fetch = originalFetch;
   }

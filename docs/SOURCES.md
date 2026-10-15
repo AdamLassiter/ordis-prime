@@ -43,6 +43,21 @@ the active run of every static source at that instant. The data-source page
 shows the current release ID and versions, so a composed catalog can be audited
 without reconstructing membership from later mutable run status.
 
+Before staging begins, promotion validates invariants that require the complete
+candidate set: one external identifier cannot declare contradictory entity
+identity, a kind/slug cannot carry conflicting names, singleton node details
+and enhancement options cannot be duplicated, and rankings must use one
+declared set, tier, and member per subject. These are source-authoring errors,
+not resolver ambiguity, so they fail the refresh before a source run is written.
+Actual ambiguity against the composed catalog remains a reviewable conflict.
+
+The WFCD item adapter also performs a payload-wide identity pass. Shared recipe
+materials keep their intrinsic name instead of being repeatedly parent-qualified;
+one-off generic components remain qualified. Same-kind display-name collisions
+with different provider types receive stable type qualifiers, while store and
+internal records with the same name/type intentionally converge. Common WFCD
+resource-like types, including Forma's `Equipment Adapter`, map to resources.
+
 Resolver conflicts store the exact external IDs that participated in an entity
 observation and the candidate canonical entities. An administrator can close a
 conflict as reviewed without changing identity, or bind one of those external

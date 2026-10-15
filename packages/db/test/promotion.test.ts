@@ -57,10 +57,31 @@ test("promotion atomically replaces the active source run while preserving entit
     { ...entity("collision-a", "Collision A", "component", "v4"), fields: { name: "Collision A", slug: "same-slug" } },
     { ...entity("collision-b", "Collision B", "component", "v4"), fields: { name: "Collision B", slug: "same-slug" } },
   ] satisfies Observation[];
-  assert.throws(() => promoteSource(sqlite, input("v4", colliding)), /UNIQUE constraint failed/);
+  assert.throws(() => promoteSource(sqlite, input("v4", colliding)), /Candidate slug component:same-slug has conflicting names/);
   assert.equal((sqlite.prepare("select count(*) as count from source_runs").get() as { count: number }).count, 2);
   assert.equal((sqlite.prepare("select count(*) as count from entities where slug = 'same-slug'").get() as { count: number }).count, 0);
   assert.equal((sqlite.prepare("select version from source_runs where status = 'active'").get() as { version: string }).version, "v2");
+});
+
+test("candidate-wide validation rejects contradictory and duplicate source facts before staging", async (context) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-candidate-validation-"));
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const databasePath = path.join(root, "catalog.sqlite");
+  migrateDatabase(databasePath);
+  const sqlite = new Database(databasePath);
+  sqlite.pragma("foreign_keys = ON");
+  context.after(() => sqlite.close());
+
+  const duplicateNodeDetails = [
+    entity("node", "Falling Glory", "node"),
+    { type: "node-detail", nodeExternalId: { sourceId: "fixture", namespace: "id", value: "node" }, planet: "Venus", evidence: { ...evidence(), sourceRecordKey: "node:first" } },
+    { type: "node-detail", nodeExternalId: { sourceId: "fixture", namespace: "id", value: "node" }, planet: "Mars", evidence: { ...evidence(), sourceRecordKey: "node:second" } },
+  ] satisfies Observation[];
+  assert.throws(() => promoteSource(sqlite, input("v1", duplicateNodeDetails)), /Candidate fact node-detail.*node:first and node:second/);
+
+  const incompleteRanking = [{ type: "ranking", setKey: "missing", subjectExternalId: { sourceId: "fixture", namespace: "id", value: "weapon" }, tier: "S", evidence: { ...evidence(), sourceRecordKey: "ranking:weapon" } }] satisfies Observation[];
+  assert.throws(() => promoteSource(sqlite, input("v1", incompleteRanking)), /refers to undeclared set missing/);
+  assert.deepEqual(sqlite.prepare("select (select count(*) from sources) as sources, (select count(*) from source_runs) as runs").get(), { sources: 0, runs: 0 });
 });
 
 test("each catalog release records its complete active source-run composition", async (context) => {

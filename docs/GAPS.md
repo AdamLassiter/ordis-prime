@@ -11,10 +11,11 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   has not yet been observed on the remote repository.
 - The canonical schema, initial migration, and transactional per-source
   promotion exist. Each release now records its complete active source-run
-  composition. Pre-promotion validation across the whole candidate set and
-  pruning of superseded inactive-source rows are not implemented yet; a SQLite-leased job
-  runner handles the current recurring world-state job.
-  Migrations run lazily when the web process first opens SQLite.
+  composition. Whole-candidate identity, singleton-fact and ranking invariants
+  run before a source is staged. Cross-source semantic completeness checks and
+  pruning of superseded inactive-source rows remain unimplemented; a
+  SQLite-leased job runner handles recurring work. Migrations run lazily when
+  the web process first opens SQLite.
 - WFCD item and mission-drop adapters exist and emit entities, recipes,
   components, arcanes, Archon Shards, nodes, and drops. Fetched payloads can be retained in an
   immutable, hash-verified snapshot store and observations can be resolved into
