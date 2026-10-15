@@ -5,9 +5,24 @@ import path from "node:path";
 import test from "node:test";
 import Database from "better-sqlite3";
 import type { Observation } from "@ordis-prime/domain";
-import { migrateDatabase, promoteSource } from "../src/index.ts";
+import { migrateDatabase, previewSourcePromotion, promoteSource } from "../src/index.ts";
 
 const source = { id: "fixture", name: "Fixture", homepage: "https://example.test", license: "CC0", priority: 10 };
+
+test("source previews execute promotion validation and roll back every write", async (context) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-preview-"));
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const databasePath = path.join(root, "catalog.sqlite");
+  migrateDatabase(databasePath);
+  const sqlite = new Database(databasePath);
+  sqlite.pragma("foreign_keys = ON");
+  context.after(() => sqlite.close());
+
+  const preview = previewSourcePromotion(sqlite, input("v1", [entity("reward", "Ash Chassis", "component")]));
+  assert.equal(preview.entitiesCreated, 1);
+  assert.deepEqual(sqlite.prepare("select (select count(*) from sources) as sources, (select count(*) from source_runs) as runs, (select count(*) from entities) as entities, (select count(*) from catalog_releases) as releases").get(), { sources: 0, runs: 0, entities: 0, releases: 0 });
+  assert.equal(promoteSource(sqlite, input("v1", [entity("reward", "Ash Chassis", "component")])).entitiesCreated, 1);
+});
 
 test("promotion atomically replaces the active source run while preserving entity IDs", async (context) => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-promotion-"));

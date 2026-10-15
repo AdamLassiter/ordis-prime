@@ -22,6 +22,11 @@ Administrators can also upload any of the three YAML formats from
 `/data-sources`. Uploads are limited to 1 MB, parsed as untrusted input, and
 passed directly to the same immutable snapshot, observation and transactional
 promotion pipeline. The browser never supplies a server filesystem path.
+A preview button runs the exact parser, resolver and promotion transaction and
+then rolls back every database write without retaining the uploaded bytes. It
+reports observation and promoted-record counts plus conflicts. Import is a
+separate submission and revalidates the selected file; preview is not an
+authorization token and cannot make a later changed file safe.
 
 The original YAML is stored as an immutable snapshot. Ranking sets and their
 entries are versioned by source run, so different authors and dates remain

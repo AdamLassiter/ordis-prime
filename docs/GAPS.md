@@ -47,8 +47,9 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   those optional details. Docker deployments queue initial catalog imports in
   the worker and expose administrator-only refresh controls. Administrators can
   upload bounded ranking, discovery or factual-overlay YAML through the same
-  snapshot/promotion pipeline; uploads run in the web request and do not yet
-  provide a preview/dry-run stage.
+  snapshot/promotion pipeline. A dry run executes and rolls back the same
+  resolver/promotion transaction before the separately confirmed import.
+  Manual uploads still run synchronously in the web request.
 - Local email/password accounts, persisted sessions, closed registration, and
   first-administrator bootstrap enforcement are wired at the authentication
   API, with first-run, sign-in, and sign-out UI. Player-state reads and mutations

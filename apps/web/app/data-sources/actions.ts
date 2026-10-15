@@ -2,8 +2,9 @@
 
 import path from "node:path";
 import { revalidatePath } from "next/cache";
-import { CATALOG_SOURCE_REFRESH_JOB, enqueueJobNow, WORLD_STATE_REFRESH_JOB } from "@ordis-prime/db";
-import { ManualDiscoveryAdapter, ManualFactsAdapter, ManualRankingAdapter, refreshSource, SnapshotStore } from "@ordis-prime/ingestion";
+import { redirect } from "next/navigation";
+import { CATALOG_SOURCE_REFRESH_JOB, enqueueJobNow, previewSourcePromotion, WORLD_STATE_REFRESH_JOB } from "@ordis-prime/db";
+import { collect, ManualDiscoveryAdapter, ManualFactsAdapter, ManualRankingAdapter, refreshSource, SnapshotStore, type SourceAdapter } from "@ordis-prime/ingestion";
 import { getDatabase, getDataDirectory } from "@/lib/database";
 import { requireCurrentSession } from "@/lib/session";
 
@@ -26,6 +27,38 @@ export async function queueSourceRefresh(sourceId: string) {
 export async function importManualSource(form: FormData) {
   const session = await requireCurrentSession();
   if (session.user.role !== "admin") throw new Error("Administrator access required");
+  const adapter = await manualAdapterFromForm(form);
+  await refreshSource({ adapter, database: getDatabase(), snapshotStore: new SnapshotStore(path.join(getDataDirectory(), "sources")) });
+  revalidatePath("/data-sources");
+  revalidatePath(`/data-sources/${adapter.source.id}`);
+  revalidatePath("/");
+}
+
+export async function previewManualSource(form: FormData) {
+  const session = await requireCurrentSession();
+  if (session.user.role !== "admin") throw new Error("Administrator access required");
+  const adapter = await manualAdapterFromForm(form);
+  const snapshot = await adapter.fetch({});
+  const observations = await collect(adapter, snapshot);
+  const result = previewSourcePromotion(getDatabase(), {
+    source: adapter.source, version: snapshot.version, contentHash: snapshot.contentHash,
+    retrievedAt: snapshot.retrievedAt, observations,
+  });
+  const query = new URLSearchParams({
+    previewSource: adapter.source.id,
+    previewObservations: String(observations.length),
+    previewEntities: String(result.entitiesCreated + result.entitiesMatched),
+    previewRecipes: String(result.recipesCreated),
+    previewDrops: String(result.dropsCreated),
+    previewRelations: String(result.relationsCreated),
+    previewOptions: String(result.enhancementOptionsCreated),
+    previewRankings: String(result.rankingSetsCreated + result.rankingsCreated),
+    previewConflicts: String(result.conflictsCreated),
+  });
+  redirect(`/data-sources?${query}`);
+}
+
+async function manualAdapterFromForm(form: FormData): Promise<SourceAdapter> {
   const type = String(form.get("type") ?? "");
   if (!(MANUAL_TYPES as readonly string[]).includes(type)) throw new Error("Manual source type is invalid");
   const file = form.get("file");
@@ -36,8 +69,5 @@ export async function importManualSource(form: FormData) {
     : type === "discovery" ? ManualDiscoveryAdapter.fromBytes(bytes)
       : ManualFactsAdapter.fromBytes(bytes);
   if (RESERVED_SOURCE_IDS.has(adapter.source.id)) throw new Error("Manual source ID is reserved for an automatic provider");
-  await refreshSource({ adapter, database: getDatabase(), snapshotStore: new SnapshotStore(path.join(getDataDirectory(), "sources")) });
-  revalidatePath("/data-sources");
-  revalidatePath(`/data-sources/${adapter.source.id}`);
-  revalidatePath("/");
+  return adapter;
 }

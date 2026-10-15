@@ -54,6 +54,21 @@ export function promoteSource(sqlite: Database.Database, input: PromoteSourceInp
   return sqlite.transaction(() => promoteInTransaction(sqlite, input))();
 }
 
+export function previewSourcePromotion(sqlite: Database.Database, input: PromoteSourceInput): PromotionResult {
+  const rollbackMarker = {};
+  let result: PromotionResult | undefined;
+  try {
+    sqlite.transaction(() => {
+      result = promoteSource(sqlite, input);
+      throw rollbackMarker;
+    })();
+  } catch (error) {
+    if (error !== rollbackMarker) throw error;
+  }
+  if (!result) throw new Error("Source preview did not produce a result");
+  return result;
+}
+
 function promoteInTransaction(sqlite: Database.Database, input: PromoteSourceInput): PromotionResult {
   const existing = sqlite.prepare(
     "select id, content_hash as contentHash, status from source_runs where source_id = ? and version = ?",
