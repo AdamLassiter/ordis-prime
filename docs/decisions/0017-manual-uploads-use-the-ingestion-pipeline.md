@@ -21,8 +21,10 @@ priority and release composition. Reusing adapters preserves one trust boundary.
 ## Consequences
 
 - CLI imports remain available for automation and local authoring.
-- Browser uploads are synchronous and deliberately small. A future preview or
-  approval workflow can stage the same bytes without changing adapter semantics.
+- Browser uploads are synchronous and deliberately small. Preview now executes
+  the same promotion transaction and rolls it back; import remains a separate
+  submission that revalidates and archives the selected bytes. A future durable
+  approval workflow can stage those bytes without changing adapter semantics.
 - Validation or promotion failure is recorded as a failed source refresh when
   source metadata was valid enough to construct the adapter.
 - Manual sources are explicit actions and are never placed on the recurring

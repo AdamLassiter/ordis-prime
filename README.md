@@ -66,6 +66,8 @@ so a failed refresh cannot replace the active source run. User inventory is
 stored separately against stable canonical IDs, and portable exports prefer
 provider identifiers so a profile can resolve against a different installation.
 Each promotion records complete active source membership, and the worker bounds
-inactive normalized release history. Catalog-wide candidate validation,
-cross-source completeness checks, and raw snapshot retention remain documented
-gaps.
+inactive normalized release history. Candidate-wide and composed-catalog
+validation protect known invariants, while selective source omissions and
+richer domain-specific completeness checks remain documented gaps. Raw
+snapshots are collected only after no retained database record references them
+and a configurable safety grace has elapsed.
