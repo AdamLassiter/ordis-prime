@@ -180,6 +180,7 @@ test("build drafts are private and share snapshots remain immutable", async (con
   });
   configureBuildEquipment(database, owner, buildId, "primary", {
     configuration: "Incarnon",
+    rank: 27,
     formaCount: 3,
     capacityUpgrade: true,
   });
@@ -204,6 +205,15 @@ test("build drafts are private and share snapshots remain immutable", async (con
         11,
       ),
     /rank must not exceed 10/,
+  );
+  assert.throws(
+    () =>
+      configureBuildEquipment(database, owner, buildId, "primary", {
+        rank: 41,
+        formaCount: 3,
+        capacityUpgrade: true,
+      }),
+    /Equipment rank must be between 0 and 40/,
   );
   setBuildEnhancement(
     database,
@@ -258,6 +268,7 @@ test("build drafts are private and share snapshots remain immutable", async (con
       slot: "primary",
       entity: { kind: "weapon", slug: "paris", name: "Paris" },
       configuration: "Incarnon",
+      rank: 27,
       formaCount: 3,
       capacityUpgrade: true,
       notes: undefined,
@@ -303,6 +314,10 @@ test("build drafts are private and share snapshots remain immutable", async (con
   assert.equal(
     shared.equipment.find(({ slot }) => slot === "primary")?.configuration,
     "Incarnon",
+  );
+  assert.equal(
+    shared.equipment.find(({ slot }) => slot === "primary")?.rank,
+    27,
   );
   assert.deepEqual(shared.enhancements, [
     {
@@ -355,6 +370,10 @@ test("build drafts are private and share snapshots remain immutable", async (con
     "Incarnon",
   );
   assert.equal(
+    publicClone.equipment.find(({ slot }) => slot === "primary")?.rank,
+    27,
+  );
+  assert.equal(
     publicClone.equipment.find(({ slot }) => slot === "primary")?.mods[0]?.rank,
     5,
   );
@@ -394,6 +413,10 @@ test("build drafts are private and share snapshots remain immutable", async (con
   assert.equal(
     clone.equipment.find(({ slot }) => slot === "primary")?.configuration,
     "Incarnon",
+  );
+  assert.equal(
+    clone.equipment.find(({ slot }) => slot === "primary")?.rank,
+    27,
   );
   assert.equal(clone.enhancements.length, 3);
   revokeBuildShare(database, owner, buildId, shareKey);

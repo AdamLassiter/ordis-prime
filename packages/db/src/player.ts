@@ -148,7 +148,7 @@ export interface PortableEntityReference {
 }
 
 export interface ProfileExport {
-  schemaVersion: 12;
+  schemaVersion: 13;
   exportedAt: string;
   player: PlayerSettings;
   inventory: Array<InventoryValues & { entity: PortableEntityReference }>;
@@ -185,6 +185,7 @@ export interface PortableBuild {
     entity: PortableEntityReference;
     notes?: string;
     configuration?: string;
+    rank?: number;
     formaCount: number;
     capacityUpgrade: boolean;
     mods: Array<{
@@ -334,7 +335,7 @@ export function exportPlayerProfile(
              source_id, namespace, value
   `);
   return {
-    schemaVersion: 12,
+    schemaVersion: 13,
     exportedAt: new Date().toISOString(),
     player: getPlayerSettings(sqlite, userId),
     inventory: inventory.map(({ entityId, kind, slug, name, ...values }) => ({
@@ -475,6 +476,7 @@ export function exportPlayerProfile(
             entity,
             notes: equipmentNotes,
             configuration,
+            rank,
             formaCount,
             capacityUpgrade,
             mods,
@@ -487,6 +489,7 @@ export function exportPlayerProfile(
             ),
             notes: equipmentNotes,
             configuration,
+            rank,
             formaCount,
             capacityUpgrade,
             mods: mods.map(({ position, rank, entity: mod }) => ({
@@ -740,6 +743,7 @@ export function importPlayerProfile(
           : { kind: entry.entity.kind, slug: entry.entity.slug },
         notes: entry.notes,
         configuration: entry.configuration,
+        rank: entry.rank,
         formaCount: entry.formaCount,
         capacityUpgrade: entry.capacityUpgrade,
         mods,
@@ -928,7 +932,7 @@ export function importPlayerProfile(
 function parseProfile(value: unknown): ProfileExport {
   if (
     !isRecord(value) ||
-    value.schemaVersion !== 12 ||
+    value.schemaVersion !== 13 ||
     !isRecord(value.player) ||
     !Array.isArray(value.inventory) ||
     !Array.isArray(value.goals) ||
@@ -939,7 +943,7 @@ function parseProfile(value: unknown): ProfileExport {
     !Array.isArray(value.builds)
   )
     throw new Error(
-      "Profile must use schemaVersion 12 and contain player settings plus every portable state array",
+      "Profile must use schemaVersion 13 and contain player settings plus every portable state array",
     );
   const masteryRank = value.player.masteryRank;
   if (
@@ -1037,7 +1041,7 @@ function parseProfile(value: unknown): ProfileExport {
     parsePortableBuild(entry, index),
   );
   return {
-    schemaVersion: 12,
+    schemaVersion: 13,
     exportedAt: typeof value.exportedAt === "string" ? value.exportedAt : "",
     player: { masteryRank: masteryRank as number | undefined },
     inventory,
@@ -1166,6 +1170,10 @@ function parsePortableBuild(value: unknown, index: number): PortableBuild {
       typeof entry.slot !== "string" ||
       !(BUILD_SLOTS as readonly string[]).includes(entry.slot) ||
       !Array.isArray(entry.mods) ||
+      (entry.rank !== undefined &&
+        (!Number.isSafeInteger(entry.rank) ||
+          (entry.rank as number) < 0 ||
+          (entry.rank as number) > 40)) ||
       !Number.isSafeInteger(entry.formaCount) ||
       (entry.formaCount as number) < 0 ||
       (entry.formaCount as number) > 100 ||
@@ -1210,6 +1218,7 @@ function parsePortableBuild(value: unknown, index: number): PortableBuild {
         120,
         `${label} configuration`,
       ),
+      rank: entry.rank as number | undefined,
       formaCount: entry.formaCount as number,
       capacityUpgrade: entry.capacityUpgrade,
       mods,

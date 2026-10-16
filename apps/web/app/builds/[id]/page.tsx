@@ -150,6 +150,18 @@ export default async function BuildEditor({
                       </label>
                       <div className="count-grid">
                         <label>
+                          Current rank
+                          <input
+                            name="rank"
+                            type="number"
+                            min="0"
+                            max="40"
+                            step="1"
+                            defaultValue={equipment.rank}
+                            placeholder="Unknown"
+                          />
+                        </label>
+                        <label>
                           Forma
                           <input
                             name="formaCount"

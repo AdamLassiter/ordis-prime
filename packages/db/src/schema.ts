@@ -744,6 +744,7 @@ export const buildEquipment = sqliteTable(
       .references(() => entities.id),
     notes: text(),
     configuration: text(),
+    rank: integer(),
     formaCount: integer("forma_count").notNull().default(0),
     capacityUpgrade: integer("capacity_upgrade", { mode: "boolean" })
       .notNull()

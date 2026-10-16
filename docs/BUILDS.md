@@ -5,7 +5,8 @@ They can be partial: a player may record only a Warframe, one weapon, or any
 subset of the supported loadout slots. Each equipment entry can carry notes and
 up to twenty positioned mods with optional ranks. It can also record a freeform
 configuration label (for example, an Incarnon or named config), Forma count, and
-whether an Orokin capacity upgrade is installed.
+whether an Orokin capacity upgrade is installed. An optional current equipment
+rank records the player's actual configuration independently from Forma count.
 When a mod has sourced rank and base-drain metadata, the editor constrains its
 selected rank and shows its unpolarized ranked drain. Positive drain increases
 by one per rank; negative aura/stance drain becomes a larger capacity bonus.
@@ -60,10 +61,12 @@ recipes and recommends nodes using the same canonical IDs.
 
 ## Current limits
 
-- Forma count, a capacity-upgrade flag, and a configuration label are recorded.
+- Current equipment rank, Forma count, a capacity-upgrade flag, and a
+  configuration label are recorded.
   The catalog now retains sourced mod maximum rank, base drain and polarity,
   and calculates each known mod's unpolarized ranked drain, but equipment-slot
-  polarities and whole-build capacity are not yet modeled. Broad arcane
+  polarities, item-specific maximum rank rules and whole-build capacity are not
+  yet modeled. Broad arcane
   and specialized weapon compatibility are enforced from cited canonical
   facts. A Kitgun chamber or Zaw strike is currently the representative
   canonical weapon; the other modular parts and their stat composition are not

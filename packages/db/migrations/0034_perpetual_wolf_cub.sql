@@ -1,0 +1,1 @@
+ALTER TABLE `build_equipment` ADD `rank` integer;

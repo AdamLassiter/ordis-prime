@@ -50,6 +50,9 @@ export default async function SharedBuildPage({
               </h3>
               <p className="muted">
                 {equipment.configuration ? `${equipment.configuration} · ` : ""}
+                {equipment.rank === undefined
+                  ? ""
+                  : `rank ${equipment.rank} · `}
                 {equipment.formaCount} Forma
                 {equipment.capacityUpgrade ? " · capacity upgraded" : ""}
               </p>

@@ -57,6 +57,7 @@ export interface BuildEquipmentEntry {
   entity: BuildEntityReference;
   notes?: string;
   configuration?: string;
+  rank?: number;
   formaCount: number;
   capacityUpgrade: boolean;
   mods: BuildMod[];
@@ -246,6 +247,7 @@ function cloneBuildSnapshot(
       );
       configureBuildEquipment(sqlite, userId, cloneId, equipment.slot, {
         configuration: equipment.configuration,
+        rank: equipment.rank,
         formaCount: equipment.formaCount,
         capacityUpgrade: equipment.capacityUpgrade,
       });
@@ -509,7 +511,7 @@ export function setBuildEquipment(
           .run(existing.id);
         sqlite
           .prepare(
-            "update build_equipment set entity_id = ?, notes = ?, configuration = null, forma_count = 0, capacity_upgrade = 0 where id = ?",
+            "update build_equipment set entity_id = ?, notes = ?, configuration = null, rank = null, forma_count = 0, capacity_upgrade = 0 where id = ?",
           )
           .run(entity.id, normalizedNotes ?? null, existing.id);
       } else {
@@ -551,6 +553,7 @@ export function configureBuildEquipment(
   slot: BuildSlot,
   input: {
     configuration?: string;
+    rank?: number;
     formaCount: number;
     capacityUpgrade: boolean;
   },
@@ -563,6 +566,11 @@ export function configureBuildEquipment(
     "Configuration",
   );
   if (
+    input.rank !== undefined &&
+    (!Number.isSafeInteger(input.rank) || input.rank < 0 || input.rank > 40)
+  )
+    throw new Error("Equipment rank must be between 0 and 40");
+  if (
     !Number.isSafeInteger(input.formaCount) ||
     input.formaCount < 0 ||
     input.formaCount > 100
@@ -574,10 +582,11 @@ export function configureBuildEquipment(
     assertBuildOwner(sqlite, userId, buildId);
     const result = sqlite
       .prepare(
-        "update build_equipment set configuration = ?, forma_count = ?, capacity_upgrade = ? where build_id = ? and slot = ?",
+        "update build_equipment set configuration = ?, rank = ?, forma_count = ?, capacity_upgrade = ? where build_id = ? and slot = ?",
       )
       .run(
         configuration ?? null,
+        input.rank ?? null,
         input.formaCount,
         input.capacityUpgrade ? 1 : 0,
         buildId,
@@ -791,7 +800,8 @@ function hydrateBuild(
     .prepare(
       `
     select equipment.id, equipment.slot, equipment.notes, equipment.configuration,
-      equipment.forma_count as formaCount, equipment.capacity_upgrade as capacityUpgrade,
+      equipment.rank, equipment.forma_count as formaCount,
+      equipment.capacity_upgrade as capacityUpgrade,
       entity.kind, entity.slug, entity.name
     from build_equipment equipment join entities entity on entity.id = equipment.entity_id
     where equipment.build_id = ? order by equipment.slot
@@ -802,6 +812,7 @@ function hydrateBuild(
     slot: BuildSlot;
     notes: string | null;
     configuration: string | null;
+    rank: number | null;
     formaCount: number;
     capacityUpgrade: number;
     kind: string;
@@ -848,6 +859,7 @@ function hydrateBuild(
       entity: { kind: entry.kind, slug: entry.slug, name: entry.name },
       notes: entry.notes ?? undefined,
       configuration: entry.configuration ?? undefined,
+      rank: entry.rank ?? undefined,
       formaCount: entry.formaCount,
       capacityUpgrade: Boolean(entry.capacityUpgrade),
       mods: (

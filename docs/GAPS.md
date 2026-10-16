@@ -114,14 +114,14 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   Read, expired alerts have configurable time-based retention; unread and
   non-expiring alert history is deliberately not pruned automatically.
 - Private, revisioned build persistence supports partial equipment loadouts,
-  positioned mods, ranks, configuration labels, Forma counts, capacity-upgrade
-  flags, notes and immutable unlisted share snapshots. Authenticated
-  editor and public snapshot routes use canonical catalog links. Sourced mod
+  positioned mods, mod and equipment ranks, configuration labels, Forma counts,
+  capacity-upgrade flags, notes and immutable unlisted share snapshots.
+  Authenticated editor and public snapshot routes use canonical catalog links. Sourced mod
   maximum-rank, base-drain and polarity facts validate selected ranks and expose
-  per-mod unpolarized drain. Equipment-slot polarity and whole-build capacity
-  calculation remain. Builds can assign ranked arcanes and
-  positioned Archon Shards with sourced effect selections. Arcane candidates
-  and assignments enforce sourced broad and specialized weapon classes against
+  per-mod unpolarized drain. Equipment-slot polarity, sourced item-specific
+  maximum ranks and whole-build capacity calculation remain. Builds can assign
+  ranked arcanes and positioned Archon Shards with sourced effect selections.
+  Arcane candidates and assignments enforce sourced broad and specialized weapon classes against
   equipped items in either assignment order. Equipment slots also enforce
   sourced weapon classes. Kitgun chambers and Zaw strikes act as the current
   modular weapon representatives; full part composition is not modeled. Private

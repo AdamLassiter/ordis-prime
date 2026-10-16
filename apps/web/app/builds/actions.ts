@@ -85,10 +85,14 @@ export async function saveEquipmentConfiguration(
 ) {
   const session = await requireCurrentSession();
   const rawFormaCount = String(form.get("formaCount") ?? "");
+  const rawRank = String(form.get("rank") ?? "");
   if (!/^\d+$/.test(rawFormaCount))
     throw new Error("Forma count must be a non-negative integer");
+  if (rawRank && !/^\d+$/.test(rawRank))
+    throw new Error("Equipment rank must be a non-negative integer");
   configureBuildEquipment(getDatabase(), session.user.id, buildId, slot, {
     configuration: String(form.get("configuration") ?? ""),
+    rank: rawRank ? Number(rawRank) : undefined,
     formaCount: Number(rawFormaCount),
     capacityUpgrade: form.get("capacityUpgrade") === "yes",
   });
