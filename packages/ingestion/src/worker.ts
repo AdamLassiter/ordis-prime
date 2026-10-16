@@ -4,6 +4,7 @@ import {
   ensurePendingJob,
   evaluateWorldStateWatches,
   finishAndRescheduleJob,
+  listReferencedSnapshotPaths,
   pruneFinishedJobs,
   pruneFinishedSourceRefreshes,
   pruneInactiveCatalogHistory,
@@ -35,6 +36,7 @@ export async function runWorkerCycle(options: {
   notificationRetentionMilliseconds?: number;
   catalogReleaseHistoryLimit?: number;
   sourceRefreshHistoryLimit?: number;
+  snapshotPruneGraceMilliseconds?: number;
 }): Promise<{
   status: "idle" | "succeeded" | "failed";
   sourceId?: string;
@@ -56,6 +58,8 @@ export async function runWorkerCycle(options: {
     options.notificationRetentionMilliseconds ?? 30 * 24 * 60 * 60_000;
   const catalogReleaseHistoryLimit = options.catalogReleaseHistoryLimit ?? 20;
   const sourceRefreshHistoryLimit = options.sourceRefreshHistoryLimit ?? 1_000;
+  const snapshotPruneGraceMilliseconds =
+    options.snapshotPruneGraceMilliseconds ?? 60 * 60_000;
   const payload = { source: options.worldStateAdapter.source.id };
   ensurePendingJob(options.database, {
     kind: WORLD_STATE_REFRESH_JOB,
@@ -70,6 +74,17 @@ export async function runWorkerCycle(options: {
     });
   pruneFinishedJobs(options.database, jobHistoryLimit);
   pruneFinishedSourceRefreshes(options.database, sourceRefreshHistoryLimit);
+  try {
+    await options.snapshotStore.pruneUnreferenced(
+      listReferencedSnapshotPaths(options.database),
+      { minimumAgeMilliseconds: snapshotPruneGraceMilliseconds },
+    );
+  } catch (error) {
+    return {
+      status: "failed",
+      error: `Snapshot retention failed: ${error instanceof Error ? error.message : String(error)}`,
+    };
+  }
   const job = claimDueJob(options.database, {
     owner: options.owner,
     now,

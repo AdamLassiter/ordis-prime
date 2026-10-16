@@ -54,6 +54,10 @@ const sourceRefreshHistoryLimit = nonNegativeInteger(
   process.env.ORDIS_SOURCE_REFRESH_HISTORY_LIMIT,
   1_000,
 );
+const snapshotPruneGraceMilliseconds = nonNegativeDuration(
+  process.env.ORDIS_SNAPSHOT_PRUNE_GRACE_MS,
+  60 * 60_000,
+);
 const owner = `${hostname()}:${process.pid}`;
 const abortController = new AbortController();
 for (const signal of ["SIGINT", "SIGTERM"] as const)
@@ -65,7 +69,7 @@ const snapshotStore = new SnapshotStore(path.join(dataDirectory, "sources"));
 const adapter = new WfcdWorldStateAdapter();
 const catalogAdapters = [new WfcdItemsAdapter(), new WfcdDropsAdapter()];
 process.stdout.write(
-  `${JSON.stringify({ event: "worker-started", owner, databasePath, refreshInterval, catalogRefreshInterval, jobHistoryLimit, worldStateSnapshotHistoryLimit, notificationRetentionMilliseconds, catalogReleaseHistoryLimit, sourceRefreshHistoryLimit })}\n`,
+  `${JSON.stringify({ event: "worker-started", owner, databasePath, refreshInterval, catalogRefreshInterval, jobHistoryLimit, worldStateSnapshotHistoryLimit, notificationRetentionMilliseconds, catalogReleaseHistoryLimit, sourceRefreshHistoryLimit, snapshotPruneGraceMilliseconds })}\n`,
 );
 
 try {
@@ -86,6 +90,7 @@ try {
       notificationRetentionMilliseconds,
       catalogReleaseHistoryLimit,
       sourceRefreshHistoryLimit,
+      snapshotPruneGraceMilliseconds,
     });
     if (result.status !== "idle")
       process.stdout.write(

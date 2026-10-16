@@ -25,7 +25,8 @@ Every promoted catalog release records the exact active run for every static
 source. Source-run `active` flags remain the efficient read selector, while the
 immutable membership rows make retained composed releases inspectable and
 reproducible. Retention is explicitly bounded; raw snapshots remain the longer-lived
-audit artifact after an old normalized release is pruned.
+audit artifact after an old normalized release is pruned, but are collected once
+no retained source run, world-state snapshot or refresh attempt references them.
 World-state snapshots remain a separate, faster-moving release stream.
 
 ## Runtime

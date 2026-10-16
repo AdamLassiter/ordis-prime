@@ -1,5 +1,6 @@
 import type { WorldStateWindowObservation } from "@ordis-prime/domain";
 import {
+  attachSourceRefreshSnapshot,
   beginSourceRefresh,
   completeSourceRefresh,
   failSourceRefresh,
@@ -236,6 +237,7 @@ export async function refreshWorldState(options: {
   try {
     const snapshot = await options.adapter.fetch({ signal: options.signal });
     snapshotPath = await options.snapshotStore.put(snapshot);
+    attachSourceRefreshSnapshot(options.database, refreshId, snapshotPath);
     const windows = options.adapter.parse(snapshot);
     const result = promoteWorldState(options.database, {
       source: options.adapter.source,

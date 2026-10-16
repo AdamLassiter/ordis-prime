@@ -58,13 +58,21 @@ release references are deleted with their normalized facts. Runs containing a
 resolver conflict remain available for review even after their release ages
 out. `ORDIS_CATALOG_HISTORY_LIMIT` changes the inactive-release count; zero
 keeps only the active release. Immutable raw payloads and refresh-operation rows
-are retained independently and are not deleted by catalog pruning.
+are retained independently of catalog pruning.
 
 The worker keeps the newest 1,000 finished source-refresh operations per source
 by default and never prunes a running attempt. `ORDIS_SOURCE_REFRESH_HISTORY_LIMIT`
 changes that per-source bound; operational counts and throughput therefore
-describe the retained window rather than lifetime history. This does not delete
-the immutable payload directories named by expired operation rows.
+describe the retained window rather than lifetime history.
+
+After database retention runs, the worker removes content-addressed payload
+directories that are no longer referenced by any source run, world-state
+snapshot or refresh attempt. Newly written or reused payloads receive a one-hour
+grace period by default so concurrent refresh work cannot be collected between
+filesystem publication and database attachment. `ORDIS_SNAPSHOT_PRUNE_GRACE_MS`
+changes that grace. Running attempts attach their retained path before parsing,
+and cleanup failure is reported without claiming a refresh job. Unexpected
+directories and temporary writes are never treated as collectible snapshots.
 
 Before staging begins, promotion validates invariants that require the complete
 candidate set. Every observation's source, version and retrieval instant must

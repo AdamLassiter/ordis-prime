@@ -48,3 +48,44 @@ test("snapshot store rejects corrupted and unsafe snapshots", async (context) =>
     /Unsafe source ID/,
   );
 });
+
+test("snapshot pruning removes only old unreferenced content-addressed payloads", async (context) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-snapshots-"));
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const store = new SnapshotStore(root);
+  const retained = createSnapshot({
+    sourceId: "wfcd-items",
+    version: "retained",
+    retrievedAt: "2026-10-13T12:00:00.000Z",
+    mediaType: "application/json",
+    bytes: new Uint8Array([1]),
+  });
+  const unreferenced = createSnapshot({
+    ...retained,
+    version: "unreferenced",
+    bytes: new Uint8Array([2]),
+  });
+  const young = createSnapshot({
+    ...retained,
+    version: "young",
+    bytes: new Uint8Array([3]),
+  });
+  const retainedPath = await store.put(retained);
+  const unreferencedPath = await store.put(unreferenced);
+  const youngPath = await store.put(young);
+  const unrelatedDirectory = path.join(root, "wfcd-items", "not-a-digest");
+  await fs.mkdir(unrelatedDirectory);
+  await fs.utimes(unreferencedPath, new Date(0), new Date(0));
+
+  assert.equal(
+    await store.pruneUnreferenced([retainedPath], {
+      minimumAgeMilliseconds: 60_000,
+      now: Date.now(),
+    }),
+    1,
+  );
+  assert.equal((await fs.stat(retainedPath)).isDirectory(), true);
+  assert.equal((await fs.stat(youngPath)).isDirectory(), true);
+  assert.equal((await fs.stat(unrelatedDirectory)).isDirectory(), true);
+  await assert.rejects(() => fs.stat(unreferencedPath), { code: "ENOENT" });
+});

@@ -13,6 +13,7 @@ interface StoredSnapshotMetadata {
 
 const safeSegment = /^[a-zA-Z0-9][a-zA-Z0-9._-]*$/;
 const sha256Hash = /^sha256:([a-f0-9]{64})$/;
+const digestDirectory = /^[a-f0-9]{64}$/;
 
 export class SnapshotStore {
   private readonly root: string;
@@ -54,6 +55,8 @@ export class SnapshotStore {
       } catch (error) {
         if (!isAlreadyExists(error)) throw error;
         await fs.rm(temporary, { recursive: true, force: true });
+        const now = new Date();
+        await fs.utimes(destination, now, now);
         await this.load(snapshot.sourceId, snapshot.contentHash);
       }
     } catch (error) {
@@ -81,6 +84,62 @@ export class SnapshotStore {
     }
     return snapshot;
   }
+
+  async pruneUnreferenced(
+    retainedPaths: Iterable<string>,
+    options: { minimumAgeMilliseconds?: number; now?: number } = {},
+  ): Promise<number> {
+    const minimumAgeMilliseconds =
+      options.minimumAgeMilliseconds ?? 60 * 60_000;
+    const now = options.now ?? Date.now();
+    if (
+      !Number.isSafeInteger(minimumAgeMilliseconds) ||
+      minimumAgeMilliseconds < 0
+    )
+      throw new Error("Snapshot prune grace must be a non-negative integer");
+    if (!Number.isFinite(now))
+      throw new Error("Snapshot prune time is invalid");
+    const retained = new Set(
+      [...retainedPaths].filter(Boolean).map((entry) => path.resolve(entry)),
+    );
+    const sources = await readDirectories(this.root);
+    let deleted = 0;
+    for (const source of sources) {
+      if (!safeSegment.test(source.name)) continue;
+      const sourceDirectory = path.join(this.root, source.name);
+      for (const entry of await readDirectories(sourceDirectory)) {
+        if (!digestDirectory.test(entry.name)) continue;
+        const candidate = path.join(sourceDirectory, entry.name);
+        if (retained.has(path.resolve(candidate))) continue;
+        let stats;
+        try {
+          stats = await fs.stat(candidate);
+        } catch (error) {
+          if (isMissing(error)) continue;
+          throw error;
+        }
+        if (now - stats.mtimeMs < minimumAgeMilliseconds) continue;
+        try {
+          await fs.rm(candidate, { recursive: true, force: false });
+          deleted += 1;
+        } catch (error) {
+          if (!isMissing(error)) throw error;
+        }
+      }
+    }
+    return deleted;
+  }
+}
+
+async function readDirectories(directory: string) {
+  try {
+    return (await fs.readdir(directory, { withFileTypes: true })).filter(
+      (entry) => entry.isDirectory(),
+    );
+  } catch (error) {
+    if (isMissing(error)) return [];
+    throw error;
+  }
 }
 
 function validatePathParts(sourceId: string, hash: string): void {
@@ -104,4 +163,8 @@ function validateSnapshot(snapshot: Snapshot): void {
 
 function isAlreadyExists(error: unknown): boolean {
   return error instanceof Error && "code" in error && error.code === "EEXIST";
+}
+
+function isMissing(error: unknown): boolean {
+  return error instanceof Error && "code" in error && error.code === "ENOENT";
 }

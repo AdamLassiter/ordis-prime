@@ -19,7 +19,8 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   completeness checks remain unimplemented. The worker retains a configurable number of inactive
   catalog releases and removes unreferenced clean source runs and their facts;
   runs containing resolver conflicts remain protected for review. Refresh-operation
-  rows are bounded per source, while raw payload storage remains unbounded. A
+  rows are bounded per source. Raw content-addressed payloads without any retained
+  database reference are collected after a configurable safety grace. A
   SQLite-leased job runner handles recurring work. Migrations run lazily when
   the web process first opens SQLite. Canonical entity fields are recomputed
   from value-bearing provenance whenever active source membership changes, so
@@ -51,8 +52,8 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   countdowns and visible snapshot freshness. A database-leased production worker
   polls it every five minutes and retries failures without replacing active data.
   Snapshots older than a configurable threshold are visibly marked stale without
-  hiding their data. Normalized world-state history is bounded per source, while
-  raw immutable payloads remain unbounded. Exact unique node names are reconciled to canonical nodes;
+  hiding their data. Normalized world-state history and unreferenced raw payload
+  storage are bounded independently. Exact unique node names are reconciled to canonical nodes;
   ambiguous or differently spelled labels remain plain source text. Finished
   job history is count-bounded and filterable by kind, status and source.
   Source operation pages report persisted record counts, durations and aggregate

@@ -191,6 +191,37 @@ export function failSourceRefresh(
     throw new Error(`Refresh ${refreshId} is not running`);
 }
 
+export function attachSourceRefreshSnapshot(
+  sqlite: Database.Database,
+  refreshId: string,
+  snapshotPath: string,
+): void {
+  if (!snapshotPath) throw new Error("Refresh snapshot path is required");
+  const result = sqlite
+    .prepare(
+      "update source_refreshes set snapshot_path = ? where id = ? and status = 'running'",
+    )
+    .run(snapshotPath, refreshId);
+  if (result.changes !== 1)
+    throw new Error(`Refresh ${refreshId} is not running`);
+}
+
+export function listReferencedSnapshotPaths(
+  sqlite: Database.Database,
+): string[] {
+  const rows = sqlite
+    .prepare(
+      `select snapshot_path as snapshotPath from source_runs where snapshot_path is not null
+       union
+       select snapshot_path from world_state_snapshots where snapshot_path is not null
+       union
+       select snapshot_path from source_refreshes where snapshot_path is not null
+       order by snapshotPath`,
+    )
+    .all() as Array<{ snapshotPath: string }>;
+  return rows.map(({ snapshotPath }) => snapshotPath);
+}
+
 export function pruneFinishedSourceRefreshes(
   sqlite: Database.Database,
   keepPerSource: number,

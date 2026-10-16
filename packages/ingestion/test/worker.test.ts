@@ -42,6 +42,7 @@ test("worker refreshes once, waits for its interval, and retries failures sooner
     jobHistoryLimit: 1,
     worldStateSnapshotHistoryLimit: 0,
     sourceRefreshHistoryLimit: 0,
+    snapshotPruneGraceMilliseconds: 0,
   };
 
   assert.deepEqual(await runWorkerCycle({ ...options, now: 100 }), {
@@ -103,6 +104,14 @@ test("worker refreshes once, waits for its interval, and retries failures sooner
         )
         .get() as { count: number }
     ).count,
+    1,
+  );
+  assert.equal(
+    (
+      await fs.readdir(path.join(root, "sources", "wfcd-worldstate"), {
+        withFileTypes: true,
+      })
+    ).filter((entry) => entry.isDirectory()).length,
     1,
   );
 });

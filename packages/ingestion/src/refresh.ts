@@ -1,4 +1,5 @@
 import {
+  attachSourceRefreshSnapshot,
   beginSourceRefresh,
   completeSourceRefresh,
   failSourceRefresh,
@@ -39,6 +40,7 @@ export async function refreshSource(
       previousVersion: options.previousVersion,
     });
     snapshotPath = await options.snapshotStore.put(fetchedSnapshot);
+    attachSourceRefreshSnapshot(options.database, refreshId, snapshotPath);
     const snapshot = versionSnapshotForIdentityOverrides(
       options.database,
       options.adapter.source.id,
