@@ -20,6 +20,9 @@ version to match the envelope as well.
 
 Compare timestamps by parsed instant rather than text, so equivalent ISO 8601
 representations remain valid. Reject the complete candidate on any mismatch.
+Apply the same envelope validation to static observations and dynamic
+world-state windows; provider observation time remains a separate ordering fact
+for world-state freshness.
 
 ## Consequences
 

@@ -246,6 +246,7 @@ export async function refreshWorldState(options: {
       version: snapshot.version,
       contentHash: snapshot.contentHash,
       observedAt: snapshot.version,
+      retrievedAt: snapshot.retrievedAt,
       snapshotPath,
       windows,
     });

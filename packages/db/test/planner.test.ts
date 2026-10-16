@@ -223,6 +223,7 @@ test("persisted goals expand through active recipes and produce named node reaso
     version: "live-v1",
     contentHash: "live-hash",
     observedAt: "2026-10-13T12:00:00.000Z",
+    retrievedAt: "2026-10-13T12:00:00.000Z",
     snapshotPath: "/live",
     windows: [
       {

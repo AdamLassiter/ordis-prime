@@ -12,6 +12,7 @@ export interface PromoteWorldStateInput {
   version: string;
   contentHash: string;
   observedAt: string;
+  retrievedAt: string;
   snapshotPath: string;
   windows: WorldStateWindowObservation[];
 }
@@ -396,7 +397,8 @@ function validateWorldState(input: PromoteWorldStateInput): void {
     !input.version ||
     !input.contentHash ||
     !input.snapshotPath ||
-    !Number.isFinite(Date.parse(input.observedAt))
+    !Number.isFinite(Date.parse(input.observedAt)) ||
+    !Number.isFinite(Date.parse(input.retrievedAt))
   )
     throw new Error("World-state snapshot metadata is invalid");
   const ids = new Set<string>();
@@ -412,6 +414,17 @@ function validateWorldState(input: PromoteWorldStateInput): void {
     )
       throw new Error(
         `World-state evidence does not match snapshot for ${window.externalId}`,
+      );
+    if (!window.evidence.sourceRecordKey.trim())
+      throw new Error(
+        `World-state evidence record key is required for ${window.externalId}`,
+      );
+    if (
+      !Number.isFinite(Date.parse(window.evidence.retrievedAt)) ||
+      Date.parse(window.evidence.retrievedAt) !== Date.parse(input.retrievedAt)
+    )
+      throw new Error(
+        `World-state evidence retrieval time does not match snapshot for ${window.externalId}`,
       );
     const activation = window.activation
       ? Date.parse(window.activation)

@@ -62,6 +62,7 @@ test("world-state nodes reconcile unique aliases but preserve ambiguity", async 
     version,
     contentHash: "alias-hash",
     observedAt: version,
+    retrievedAt: version,
     snapshotPath: "/snapshots/alias",
     windows: [
       {
@@ -120,6 +121,87 @@ test("world-state nodes reconcile unique aliases but preserve ambiguity", async 
   );
 });
 
+test("world-state promotion rejects evidence outside its snapshot envelope", async (context) => {
+  const root = await fs.mkdtemp(
+    path.join(os.tmpdir(), "ordis-world-evidence-"),
+  );
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const databasePath = path.join(root, "world-state.sqlite");
+  migrateDatabase(databasePath);
+  const sqlite = openSqliteDatabase(databasePath);
+  context.after(() => sqlite.close());
+  const version = "2026-10-13T20:30:00.000Z";
+  const retrievedAt = "2026-10-13T20:31:00.000Z";
+  const input = {
+    source: {
+      id: "world-fixture",
+      name: "World fixture",
+      homepage: "https://example.test",
+      priority: 1,
+    },
+    version,
+    contentHash: "evidence-hash",
+    observedAt: version,
+    retrievedAt,
+    snapshotPath: "/snapshots/evidence",
+    windows: [
+      {
+        type: "world-state-window" as const,
+        externalId: "event",
+        kind: "event" as const,
+        label: "Event",
+        evidence: {
+          sourceId: "world-fixture",
+          sourceRecordKey: "event",
+          snapshotVersion: version,
+          retrievedAt,
+        },
+      },
+    ],
+  };
+
+  assert.throws(
+    () =>
+      promoteWorldState(sqlite, {
+        ...input,
+        windows: [
+          {
+            ...input.windows[0],
+            evidence: {
+              ...input.windows[0]!.evidence,
+              retrievedAt: "2026-10-13T20:29:00.000Z",
+            },
+          },
+        ],
+      }),
+    /retrieval time does not match/,
+  );
+  assert.throws(
+    () =>
+      promoteWorldState(sqlite, {
+        ...input,
+        windows: [
+          {
+            ...input.windows[0],
+            evidence: {
+              ...input.windows[0]!.evidence,
+              sourceRecordKey: "   ",
+            },
+          },
+        ],
+      }),
+    /record key is required/,
+  );
+  assert.deepEqual(
+    sqlite
+      .prepare(
+        "select (select count(*) from sources) as sources, (select count(*) from world_state_snapshots) as snapshots",
+      )
+      .get(),
+    { sources: 0, snapshots: 0 },
+  );
+});
+
 test("world-state pruning keeps each active snapshot and bounded inactive history", async (context) => {
   const root = await fs.mkdtemp(
     path.join(os.tmpdir(), "ordis-world-state-prune-"),
@@ -145,6 +227,7 @@ test("world-state pruning keeps each active snapshot and bounded inactive histor
       version,
       contentHash: `hash-${day}`,
       observedAt: version,
+      retrievedAt: version,
       snapshotPath: `/snapshots/${day}`,
       windows: [
         {

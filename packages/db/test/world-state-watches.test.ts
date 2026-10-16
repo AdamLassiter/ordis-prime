@@ -51,6 +51,7 @@ test("world-state watches create private notifications once per normalized occur
     version: "2026-10-13T20:30:00.000Z",
     contentHash: "hash",
     observedAt: "2026-10-13T20:30:00.000Z",
+    retrievedAt: "2026-10-13T20:30:00.000Z",
     snapshotPath: "/snapshot",
     windows: [
       {
@@ -174,6 +175,7 @@ test("node-linked watches match canonical reconciled nodes rather than similar l
     version: "node-window-v1",
     contentHash: "node-hash",
     observedAt: "2026-10-13T20:30:00.000Z",
+    retrievedAt: "2026-10-13T20:30:00.000Z",
     snapshotPath: "/snapshot",
     windows: [
       {
@@ -270,6 +272,7 @@ test("item-linked watches match exact reconciled window subjects", async (contex
     version: "subject-window-v1",
     contentHash: "subject-hash",
     observedAt: "2026-10-13T20:30:00.000Z",
+    retrievedAt: "2026-10-13T20:30:00.000Z",
     snapshotPath: "/snapshot",
     windows: [
       {

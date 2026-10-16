@@ -7,7 +7,9 @@ so timers, todos and later notification rules do not depend on one API's JSON.
 The initial adapter reads the PC English response from WFCD's WarframeStat.us
 API. It currently recognizes landscape and hub cycles, events, alerts, Void
 Fissures and Void Trader visits. Every window retains its provider record key,
-payload path and immutable snapshot version.
+payload path and immutable snapshot version. Promotion requires that record key
+to be non-blank and its evidence source, version and retrieval instant to match
+the archived snapshot envelope.
 
 During promotion, a provider node label is conservatively linked to a canonical
 node when its case-insensitive name or normalized catalog alias identifies one
