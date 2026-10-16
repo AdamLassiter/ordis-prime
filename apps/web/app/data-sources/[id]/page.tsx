@@ -51,6 +51,13 @@ export default async function SourceOperationsPage({
         <a href={source.homepage}>Upstream source</a> ·{" "}
         <Link href="/data-sources">All sources</Link>
       </p>
+      {source.observationCount != null && (
+        <p className="notice">
+          The active run contains {source.observationCount.toLocaleString()}{" "}
+          normalized observations. Automatic shrinkage policy compares new
+          candidates with this baseline before promotion.
+        </p>
+      )}
 
       <section className="planner-section">
         <h2>Recent refreshes</h2>

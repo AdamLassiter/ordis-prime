@@ -270,6 +270,12 @@ export default async function Sources({
                   Retrieved {new Date(source.retrievedAt).toISOString()}
                 </p>
               )}
+              {source.observationCount != null && (
+                <p className="muted">
+                  Active baseline: {source.observationCount.toLocaleString()}{" "}
+                  normalized observations
+                </p>
+              )}
               <span className="tag">
                 {source.license ?? "Licence not recorded"}
               </span>{" "}

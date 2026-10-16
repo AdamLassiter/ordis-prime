@@ -124,7 +124,7 @@ test("source status exposes the latest persisted refresh failure", async (contex
 
   sqlite
     .prepare(
-      "insert into source_runs (id, source_id, version, content_hash, retrieved_at, snapshot_path, status) values ('run', ?, 'v1', 'hash', ?, '/snapshots/fixture/v1', 'active')",
+      "insert into source_runs (id, source_id, version, content_hash, retrieved_at, snapshot_path, observation_count, status) values ('run', ?, 'v1', 'hash', ?, '/snapshots/fixture/v1', 123, 'active')",
     )
     .run(source.id, Date.now());
   sqlite
@@ -132,6 +132,7 @@ test("source status exposes the latest persisted refresh failure", async (contex
       "insert into ingestion_conflicts (id, source_run_id, record_key, reason, candidates_json) values ('conflict', 'run', 'records[4]', 'Ambiguous identity', '[\"one\",\"two\"]')",
     )
     .run();
+  assert.equal(listSourceStatuses(sqlite)[0]?.observationCount, 123);
   assert.deepEqual(listSourceConflicts(sqlite, source.id), [
     {
       id: "conflict",

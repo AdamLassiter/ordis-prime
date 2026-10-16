@@ -53,7 +53,8 @@ source run records its input observation count, so this guard is independent of
 shorter operational-history retention. The threshold is adapter policy rather
 than a global rule: manual sources may intentionally publish a much smaller
 replacement and therefore have no implicit shrinkage floor. A first import or a
-pre-count source run establishes the baseline without comparison.
+pre-count source run establishes the baseline without comparison. Data-source
+status and operation pages expose the current baseline to administrators.
 
 Promoting any static source creates a catalog release whose membership records
 the active run of every static source at that instant. The data-source page

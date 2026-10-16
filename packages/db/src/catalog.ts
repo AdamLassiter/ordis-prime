@@ -125,6 +125,7 @@ export interface SourceStatus {
   version?: string;
   retrievedAt?: number;
   contentHash?: string;
+  observationCount?: number | null;
   conflictCount: number;
   latestRefreshStatus?: "running" | "succeeded" | "failed";
   latestRefreshStartedAt?: number;
@@ -681,6 +682,7 @@ export function listSourceStatuses(sqlite: Database.Database): SourceStatus[] {
       `
     select source.id, source.name, source.homepage, source.license,
            run.version, run.retrieved_at as retrievedAt, run.content_hash as contentHash,
+           run.observation_count as observationCount,
            count(conflict.id) as conflictCount, refresh.status as latestRefreshStatus,
            refresh.started_at as latestRefreshStartedAt, refresh.finished_at as latestRefreshFinishedAt
     from sources source
