@@ -87,6 +87,34 @@ test("source refresh pruning is bounded per source and preserves running attempt
   );
 });
 
+test("source refresh attempts serialize per source", async (context) => {
+  const root = await fs.mkdtemp(
+    path.join(os.tmpdir(), "ordis-source-refresh-serialization-"),
+  );
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const databasePath = path.join(root, "catalog.sqlite");
+  migrateDatabase(databasePath);
+  const sqlite = openSqliteDatabase(databasePath);
+  context.after(() => sqlite.close());
+  const source = {
+    id: "fixture",
+    name: "Fixture",
+    homepage: "https://example.test",
+    priority: 1,
+  };
+  const first = beginSourceRefresh(sqlite, source, 100);
+
+  assert.throws(
+    () => beginSourceRefresh(sqlite, source, 101),
+    new RegExp(`already has running refresh ${first}`),
+  );
+  assert.doesNotThrow(() =>
+    beginSourceRefresh(sqlite, { ...source, id: "other" }, 101),
+  );
+  failSourceRefresh(sqlite, first, new Error("finished"), { finishedAt: 102 });
+  assert.doesNotThrow(() => beginSourceRefresh(sqlite, source, 103));
+});
+
 test("abandoned source refresh recovery closes only expired attempts", async (context) => {
   const root = await fs.mkdtemp(
     path.join(os.tmpdir(), "ordis-source-refresh-recovery-"),
@@ -104,7 +132,11 @@ test("abandoned source refresh recovery closes only expired attempts", async (co
   };
   const expired = beginSourceRefresh(sqlite, source, 100);
   attachSourceRefreshSnapshot(sqlite, expired, "/snapshots/retained");
-  const current = beginSourceRefresh(sqlite, source, 101);
+  const current = beginSourceRefresh(
+    sqlite,
+    { ...source, id: "current-fixture", name: "Current fixture" },
+    101,
+  );
 
   assert.equal(
     recoverAbandonedSourceRefreshes(sqlite, {
@@ -125,13 +157,6 @@ test("abandoned source refresh recovery closes only expired attempts", async (co
     ),
     [
       {
-        id: current,
-        status: "running",
-        finishedAt: undefined,
-        snapshotPath: undefined,
-        error: undefined,
-      },
-      {
         id: expired,
         status: "failed",
         finishedAt: 200,
@@ -139,6 +164,12 @@ test("abandoned source refresh recovery closes only expired attempts", async (co
         error: "Refresh process ended before completion",
       },
     ],
+  );
+  assert.deepEqual(
+    listSourceRefreshes(sqlite, "current-fixture").map(
+      ({ id, status, startedAt }) => ({ id, status, startedAt }),
+    ),
+    [{ id: current, status: "running", startedAt: 101 }],
   );
   assert.equal(
     recoverAbandonedSourceRefreshes(sqlite, {

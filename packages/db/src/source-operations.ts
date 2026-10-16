@@ -104,29 +104,40 @@ export function beginSourceRefresh(
   now = Date.now(),
 ): string {
   const id = randomUUID();
-  sqlite.transaction(() => {
-    sqlite
-      .prepare(
-        `
+  sqlite
+    .transaction(() => {
+      sqlite
+        .prepare(
+          `
       insert into sources (id, name, homepage, license, priority, enabled)
       values (?, ?, ?, ?, ?, 1)
       on conflict(id) do update set name = excluded.name, homepage = excluded.homepage,
         license = excluded.license, priority = excluded.priority, enabled = 1
     `,
-      )
-      .run(
-        source.id,
-        source.name,
-        source.homepage,
-        source.license ?? null,
-        source.priority,
-      );
-    sqlite
-      .prepare(
-        "insert into source_refreshes (id, source_id, status, started_at) values (?, ?, 'running', ?)",
-      )
-      .run(id, source.id, now);
-  })();
+        )
+        .run(
+          source.id,
+          source.name,
+          source.homepage,
+          source.license ?? null,
+          source.priority,
+        );
+      const running = sqlite
+        .prepare(
+          "select id from source_refreshes where source_id = ? and status = 'running' limit 1",
+        )
+        .get(source.id) as { id: string } | undefined;
+      if (running)
+        throw new Error(
+          `Source ${source.id} already has running refresh ${running.id}`,
+        );
+      sqlite
+        .prepare(
+          "insert into source_refreshes (id, source_id, status, started_at) values (?, ?, 'running', ?)",
+        )
+        .run(id, source.id, now);
+    })
+    .immediate();
   return id;
 }
 

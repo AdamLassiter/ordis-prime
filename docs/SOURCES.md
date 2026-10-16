@@ -16,6 +16,10 @@ attempt records success or a bounded error message and links successful imports
 to their promoted source run or world-state snapshot. If a snapshot was retained
 before parsing or promotion failed, its path remains attached to the failed
 attempt. A failure never changes the previously active data.
+Attempt creation uses an immediate database transaction and refuses a second
+running attempt for the same source. Different sources remain independent, and
+the worker's abandoned-attempt recovery eventually releases a source after a
+terminated process.
 Successful attempts also persist the number of normalized observations or
 world-state windows processed. Source operation pages derive duration and
 throughput from those authoritative counts and timestamps. Worker history can
