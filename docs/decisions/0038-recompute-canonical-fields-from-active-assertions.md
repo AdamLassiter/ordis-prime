@@ -22,7 +22,7 @@ transaction, recompute each canonical field from active assertions ordered by:
 
 1. source priority, descending;
 2. source-run retrieval time, descending;
-3. source-run ID, descending as a deterministic tie-breaker.
+3. stable source ID, ascending as a deterministic tie-breaker.
 
 Clear optional description, arcane-class and weapon-class columns when they had
 a value-bearing assertion but no active assertion remains. Keep name and slug

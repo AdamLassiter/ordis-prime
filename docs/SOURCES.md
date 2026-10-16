@@ -28,7 +28,7 @@ offering only a provider-level attribution.
 
 Each entity-field provenance row also retains the source's asserted value.
 After an active source run changes, canonical fields are recomputed from all
-active assertions by source priority, then retrieval time and run ID. Removing
+active assertions by source priority, then retrieval time and stable source ID. Removing
 a higher-priority assertion therefore reveals the next active value instead of
 leaving stale canonical text behind. Optional fields clear when their final
 active assertion disappears; the identity-bearing name and slug remain when no

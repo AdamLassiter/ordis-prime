@@ -702,7 +702,7 @@ function recomputeActiveEntityFields(sqlite: Database.Database): void {
         select provenance.entity_id as entityId, provenance.field, provenance.value_json as valueJson,
           row_number() over (
             partition by provenance.entity_id, provenance.field
-            order by source.priority desc, run.retrieved_at desc, run.id desc
+            order by source.priority desc, run.retrieved_at desc, source.id
           ) as preference
         from fact_provenance provenance
         join source_runs run on run.id = provenance.source_run_id and run.status = 'active'

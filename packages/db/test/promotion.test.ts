@@ -966,6 +966,61 @@ test("higher-priority cited facts remain field winners across provider refreshes
   );
 });
 
+test("equal-priority field winners are stable across import order", async (context) => {
+  const descriptions: string[] = [];
+  for (const order of [
+    ["zulu", "alpha"],
+    ["alpha", "zulu"],
+  ] as const) {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-stable-tie-"));
+    context.after(() => fs.rm(root, { recursive: true, force: true }));
+    const databasePath = path.join(root, "catalog.sqlite");
+    migrateDatabase(databasePath);
+    const sqlite = new Database(databasePath);
+    sqlite.pragma("foreign_keys = ON");
+    context.after(() => sqlite.close());
+    promoteSource(
+      sqlite,
+      input("base-v1", [entity("braton", "Braton", "weapon", "base-v1")]),
+    );
+    for (const sourceId of order) {
+      const version = `${sourceId}-v1`;
+      const observation: Observation = {
+        type: "entity",
+        kind: "weapon",
+        externalIds: [
+          { sourceId: "fixture", namespace: "id", value: "braton" },
+        ],
+        fields: {
+          description:
+            sourceId === "alpha" ? "Alpha description" : "Zulu description",
+        },
+        evidence: evidence(version, sourceId),
+      };
+      promoteSource(sqlite, {
+        source: {
+          id: sourceId,
+          name: sourceId,
+          homepage: `https://example.test/${sourceId}`,
+          priority: 100,
+        },
+        version,
+        contentHash: `sha256:${sourceId.padEnd(64, "0")}`,
+        retrievedAt: observation.evidence.retrievedAt,
+        observations: [observation],
+      });
+    }
+    descriptions.push(
+      (
+        sqlite
+          .prepare("select description from entities where slug = 'braton'")
+          .get() as { description: string }
+      ).description,
+    );
+  }
+  assert.deepEqual(descriptions, ["Alpha description", "Alpha description"]);
+});
+
 test("equipment classes are promoted as cited canonical fields", async (context) => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-arcane-class-"));
   context.after(() => fs.rm(root, { recursive: true, force: true }));

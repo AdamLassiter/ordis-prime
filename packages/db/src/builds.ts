@@ -1022,7 +1022,10 @@ function listEnhancementOptions(
       `
     with ranked as (
       select option.key, option.label, source.name as sourceName, option.citation_url as citationUrl,
-        row_number() over (partition by option.key order by source.priority desc, run.retrieved_at desc, option.id) as preference
+        row_number() over (
+          partition by option.key
+          order by source.priority desc, run.retrieved_at desc, source.id, option.source_record_key, option.id
+        ) as preference
       from entity_enhancement_options option
       join source_runs run on run.id = option.source_run_id and run.status = 'active'
       join sources source on source.id = run.source_id

@@ -242,7 +242,8 @@ export function buildAcquisitionPlan(
     join source_runs run on run.id = recipe.source_run_id and run.status = 'active'
     join sources source on source.id = run.source_id
     join recipe_ingredients ingredient on ingredient.recipe_id = recipe.id
-    order by recipe.output_id, source.priority desc, run.retrieved_at desc, recipe.id, ingredient.entity_id
+    order by recipe.output_id, source.priority desc, run.retrieved_at desc,
+      source.id, recipe.source_record_key, recipe.id, ingredient.entity_id
   `,
     )
     .all() as Array<{
@@ -459,7 +460,10 @@ function loadNodeMasteryRequirements(
     with ranked as (
       select detail.entity_id as nodeId, detail.mastery_requirement as required,
         source.name as sourceName, detail.citation_url as citationUrl,
-        row_number() over (partition by detail.entity_id order by source.priority desc, run.retrieved_at desc, detail.id) as preference
+        row_number() over (
+          partition by detail.entity_id
+          order by source.priority desc, run.retrieved_at desc, source.id, detail.source_record_key, detail.id
+        ) as preference
       from node_details detail
       join source_runs run on run.id = detail.source_run_id and run.status = 'active'
       join sources source on source.id = run.source_id

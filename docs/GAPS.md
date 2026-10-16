@@ -28,7 +28,8 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   SQLite-leased job runner handles recurring work. Migrations run lazily when
   the web process first opens SQLite. Canonical entity fields are recomputed
   from value-bearing provenance whenever active source membership changes, so
-  priority fallback and withdrawal are deterministic. Name and slug are still
+  priority fallback, exact-tie selection and withdrawal are deterministic across
+  import order. Name and slug are still
   retained as identity labels when no active source asserts them; arbitrary
   typed field schemas and per-field merge policies are not yet modeled. Older
   provenance rows have no reconstructable asserted value and retain their
