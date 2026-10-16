@@ -117,8 +117,9 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   positioned mods, ranks, configuration labels, Forma counts, capacity-upgrade
   flags, notes and immutable unlisted share snapshots. Authenticated
   editor and public snapshot routes use canonical catalog links. Sourced mod
-  maximum-rank, base-drain and polarity facts are available, while equipment-slot
-  polarity and capacity calculation remain. Builds can assign ranked arcanes and
+  maximum-rank, base-drain and polarity facts validate selected ranks and expose
+  per-mod unpolarized drain. Equipment-slot polarity and whole-build capacity
+  calculation remain. Builds can assign ranked arcanes and
   positioned Archon Shards with sourced effect selections. Arcane candidates
   and assignments enforce sourced broad and specialized weapon classes against
   equipped items in either assignment order. Equipment slots also enforce

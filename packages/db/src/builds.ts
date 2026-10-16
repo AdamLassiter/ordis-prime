@@ -1,5 +1,9 @@
 import { randomBytes, randomUUID } from "node:crypto";
-import type { ArcaneClass, WeaponClass } from "@ordis-prime/domain";
+import type {
+  ArcaneClass,
+  ModPolarity,
+  WeaponClass,
+} from "@ordis-prime/domain";
 import type Database from "better-sqlite3";
 
 export const BUILD_SLOTS = [
@@ -42,6 +46,10 @@ export interface BuildMod {
   position: number;
   entity: BuildEntityReference;
   rank?: number;
+  maxRank?: number;
+  baseDrain?: number;
+  polarity?: ModPolarity;
+  drain?: number;
 }
 export interface BuildEquipmentEntry {
   id: string;
@@ -91,6 +99,9 @@ export interface BuildShareSummary {
 export type BuildCandidate = BuildEntityReference & {
   arcaneClass?: ArcaneClass;
   weaponClass?: WeaponClass;
+  modMaxRank?: number;
+  modBaseDrain?: number;
+  modPolarity?: ModPolarity;
   enhancementOptions?: BuildEnhancementOption[];
 };
 
@@ -279,7 +290,8 @@ export function searchBuildCandidates(
   const candidates = sqlite
     .prepare(
       `
-    select kind, slug, name, weapon_class as weaponClass from entities
+    select kind, slug, name, weapon_class as weaponClass, mod_max_rank as modMaxRank,
+      mod_base_drain as modBaseDrain, mod_polarity as modPolarity from entities
     where retired = 0 and kind = ? ${classFilter} and name like ? escape '\\'
     order by case when lower(name) = lower(?) then 0 else 1 end, name collate nocase
     limit ?
@@ -292,12 +304,25 @@ export function searchBuildCandidates(
       query.trim(),
       normalizedLimit,
     ) as Array<
-    Omit<BuildCandidate, "weaponClass"> & { weaponClass: WeaponClass | null }
+    Omit<
+      BuildCandidate,
+      "weaponClass" | "modMaxRank" | "modBaseDrain" | "modPolarity"
+    > & {
+      weaponClass: WeaponClass | null;
+      modMaxRank: number | null;
+      modBaseDrain: number | null;
+      modPolarity: ModPolarity | null;
+    }
   >;
-  return candidates.map(({ weaponClass, ...candidate }) => ({
-    ...candidate,
-    ...(weaponClass ? { weaponClass } : {}),
-  }));
+  return candidates.map(
+    ({ weaponClass, modMaxRank, modBaseDrain, modPolarity, ...candidate }) => ({
+      ...candidate,
+      ...(weaponClass ? { weaponClass } : {}),
+      ...(modMaxRank !== null ? { modMaxRank } : {}),
+      ...(modBaseDrain !== null ? { modBaseDrain } : {}),
+      ...(modPolarity ? { modPolarity } : {}),
+    }),
+  );
 }
 
 export function searchBuildEnhancementCandidates(
@@ -588,6 +613,8 @@ export function setBuildMod(
     const mod = findEntity(sqlite, reference);
     if (mod.kind !== "mod")
       throw new Error(`Mod slot requires a mod, not ${mod.kind}`);
+    if (rank !== undefined && mod.modMaxRank !== null && rank > mod.modMaxRank)
+      throw new Error(`${mod.name} rank must not exceed ${mod.modMaxRank}`);
     sqlite
       .prepare(
         `
@@ -782,7 +809,9 @@ function hydrateBuild(
     name: string;
   }>;
   const modsQuery = sqlite.prepare(`
-    select mod.position, mod.rank, entity.kind, entity.slug, entity.name
+    select mod.position, mod.rank, entity.kind, entity.slug, entity.name,
+      entity.mod_max_rank as modMaxRank, entity.mod_base_drain as modBaseDrain,
+      entity.mod_polarity as modPolarity
     from build_mods mod join entities entity on entity.id = mod.entity_id
     where mod.equipment_id = ? order by mod.position
   `);
@@ -828,12 +857,40 @@ function hydrateBuild(
           kind: string;
           slug: string;
           name: string;
+          modMaxRank: number | null;
+          modBaseDrain: number | null;
+          modPolarity: ModPolarity | null;
         }>
-      ).map(({ position, rank, kind, slug, name }) => ({
-        position,
-        rank: rank ?? undefined,
-        entity: { kind, slug, name },
-      })),
+      ).map(
+        ({
+          position,
+          rank,
+          kind,
+          slug,
+          name,
+          modMaxRank,
+          modBaseDrain,
+          modPolarity,
+        }) => ({
+          position,
+          rank: rank ?? undefined,
+          ...(modMaxRank !== null ? { maxRank: modMaxRank } : {}),
+          ...(modBaseDrain !== null ? { baseDrain: modBaseDrain } : {}),
+          ...(modPolarity !== null ? { polarity: modPolarity } : {}),
+          ...(calculateRankedModDrain(
+            modBaseDrain ?? undefined,
+            rank ?? undefined,
+          ) === undefined
+            ? {}
+            : {
+                drain: calculateRankedModDrain(
+                  modBaseDrain ?? undefined,
+                  rank ?? undefined,
+                ),
+              }),
+          entity: { kind, slug, name },
+        }),
+      ),
     })),
     enhancements: enhancements.map(
       ({ slot, rank, optionKey, optionLabel, entityId, kind, slug, name }) => ({
@@ -909,10 +966,11 @@ function findEntity(
   name: string;
   arcaneClass?: ArcaneClass;
   weaponClass?: WeaponClass;
+  modMaxRank: number | null;
 } {
   const entity = sqlite
     .prepare(
-      "select id, kind, name, arcane_class as arcaneClass, weapon_class as weaponClass from entities where kind = ? and slug = ? and retired = 0",
+      "select id, kind, name, arcane_class as arcaneClass, weapon_class as weaponClass, mod_max_rank as modMaxRank from entities where kind = ? and slug = ? and retired = 0",
     )
     .get(reference.kind, reference.slug) as
     | {
@@ -921,6 +979,7 @@ function findEntity(
         name: string;
         arcaneClass?: ArcaneClass;
         weaponClass?: WeaponClass;
+        modMaxRank: number | null;
       }
     | undefined;
   if (!entity)
@@ -928,6 +987,13 @@ function findEntity(
       `Unknown active entity ${reference.kind}:${reference.slug}`,
     );
   return entity;
+}
+export function calculateRankedModDrain(
+  baseDrain: number | undefined,
+  rank: number | undefined,
+): number | undefined {
+  if (baseDrain === undefined || rank === undefined) return undefined;
+  return baseDrain < 0 ? baseDrain - rank : baseDrain + rank;
 }
 function enhancementKind(slot: BuildEnhancementSlot): "arcane" | "shard" {
   if (!(BUILD_ENHANCEMENT_SLOTS as readonly string[]).includes(slot))

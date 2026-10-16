@@ -205,7 +205,11 @@ export default async function BuildEditor({
                             </Link>
                             {mod.rank === undefined
                               ? ""
-                              : ` · rank ${mod.rank}`}
+                              : ` · rank ${mod.rank}${mod.maxRank === undefined ? "" : `/${mod.maxRank}`}`}
+                            {mod.drain === undefined
+                              ? ""
+                              : ` · ${mod.drain} drain`}
+                            {mod.polarity ? ` · ${mod.polarity}` : ""}
                             <form
                               action={clearMod.bind(
                                 null,
@@ -322,7 +326,12 @@ export default async function BuildEditor({
                     <span>{item.name}</span>
                     <label>
                       Rank
-                      <input name="rank" type="number" min="0" max="100" />
+                      <input
+                        name="rank"
+                        type="number"
+                        min="0"
+                        max={item.modMaxRank ?? 100}
+                      />
                     </label>
                     <button className="button">Assign</button>
                   </form>

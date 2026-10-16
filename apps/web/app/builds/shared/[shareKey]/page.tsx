@@ -65,7 +65,11 @@ export default async function SharedBuildPage({
                       >
                         {mod.entity.name}
                       </Link>
-                      {mod.rank === undefined ? "" : ` · rank ${mod.rank}`}
+                      {mod.rank === undefined
+                        ? ""
+                        : ` · rank ${mod.rank}${mod.maxRank === undefined ? "" : `/${mod.maxRank}`}`}
+                      {mod.drain === undefined ? "" : ` · ${mod.drain} drain`}
+                      {mod.polarity ? ` · ${mod.polarity}` : ""}
                     </li>
                   ))}
                 </ol>

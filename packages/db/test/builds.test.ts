@@ -5,6 +5,7 @@ import path from "node:path";
 import test from "node:test";
 import {
   addBuildAcquisitionGoals,
+  calculateRankedModDrain,
   clonePlayerBuild,
   cloneSharedBuild,
   configureBuildEquipment,
@@ -27,6 +28,13 @@ import {
   setPlayerGoal,
   updatePlayerBuild,
 } from "../src/index.ts";
+
+test("ranked mod drain preserves aura and stance capacity bonuses", () => {
+  assert.equal(calculateRankedModDrain(4, 5), 9);
+  assert.equal(calculateRankedModDrain(-2, 5), -7);
+  assert.equal(calculateRankedModDrain(undefined, 5), undefined);
+  assert.equal(calculateRankedModDrain(4, undefined), undefined);
+});
 
 test("build drafts are private and share snapshots remain immutable", async (context) => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-builds-"));
@@ -58,6 +66,11 @@ test("build drafts are private and share snapshots remain immutable", async (con
     "secondary",
   );
   seedEntity(database, "mod", "mod", "Serration", "serration");
+  database
+    .prepare(
+      "update entities set mod_max_rank = 10, mod_base_drain = 4, mod_polarity = 'madurai' where id = 'mod'",
+    )
+    .run();
   seedEntity(
     database,
     "arcane",
@@ -100,7 +113,14 @@ test("build drafts are private and share snapshots remain immutable", async (con
   ]);
   assert.deepEqual(searchBuildCandidates(database, "secondary", "Par"), []);
   assert.deepEqual(searchBuildCandidates(database, "mod", "Serr"), [
-    { kind: "mod", slug: "serration", name: "Serration" },
+    {
+      kind: "mod",
+      slug: "serration",
+      name: "Serration",
+      modMaxRank: 10,
+      modBaseDrain: 4,
+      modPolarity: "madurai",
+    },
   ]);
   assert.deepEqual(
     searchBuildEnhancementCandidates(database, "warframe-arcane-1", "Barrier"),
@@ -172,6 +192,19 @@ test("build drafts are private and share snapshots remain immutable", async (con
     { kind: "mod", slug: "serration" },
     5,
   );
+  assert.throws(
+    () =>
+      setBuildMod(
+        database,
+        owner,
+        buildId,
+        "primary",
+        1,
+        { kind: "mod", slug: "serration" },
+        11,
+      ),
+    /rank must not exceed 10/,
+  );
   setBuildEnhancement(
     database,
     owner,
@@ -232,6 +265,10 @@ test("build drafts are private and share snapshots remain immutable", async (con
         {
           position: 0,
           rank: 5,
+          maxRank: 10,
+          baseDrain: 4,
+          polarity: "madurai",
+          drain: 9,
           entity: { kind: "mod", slug: "serration", name: "Serration" },
         },
       ],
