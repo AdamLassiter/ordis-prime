@@ -14,7 +14,8 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   composition. Snapshot-evidence coherence, whole-candidate identity,
   singleton-fact and ranking invariants run before a source is staged. The
   composed candidate also rejects active
-  facts that would reference a retired entity. Broader cross-source semantic
+  facts that would reference a retired entity, use non-node entities in
+  node-only positions, or attach enhancement options to non-shards. Broader cross-source semantic
   completeness checks remain unimplemented. The worker retains a configurable number of inactive
   catalog releases and removes unreferenced clean source runs and their facts;
   runs containing resolver conflicts remain protected for review. Refresh-operation

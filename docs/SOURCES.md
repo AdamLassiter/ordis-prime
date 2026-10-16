@@ -83,6 +83,7 @@ refer to a non-retired canonical entity. A source therefore cannot tombstone an
 identity still used by another active source; the entire promotion rolls back.
 Drop locations, node-detail subjects and both endpoints of `connects-to` edges
 must additionally resolve to canonical node entities.
+Enhancement-option subjects must resolve to canonical Archon Shard entities.
 This is referential liveness validation, not a claim that every expected game
 record is present.
 

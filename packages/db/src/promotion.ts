@@ -594,6 +594,20 @@ function validateComposedCatalog(sqlite: Database.Database): void {
     throw new Error(
       `Composed catalog ${invalidNodeReference.factType} ${invalidNodeReference.recordKey ?? "without record key"} requires a node but resolved ${invalidNodeReference.kind}:${invalidNodeReference.slug}`,
     );
+
+  const invalidEnhancementSubject = sqlite
+    .prepare(
+      `select option.source_record_key as recordKey, entity.kind, entity.slug
+       from entity_enhancement_options option
+       join source_runs run on run.id = option.source_run_id and run.status = 'active'
+       join entities entity on entity.id = option.entity_id
+       where entity.kind != 'shard' limit 1`,
+    )
+    .get() as { recordKey: string; kind: string; slug: string } | undefined;
+  if (invalidEnhancementSubject)
+    throw new Error(
+      `Composed catalog enhancement option ${invalidEnhancementSubject.recordKey} requires a shard but resolved ${invalidEnhancementSubject.kind}:${invalidEnhancementSubject.slug}`,
+    );
 }
 
 function recomputeActiveEntityFields(sqlite: Database.Database): void {

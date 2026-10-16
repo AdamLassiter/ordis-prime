@@ -482,6 +482,61 @@ test("composed validation enforces node-typed fact endpoints across sources", as
   );
 });
 
+test("composed validation requires shard enhancement subjects across sources", async (context) => {
+  const root = await fs.mkdtemp(
+    path.join(os.tmpdir(), "ordis-composed-enhancement-types-"),
+  );
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const databasePath = path.join(root, "catalog.sqlite");
+  migrateDatabase(databasePath);
+  const sqlite = new Database(databasePath);
+  sqlite.pragma("foreign_keys = ON");
+  context.after(() => sqlite.close());
+
+  promoteSource(
+    sqlite,
+    input("a-v1", [entity("weapon", "Definitely A Weapon", "weapon", "a-v1")]),
+  );
+  const sourceB = { ...source, id: "fixture-b", name: "Fixture B" };
+  const invalidOption: Observation = {
+    type: "enhancement-option",
+    subjectExternalId: {
+      sourceId: "fixture",
+      namespace: "id",
+      value: "weapon",
+    },
+    key: "ability-strength",
+    label: "Ability Strength",
+    evidence: {
+      ...evidence("b-v1", "fixture-b"),
+      sourceRecordKey: "weapon:ability-strength",
+    },
+  };
+
+  assert.throws(
+    () =>
+      promoteSource(sqlite, {
+        ...input("b-v1", [invalidOption]),
+        source: sourceB,
+      }),
+    /Composed catalog enhancement option weapon:ability-strength requires a shard but resolved weapon:definitely-a-weapon/,
+  );
+  assert.deepEqual(
+    sqlite
+      .prepare("select source_id as sourceId, version, status from source_runs")
+      .all(),
+    [{ sourceId: "fixture", version: "a-v1", status: "active" }],
+  );
+  assert.equal(
+    (
+      sqlite
+        .prepare("select count(*) as count from entity_enhancement_options")
+        .get() as { count: number }
+    ).count,
+    0,
+  );
+});
+
 test("catalog pruning retains active and recent releases while protecting conflict runs", async (context) => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-release-prune-"));
   context.after(() => fs.rm(root, { recursive: true, force: true }));
