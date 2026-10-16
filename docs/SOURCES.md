@@ -47,6 +47,14 @@ their stable `/Lotus/Types/Gameplay/NarmerSorties/ArchonCrystal` internal-name
 prefix because the aggregate currently labels both their category and type as
 `Misc`; this provider-specific rule is isolated in the adapter.
 
+The two automatic WFCD catalog adapters reject a candidate that emits fewer
+than half as many normalized observations as their previous active run. Each
+source run records its input observation count, so this guard is independent of
+shorter operational-history retention. The threshold is adapter policy rather
+than a global rule: manual sources may intentionally publish a much smaller
+replacement and therefore have no implicit shrinkage floor. A first import or a
+pre-count source run establishes the baseline without comparison.
+
 Promoting any static source creates a catalog release whose membership records
 the active run of every static source at that instant. The data-source page
 shows the current release ID and versions, so a composed catalog can be audited

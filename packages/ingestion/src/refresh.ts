@@ -53,6 +53,8 @@ export async function refreshSource(
       contentHash: snapshot.contentHash,
       retrievedAt: snapshot.retrievedAt,
       snapshotPath,
+      minimumRetainedObservationRatio:
+        options.adapter.minimumRetainedObservationRatio,
       observations,
     });
     completeSourceRefresh(options.database, refreshId, {

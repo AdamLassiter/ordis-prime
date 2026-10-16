@@ -21,6 +21,7 @@ interface DropsPayload {
 const PARSER_VERSION = "wfcd-drops-v2";
 
 export class WfcdDropsAdapter implements SourceAdapter {
+  readonly minimumRetainedObservationRatio = 0.5;
   readonly source = {
     id: "wfcd-drops",
     name: "WFCD warframe-drop-data",

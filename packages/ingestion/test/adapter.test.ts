@@ -442,9 +442,11 @@ test("WFCD adapter defaults to the maintained aggregate endpoint", async () => {
     });
   };
   try {
-    const fetched = await new WfcdItemsAdapter().fetch({});
+    const adapter = new WfcdItemsAdapter();
+    const fetched = await adapter.fetch({});
     assert.equal(requestedUrl, DEFAULT_WFCD_ITEMS_URL);
     assert.equal(fetched.version, "fixture-etag|wfcd-items-v6");
+    assert.equal(adapter.minimumRetainedObservationRatio, 0.5);
   } finally {
     globalThis.fetch = originalFetch;
   }
@@ -452,6 +454,7 @@ test("WFCD adapter defaults to the maintained aggregate endpoint", async () => {
 
 test("drop adapter joins node and reward through stable provider IDs", async () => {
   const drops = new WfcdDropsAdapter();
+  assert.equal(drops.minimumRetainedObservationRatio, 0.5);
   const observations = await collect(drops, {
     ...snapshot,
     sourceId: "wfcd-drops",

@@ -38,7 +38,7 @@ with the same display name and type still converge intentionally.
 - Dry runs, manual imports, CLI refreshes and worker refreshes share the same
   pre-staging gate.
 - Malformed snapshots leave no staged run and cannot replace active data.
-- Candidate validation does not yet assert cross-source completeness or detect
-  suspicious count shrinkage; those require explicit per-source policy.
+- Candidate validation does not assert cross-source completeness. Suspicious
+  count shrinkage is handled separately by the per-source policy in ADR 0042.
 - Parser version `wfcd-items-v6` ensures unchanged upstream bytes replay under
   the corrected shared-material semantics.

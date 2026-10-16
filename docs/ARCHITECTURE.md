@@ -11,10 +11,11 @@ in `GAPS.md`; decisions and their reasoning live in `decisions/`.
 
 1. A `SourceAdapter` fetches or reads an immutable snapshot.
 2. The adapter parses the snapshot into source-neutral observations.
-3. The resolver matches external IDs and curated aliases, selects values using
+3. Source-specific safety policy rejects suspicious candidate shrinkage.
+4. The resolver matches external IDs and curated aliases, selects values using
    explicit source priority, and records unresolved conflicts.
-4. A complete candidate release is validated and promoted transactionally.
-5. Read models answer catalog and acquisition questions. Player state overlays
+5. A complete candidate release is validated and promoted transactionally.
+6. Read models answer catalog and acquisition questions. Player state overlays
    those models without modifying catalog facts.
 
 Names and URL slugs are never persistence keys. Query-critical relationships

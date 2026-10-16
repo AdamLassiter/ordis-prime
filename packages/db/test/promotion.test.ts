@@ -258,6 +258,66 @@ test("promotion atomically replaces the active source run while preserving entit
   );
 });
 
+test("source-specific shrinkage policy preserves the last healthy run", async (context) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-shrinkage-"));
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const databasePath = path.join(root, "catalog.sqlite");
+  migrateDatabase(databasePath);
+  const sqlite = new Database(databasePath);
+  sqlite.pragma("foreign_keys = ON");
+  context.after(() => sqlite.close());
+
+  const first = input("v1", [
+    entity("one", "One", "component"),
+    entity("two", "Two", "component"),
+    entity("three", "Three", "component"),
+    entity("four", "Four", "component"),
+  ]);
+  assert.throws(
+    () =>
+      promoteSource(sqlite, {
+        ...first,
+        minimumRetainedObservationRatio: 1.01,
+      }),
+    /must be between 0 and 1/,
+  );
+  promoteSource(sqlite, {
+    ...first,
+    minimumRetainedObservationRatio: 0.5,
+  });
+  const truncated = input("v2", [entity("one", "One", "component", "v2")]);
+
+  assert.throws(
+    () =>
+      promoteSource(sqlite, {
+        ...truncated,
+        minimumRetainedObservationRatio: 0.5,
+      }),
+    /produced 1 observations; minimum is 2 from previous 4/,
+  );
+  assert.deepEqual(
+    sqlite
+      .prepare(
+        "select version, observation_count as observationCount, status from source_runs",
+      )
+      .all(),
+    [{ version: "v1", observationCount: 4, status: "active" }],
+  );
+
+  promoteSource(sqlite, truncated);
+  assert.deepEqual(
+    sqlite
+      .prepare(
+        "select version, observation_count as observationCount, status from source_runs order by version",
+      )
+      .all(),
+    [
+      { version: "v1", observationCount: 4, status: "staged" },
+      { version: "v2", observationCount: 1, status: "active" },
+    ],
+  );
+});
+
 test("candidate-wide validation rejects contradictory and duplicate source facts before staging", async (context) => {
   const root = await fs.mkdtemp(
     path.join(os.tmpdir(), "ordis-candidate-validation-"),

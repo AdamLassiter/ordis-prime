@@ -22,6 +22,7 @@ export interface FetchContext {
 }
 export interface SourceAdapter {
   readonly source: SourceDescriptor;
+  readonly minimumRetainedObservationRatio?: number;
   fetch(context: FetchContext): Promise<Snapshot>;
   parse(snapshot: Snapshot): AsyncIterable<Observation>;
 }

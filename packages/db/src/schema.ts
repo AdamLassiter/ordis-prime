@@ -27,6 +27,7 @@ export const sourceRuns = sqliteTable(
     contentHash: text("content_hash").notNull(),
     retrievedAt: integer("retrieved_at", { mode: "timestamp_ms" }).notNull(),
     snapshotPath: text("snapshot_path"),
+    observationCount: integer("observation_count"),
     status: text({ enum: ["running", "failed", "staged", "active"] }).notNull(),
     error: text(),
   },

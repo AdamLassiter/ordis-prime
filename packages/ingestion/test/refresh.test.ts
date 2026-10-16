@@ -112,6 +112,47 @@ test("refresh failures are persisted without replacing active data", async (cont
   );
 });
 
+test("adapter shrinkage policy rejects a truncated retained snapshot", async (context) => {
+  const root = await fs.mkdtemp(
+    path.join(os.tmpdir(), "ordis-refresh-shrink-"),
+  );
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const databasePath = path.join(root, "catalog.sqlite");
+  migrateDatabase(databasePath);
+  const database = openSqliteDatabase(databasePath);
+  context.after(() => database.close());
+  const snapshotStore = new SnapshotStore(path.join(root, "sources"));
+  const adapter = new ShrinkageFixtureAdapter();
+
+  await refreshSource({ adapter, database, snapshotStore });
+  adapter.version = "v2";
+  adapter.count = 1;
+  await assert.rejects(
+    refreshSource({ adapter, database, snapshotStore }),
+    /produced 1 observations; minimum is 2 from previous 4/,
+  );
+
+  assert.deepEqual(
+    database
+      .prepare(
+        "select version, observation_count as observationCount, status from source_runs",
+      )
+      .all(),
+    [{ version: "v1", observationCount: 4, status: "active" }],
+  );
+  assert.deepEqual(
+    database
+      .prepare(
+        "select status, snapshot_path is not null as retained from source_refreshes order by rowid",
+      )
+      .all(),
+    [
+      { status: "succeeded", retained: 1 },
+      { status: "failed", retained: 1 },
+    ],
+  );
+});
+
 test("identity override revisions replay unchanged source snapshots", async (context) => {
   const root = await fs.mkdtemp(
     path.join(os.tmpdir(), "ordis-refresh-override-"),
@@ -217,6 +258,53 @@ class FixtureAdapter implements SourceAdapter {
         retrievedAt: snapshot.retrievedAt,
       },
     };
+  }
+}
+
+class ShrinkageFixtureAdapter implements SourceAdapter {
+  readonly minimumRetainedObservationRatio = 0.5;
+  readonly source = {
+    id: "fixture-shrinkage",
+    name: "Fixture shrinkage",
+    homepage: "https://example.test",
+    license: "CC0",
+    priority: 1,
+  };
+  version = "v1";
+  count = 4;
+
+  async fetch(): Promise<Snapshot> {
+    return createSnapshot({
+      sourceId: this.source.id,
+      version: this.version,
+      retrievedAt: "2026-10-13T12:00:00.000Z",
+      mediaType: "application/json",
+      bytes: new TextEncoder().encode(
+        JSON.stringify({ version: this.version, count: this.count }),
+      ),
+    });
+  }
+
+  async *parse(snapshot: Snapshot): AsyncIterable<Observation> {
+    for (let index = 0; index < this.count; index += 1)
+      yield {
+        type: "entity",
+        kind: "resource",
+        externalIds: [
+          {
+            sourceId: this.source.id,
+            namespace: "fixture",
+            value: `resource-${index}`,
+          },
+        ],
+        fields: { name: `Resource ${index}`, slug: `resource-${index}` },
+        evidence: {
+          sourceId: this.source.id,
+          sourceRecordKey: `resource-${index}`,
+          snapshotVersion: snapshot.version,
+          retrievedAt: snapshot.retrievedAt,
+        },
+      };
   }
 }
 

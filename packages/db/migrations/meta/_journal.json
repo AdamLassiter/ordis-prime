@@ -225,6 +225,13 @@
       "when": 1792109081716,
       "tag": "0031_secret_toad_men",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "6",
+      "when": 1792109655872,
+      "tag": "0032_unusual_mikhail_rasputin",
+      "breakpoints": true
     }
   ]
 }

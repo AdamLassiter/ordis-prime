@@ -16,7 +16,10 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   composed candidate also rejects active
   facts that would reference a retired entity, use non-node entities in
   node-only positions, or attach enhancement options to non-shards. Broader cross-source semantic
-  completeness checks remain unimplemented. The worker retains a configurable number of inactive
+  completeness checks remain unimplemented. Automatic WFCD catalog adapters reject
+  candidates below half their preceding observation count, but this coarse guard
+  does not detect selective omissions or semantically implausible changes above
+  that floor. The worker retains a configurable number of inactive
   catalog releases and removes unreferenced clean source runs and their facts;
   runs containing resolver conflicts remain protected for review. Refresh-operation
   rows are bounded per source. Raw content-addressed payloads without any retained

@@ -89,6 +89,7 @@ const arcaneClasses: Record<string, ArcaneClass> = {
 };
 
 export class WfcdItemsAdapter implements SourceAdapter {
+  readonly minimumRetainedObservationRatio = 0.5;
   readonly source = {
     id: "wfcd-items",
     name: "WFCD warframe-items",

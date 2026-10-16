@@ -28,6 +28,7 @@ export interface PromoteSourceInput {
   contentHash: string;
   retrievedAt: string;
   snapshotPath?: string;
+  minimumRetainedObservationRatio?: number;
   observations: Observation[];
 }
 
@@ -119,6 +120,25 @@ function promoteInTransaction(
     );
   }
 
+  const activeRun = sqlite
+    .prepare(
+      "select observation_count as observationCount from source_runs where source_id = ? and status = 'active'",
+    )
+    .get(input.source.id) as { observationCount: number | null } | undefined;
+  if (
+    input.minimumRetainedObservationRatio !== undefined &&
+    activeRun?.observationCount !== null &&
+    activeRun?.observationCount !== undefined
+  ) {
+    const minimum = Math.ceil(
+      activeRun.observationCount * input.minimumRetainedObservationRatio,
+    );
+    if (input.observations.length < minimum)
+      throw new Error(
+        `Source ${input.source.id} produced ${input.observations.length} observations; minimum is ${minimum} from previous ${activeRun.observationCount}`,
+      );
+  }
+
   sqlite
     .prepare(
       `
@@ -146,8 +166,8 @@ function promoteInTransaction(
   sqlite
     .prepare(
       `
-    insert into source_runs (id, source_id, version, content_hash, retrieved_at, snapshot_path, status)
-    values (?, ?, ?, ?, ?, ?, 'staged')
+    insert into source_runs (id, source_id, version, content_hash, retrieved_at, snapshot_path, observation_count, status)
+    values (?, ?, ?, ?, ?, ?, ?, 'staged')
   `,
     )
     .run(
@@ -157,6 +177,7 @@ function promoteInTransaction(
       input.contentHash,
       retrievedAt.getTime(),
       input.snapshotPath ?? null,
+      input.observations.length,
     );
 
   const state = loadResolutionState(sqlite);
@@ -1010,6 +1031,15 @@ function validateInput(input: PromoteSourceInput): void {
   const retrievedAt = new Date(input.retrievedAt);
   if (Number.isNaN(retrievedAt.getTime()))
     throw new Error("Promotion retrievedAt is invalid");
+  if (
+    input.minimumRetainedObservationRatio !== undefined &&
+    (!Number.isFinite(input.minimumRetainedObservationRatio) ||
+      input.minimumRetainedObservationRatio < 0 ||
+      input.minimumRetainedObservationRatio > 1)
+  )
+    throw new Error(
+      "Minimum retained observation ratio must be between 0 and 1",
+    );
   for (const observation of input.observations) {
     const evidenceRetrievedAt = new Date(observation.evidence.retrievedAt);
     if (
