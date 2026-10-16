@@ -52,7 +52,8 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   The leased worker schedules WFCD item and drop refreshes daily, and an
   administrator can bring supported source jobs forward from the source UI. A provider-neutral world-state
   pipeline snapshots and transactionally promotes WFCD cycles, events, alerts,
-  fissures and traders.
+  fissures and traders. A provider response older than the active observation
+  time is rejected rather than rewinding live state.
   A public timer view exposes active and upcoming windows with client-updating
   countdowns and visible snapshot freshness. A database-leased production worker
   polls it every five minutes and retries failures without replacing active data.

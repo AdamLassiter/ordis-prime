@@ -97,6 +97,7 @@ export function promoteWorldState(
 ): { snapshotId: string; windowCount: number } {
   validateWorldState(input);
   return sqlite.transaction(() => {
+    const observedAt = Date.parse(input.observedAt);
     sqlite
       .prepare(
         `
@@ -113,16 +114,32 @@ export function promoteWorldState(
         input.source.license ?? null,
         input.source.priority,
       );
+    const active = sqlite
+      .prepare(
+        "select id, version, observed_at as observedAt from world_state_snapshots where source_id = ? and active = 1",
+      )
+      .get(input.source.id) as
+      { id: string; version: string; observedAt: number } | undefined;
+    if (active && observedAt < active.observedAt)
+      throw new Error(
+        `World state ${input.source.id}@${input.version} was observed before active snapshot ${active.version}`,
+      );
     const existing = sqlite
       .prepare(
-        "select id, content_hash as contentHash from world_state_snapshots where source_id = ? and version = ?",
+        "select id, content_hash as contentHash, active from world_state_snapshots where source_id = ? and version = ?",
       )
       .get(input.source.id, input.version) as
-      { id: string; contentHash: string } | undefined;
+      { id: string; contentHash: string; active: number } | undefined;
     if (existing) {
       if (existing.contentHash !== input.contentHash)
         throw new Error(
           `World state ${input.source.id} reused version ${input.version} with different content`,
+        );
+      if (existing.active)
+        return { snapshotId: existing.id, windowCount: input.windows.length };
+      if (active)
+        throw new Error(
+          `World state ${input.source.id}@${input.version} has already been imported and is not active`,
         );
       sqlite
         .prepare(
@@ -144,7 +161,7 @@ export function promoteWorldState(
         input.source.id,
         input.version,
         input.contentHash,
-        Date.parse(input.observedAt),
+        observedAt,
         input.snapshotPath,
       );
     const insert = sqlite.prepare(`

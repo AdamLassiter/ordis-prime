@@ -34,6 +34,11 @@ path as audit metadata. A refresh validates and inserts the complete new snapsho
 in one transaction before making it active. Fetch, parse or promotion failure
 leaves the previous snapshot active and is recorded in the shared source
 operations log.
+Promotion also requires a candidate's provider observation time to be at least
+as recent as the active snapshot. An older or previously inactive snapshot
+cannot rewind the timer view; it becomes a failed refresh while the last known
+good snapshot remains active. Repeating the already-active version and hash is
+an idempotent success.
 
 The stored `observed_at` value is the timestamp declared by the provider payload;
 snapshot storage separately records when Ordis Prime retrieved the bytes. The

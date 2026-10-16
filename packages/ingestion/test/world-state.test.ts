@@ -75,6 +75,29 @@ test("WFCD world state normalizes availability windows and promotes one active s
   assert.equal(current.find(({ kind }) => kind === "fissure")?.node, undefined);
   const second = await refreshWorldState({ adapter, database, snapshotStore });
   assert.notEqual(second.snapshotId, first.snapshotId);
+  version = 0;
+  await assert.rejects(
+    refreshWorldState({ adapter, database, snapshotStore }),
+    /was observed before active snapshot/,
+  );
+  assert.deepEqual(
+    database
+      .prepare(
+        "select status, records_processed as recordsProcessed from source_refreshes order by rowid desc limit 1",
+      )
+      .get(),
+    { status: "failed", recordsProcessed: 5 },
+  );
+  assert.equal(
+    (
+      database
+        .prepare(
+          "select id from world_state_snapshots where active = 1 limit 1",
+        )
+        .get() as { id: string }
+    ).id,
+    second.snapshotId,
+  );
   assert.equal(
     (
       database
