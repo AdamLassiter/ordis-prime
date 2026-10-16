@@ -11,6 +11,7 @@ entries:
       namespace: uniqueName
       value: /Lotus/Weapons/Tenno/Rifle/Rifle
     kind: weapon
+    equipmentMaxRank: 30
     description: A balanced automatic rifle available early in a Tenno's progression.
     aliases:
       - Braton rifle

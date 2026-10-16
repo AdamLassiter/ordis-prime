@@ -21,6 +21,13 @@ export type EntityKind =
   | "secret"
   | "archwing";
 
+export const EQUIPMENT_KINDS = [
+  "warframe",
+  "weapon",
+  "companion",
+  "archwing",
+] as const satisfies readonly EntityKind[];
+
 export const ARCANE_CLASSES = [
   "warframe",
   "operator",
@@ -71,6 +78,7 @@ export interface CanonicalEntity {
   description?: string;
   arcaneClass?: ArcaneClass;
   weaponClass?: WeaponClass;
+  equipmentMaxRank?: number;
   modMaxRank?: number;
   modBaseDrain?: number;
   modPolarity?: ModPolarity;
@@ -105,6 +113,7 @@ export interface EntityObservation {
       | "description"
       | "arcaneClass"
       | "weaponClass"
+      | "equipmentMaxRank"
       | "modMaxRank"
       | "modBaseDrain"
       | "modPolarity"

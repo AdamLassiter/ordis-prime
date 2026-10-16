@@ -12,6 +12,7 @@ export interface CatalogSummary {
   description?: string;
   arcaneClass?: ArcaneClass;
   weaponClass?: WeaponClass;
+  equipmentMaxRank?: number;
   modMaxRank?: number;
   modBaseDrain?: number;
   modPolarity?: ModPolarity;
@@ -291,13 +292,14 @@ export function findCatalogItem(
 ): CatalogItem | undefined {
   const item = sqlite
     .prepare(
-      "select id, kind, slug, name, description, arcane_class as arcaneClass, weapon_class as weaponClass, mod_max_rank as modMaxRank, mod_base_drain as modBaseDrain, mod_polarity as modPolarity from entities where kind = ? and slug = ? and retired = 0",
+      "select id, kind, slug, name, description, arcane_class as arcaneClass, weapon_class as weaponClass, equipment_max_rank as equipmentMaxRank, mod_max_rank as modMaxRank, mod_base_drain as modBaseDrain, mod_polarity as modPolarity from entities where kind = ? and slug = ? and retired = 0",
     )
     .get(kind, slug) as
     | (CatalogSummary & {
         id: string;
         arcaneClass: ArcaneClass | null;
         weaponClass: WeaponClass | null;
+        equipmentMaxRank: number | null;
         modMaxRank: number | null;
         modBaseDrain: number | null;
         modPolarity: ModPolarity | null;
@@ -486,6 +488,7 @@ export function findCatalogItem(
     id: _id,
     arcaneClass,
     weaponClass,
+    equipmentMaxRank,
     modMaxRank,
     modBaseDrain,
     modPolarity,
@@ -495,6 +498,7 @@ export function findCatalogItem(
     ...summary,
     ...(arcaneClass ? { arcaneClass } : {}),
     ...(weaponClass ? { weaponClass } : {}),
+    ...(equipmentMaxRank !== null ? { equipmentMaxRank } : {}),
     ...(modMaxRank !== null ? { modMaxRank } : {}),
     ...(modBaseDrain !== null ? { modBaseDrain } : {}),
     ...(modPolarity ? { modPolarity } : {}),

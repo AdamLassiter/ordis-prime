@@ -159,11 +159,14 @@ export default async function BuildEditor({
                             name="rank"
                             type="number"
                             min="0"
-                            max="40"
+                            max={equipment.maxRank ?? 40}
                             step="1"
                             defaultValue={equipment.rank}
                             placeholder="Unknown"
                           />
+                          {equipment.maxRank === undefined
+                            ? ""
+                            : ` (maximum ${equipment.maxRank})`}
                         </label>
                         <label>
                           Forma

@@ -45,6 +45,7 @@ test("catalog read models join active recipes, drops, provenance, and rankings",
         name: "Braton",
         slug: "braton",
         description: "A balanced rifle.",
+        equipmentMaxRank: 30,
       },
       evidence,
     },
@@ -215,6 +216,7 @@ test("catalog read models join active recipes, drops, provenance, and rankings",
   );
   assert.deepEqual(searchDiscoveryCatalog(sqlite, { query: "%" }), []);
   const item = findCatalogItem(sqlite, "weapon", "braton");
+  assert.equal(item?.equipmentMaxRank, 30);
   assert.equal(item?.components[0]?.quantity, 200);
   assert.equal(item?.drops[0]?.nodeSlug, "mercury-caloris");
   assert.equal(item?.sources[0]?.name, "Items");

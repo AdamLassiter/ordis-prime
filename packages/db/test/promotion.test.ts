@@ -1029,6 +1029,23 @@ test("equipment and mod fields are promoted as cited canonical fields", async (c
   const sqlite = new Database(databasePath);
   sqlite.pragma("foreign_keys = ON");
   context.after(() => sqlite.close());
+  assert.throws(
+    () =>
+      promoteSource(
+        sqlite,
+        input("v0", [
+          {
+            ...entity("invalid-equipment", "Invalid Equipment", "mod", "v0"),
+            fields: {
+              name: "Invalid Equipment",
+              slug: "invalid-equipment",
+              equipmentMaxRank: 30,
+            },
+          },
+        ]),
+      ),
+    /Equipment maximum rank requires equipment/,
+  );
   const arcane = {
     ...entity("barrier", "Arcane Barrier", "arcane"),
     fields: {
@@ -1039,7 +1056,12 @@ test("equipment and mod fields are promoted as cited canonical fields", async (c
   };
   const weapon = {
     ...entity("dread", "Dread", "weapon"),
-    fields: { name: "Dread", slug: "dread", weaponClass: "bow" as const },
+    fields: {
+      name: "Dread",
+      slug: "dread",
+      weaponClass: "bow" as const,
+      equipmentMaxRank: 30,
+    },
   };
   const mod = {
     ...entity("serration", "Serration", "mod"),
@@ -1073,10 +1095,10 @@ test("equipment and mod fields are promoted as cited canonical fields", async (c
   assert.deepEqual(
     sqlite
       .prepare(
-        "select weapon_class as weaponClass from entities where slug = 'dread'",
+        "select weapon_class as weaponClass, equipment_max_rank as equipmentMaxRank from entities where slug = 'dread'",
       )
       .get(),
-    { weaponClass: "bow" },
+    { weaponClass: "bow", equipmentMaxRank: 30 },
   );
   assert.deepEqual(
     sqlite
@@ -1085,6 +1107,14 @@ test("equipment and mod fields are promoted as cited canonical fields", async (c
       )
       .get(),
     { field: "weaponClass", recordKey: "record" },
+  );
+  assert.deepEqual(
+    sqlite
+      .prepare(
+        "select field, value_json as valueJson from fact_provenance where entity_id = (select id from entities where slug = 'dread') and field = 'equipmentMaxRank'",
+      )
+      .get(),
+    { field: "equipmentMaxRank", valueJson: "30" },
   );
   assert.deepEqual(
     sqlite

@@ -52,7 +52,7 @@ export default async function SharedBuildPage({
                 {equipment.configuration ? `${equipment.configuration} · ` : ""}
                 {equipment.rank === undefined
                   ? ""
-                  : `rank ${equipment.rank} · `}
+                  : `rank ${equipment.rank}${equipment.maxRank === undefined ? "" : `/${equipment.maxRank}`} · `}
                 {equipment.formaCount} Forma
                 {equipment.capacityUpgrade ? " · capacity upgraded" : ""}
               </p>

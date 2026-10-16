@@ -151,6 +151,7 @@ entries:
       description: undefined,
       arcaneClass: undefined,
       weaponClass: undefined,
+      equipmentMaxRank: undefined,
       modMaxRank: 10,
       modBaseDrain: 4,
       modPolarity: "madurai",
@@ -169,6 +170,39 @@ entries:
 `),
       ),
     /modMaxRank is invalid/,
+  );
+});
+
+test("manual facts validate equipment maximum rank", async () => {
+  const valid = ManualFactsAdapter.fromBytes(
+    new TextEncoder().encode(`
+schemaVersion: 1
+source: { id: manual, title: Manual, url: https://example.test, licenseNote: cited }
+entries:
+  - target: { sourceId: items, namespace: id, value: kuva-bramma }
+    kind: weapon
+    equipmentMaxRank: 40
+`),
+  );
+  const observations = await collect(valid, await valid.fetch({}));
+  assert.equal(
+    observations[0]?.type === "entity" &&
+      observations[0].fields.equipmentMaxRank,
+    40,
+  );
+  assert.throws(
+    () =>
+      ManualFactsAdapter.fromBytes(
+        new TextEncoder().encode(`
+schemaVersion: 1
+source: { id: manual, title: Manual, url: https://example.test, licenseNote: cited }
+entries:
+  - target: { sourceId: items, namespace: id, value: serration }
+    kind: mod
+    equipmentMaxRank: 30
+`),
+      ),
+    /equipmentMaxRank is invalid/,
   );
 });
 

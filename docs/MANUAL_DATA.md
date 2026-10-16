@@ -86,7 +86,8 @@ provider snapshot. Version 1 YAML declares an independently cited source and
 targets every entry by an explicit `{ sourceId, namespace, value }` identifier.
 Display names are never used to guess the correction target. An entry can
 provide a name, slug, description, canonical `arcaneClass` or `weaponClass`,
-canonical mod `modMaxRank`, `modBaseDrain` or `modPolarity` facts, aliases,
+canonical equipment `equipmentMaxRank`, canonical mod `modMaxRank`,
+`modBaseDrain` or `modPolarity` facts, aliases,
 sourced `enhancementOptions`, or the explicit tombstone
 `retired: true`; `retired: false` is rejected because restoration needs a
 separate reviewed operation. See `data/manual/facts.example.yaml`.
@@ -100,6 +101,7 @@ pnpm data:refresh manual-facts:data/manual/facts.example.yaml
 
 Source priority determines the active value for name, slug, description, arcane
 class, weapon class, and mod capacity fields.
+Equipment maximum rank follows the same field-level selection rules.
 The default manual priority is 300, above the bundled providers, while each
 field retains the overlay's source record, YAML path, snapshot, and citation.
 Later provider refreshes therefore cannot silently erase an accepted
@@ -115,6 +117,12 @@ without teaching build consumers about provider-specific type labels.
 `kitgun`, `zaw`, `archgun`, `archmelee`, `companion`, or `amp`, and is valid
 only on a `weapon` entry. The normalized class drives equipment-slot and
 specialized-arcane validation.
+
+`equipmentMaxRank` accepts an integer from 30 through 40 on Warframes,
+weapons, companions and Archwings. It is deliberately separate from a player's
+current build rank. The field lets source adapters identify ordinary rank-30
+equipment and exceptional rank-40 equipment without embedding name lists in
+capacity calculations.
 
 Mod facts are valid only for `kind: mod`. Maximum rank is an integer from zero
 through ten; base drain is an integer from -4 through 10 so aura and stance

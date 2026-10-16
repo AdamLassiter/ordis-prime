@@ -132,6 +132,9 @@ test("build drafts are private and share snapshots remain immutable", async (con
   );
   seedEntity(database, "mod", "mod", "Serration", "serration");
   database
+    .prepare("update entities set equipment_max_rank = 30 where id = 'weapon'")
+    .run();
+  database
     .prepare(
       "update entities set mod_max_rank = 10, mod_base_drain = 4, mod_polarity = 'madurai' where id = 'mod'",
     )
@@ -174,7 +177,13 @@ test("build drafts are private and share snapshots remain immutable", async (con
     "Ability Strength",
   );
   assert.deepEqual(searchBuildCandidates(database, "primary", "Par"), [
-    { kind: "weapon", slug: "paris", name: "Paris", weaponClass: "primary" },
+    {
+      kind: "weapon",
+      slug: "paris",
+      name: "Paris",
+      weaponClass: "primary",
+      equipmentMaxRank: 30,
+    },
   ]);
   assert.deepEqual(searchBuildCandidates(database, "secondary", "Par"), []);
   assert.deepEqual(searchBuildCandidates(database, "mod", "Serr"), [
@@ -303,6 +312,15 @@ test("build drafts are private and share snapshots remain immutable", async (con
       }),
     /Equipment rank must be between 0 and 40/,
   );
+  assert.throws(
+    () =>
+      configureBuildEquipment(database, owner, buildId, "primary", {
+        rank: 31,
+        formaCount: 3,
+        capacityUpgrade: true,
+      }),
+    /Paris rank must not exceed 30/,
+  );
   setBuildEnhancement(
     database,
     owner,
@@ -357,6 +375,7 @@ test("build drafts are private and share snapshots remain immutable", async (con
       entity: { kind: "weapon", slug: "paris", name: "Paris" },
       configuration: "Incarnon",
       rank: 27,
+      maxRank: 30,
       formaCount: 3,
       capacityUpgrade: true,
       notes: undefined,

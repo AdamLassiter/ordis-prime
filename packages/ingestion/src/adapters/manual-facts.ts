@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import { parse } from "yaml";
 import {
   ARCANE_CLASSES,
+  EQUIPMENT_KINDS,
   MOD_POLARITIES,
   WEAPON_CLASSES,
   type ArcaneClass,
@@ -58,6 +59,7 @@ interface ManualFactsDocument {
     description?: string;
     arcaneClass?: ArcaneClass;
     weaponClass?: WeaponClass;
+    equipmentMaxRank?: number;
     modMaxRank?: number;
     modBaseDrain?: number;
     modPolarity?: ModPolarity;
@@ -133,6 +135,7 @@ export class ManualFactsAdapter implements SourceAdapter {
           description: entry.description,
           arcaneClass: entry.arcaneClass,
           weaponClass: entry.weaponClass,
+          equipmentMaxRank: entry.equipmentMaxRank,
           modMaxRank: entry.modMaxRank,
           modBaseDrain: entry.modBaseDrain,
           modPolarity: entry.modPolarity,
@@ -218,6 +221,16 @@ function parseDocument(bytes: Uint8Array): ManualFactsDocument {
     )
       throw new Error(`Manual facts entry ${index}.weaponClass is invalid`);
     if (
+      entry.equipmentMaxRank !== undefined &&
+      (!(EQUIPMENT_KINDS as readonly string[]).includes(entry.kind) ||
+        !Number.isSafeInteger(entry.equipmentMaxRank) ||
+        (entry.equipmentMaxRank as number) < 30 ||
+        (entry.equipmentMaxRank as number) > 40)
+    )
+      throw new Error(
+        `Manual facts entry ${index}.equipmentMaxRank is invalid`,
+      );
+    if (
       entry.modMaxRank !== undefined &&
       (entry.kind !== "mod" ||
         !Number.isSafeInteger(entry.modMaxRank) ||
@@ -286,6 +299,7 @@ function parseDocument(bytes: Uint8Array): ManualFactsDocument {
         entry.description,
         entry.arcaneClass,
         entry.weaponClass,
+        entry.equipmentMaxRank,
         entry.modMaxRank,
         entry.modBaseDrain,
         entry.modPolarity,

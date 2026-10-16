@@ -91,6 +91,7 @@ export interface BuildEquipmentEntry {
   notes?: string;
   configuration?: string;
   rank?: number;
+  maxRank?: number;
   formaCount: number;
   capacityUpgrade: boolean;
   modSlots: BuildModSlot[];
@@ -134,6 +135,7 @@ export interface BuildShareSummary {
 export type BuildCandidate = BuildEntityReference & {
   arcaneClass?: ArcaneClass;
   weaponClass?: WeaponClass;
+  equipmentMaxRank?: number;
   modMaxRank?: number;
   modBaseDrain?: number;
   modPolarity?: ModPolarity;
@@ -336,7 +338,8 @@ export function searchBuildCandidates(
   const candidates = sqlite
     .prepare(
       `
-    select kind, slug, name, weapon_class as weaponClass, mod_max_rank as modMaxRank,
+    select kind, slug, name, weapon_class as weaponClass,
+      equipment_max_rank as equipmentMaxRank, mod_max_rank as modMaxRank,
       mod_base_drain as modBaseDrain, mod_polarity as modPolarity from entities
     where retired = 0 and kind = ? ${classFilter} and name like ? escape '\\'
     order by case when lower(name) = lower(?) then 0 else 1 end, name collate nocase
@@ -352,18 +355,31 @@ export function searchBuildCandidates(
     ) as Array<
     Omit<
       BuildCandidate,
-      "weaponClass" | "modMaxRank" | "modBaseDrain" | "modPolarity"
+      | "weaponClass"
+      | "equipmentMaxRank"
+      | "modMaxRank"
+      | "modBaseDrain"
+      | "modPolarity"
     > & {
       weaponClass: WeaponClass | null;
+      equipmentMaxRank: number | null;
       modMaxRank: number | null;
       modBaseDrain: number | null;
       modPolarity: ModPolarity | null;
     }
   >;
   return candidates.map(
-    ({ weaponClass, modMaxRank, modBaseDrain, modPolarity, ...candidate }) => ({
+    ({
+      weaponClass,
+      equipmentMaxRank,
+      modMaxRank,
+      modBaseDrain,
+      modPolarity,
+      ...candidate
+    }) => ({
       ...candidate,
       ...(weaponClass ? { weaponClass } : {}),
+      ...(equipmentMaxRank !== null ? { equipmentMaxRank } : {}),
       ...(modMaxRank !== null ? { modMaxRank } : {}),
       ...(modBaseDrain !== null ? { modBaseDrain } : {}),
       ...(modPolarity ? { modPolarity } : {}),
@@ -627,17 +643,33 @@ export function configureBuildEquipment(
     throw new Error("Capacity upgrade must be boolean");
   sqlite.transaction(() => {
     assertBuildOwner(sqlite, userId, buildId);
+    const equipment = sqlite
+      .prepare(
+        `select equipment.id, entity.name, entity.equipment_max_rank as maxRank
+         from build_equipment equipment join entities entity on entity.id = equipment.entity_id
+         where equipment.build_id = ? and equipment.slot = ?`,
+      )
+      .get(buildId, slot) as
+      { id: string; name: string; maxRank: number | null } | undefined;
+    if (!equipment) throw new Error("Build equipment not found");
+    if (
+      input.rank !== undefined &&
+      equipment.maxRank !== null &&
+      input.rank > equipment.maxRank
+    )
+      throw new Error(
+        `${equipment.name} rank must not exceed ${equipment.maxRank}`,
+      );
     const result = sqlite
       .prepare(
-        "update build_equipment set configuration = ?, rank = ?, forma_count = ?, capacity_upgrade = ? where build_id = ? and slot = ?",
+        "update build_equipment set configuration = ?, rank = ?, forma_count = ?, capacity_upgrade = ? where id = ?",
       )
       .run(
         configuration ?? null,
         input.rank ?? null,
         input.formaCount,
         input.capacityUpgrade ? 1 : 0,
-        buildId,
-        slot,
+        equipment.id,
       );
     if (result.changes !== 1) throw new Error("Build equipment not found");
     touchBuild(sqlite, buildId);
@@ -914,7 +946,8 @@ function hydrateBuild(
     .prepare(
       `
     select equipment.id, equipment.slot, equipment.notes, equipment.configuration,
-      equipment.rank, equipment.forma_count as formaCount,
+      equipment.rank, entity.equipment_max_rank as equipmentMaxRank,
+      equipment.forma_count as formaCount,
       equipment.capacity_upgrade as capacityUpgrade,
       entity.kind, entity.slug, entity.name
     from build_equipment equipment join entities entity on entity.id = equipment.entity_id
@@ -927,6 +960,7 @@ function hydrateBuild(
     notes: string | null;
     configuration: string | null;
     rank: number | null;
+    equipmentMaxRank: number | null;
     formaCount: number;
     capacityUpgrade: number;
     kind: string;
@@ -981,6 +1015,9 @@ function hydrateBuild(
       notes: entry.notes ?? undefined,
       configuration: entry.configuration ?? undefined,
       rank: entry.rank ?? undefined,
+      ...(entry.equipmentMaxRank !== null
+        ? { maxRank: entry.equipmentMaxRank }
+        : {}),
       formaCount: entry.formaCount,
       capacityUpgrade: Boolean(entry.capacityUpgrade),
       modSlots: (

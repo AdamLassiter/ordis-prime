@@ -76,6 +76,12 @@ export default async function ItemPage({
             <dd>{item.modMaxRank}</dd>
           </>
         )}
+        {item.equipmentMaxRank !== undefined && (
+          <>
+            <dt>Maximum equipment rank</dt>
+            <dd>{item.equipmentMaxRank}</dd>
+          </>
+        )}
         {item.modBaseDrain !== undefined && (
           <>
             <dt>Base drain</dt>

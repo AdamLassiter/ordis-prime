@@ -1,0 +1,1 @@
+ALTER TABLE `entities` ADD `equipment_max_rank` integer;
