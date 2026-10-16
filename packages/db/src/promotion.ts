@@ -997,12 +997,23 @@ function validateInput(input: PromoteSourceInput): void {
   if (Number.isNaN(retrievedAt.getTime()))
     throw new Error("Promotion retrievedAt is invalid");
   for (const observation of input.observations) {
+    const evidenceRetrievedAt = new Date(observation.evidence.retrievedAt);
     if (
       observation.evidence.sourceId !== input.source.id ||
       observation.evidence.snapshotVersion !== input.version
     ) {
       throw new Error(
         "Observation evidence does not match the promoted source snapshot",
+      );
+    }
+    if (!observation.evidence.sourceRecordKey.trim())
+      throw new Error("Observation evidence source record key is required");
+    if (
+      Number.isNaN(evidenceRetrievedAt.getTime()) ||
+      evidenceRetrievedAt.getTime() !== retrievedAt.getTime()
+    ) {
+      throw new Error(
+        "Observation evidence retrieval time does not match the promoted source snapshot",
       );
     }
     if (

@@ -67,7 +67,9 @@ describe the retained window rather than lifetime history. This does not delete
 the immutable payload directories named by expired operation rows.
 
 Before staging begins, promotion validates invariants that require the complete
-candidate set: one external identifier cannot declare contradictory entity
+candidate set. Every observation's source, version and retrieval instant must
+match the promoted snapshot envelope and its record key must be non-blank. One
+external identifier cannot declare contradictory entity
 identity, a kind/slug cannot carry conflicting names, singleton node details
 and enhancement options cannot be duplicated, and rankings must use one
 declared set, tier, and member per subject. These are source-authoring errors,

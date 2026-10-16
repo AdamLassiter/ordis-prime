@@ -11,8 +11,9 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   has not yet been observed on the remote repository.
 - The canonical schema, initial migration, and transactional per-source
   promotion exist. Each release now records its complete active source-run
-  composition. Whole-candidate identity, singleton-fact and ranking invariants
-  run before a source is staged. The composed candidate also rejects active
+  composition. Snapshot-evidence coherence, whole-candidate identity,
+  singleton-fact and ranking invariants run before a source is staged. The
+  composed candidate also rejects active
   facts that would reference a retired entity. Broader cross-source semantic
   completeness checks remain unimplemented. The worker retains a configurable number of inactive
   catalog releases and removes unreferenced clean source runs and their facts;

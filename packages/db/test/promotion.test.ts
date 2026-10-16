@@ -51,6 +51,53 @@ test("source previews execute promotion validation and roll back every write", a
   );
 });
 
+test("promotion rejects evidence outside the source snapshot envelope", async (context) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-evidence-"));
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const databasePath = path.join(root, "catalog.sqlite");
+  migrateDatabase(databasePath);
+  const sqlite = new Database(databasePath);
+  sqlite.pragma("foreign_keys = ON");
+  context.after(() => sqlite.close());
+  const valid = entity("reward", "Ash Chassis", "component");
+
+  for (const [evidenceOverrides, message] of [
+    [{ sourceId: "other" }, /does not match the promoted source snapshot/],
+    [
+      { snapshotVersion: "other" },
+      /does not match the promoted source snapshot/,
+    ],
+    [{ sourceRecordKey: "   " }, /source record key is required/],
+    [
+      { retrievedAt: "2026-10-13T12:00:01.000Z" },
+      /retrieval time does not match/,
+    ],
+    [{ retrievedAt: "not-a-date" }, /retrieval time does not match/],
+  ] as const) {
+    assert.throws(
+      () =>
+        promoteSource(
+          sqlite,
+          input("v1", [
+            {
+              ...valid,
+              evidence: { ...valid.evidence, ...evidenceOverrides },
+            },
+          ]),
+        ),
+      message,
+    );
+  }
+  assert.deepEqual(
+    sqlite
+      .prepare(
+        "select (select count(*) from sources) as sources, (select count(*) from source_runs) as runs",
+      )
+      .get(),
+    { sources: 0, runs: 0 },
+  );
+});
+
 test("promotion atomically replaces the active source run while preserving entity IDs", async (context) => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-promotion-"));
   context.after(() => fs.rm(root, { recursive: true, force: true }));
@@ -694,7 +741,10 @@ test("higher-priority cited facts remain field winners across provider refreshes
           { sourceId: "fixture", namespace: "id", value: "braton" },
         ],
         fields: {},
-        evidence: evidence("manual-v2", "manual"),
+        evidence: {
+          ...evidence("manual-v2", "manual"),
+          retrievedAt: "2026-01-03T00:00:00.000Z",
+        },
       },
     ],
   });
