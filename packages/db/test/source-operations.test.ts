@@ -101,12 +101,9 @@ test("source status exposes the latest persisted refresh failure", async (contex
     priority: 10,
   };
   const refreshId = beginSourceRefresh(sqlite, source);
-  failSourceRefresh(
-    sqlite,
-    refreshId,
-    new Error("bad payload"),
-    "/snapshots/fixture/v1",
-  );
+  failSourceRefresh(sqlite, refreshId, new Error("bad payload"), {
+    snapshotPath: "/snapshots/fixture/v1",
+  });
 
   assert.equal(listSourceStatuses(sqlite)[0]?.latestRefreshStatus, "failed");
   assert.deepEqual(
@@ -331,12 +328,16 @@ test("source refresh records expose deterministic throughput metrics", async (co
     finishedAt: 3_000,
   });
   const failedId = beginSourceRefresh(sqlite, source, 4_000);
-  failSourceRefresh(sqlite, failedId, new Error("nope"));
+  failSourceRefresh(sqlite, failedId, new Error("nope"), {
+    recordsProcessed: 12,
+    finishedAt: 5_000,
+  });
 
   assert.equal(
     listSourceRefreshes(sqlite, source.id)[1]?.recordsProcessed,
     250,
   );
+  assert.equal(listSourceRefreshes(sqlite, source.id)[0]?.recordsProcessed, 12);
   assert.deepEqual(getSourceRefreshMetrics(sqlite, source.id), {
     attempts: 2,
     succeeded: 1,
@@ -350,6 +351,14 @@ test("source refresh records expose deterministic throughput metrics", async (co
       completeSourceRefresh(sqlite, "missing", {
         sourceRunId: "run",
         snapshotPath: "/snapshot",
+        recordsProcessed: -1,
+      }),
+    /record count/,
+  );
+  const invalidFailureId = beginSourceRefresh(sqlite, source, 6_000);
+  assert.throws(
+    () =>
+      failSourceRefresh(sqlite, invalidFailureId, new Error("nope"), {
         recordsProcessed: -1,
       }),
     /record count/,

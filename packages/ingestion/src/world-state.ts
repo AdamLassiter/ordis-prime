@@ -234,11 +234,13 @@ export async function refreshWorldState(options: {
     options.adapter.source,
   );
   let snapshotPath: string | undefined;
+  let recordsProcessed: number | undefined;
   try {
     const snapshot = await options.adapter.fetch({ signal: options.signal });
     snapshotPath = await options.snapshotStore.put(snapshot);
     attachSourceRefreshSnapshot(options.database, refreshId, snapshotPath);
     const windows = options.adapter.parse(snapshot);
+    recordsProcessed = windows.length;
     const result = promoteWorldState(options.database, {
       source: options.adapter.source,
       version: snapshot.version,
@@ -254,7 +256,10 @@ export async function refreshWorldState(options: {
     });
     return { ...result, snapshotPath };
   } catch (error) {
-    failSourceRefresh(options.database, refreshId, error, snapshotPath);
+    failSourceRefresh(options.database, refreshId, error, {
+      snapshotPath,
+      recordsProcessed,
+    });
     throw error;
   }
 }

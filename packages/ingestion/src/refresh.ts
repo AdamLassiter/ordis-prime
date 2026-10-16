@@ -34,6 +34,7 @@ export async function refreshSource(
     options.adapter.source,
   );
   let snapshotPath: string | undefined;
+  let recordsProcessed: number | undefined;
   try {
     const fetchedSnapshot = await options.adapter.fetch({
       signal: options.signal,
@@ -47,6 +48,7 @@ export async function refreshSource(
       fetchedSnapshot,
     );
     const observations = await collect(options.adapter, snapshot);
+    recordsProcessed = observations.length;
     const promotion = promoteSource(options.database, {
       source: options.adapter.source,
       version: snapshot.version,
@@ -68,7 +70,10 @@ export async function refreshSource(
       observationCount: observations.length,
     };
   } catch (error) {
-    failSourceRefresh(options.database, refreshId, error, snapshotPath);
+    failSourceRefresh(options.database, refreshId, error, {
+      snapshotPath,
+      recordsProcessed,
+    });
     throw error;
   }
 }

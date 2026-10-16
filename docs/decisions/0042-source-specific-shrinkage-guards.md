@@ -34,7 +34,9 @@ idempotent no-op.
 
 - A severely truncated WFCD response cannot replace the last healthy catalog.
 - The rejected snapshot and failure remain inspectable through the refresh
-  operation without changing active source membership.
+  operation without changing active source membership. Its refresh record also
+  retains the rejected observation count for direct comparison with the active
+  baseline.
 - The baseline survives pruning of refresh-operation rows because it belongs to
   the source run.
 - The guard detects gross count loss, not selective missing records, distorted

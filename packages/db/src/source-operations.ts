@@ -175,18 +175,36 @@ export function failSourceRefresh(
   sqlite: Database.Database,
   refreshId: string,
   error: unknown,
-  snapshotPath?: string,
+  input: {
+    snapshotPath?: string;
+    recordsProcessed?: number;
+    finishedAt?: number;
+  } = {},
 ): void {
+  if (
+    input.recordsProcessed !== undefined &&
+    (!Number.isSafeInteger(input.recordsProcessed) ||
+      input.recordsProcessed < 0)
+  )
+    throw new Error(
+      "Failed refresh record count must be a non-negative safe integer",
+    );
   const message =
     error instanceof Error ? `${error.name}: ${error.message}` : String(error);
   const result = sqlite
     .prepare(
       `
-    update source_refreshes set status = 'failed', snapshot_path = ?, finished_at = ?, error = ?
+    update source_refreshes set status = 'failed', snapshot_path = ?, records_processed = ?, finished_at = ?, error = ?
     where id = ? and status = 'running'
   `,
     )
-    .run(snapshotPath ?? null, Date.now(), message.slice(0, 4_000), refreshId);
+    .run(
+      input.snapshotPath ?? null,
+      input.recordsProcessed ?? null,
+      input.finishedAt ?? Date.now(),
+      message.slice(0, 4_000),
+      refreshId,
+    );
   if (result.changes !== 1)
     throw new Error(`Refresh ${refreshId} is not running`);
 }

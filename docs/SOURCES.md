@@ -55,6 +55,10 @@ than a global rule: manual sources may intentionally publish a much smaller
 replacement and therefore have no implicit shrinkage floor. A first import or a
 pre-count source run establishes the baseline without comparison. Data-source
 status and operation pages expose the current baseline to administrators.
+When parsing succeeds but promotion rejects a candidate, the failed operation
+also records the candidate observation count so the attempted size can be
+compared directly with that baseline. Failures before normalization leave the
+count unknown rather than implying that the source contained zero records.
 
 Promoting any static source creates a catalog release whose membership records
 the active run of every static source at that instant. The data-source page

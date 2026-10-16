@@ -143,12 +143,12 @@ test("adapter shrinkage policy rejects a truncated retained snapshot", async (co
   assert.deepEqual(
     database
       .prepare(
-        "select status, snapshot_path is not null as retained from source_refreshes order by rowid",
+        "select status, snapshot_path is not null as retained, records_processed as recordsProcessed from source_refreshes order by rowid",
       )
       .all(),
     [
-      { status: "succeeded", retained: 1 },
-      { status: "failed", retained: 1 },
+      { status: "succeeded", retained: 1, recordsProcessed: 4 },
+      { status: "failed", retained: 1, recordsProcessed: 1 },
     ],
   );
 });
