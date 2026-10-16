@@ -63,7 +63,9 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   remain plain source text. Finished
   job history is count-bounded and filterable by kind, status and source.
   Source operation pages report persisted record counts, durations and aggregate
-  throughput; provider spellings absent from catalog aliases remain unresolved.
+  throughput. Attempts stranded by a terminated process are failed after the
+  worker's maximum lease, so they do not remain permanent retention roots;
+  provider spellings absent from catalog aliases remain unresolved.
 - The web explorer reads the canonical SQLite catalog and links active recipes,
   drops, nodes, record-level provenance, and editorial rankings. Newly imported
   entity fields and typed relations retain exact source record keys, paths, and

@@ -3,7 +3,11 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { migrateDatabase, openSqliteDatabase } from "@ordis-prime/db";
+import {
+  beginSourceRefresh,
+  migrateDatabase,
+  openSqliteDatabase,
+} from "@ordis-prime/db";
 import {
   createSnapshot,
   runWorkerCycle,
@@ -172,10 +176,32 @@ test("worker schedules static catalog adapters independently of world state", as
     refreshIntervalMilliseconds: 300,
     catalogRefreshIntervalMilliseconds: 1_000,
   };
+  const abandonedRefreshId = beginSourceRefresh(
+    database,
+    {
+      id: "abandoned-fixture",
+      name: "Abandoned fixture",
+      homepage: "https://example.test/abandoned",
+      priority: 1,
+    },
+    -600_000,
+  );
 
   assert.equal(
     (await runWorkerCycle({ ...options, now: 100 })).sourceId,
     "wfcd-worldstate",
+  );
+  assert.deepEqual(
+    database
+      .prepare(
+        "select status, finished_at as finishedAt, error from source_refreshes where id = ?",
+      )
+      .get(abandonedRefreshId),
+    {
+      status: "failed",
+      finishedAt: 100,
+      error: "Refresh process ended before completion",
+    },
   );
   assert.deepEqual(await runWorkerCycle({ ...options, now: 100 }), {
     status: "succeeded",

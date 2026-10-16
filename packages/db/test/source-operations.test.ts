@@ -5,6 +5,7 @@ import path from "node:path";
 import test from "node:test";
 import {
   beginSourceRefresh,
+  attachSourceRefreshSnapshot,
   bindSourceIdentityOverride,
   completeSourceRefresh,
   failSourceRefresh,
@@ -18,6 +19,7 @@ import {
   openSqliteDatabase,
   promoteSource,
   pruneFinishedSourceRefreshes,
+  recoverAbandonedSourceRefreshes,
   reopenSourceConflict,
   revokeSourceIdentityOverride,
   reviewSourceConflict,
@@ -82,6 +84,76 @@ test("source refresh pruning is bounded per source and preserves running attempt
   assert.throws(
     () => pruneFinishedSourceRefreshes(sqlite, -1),
     /between 0 and 100000/,
+  );
+});
+
+test("abandoned source refresh recovery closes only expired attempts", async (context) => {
+  const root = await fs.mkdtemp(
+    path.join(os.tmpdir(), "ordis-source-refresh-recovery-"),
+  );
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const databasePath = path.join(root, "catalog.sqlite");
+  migrateDatabase(databasePath);
+  const sqlite = openSqliteDatabase(databasePath);
+  context.after(() => sqlite.close());
+  const source = {
+    id: "fixture",
+    name: "Fixture",
+    homepage: "https://example.test",
+    priority: 1,
+  };
+  const expired = beginSourceRefresh(sqlite, source, 100);
+  attachSourceRefreshSnapshot(sqlite, expired, "/snapshots/retained");
+  const current = beginSourceRefresh(sqlite, source, 101);
+
+  assert.equal(
+    recoverAbandonedSourceRefreshes(sqlite, {
+      startedAtOrBefore: 100,
+      finishedAt: 200,
+    }),
+    1,
+  );
+  assert.deepEqual(
+    listSourceRefreshes(sqlite, source.id).map(
+      ({ id, status, finishedAt, snapshotPath, error }) => ({
+        id,
+        status,
+        finishedAt,
+        snapshotPath,
+        error,
+      }),
+    ),
+    [
+      {
+        id: current,
+        status: "running",
+        finishedAt: undefined,
+        snapshotPath: undefined,
+        error: undefined,
+      },
+      {
+        id: expired,
+        status: "failed",
+        finishedAt: 200,
+        snapshotPath: "/snapshots/retained",
+        error: "Refresh process ended before completion",
+      },
+    ],
+  );
+  assert.equal(
+    recoverAbandonedSourceRefreshes(sqlite, {
+      startedAtOrBefore: 100,
+      finishedAt: 200,
+    }),
+    0,
+  );
+  assert.throws(
+    () =>
+      recoverAbandonedSourceRefreshes(sqlite, {
+        startedAtOrBefore: 201,
+        finishedAt: 200,
+      }),
+    /recovery window/,
   );
 });
 

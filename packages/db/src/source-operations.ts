@@ -276,6 +276,26 @@ export function pruneFinishedSourceRefreshes(
   })();
 }
 
+export function recoverAbandonedSourceRefreshes(
+  sqlite: Database.Database,
+  input: { startedAtOrBefore: number; finishedAt?: number },
+): number {
+  const finishedAt = input.finishedAt ?? Date.now();
+  if (
+    !Number.isSafeInteger(input.startedAtOrBefore) ||
+    !Number.isSafeInteger(finishedAt) ||
+    input.startedAtOrBefore > finishedAt
+  )
+    throw new Error("Invalid abandoned source refresh recovery window");
+  return sqlite
+    .prepare(
+      `update source_refreshes
+       set status = 'failed', finished_at = ?, error = 'Refresh process ended before completion'
+       where status = 'running' and started_at <= ?`,
+    )
+    .run(finishedAt, input.startedAtOrBefore).changes;
+}
+
 export function listSourceRefreshes(
   sqlite: Database.Database,
   sourceId: string,

@@ -76,7 +76,10 @@ are retained independently of catalog pruning.
 The worker keeps the newest 1,000 finished source-refresh operations per source
 by default and never prunes a running attempt. `ORDIS_SOURCE_REFRESH_HISTORY_LIMIT`
 changes that per-source bound; operational counts and throughput therefore
-describe the retained window rather than lifetime history.
+describe the retained window rather than lifetime history. Before applying
+retention, the worker marks attempts older than its longest job lease as failed;
+this recovers operations stranded by process termination without guessing that
+a currently leased request has ended.
 
 After database retention runs, the worker removes content-addressed payload
 directories that are no longer referenced by any source run, world-state

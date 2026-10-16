@@ -10,6 +10,7 @@ import {
   pruneInactiveCatalogHistory,
   pruneInactiveWorldStateSnapshots,
   pruneReadExpiredPlayerNotifications,
+  recoverAbandonedSourceRefreshes,
   WORLD_STATE_REFRESH_JOB,
 } from "@ordis-prime/db";
 import { SnapshotStore } from "./snapshot-store.ts";
@@ -60,6 +61,11 @@ export async function runWorkerCycle(options: {
   const sourceRefreshHistoryLimit = options.sourceRefreshHistoryLimit ?? 1_000;
   const snapshotPruneGraceMilliseconds =
     options.snapshotPruneGraceMilliseconds ?? 60 * 60_000;
+  const leaseMilliseconds = Math.max(
+    2 * catalogRequestTimeout,
+    2 * requestTimeout,
+    2 * 60_000,
+  );
   const payload = { source: options.worldStateAdapter.source.id };
   ensurePendingJob(options.database, {
     kind: WORLD_STATE_REFRESH_JOB,
@@ -72,6 +78,10 @@ export async function runWorkerCycle(options: {
       payload: { source: adapter.source.id },
       runAfter: now,
     });
+  recoverAbandonedSourceRefreshes(options.database, {
+    startedAtOrBefore: now - leaseMilliseconds,
+    finishedAt: now,
+  });
   pruneFinishedJobs(options.database, jobHistoryLimit);
   pruneFinishedSourceRefreshes(options.database, sourceRefreshHistoryLimit);
   try {
@@ -88,11 +98,7 @@ export async function runWorkerCycle(options: {
   const job = claimDueJob(options.database, {
     owner: options.owner,
     now,
-    leaseMilliseconds: Math.max(
-      2 * catalogRequestTimeout,
-      2 * requestTimeout,
-      2 * 60_000,
-    ),
+    leaseMilliseconds,
     kinds: [WORLD_STATE_REFRESH_JOB, CATALOG_SOURCE_REFRESH_JOB],
   });
   if (!job) return { status: "idle" };
