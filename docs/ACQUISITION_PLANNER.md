@@ -13,6 +13,9 @@ then the newest source run. A player can choose another recipe; that preference
 is stored by source ID and record key so a provider refresh can replace the
 internal recipe row without losing the choice. If the preferred recipe is no
 longer active, the UI reports the fallback instead of expanding stale facts.
+Promotion validates the union of active recipe alternatives as an acyclic
+dependency graph. A bad source therefore cannot defer a cycle failure until a
+player selects the affected goal or alternative.
 
 Recommendations show coverage, remaining quantity, documented chance, and
 rotation. They deliberately do not estimate farming time because the catalog

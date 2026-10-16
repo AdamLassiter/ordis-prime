@@ -629,6 +629,63 @@ function validateComposedCatalog(sqlite: Database.Database): void {
     throw new Error(
       `Composed catalog enhancement option ${invalidEnhancementSubject.recordKey} requires a shard but resolved ${invalidEnhancementSubject.kind}:${invalidEnhancementSubject.slug}`,
     );
+
+  validateAcyclicRecipes(sqlite);
+}
+
+function validateAcyclicRecipes(sqlite: Database.Database): void {
+  const edges = sqlite
+    .prepare(
+      `select recipe.output_id as outputId, ingredient.entity_id as ingredientId
+       from recipes recipe
+       join source_runs run on run.id = recipe.source_run_id and run.status = 'active'
+       join recipe_ingredients ingredient on ingredient.recipe_id = recipe.id`,
+    )
+    .all() as Array<{ outputId: string; ingredientId: string }>;
+  const adjacency = new Map<string, Set<string>>();
+  for (const { outputId, ingredientId } of edges) {
+    const ingredients = adjacency.get(outputId) ?? new Set<string>();
+    ingredients.add(ingredientId);
+    adjacency.set(outputId, ingredients);
+  }
+  const state = new Map<string, "visiting" | "visited">();
+  let cycleEntityId: string | undefined;
+  for (const start of adjacency.keys()) {
+    if (state.has(start)) continue;
+    state.set(start, "visiting");
+    const stack = [
+      { node: start, ingredients: [...(adjacency.get(start) ?? [])], index: 0 },
+    ];
+    while (stack.length && !cycleEntityId) {
+      const frame = stack.at(-1)!;
+      const ingredient = frame.ingredients[frame.index];
+      if (ingredient === undefined) {
+        state.set(frame.node, "visited");
+        stack.pop();
+        continue;
+      }
+      frame.index += 1;
+      if (state.get(ingredient) === "visiting") {
+        cycleEntityId = ingredient;
+        break;
+      }
+      if (state.has(ingredient) || !adjacency.has(ingredient)) continue;
+      state.set(ingredient, "visiting");
+      stack.push({
+        node: ingredient,
+        ingredients: [...(adjacency.get(ingredient) ?? [])],
+        index: 0,
+      });
+    }
+    if (cycleEntityId) break;
+  }
+  if (!cycleEntityId) return;
+  const entity = sqlite
+    .prepare("select kind, slug from entities where id = ?")
+    .get(cycleEntityId) as { kind: string; slug: string };
+  throw new Error(
+    `Composed catalog recipe graph contains a cycle at ${entity.kind}:${entity.slug}`,
+  );
 }
 
 function recomputeActiveEntityFields(sqlite: Database.Database): void {

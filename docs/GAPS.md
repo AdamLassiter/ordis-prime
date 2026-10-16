@@ -15,7 +15,8 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   singleton-fact and ranking invariants run before a source is staged. The
   composed candidate also rejects active
   facts that would reference a retired entity, use non-node entities in
-  node-only positions, or attach enhancement options to non-shards. Broader cross-source semantic
+  node-only positions, attach enhancement options to non-shards, or introduce
+  a cycle through active recipe alternatives. Broader cross-source semantic
   completeness checks remain unimplemented. Automatic WFCD catalog adapters reject
   candidates below half their preceding observation count, but this coarse guard
   does not detect selective omissions or semantically implausible changes above

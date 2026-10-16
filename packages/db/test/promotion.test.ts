@@ -597,6 +597,73 @@ test("composed validation requires shard enhancement subjects across sources", a
   );
 });
 
+test("composed validation rejects recipe cycles across sources", async (context) => {
+  const root = await fs.mkdtemp(
+    path.join(os.tmpdir(), "ordis-composed-recipe-cycle-"),
+  );
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const databasePath = path.join(root, "catalog.sqlite");
+  migrateDatabase(databasePath);
+  const sqlite = new Database(databasePath);
+  sqlite.pragma("foreign_keys = ON");
+  context.after(() => sqlite.close());
+  const recipe = (
+    version: string,
+    sourceId: string,
+    output: string,
+    ingredient: string,
+  ): Observation => ({
+    type: "recipe",
+    outputExternalId: { sourceId: "fixture", namespace: "id", value: output },
+    ingredients: [
+      {
+        externalId: {
+          sourceId: "fixture",
+          namespace: "id",
+          value: ingredient,
+        },
+        quantity: 1,
+      },
+    ],
+    evidence: {
+      ...evidence(version, sourceId),
+      sourceRecordKey: `${output}-from-${ingredient}`,
+    },
+  });
+
+  promoteSource(
+    sqlite,
+    input("a-v1", [
+      entity("a", "Resource A", "component", "a-v1"),
+      entity("b", "Resource B", "component", "a-v1"),
+      recipe("a-v1", "fixture", "a", "b"),
+    ]),
+  );
+  const sourceB = { ...source, id: "fixture-b", name: "Fixture B" };
+  assert.throws(
+    () =>
+      promoteSource(sqlite, {
+        ...input("b-v1", [recipe("b-v1", "fixture-b", "b", "a")]),
+        source: sourceB,
+      }),
+    /Composed catalog recipe graph contains a cycle at component:resource-[ab]/,
+  );
+  assert.deepEqual(
+    sqlite
+      .prepare("select source_id as sourceId, version, status from source_runs")
+      .all(),
+    [{ sourceId: "fixture", version: "a-v1", status: "active" }],
+  );
+  assert.equal(
+    (
+      sqlite.prepare("select count(*) as count from recipes").get() as {
+        count: number;
+      }
+    ).count,
+    1,
+  );
+});
+
 test("catalog pruning retains active and recent releases while protecting conflict runs", async (context) => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-release-prune-"));
   context.after(() => fs.rm(root, { recursive: true, force: true }));
