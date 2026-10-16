@@ -486,6 +486,7 @@ function promoteInTransaction(
   sqlite
     .prepare("update source_runs set status = 'active' where id = ?")
     .run(sourceRunId);
+  recomputeActiveEntityFields(sqlite);
   validateComposedCatalog(sqlite);
   sqlite
     .prepare("update catalog_releases set active = 0 where active = 1")
@@ -593,6 +594,74 @@ function validateComposedCatalog(sqlite: Database.Database): void {
     throw new Error(
       `Composed catalog ${invalidNodeReference.factType} ${invalidNodeReference.recordKey ?? "without record key"} requires a node but resolved ${invalidNodeReference.kind}:${invalidNodeReference.slug}`,
     );
+}
+
+function recomputeActiveEntityFields(sqlite: Database.Database): void {
+  const columns = {
+    name: "name",
+    slug: "slug",
+    description: "description",
+    arcaneClass: "arcane_class",
+    weaponClass: "weapon_class",
+  } as const;
+  const winners = sqlite
+    .prepare(
+      `with ranked as (
+        select provenance.entity_id as entityId, provenance.field, provenance.value_json as valueJson,
+          row_number() over (
+            partition by provenance.entity_id, provenance.field
+            order by source.priority desc, run.retrieved_at desc, run.id desc
+          ) as preference
+        from fact_provenance provenance
+        join source_runs run on run.id = provenance.source_run_id and run.status = 'active'
+        join sources source on source.id = run.source_id
+        where provenance.value_json is not null
+      )
+      select entityId, field, valueJson from ranked where preference = 1`,
+    )
+    .all() as Array<{
+    entityId: string;
+    field: keyof typeof columns;
+    valueJson: string;
+  }>;
+  const updates = new Map<string, Array<{ column: string; value: string }>>();
+  for (const winner of winners) {
+    if (!(winner.field in columns)) continue;
+    const value: unknown = JSON.parse(winner.valueJson);
+    if (typeof value !== "string")
+      throw new Error(
+        `Stored entity field ${winner.field} for ${winner.entityId} is invalid`,
+      );
+    const fields = updates.get(winner.entityId) ?? [];
+    fields.push({ column: columns[winner.field], value });
+    updates.set(winner.entityId, fields);
+  }
+  for (const [entityId, fields] of updates) {
+    sqlite
+      .prepare(
+        `update entities set ${fields.map(({ column }) => `${column} = ?`).join(", ")}, updated_at = ? where id = ?`,
+      )
+      .run(...fields.map(({ value }) => value), Date.now(), entityId);
+  }
+  for (const [field, column] of [
+    ["description", "description"],
+    ["arcaneClass", "arcane_class"],
+    ["weaponClass", "weapon_class"],
+  ] as const) {
+    sqlite
+      .prepare(
+        `update entities set ${column} = null, updated_at = ?
+         where exists (
+           select 1 from fact_provenance historical
+           where historical.entity_id = entities.id and historical.field = ? and historical.value_json is not null
+         ) and not exists (
+           select 1 from fact_provenance active
+           join source_runs run on run.id = active.source_run_id and run.status = 'active'
+           where active.entity_id = entities.id and active.field = ? and active.value_json is not null
+         )`,
+      )
+      .run(Date.now(), field, field);
+  }
 }
 
 function resolveAndWriteEntity(
@@ -737,12 +806,13 @@ function resolveAndWriteEntity(
     insertAlias.run(entityId, normalizedAlias(name), name);
 
   const writeProvenance = sqlite.prepare(`
-    insert into fact_provenance (entity_id, field, source_run_id, source_record_key, citation_url, source_path)
-    values (?, ?, ?, ?, ?, ?)
+    insert into fact_provenance (entity_id, field, source_run_id, source_record_key, citation_url, source_path, value_json)
+    values (?, ?, ?, ?, ?, ?, ?)
     on conflict(entity_id, field, source_run_id) do update set
       source_record_key = excluded.source_record_key,
       citation_url = excluded.citation_url,
-      source_path = excluded.source_path
+      source_path = excluded.source_path,
+      value_json = excluded.value_json
   `);
   for (const field of [
     "name",
@@ -759,6 +829,7 @@ function resolveAndWriteEntity(
         observation.evidence.sourceRecordKey,
         observation.evidence.citationUrl ?? null,
         observation.evidence.path ?? null,
+        JSON.stringify(observation.fields[field]),
       );
     }
   }

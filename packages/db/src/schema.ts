@@ -210,6 +210,7 @@ export const provenance = sqliteTable(
     sourceRecordKey: text("source_record_key").notNull(),
     citationUrl: text("citation_url"),
     sourcePath: text("source_path"),
+    valueJson: text("value_json"),
   },
   (table) => [
     primaryKey({ columns: [table.entityId, table.field, table.sourceRunId] }),

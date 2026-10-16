@@ -1,0 +1,1 @@
+ALTER TABLE `fact_provenance` ADD `value_json` text;

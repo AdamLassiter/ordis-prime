@@ -218,6 +218,13 @@
       "when": 1792108381339,
       "tag": "0030_plain_machine_man",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "6",
+      "when": 1792109081716,
+      "tag": "0031_secret_toad_men",
+      "breakpoints": true
     }
   ]
 }

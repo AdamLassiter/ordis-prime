@@ -26,6 +26,15 @@ retain the source record key plus optional citation URL and source path. The
 catalog can therefore explain a typed relation at record level instead of
 offering only a provider-level attribution.
 
+Each entity-field provenance row also retains the source's asserted value.
+After an active source run changes, canonical fields are recomputed from all
+active assertions by source priority, then retrieval time and run ID. Removing
+a higher-priority assertion therefore reveals the next active value instead of
+leaving stale canonical text behind. Optional fields clear when their final
+active assertion disappears; the identity-bearing name and slug remain when no
+active source asserts a replacement. Provenance created before value retention
+preserves its canonical value until that source next refreshes.
+
 Adapter parser versions form part of static snapshot versions. Re-fetching an
 already-active identical version is a successful no-op; a parser change uses a
 new version suffix so retained upstream bytes can be interpreted into a new run.

@@ -675,6 +675,63 @@ test("higher-priority cited facts remain field winners across provider refreshes
       .get(),
     { description: "Cited correction" },
   );
+
+  promoteSource(sqlite, {
+    source: {
+      id: "manual",
+      name: "Manual",
+      homepage: "https://example.test/correction",
+      priority: 300,
+    },
+    version: "manual-v2",
+    contentHash: "manual-v2",
+    retrievedAt: "2026-01-03T00:00:00.000Z",
+    observations: [
+      {
+        type: "entity",
+        kind: "weapon",
+        externalIds: [
+          { sourceId: "fixture", namespace: "id", value: "braton" },
+        ],
+        fields: {},
+        evidence: evidence("manual-v2", "manual"),
+      },
+    ],
+  });
+  assert.deepEqual(
+    sqlite
+      .prepare("select description from entities where slug = 'braton'")
+      .get(),
+    { description: "New provider description" },
+  );
+  assert.deepEqual(
+    sqlite
+      .prepare(
+        `select run.version, provenance.value_json as valueJson
+         from fact_provenance provenance
+         join source_runs run on run.id = provenance.source_run_id
+         join entities entity on entity.id = provenance.entity_id
+         where entity.slug = 'braton' and provenance.field = 'description' and run.status = 'active'`,
+      )
+      .all(),
+    [{ version: "v2", valueJson: '"New provider description"' }],
+  );
+
+  promoteSource(
+    sqlite,
+    input("v3", [
+      {
+        ...entity("braton", "Braton", "weapon", "v3"),
+        fields: { name: "Braton", slug: "braton" },
+      },
+    ]),
+  );
+  assert.deepEqual(
+    sqlite
+      .prepare("select description from entities where slug = 'braton'")
+      .get(),
+    { description: null },
+  );
 });
 
 test("equipment classes are promoted as cited canonical fields", async (context) => {

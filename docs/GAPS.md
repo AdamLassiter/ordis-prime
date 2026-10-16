@@ -19,7 +19,13 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   runs containing resolver conflicts remain protected for review. Refresh-operation
   rows are bounded per source, while raw payload storage remains unbounded. A
   SQLite-leased job runner handles recurring work. Migrations run lazily when
-  the web process first opens SQLite.
+  the web process first opens SQLite. Canonical entity fields are recomputed
+  from value-bearing provenance whenever active source membership changes, so
+  priority fallback and withdrawal are deterministic. Name and slug are still
+  retained as identity labels when no active source asserts them; arbitrary
+  typed field schemas and per-field merge policies are not yet modeled. Older
+  provenance rows have no reconstructable asserted value and retain their
+  canonical field until their source is refreshed.
 - WFCD item and mission-drop adapters exist and emit entities, recipes,
   components, arcanes, Archon Shards, nodes, and drops. Fetched payloads can be retained in an
   immutable, hash-verified snapshot store and observations can be resolved into
