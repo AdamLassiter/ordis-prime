@@ -70,6 +70,24 @@ export default async function ItemPage({
             <dd>{item.weaponClass}</dd>
           </>
         )}
+        {item.modMaxRank !== undefined && (
+          <>
+            <dt>Maximum rank</dt>
+            <dd>{item.modMaxRank}</dd>
+          </>
+        )}
+        {item.modBaseDrain !== undefined && (
+          <>
+            <dt>Base drain</dt>
+            <dd>{item.modBaseDrain}</dd>
+          </>
+        )}
+        {item.modPolarity && (
+          <>
+            <dt>Polarity</dt>
+            <dd>{item.modPolarity}</dd>
+          </>
+        )}
         <dt>Components</dt>
         <dd>
           {item.components.length

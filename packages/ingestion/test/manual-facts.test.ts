@@ -129,6 +129,49 @@ entries: [{ target: { sourceId: items, namespace: id, value: dread }, kind: weap
   );
 });
 
+test("manual facts validate canonical mod capacity fields", async () => {
+  const valid = ManualFactsAdapter.fromBytes(
+    new TextEncoder().encode(`
+schemaVersion: 1
+source: { id: manual, title: Manual, url: https://example.test, licenseNote: cited }
+entries:
+  - target: { sourceId: items, namespace: id, value: serration }
+    kind: mod
+    modMaxRank: 10
+    modBaseDrain: 4
+    modPolarity: madurai
+`),
+  );
+  const observations = await collect(valid, await valid.fetch({}));
+  assert.deepEqual(
+    observations[0]?.type === "entity" && observations[0].fields,
+    {
+      name: undefined,
+      slug: undefined,
+      description: undefined,
+      arcaneClass: undefined,
+      weaponClass: undefined,
+      modMaxRank: 10,
+      modBaseDrain: 4,
+      modPolarity: "madurai",
+    },
+  );
+  assert.throws(
+    () =>
+      ManualFactsAdapter.fromBytes(
+        new TextEncoder().encode(`
+schemaVersion: 1
+source: { id: manual, title: Manual, url: https://example.test, licenseNote: cited }
+entries:
+  - target: { sourceId: items, namespace: id, value: serration }
+    kind: mod
+    modMaxRank: 592
+`),
+      ),
+    /modMaxRank is invalid/,
+  );
+});
+
 test("manual facts do not imply that a retired entity can be restored", async (context) => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-manual-facts-"));
   context.after(() => fs.rm(root, { recursive: true, force: true }));

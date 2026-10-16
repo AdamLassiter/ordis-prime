@@ -50,6 +50,19 @@ export const WEAPON_CLASSES = [
 ] as const;
 export type WeaponClass = (typeof WEAPON_CLASSES)[number];
 
+export const MOD_POLARITIES = [
+  "aura",
+  "madurai",
+  "naramon",
+  "penjaga",
+  "umbra",
+  "unairu",
+  "universal",
+  "vazarin",
+  "zenurik",
+] as const;
+export type ModPolarity = (typeof MOD_POLARITIES)[number];
+
 export interface CanonicalEntity {
   id: EntityId;
   kind: EntityKind;
@@ -58,6 +71,9 @@ export interface CanonicalEntity {
   description?: string;
   arcaneClass?: ArcaneClass;
   weaponClass?: WeaponClass;
+  modMaxRank?: number;
+  modBaseDrain?: number;
+  modPolarity?: ModPolarity;
   retired: boolean;
 }
 
@@ -84,7 +100,14 @@ export interface EntityObservation {
   fields: Partial<
     Pick<
       CanonicalEntity,
-      "name" | "slug" | "description" | "arcaneClass" | "weaponClass"
+      | "name"
+      | "slug"
+      | "description"
+      | "arcaneClass"
+      | "weaponClass"
+      | "modMaxRank"
+      | "modBaseDrain"
+      | "modPolarity"
     >
   >;
   aliases?: string[];

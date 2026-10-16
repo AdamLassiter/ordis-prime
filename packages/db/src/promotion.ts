@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import type Database from "better-sqlite3";
 import {
   ARCANE_CLASSES,
+  MOD_POLARITIES,
   WEAPON_CLASSES,
   externalKey,
   normalizedAlias,
@@ -695,6 +696,9 @@ function recomputeActiveEntityFields(sqlite: Database.Database): void {
     description: "description",
     arcaneClass: "arcane_class",
     weaponClass: "weapon_class",
+    modMaxRank: "mod_max_rank",
+    modBaseDrain: "mod_base_drain",
+    modPolarity: "mod_polarity",
   } as const;
   const winners = sqlite
     .prepare(
@@ -716,16 +720,27 @@ function recomputeActiveEntityFields(sqlite: Database.Database): void {
     field: keyof typeof columns;
     valueJson: string;
   }>;
-  const updates = new Map<string, Array<{ column: string; value: string }>>();
+  const updates = new Map<
+    string,
+    Array<{ column: string; value: string | number }>
+  >();
   for (const winner of winners) {
     if (!(winner.field in columns)) continue;
     const value: unknown = JSON.parse(winner.valueJson);
-    if (typeof value !== "string")
+    const numeric =
+      winner.field === "modMaxRank" || winner.field === "modBaseDrain";
+    if (
+      (numeric && !Number.isSafeInteger(value)) ||
+      (!numeric && typeof value !== "string")
+    )
       throw new Error(
         `Stored entity field ${winner.field} for ${winner.entityId} is invalid`,
       );
     const fields = updates.get(winner.entityId) ?? [];
-    fields.push({ column: columns[winner.field], value });
+    fields.push({
+      column: columns[winner.field],
+      value: value as string | number,
+    });
     updates.set(winner.entityId, fields);
   }
   for (const [entityId, fields] of updates) {
@@ -739,6 +754,9 @@ function recomputeActiveEntityFields(sqlite: Database.Database): void {
     ["description", "description"],
     ["arcaneClass", "arcane_class"],
     ["weaponClass", "weapon_class"],
+    ["modMaxRank", "mod_max_rank"],
+    ["modBaseDrain", "mod_base_drain"],
+    ["modPolarity", "mod_polarity"],
   ] as const) {
     sqlite
       .prepare(
@@ -816,8 +834,8 @@ function resolveAndWriteEntity(
     sqlite
       .prepare(
         `
-      insert into entities (id, kind, name, slug, description, arcane_class, weapon_class, retired, updated_at)
-      values (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      insert into entities (id, kind, name, slug, description, arcane_class, weapon_class, mod_max_rank, mod_base_drain, mod_polarity, retired, updated_at)
+      values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `,
       )
       .run(
@@ -828,6 +846,9 @@ function resolveAndWriteEntity(
         observation.fields.description ?? null,
         observation.fields.arcaneClass ?? null,
         observation.fields.weaponClass ?? null,
+        observation.fields.modMaxRank ?? null,
+        observation.fields.modBaseDrain ?? null,
+        observation.fields.modPolarity ?? null,
         observation.tombstone ? 1 : 0,
         Date.now(),
       );
@@ -839,6 +860,9 @@ function resolveAndWriteEntity(
       description: observation.fields.description,
       arcaneClass: observation.fields.arcaneClass,
       weaponClass: observation.fields.weaponClass,
+      modMaxRank: observation.fields.modMaxRank,
+      modBaseDrain: observation.fields.modBaseDrain,
+      modPolarity: observation.fields.modPolarity,
       retired: observation.tombstone ?? false,
     });
     counts.entitiesCreated += 1;
@@ -912,6 +936,9 @@ function resolveAndWriteEntity(
     "description",
     "arcaneClass",
     "weaponClass",
+    "modMaxRank",
+    "modBaseDrain",
+    "modPolarity",
   ] as const) {
     if (observation.fields[field] !== undefined) {
       writeProvenance.run(
@@ -942,6 +969,9 @@ function updateWinningFields(
     description: "description",
     arcaneClass: "arcane_class",
     weaponClass: "weapon_class",
+    modMaxRank: "mod_max_rank",
+    modBaseDrain: "mod_base_drain",
+    modPolarity: "mod_polarity",
   } as const;
   for (const field of [
     "name",
@@ -949,6 +979,9 @@ function updateWinningFields(
     "description",
     "arcaneClass",
     "weaponClass",
+    "modMaxRank",
+    "modBaseDrain",
+    "modPolarity",
   ] as const) {
     const value = observation.fields[field];
     if (value === undefined) continue;
@@ -981,7 +1014,7 @@ function updateWinningFields(
 function loadResolutionState(sqlite: Database.Database): ResolutionState {
   const entityRows = sqlite
     .prepare(
-      "select id, kind, name, slug, description, arcane_class as arcaneClass, weapon_class as weaponClass, retired from entities",
+      "select id, kind, name, slug, description, arcane_class as arcaneClass, weapon_class as weaponClass, mod_max_rank as modMaxRank, mod_base_drain as modBaseDrain, mod_polarity as modPolarity, retired from entities",
     )
     .all() as Array<Omit<CanonicalEntity, "retired"> & { retired: number }>;
   const entities = new Map<EntityId, CanonicalEntity>();
@@ -1143,6 +1176,33 @@ function validateInput(input: PromoteSourceInput): void {
         ))
     ) {
       throw new Error("Entity weapon class is invalid");
+    }
+    if (observation.type === "entity") {
+      const { modMaxRank, modBaseDrain, modPolarity } = observation.fields;
+      if (
+        (modMaxRank !== undefined ||
+          modBaseDrain !== undefined ||
+          modPolarity !== undefined) &&
+        observation.kind !== "mod"
+      )
+        throw new Error("Mod fields require a mod entity");
+      if (
+        modMaxRank !== undefined &&
+        (!Number.isSafeInteger(modMaxRank) || modMaxRank < 0 || modMaxRank > 10)
+      )
+        throw new Error("Mod maximum rank must be between 0 and 10");
+      if (
+        modBaseDrain !== undefined &&
+        (!Number.isSafeInteger(modBaseDrain) ||
+          modBaseDrain < -4 ||
+          modBaseDrain > 10)
+      )
+        throw new Error("Mod base drain must be between -4 and 10");
+      if (
+        modPolarity !== undefined &&
+        !(MOD_POLARITIES as readonly string[]).includes(modPolarity)
+      )
+        throw new Error("Mod polarity is invalid");
     }
     if (
       observation.type === "drop" &&
@@ -1314,7 +1374,15 @@ function incompatibleEntityDeclarations(
     second.kind !== "unknown"
   )
     return true;
-  for (const field of ["name", "slug", "arcaneClass", "weaponClass"] as const) {
+  for (const field of [
+    "name",
+    "slug",
+    "arcaneClass",
+    "weaponClass",
+    "modMaxRank",
+    "modBaseDrain",
+    "modPolarity",
+  ] as const) {
     if (
       first.fields[field] !== undefined &&
       second.fields[field] !== undefined &&

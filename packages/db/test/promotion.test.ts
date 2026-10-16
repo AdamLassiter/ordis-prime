@@ -1021,7 +1021,7 @@ test("equal-priority field winners are stable across import order", async (conte
   assert.deepEqual(descriptions, ["Alpha description", "Alpha description"]);
 });
 
-test("equipment classes are promoted as cited canonical fields", async (context) => {
+test("equipment and mod fields are promoted as cited canonical fields", async (context) => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-arcane-class-"));
   context.after(() => fs.rm(root, { recursive: true, force: true }));
   const databasePath = path.join(root, "catalog.sqlite");
@@ -1041,8 +1041,18 @@ test("equipment classes are promoted as cited canonical fields", async (context)
     ...entity("dread", "Dread", "weapon"),
     fields: { name: "Dread", slug: "dread", weaponClass: "bow" as const },
   };
+  const mod = {
+    ...entity("serration", "Serration", "mod"),
+    fields: {
+      name: "Serration",
+      slug: "serration",
+      modMaxRank: 10,
+      modBaseDrain: 4,
+      modPolarity: "madurai" as const,
+    },
+  };
 
-  promoteSource(sqlite, input("v1", [arcane, weapon]));
+  promoteSource(sqlite, input("v1", [arcane, weapon, mod]));
 
   assert.deepEqual(
     sqlite
@@ -1075,6 +1085,26 @@ test("equipment classes are promoted as cited canonical fields", async (context)
       )
       .get(),
     { field: "weaponClass", recordKey: "record" },
+  );
+  assert.deepEqual(
+    sqlite
+      .prepare(
+        "select mod_max_rank as modMaxRank, mod_base_drain as modBaseDrain, mod_polarity as modPolarity from entities where slug = 'serration'",
+      )
+      .get(),
+    { modMaxRank: 10, modBaseDrain: 4, modPolarity: "madurai" },
+  );
+  assert.deepEqual(
+    sqlite
+      .prepare(
+        "select field, value_json as valueJson from fact_provenance where entity_id = (select id from entities where slug = 'serration') and field like 'mod%' order by field",
+      )
+      .all(),
+    [
+      { field: "modBaseDrain", valueJson: "4" },
+      { field: "modMaxRank", valueJson: "10" },
+      { field: "modPolarity", valueJson: '"madurai"' },
+    ],
   );
 });
 

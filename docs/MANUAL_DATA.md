@@ -86,7 +86,8 @@ provider snapshot. Version 1 YAML declares an independently cited source and
 targets every entry by an explicit `{ sourceId, namespace, value }` identifier.
 Display names are never used to guess the correction target. An entry can
 provide a name, slug, description, canonical `arcaneClass` or `weaponClass`,
-aliases, sourced `enhancementOptions`, or the explicit tombstone
+canonical mod `modMaxRank`, `modBaseDrain` or `modPolarity` facts, aliases,
+sourced `enhancementOptions`, or the explicit tombstone
 `retired: true`; `retired: false` is rejected because restoration needs a
 separate reviewed operation. See `data/manual/facts.example.yaml`.
 
@@ -98,7 +99,7 @@ pnpm data:refresh manual-facts:data/manual/facts.example.yaml
 ```
 
 Source priority determines the active value for name, slug, description, arcane
-class, and weapon class.
+class, weapon class, and mod capacity fields.
 The default manual priority is 300, above the bundled providers, while each
 field retains the overlay's source record, YAML path, snapshot, and citation.
 Later provider refreshes therefore cannot silently erase an accepted
@@ -114,6 +115,12 @@ without teaching build consumers about provider-specific type labels.
 `kitgun`, `zaw`, `archgun`, `archmelee`, `companion`, or `amp`, and is valid
 only on a `weapon` entry. The normalized class drives equipment-slot and
 specialized-arcane validation.
+
+Mod facts are valid only for `kind: mod`. Maximum rank is an integer from zero
+through ten; base drain is an integer from -4 through 10 so aura and stance
+capacity bonuses remain representable. Polarity accepts `aura`, `madurai`,
+`naramon`, `penjaga`, `umbra`, `unairu`, `universal`, `vazarin`, or `zenurik`.
+These fields are independently cited and follow normal source-priority rules.
 
 Enhancement options contain a stable lowercase-hyphen key and a concise label.
 They are immutable source-run facts rather than fields copied onto an entity.

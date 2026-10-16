@@ -1,8 +1,10 @@
 import {
+  MOD_POLARITIES,
   normalizedAlias,
   type ArcaneClass,
   type EntityKind,
   type EntityObservation,
+  type ModPolarity,
   type Observation,
   type WeaponClass,
 } from "@ordis-prime/domain";
@@ -26,6 +28,9 @@ interface WfcdItem {
   maxEnemyLevel?: number;
   masteryReq?: number;
   nodeType?: number;
+  fusionLimit?: number;
+  baseDrain?: number;
+  polarity?: string;
 }
 interface WfcdComponent {
   uniqueName?: string;
@@ -57,7 +62,7 @@ const categories: Record<string, EntityKind> = {
   Enemy: "enemy",
 };
 export const DEFAULT_WFCD_ITEMS_URL = "https://api.warframestat.us/items";
-const PARSER_VERSION = "wfcd-items-v6";
+const PARSER_VERSION = "wfcd-items-v7";
 const ARCHON_SHARD_PREFIX = "/Lotus/Types/Gameplay/NarmerSorties/ArchonCrystal";
 const resourceTypes = new Set([
   "Resource",
@@ -173,6 +178,24 @@ export class WfcdItemsAdapter implements SourceAdapter {
           arcaneClass:
             kind === "arcane" ? arcaneClasses[item.type ?? ""] : undefined,
           weaponClass: kind === "weapon" ? weaponClassFor(item) : undefined,
+          modMaxRank:
+            kind === "mod" &&
+            Number.isSafeInteger(item.fusionLimit) &&
+            item.fusionLimit! >= 0 &&
+            item.fusionLimit! <= 10
+              ? item.fusionLimit
+              : undefined,
+          modBaseDrain:
+            kind === "mod" &&
+            Number.isSafeInteger(item.baseDrain) &&
+            item.baseDrain! >= -4 &&
+            item.baseDrain! <= 10
+              ? item.baseDrain
+              : undefined,
+          modPolarity:
+            kind === "mod" && isModPolarity(item.polarity)
+              ? item.polarity
+              : undefined,
         },
         evidence,
       };
@@ -251,6 +274,12 @@ export class WfcdItemsAdapter implements SourceAdapter {
         };
     }
   }
+}
+
+function isModPolarity(value: string | undefined): value is ModPolarity {
+  return (
+    value !== undefined && (MOD_POLARITIES as readonly string[]).includes(value)
+  );
 }
 function kindFor(
   item: Pick<WfcdItem, "uniqueName" | "category" | "type">,

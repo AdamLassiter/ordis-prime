@@ -1,12 +1,12 @@
 # Source policy
 
-| Source                  | Initial use                                                                                                                                    | Policy                                                                                                                                               |
-| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| WFCD warframe-items     | identities, items, weapon and arcane classes, modular weapon representatives/components, Archwings, Archon Shards, node levels/planets, quests | Fetch the maintained aggregate API endpoint; snapshot, validate, retain version/hash and MIT attribution                                             |
-| WFCD warframe-drop-data | mission metadata, enemy, relic and rotation drops                                                                                              | Snapshot mission rewards with payload and retain upstream attribution                                                                                |
-| WFCD WarframeStat.us    | live cycles, events, alerts, fissures and traders                                                                                              | Snapshot the PC English aggregate response; normalize absolute availability windows and retain MIT attribution                                       |
-| Manual YAML             | published editorial rankings; curated discovery facts and relations; factual overlays                                                          | Require source-specific citations and licence notes; retain each source as an independent versioned set and resolve overlays by explicit external ID |
-| Warframe Wiki           | external detail links and a curated Archon Shard effect vocabulary                                                                             | No automated fetching; the checked-in effect source is a cited CC BY-NC-SA 3.0 manual snapshot, and future facts remain segregated and attributable  |
+| Source                  | Initial use                                                                                                                                                                   | Policy                                                                                                                                               |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| WFCD warframe-items     | identities, items, weapon and arcane classes, mod rank/drain/polarity facts, modular weapon representatives/components, Archwings, Archon Shards, node levels/planets, quests | Fetch the maintained aggregate API endpoint; snapshot, validate, retain version/hash and MIT attribution                                             |
+| WFCD warframe-drop-data | mission metadata, enemy, relic and rotation drops                                                                                                                             | Snapshot mission rewards with payload and retain upstream attribution                                                                                |
+| WFCD WarframeStat.us    | live cycles, events, alerts, fissures and traders                                                                                                                             | Snapshot the PC English aggregate response; normalize absolute availability windows and retain MIT attribution                                       |
+| Manual YAML             | published editorial rankings; curated discovery facts and relations; factual overlays                                                                                         | Require source-specific citations and licence notes; retain each source as an independent versioned set and resolve overlays by explicit external ID |
+| Warframe Wiki           | external detail links and a curated Archon Shard effect vocabulary                                                                                                            | No automated fetching; the checked-in effect source is a cited CC BY-NC-SA 3.0 manual snapshot, and future facts remain segregated and attributable  |
 
 Provider absence never means deletion. Removals require an explicit tombstone,
 and records referenced by player data are retired rather than physically deleted.
@@ -123,6 +123,10 @@ one-off generic components remain qualified. Same-kind display-name collisions
 with different provider types receive stable type qualifiers, while store and
 internal records with the same name/type intentionally converge. Common WFCD
 resource-like types, including Forma's `Equipment Adapter`, map to resources.
+For mods, sane `fusionLimit`, `baseDrain` and canonical polarity values become
+cited canonical fields. The adapter omits provider placeholder sentinels such
+as rank 592 and extreme negative drain rather than turning corrupt metadata into
+capacity facts. A parser-version bump ensures retained bytes can be replayed.
 
 Resolver conflicts store the exact external IDs that participated in an entity
 observation and the candidate canonical entities. An administrator can close a

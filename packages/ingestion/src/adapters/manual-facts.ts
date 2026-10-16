@@ -2,10 +2,12 @@ import fs from "node:fs/promises";
 import { parse } from "yaml";
 import {
   ARCANE_CLASSES,
+  MOD_POLARITIES,
   WEAPON_CLASSES,
   type ArcaneClass,
   type EntityKind,
   type ExternalIdentifier,
+  type ModPolarity,
   type Observation,
   type WeaponClass,
 } from "@ordis-prime/domain";
@@ -56,6 +58,9 @@ interface ManualFactsDocument {
     description?: string;
     arcaneClass?: ArcaneClass;
     weaponClass?: WeaponClass;
+    modMaxRank?: number;
+    modBaseDrain?: number;
+    modPolarity?: ModPolarity;
     aliases?: string[];
     enhancementOptions?: Array<{ key: string; label: string }>;
     retired?: boolean;
@@ -128,6 +133,9 @@ export class ManualFactsAdapter implements SourceAdapter {
           description: entry.description,
           arcaneClass: entry.arcaneClass,
           weaponClass: entry.weaponClass,
+          modMaxRank: entry.modMaxRank,
+          modBaseDrain: entry.modBaseDrain,
+          modPolarity: entry.modPolarity,
         },
         aliases: entry.aliases,
         tombstone: entry.retired,
@@ -210,6 +218,29 @@ function parseDocument(bytes: Uint8Array): ManualFactsDocument {
     )
       throw new Error(`Manual facts entry ${index}.weaponClass is invalid`);
     if (
+      entry.modMaxRank !== undefined &&
+      (entry.kind !== "mod" ||
+        !Number.isSafeInteger(entry.modMaxRank) ||
+        (entry.modMaxRank as number) < 0 ||
+        (entry.modMaxRank as number) > 10)
+    )
+      throw new Error(`Manual facts entry ${index}.modMaxRank is invalid`);
+    if (
+      entry.modBaseDrain !== undefined &&
+      (entry.kind !== "mod" ||
+        !Number.isSafeInteger(entry.modBaseDrain) ||
+        (entry.modBaseDrain as number) < -4 ||
+        (entry.modBaseDrain as number) > 10)
+    )
+      throw new Error(`Manual facts entry ${index}.modBaseDrain is invalid`);
+    if (
+      entry.modPolarity !== undefined &&
+      (entry.kind !== "mod" ||
+        typeof entry.modPolarity !== "string" ||
+        !(MOD_POLARITIES as readonly string[]).includes(entry.modPolarity))
+    )
+      throw new Error(`Manual facts entry ${index}.modPolarity is invalid`);
+    if (
       entry.aliases !== undefined &&
       (!Array.isArray(entry.aliases) ||
         entry.aliases.some((alias) => typeof alias !== "string" || !alias))
@@ -255,6 +286,9 @@ function parseDocument(bytes: Uint8Array): ManualFactsDocument {
         entry.description,
         entry.arcaneClass,
         entry.weaponClass,
+        entry.modMaxRank,
+        entry.modBaseDrain,
+        entry.modPolarity,
         entry.aliases,
         entry.enhancementOptions,
         entry.retired,

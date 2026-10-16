@@ -41,6 +41,61 @@ test("WFCD adapter emits source-neutral, evidenced observations", async () => {
   );
 });
 
+test("WFCD adapter retains sane canonical mod capacity facts", async () => {
+  const modSnapshot = {
+    ...snapshot,
+    bytes: new TextEncoder().encode(
+      JSON.stringify([
+        {
+          uniqueName: "/mod",
+          name: "Capacity Test",
+          category: "Mods",
+          fusionLimit: 5,
+          baseDrain: 4,
+          polarity: "madurai",
+        },
+        {
+          uniqueName: "/riven-placeholder",
+          name: "Riven Placeholder",
+          category: "Mods",
+          fusionLimit: 592,
+          baseDrain: -1812070400,
+          polarity: "unknown-provider-value",
+        },
+      ]),
+    ),
+  };
+  const observations = await collect(new WfcdItemsAdapter(), modSnapshot);
+  assert.deepEqual(
+    observations.flatMap((entry) =>
+      entry.type === "entity"
+        ? [
+            {
+              name: entry.fields.name,
+              maxRank: entry.fields.modMaxRank,
+              baseDrain: entry.fields.modBaseDrain,
+              polarity: entry.fields.modPolarity,
+            },
+          ]
+        : [],
+    ),
+    [
+      {
+        name: "Capacity Test",
+        maxRank: 5,
+        baseDrain: 4,
+        polarity: "madurai",
+      },
+      {
+        name: "Riven Placeholder",
+        maxRank: undefined,
+        baseDrain: undefined,
+        polarity: undefined,
+      },
+    ],
+  );
+});
+
 test("WFCD component references retain trustworthy item kinds and qualified part names", async () => {
   const componentSnapshot = {
     ...snapshot,
@@ -445,7 +500,7 @@ test("WFCD adapter defaults to the maintained aggregate endpoint", async () => {
     const adapter = new WfcdItemsAdapter();
     const fetched = await adapter.fetch({});
     assert.equal(requestedUrl, DEFAULT_WFCD_ITEMS_URL);
-    assert.equal(fetched.version, "fixture-etag|wfcd-items-v6");
+    assert.equal(fetched.version, "fixture-etag|wfcd-items-v7");
     assert.equal(adapter.minimumRetainedObservationRatio, 0.5);
   } finally {
     globalThis.fetch = originalFetch;

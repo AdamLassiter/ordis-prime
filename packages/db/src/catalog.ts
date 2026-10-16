@@ -1,4 +1,8 @@
-import type { ArcaneClass, WeaponClass } from "@ordis-prime/domain";
+import type {
+  ArcaneClass,
+  ModPolarity,
+  WeaponClass,
+} from "@ordis-prime/domain";
 import type Database from "better-sqlite3";
 
 export interface CatalogSummary {
@@ -8,6 +12,9 @@ export interface CatalogSummary {
   description?: string;
   arcaneClass?: ArcaneClass;
   weaponClass?: WeaponClass;
+  modMaxRank?: number;
+  modBaseDrain?: number;
+  modPolarity?: ModPolarity;
 }
 export const DISCOVERY_KINDS = [
   "quest",
@@ -284,13 +291,16 @@ export function findCatalogItem(
 ): CatalogItem | undefined {
   const item = sqlite
     .prepare(
-      "select id, kind, slug, name, description, arcane_class as arcaneClass, weapon_class as weaponClass from entities where kind = ? and slug = ? and retired = 0",
+      "select id, kind, slug, name, description, arcane_class as arcaneClass, weapon_class as weaponClass, mod_max_rank as modMaxRank, mod_base_drain as modBaseDrain, mod_polarity as modPolarity from entities where kind = ? and slug = ? and retired = 0",
     )
     .get(kind, slug) as
     | (CatalogSummary & {
         id: string;
         arcaneClass: ArcaneClass | null;
         weaponClass: WeaponClass | null;
+        modMaxRank: number | null;
+        modBaseDrain: number | null;
+        modPolarity: ModPolarity | null;
       })
     | undefined;
   if (!item) return undefined;
@@ -472,11 +482,22 @@ export function findCatalogItem(
     sourcePath?: string;
     snapshotPath?: string;
   }>;
-  const { id: _id, arcaneClass, weaponClass, ...summary } = item;
+  const {
+    id: _id,
+    arcaneClass,
+    weaponClass,
+    modMaxRank,
+    modBaseDrain,
+    modPolarity,
+    ...summary
+  } = item;
   return {
     ...summary,
     ...(arcaneClass ? { arcaneClass } : {}),
     ...(weaponClass ? { weaponClass } : {}),
+    ...(modMaxRank !== null ? { modMaxRank } : {}),
+    ...(modBaseDrain !== null ? { modBaseDrain } : {}),
+    ...(modPolarity ? { modPolarity } : {}),
     components,
     drops,
     sources,

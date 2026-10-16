@@ -56,8 +56,9 @@ recipes and recommends nodes using the same canonical IDs.
 
 ## Current limits
 
-- Forma count, a capacity-upgrade flag, and a configuration label are recorded,
-  but polarities and calculated capacity/drain are not modeled. Broad arcane
+- Forma count, a capacity-upgrade flag, and a configuration label are recorded.
+  The catalog now retains sourced mod maximum rank, base drain and polarity,
+  but equipment-slot polarities and calculated capacity/drain are not yet modeled. Broad arcane
   and specialized weapon compatibility are enforced from cited canonical
   facts. A Kitgun chamber or Zaw strike is currently the representative
   canonical weapon; the other modular parts and their stat composition are not
