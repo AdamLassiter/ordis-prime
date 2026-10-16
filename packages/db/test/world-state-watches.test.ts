@@ -153,6 +153,11 @@ test("node-linked watches match canonical reconciled nodes rather than similar l
       "insert into entities (id, kind, name, slug, retired, updated_at) values ('node-tessera', 'node', 'Tessera', 'tessera', 0, ?)",
     )
     .run(Date.now());
+  database
+    .prepare(
+      "insert into entity_aliases (entity_id, normalized, display) values ('node-tessera', 'tesserarelay', 'Tessera Relay')",
+    )
+    .run();
   const watchId = createWorldStateWatch(database, userId, {
     kind: "fissure",
     trigger: "active",
@@ -175,7 +180,7 @@ test("node-linked watches match canonical reconciled nodes rather than similar l
         externalId: "fissure:tessera",
         kind: "fissure",
         label: "Lith fissure",
-        nodeLabel: "Tessera (Venus)",
+        nodeLabel: "Tessera Relay (Venus)",
         expiry: "2026-10-13T22:00:00.000Z",
         evidence: {
           sourceId: "test-world",

@@ -332,9 +332,12 @@ function resolveWorldStateNode(
   const planet = match?.[2]?.trim();
   const candidates = sqlite
     .prepare(
-      "select id from entities where kind = 'node' and retired = 0 and name = ? collate nocase",
+      `select distinct entity.id from entities entity
+       left join entity_aliases alias on alias.entity_id = entity.id
+       where entity.kind = 'node' and entity.retired = 0
+         and (entity.name = ? collate nocase or alias.normalized = ?)`,
     )
-    .all(name) as Array<{ id: string }>;
+    .all(name, normalizedAlias(name)) as Array<{ id: string }>;
   if (candidates.length === 1) return candidates[0]!.id;
   if (!planet || !candidates.length) return undefined;
   const placeholders = candidates.map(() => "?").join(", ");

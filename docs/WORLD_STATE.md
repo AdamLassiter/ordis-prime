@@ -10,11 +10,12 @@ Fissures and Void Trader visits. Every window retains its provider record key,
 payload path and immutable snapshot version.
 
 During promotion, a provider node label is conservatively linked to a canonical
-node when its name is a unique case-insensitive match. A trailing parenthetical
-planet such as `Mantle (Earth)` is separated from the node name; the planet is
-used only to disambiguate duplicate names with active node metadata. Unresolved
-or ambiguous labels remain visible as source text without a link. Resolved
-labels link timers directly to the node's rewards and player inventory overlay.
+node when its case-insensitive name or normalized catalog alias identifies one
+active node. A trailing parenthetical planet such as `Mantle (Earth)` is
+separated from the candidate name or alias; the planet is used only to
+disambiguate multiple matches with active node metadata. Unresolved or
+ambiguous labels remain visible as source text without a link. Resolved labels
+link timers directly to the node's rewards and player inventory overlay.
 
 Windows can also carry source-neutral subjects. The WFCD adapter emits alert
 rewards, event names and rewards, and Void Trader inventory entries. WFCD item
@@ -79,7 +80,7 @@ disappearing.
   status and source filters. Source refresh attempts and normalized throughput
   remain separately visible.
 - Reconciliation uses provider identifiers where supplied, then exact unique
-  names or aliases. It intentionally does not fuzzy-match relays, open worlds,
+  names or normalized catalog aliases. It intentionally does not fuzzy-match relays, open worlds,
   reward labels or provider spelling differences. Event reward extraction does
   not yet cover every possible provider-specific nested reward shape.
 - Arbitrations between multiple live world-state providers are not implemented.
