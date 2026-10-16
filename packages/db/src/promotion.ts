@@ -563,6 +563,36 @@ function validateComposedCatalog(sqlite: Database.Database): void {
     throw new Error(
       `Composed catalog ${retiredReference.factType} ${retiredReference.recordKey ?? "without record key"} references retired ${retiredReference.kind}:${retiredReference.slug}`,
     );
+
+  const invalidNodeReference = sqlite
+    .prepare(
+      `select factType, recordKey, kind, slug from (
+        select 'drop node' as factType, item_drop.source_record_key as recordKey, entity.kind, entity.slug
+          from drops item_drop join source_runs run on run.id = item_drop.source_run_id and run.status = 'active'
+          join entities entity on entity.id = item_drop.node_id where entity.kind != 'node'
+        union all
+        select 'node detail', detail.source_record_key, entity.kind, entity.slug
+          from node_details detail join source_runs run on run.id = detail.source_run_id and run.status = 'active'
+          join entities entity on entity.id = detail.entity_id where entity.kind != 'node'
+        union all
+        select 'connection origin', relation.source_record_key, entity.kind, entity.slug
+          from entity_relations relation join source_runs run on run.id = relation.source_run_id and run.status = 'active'
+          join entities entity on entity.id = relation.from_entity_id
+          where relation.kind = 'connects-to' and entity.kind != 'node'
+        union all
+        select 'connection target', relation.source_record_key, entity.kind, entity.slug
+          from entity_relations relation join source_runs run on run.id = relation.source_run_id and run.status = 'active'
+          join entities entity on entity.id = relation.to_entity_id
+          where relation.kind = 'connects-to' and entity.kind != 'node'
+      ) limit 1`,
+    )
+    .get() as
+    | { factType: string; recordKey: string | null; kind: string; slug: string }
+    | undefined;
+  if (invalidNodeReference)
+    throw new Error(
+      `Composed catalog ${invalidNodeReference.factType} ${invalidNodeReference.recordKey ?? "without record key"} requires a node but resolved ${invalidNodeReference.kind}:${invalidNodeReference.slug}`,
+    );
 }
 
 function resolveAndWriteEntity(

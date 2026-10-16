@@ -388,6 +388,53 @@ test("composed validation rejects retirement of entities referenced by another a
   );
 });
 
+test("composed validation enforces node-typed fact endpoints across sources", async (context) => {
+  const root = await fs.mkdtemp(
+    path.join(os.tmpdir(), "ordis-composed-node-types-"),
+  );
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const databasePath = path.join(root, "catalog.sqlite");
+  migrateDatabase(databasePath);
+  const sqlite = new Database(databasePath);
+  sqlite.pragma("foreign_keys = ON");
+  context.after(() => sqlite.close());
+
+  promoteSource(
+    sqlite,
+    input("a-v1", [entity("weapon", "Definitely A Weapon", "weapon", "a-v1")]),
+  );
+  const sourceB = { ...source, id: "fixture-b", name: "Fixture B" };
+  const invalidDrop: Observation = {
+    type: "drop",
+    rewardExternalId: { sourceId: "fixture", namespace: "id", value: "weapon" },
+    nodeExternalId: { sourceId: "fixture", namespace: "id", value: "weapon" },
+    locationLabel: "Invalid node",
+    evidence: evidence("b-v1", "fixture-b"),
+  };
+  assert.throws(
+    () =>
+      promoteSource(sqlite, {
+        ...input("b-v1", [invalidDrop]),
+        source: sourceB,
+      }),
+    /Composed catalog drop node record requires a node but resolved weapon:definitely-a-weapon/,
+  );
+  assert.deepEqual(
+    sqlite
+      .prepare("select source_id as sourceId, version, status from source_runs")
+      .all(),
+    [{ sourceId: "fixture", version: "a-v1", status: "active" }],
+  );
+  assert.equal(
+    (
+      sqlite.prepare("select count(*) as count from drops").get() as {
+        count: number;
+      }
+    ).count,
+    0,
+  );
+});
+
 test("catalog pruning retains active and recent releases while protecting conflict runs", async (context) => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-release-prune-"));
   context.after(() => fs.rm(root, { recursive: true, force: true }));

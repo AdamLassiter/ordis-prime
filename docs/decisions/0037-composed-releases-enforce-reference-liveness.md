@@ -18,6 +18,8 @@ then validate the resulting composed active catalog before publishing a release.
 Require exactly one active run per represented source and require every entity
 referenced by an active structured fact to be non-retired. A violation aborts
 and rolls back the source run, entity retirement, active-run switch and release.
+Also require node-typed endpoints for drop locations, node-detail subjects and
+both ends of star-chart `connects-to` relations.
 
 The checked fact families are recipes and ingredients, drop rewards and nodes,
 node details, both typed-relation endpoints, enhancement options and editorial
@@ -28,6 +30,8 @@ consumer and does not keep an entity alive by itself.
 
 - A provider cannot invalidate another active provider's facts through a shared
   tombstone.
+- Cross-source identifiers cannot smuggle weapons, quests or other entity kinds
+  into node-only fact positions.
 - Failed composition leaves the previously active release and entity state
   untouched.
 - This establishes a release-wide validation hook for future semantic checks.
