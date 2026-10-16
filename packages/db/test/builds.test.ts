@@ -5,6 +5,7 @@ import path from "node:path";
 import test from "node:test";
 import {
   addBuildAcquisitionGoals,
+  calculatePolarityAdjustedDrain,
   calculateRankedModDrain,
   clonePlayerBuild,
   cloneSharedBuild,
@@ -35,6 +36,69 @@ test("ranked mod drain preserves aura and stance capacity bonuses", () => {
   assert.equal(calculateRankedModDrain(-2, 5), -7);
   assert.equal(calculateRankedModDrain(undefined, 5), undefined);
   assert.equal(calculateRankedModDrain(4, undefined), undefined);
+});
+
+test("slot polarity adjusts ordinary drain and special-slot capacity bonuses", () => {
+  const normal = { position: 0, role: "normal" } as const;
+  const aura = { position: 10, role: "aura" } as const;
+  assert.equal(
+    calculatePolarityAdjustedDrain(9, "madurai", undefined),
+    undefined,
+  );
+  assert.equal(calculatePolarityAdjustedDrain(9, "madurai", normal), 9);
+  assert.equal(
+    calculatePolarityAdjustedDrain(9, "madurai", {
+      ...normal,
+      polarity: "madurai",
+    }),
+    5,
+  );
+  assert.equal(
+    calculatePolarityAdjustedDrain(9, "madurai", {
+      ...normal,
+      polarity: "vazarin",
+    }),
+    12,
+  );
+  assert.equal(
+    calculatePolarityAdjustedDrain(-7, "madurai", {
+      ...aura,
+      polarity: "madurai",
+    }),
+    -14,
+  );
+  assert.equal(
+    calculatePolarityAdjustedDrain(-7, "madurai", {
+      ...aura,
+      polarity: "vazarin",
+    }),
+    -5,
+  );
+  assert.equal(
+    calculatePolarityAdjustedDrain(9, "madurai", {
+      ...normal,
+      polarity: "aura",
+    }),
+    5,
+  );
+  assert.equal(
+    calculatePolarityAdjustedDrain(9, "aura", {
+      ...normal,
+      polarity: "naramon",
+    }),
+    5,
+  );
+  assert.equal(
+    calculatePolarityAdjustedDrain(9, "aura", {
+      ...normal,
+      polarity: "umbra",
+    }),
+    12,
+  );
+  assert.equal(
+    calculatePolarityAdjustedDrain(-7, "madurai", normal),
+    undefined,
+  );
 });
 
 test("build drafts are private and share snapshots remain immutable", async (context) => {
@@ -192,6 +256,19 @@ test("build drafts are private and share snapshots remain immutable", async (con
     /Aura slots are only valid on Warframes/,
   );
   assert.throws(
+    () =>
+      setBuildModSlot(
+        database,
+        owner,
+        buildId,
+        "primary",
+        2,
+        "normal",
+        "universal",
+      ),
+    /Mod slot polarity is invalid/,
+  );
+  assert.throws(
     () => setBuildModSlot(database, owner, buildId, "warframe", 11, "aura"),
     /already has a configured aura slot/,
   );
@@ -292,6 +369,7 @@ test("build drafts are private and share snapshots remain immutable", async (con
           baseDrain: 4,
           polarity: "madurai",
           drain: 9,
+          adjustedDrain: 5,
           entity: { kind: "mod", slug: "serration", name: "Serration" },
         },
       ],

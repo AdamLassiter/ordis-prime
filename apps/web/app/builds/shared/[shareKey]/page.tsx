@@ -83,6 +83,9 @@ export default async function SharedBuildPage({
                         ? ""
                         : ` · rank ${mod.rank}${mod.maxRank === undefined ? "" : `/${mod.maxRank}`}`}
                       {mod.drain === undefined ? "" : ` · ${mod.drain} drain`}
+                      {mod.adjustedDrain === undefined
+                        ? ""
+                        : ` · ${mod.adjustedDrain} after slot polarity`}
                       {mod.polarity ? ` · ${mod.polarity}` : ""}
                     </li>
                   ))}

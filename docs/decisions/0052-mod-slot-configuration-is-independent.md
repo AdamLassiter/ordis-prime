@@ -29,5 +29,6 @@ or factory polarities that are not supplied by an active catalog source.
 - Empty Forma'd slots survive edits, cloning and export/import.
 - The editor can describe custom slot layouts now, while sourced default layouts
   and item-specific slot restrictions remain future catalog work.
-- Whole-build capacity is still withheld until polarity arithmetic and
-  equipment-specific capacity rules are implemented and tested.
+- ADR 0053 subsequently implements polarity arithmetic. Whole-build capacity is
+  still withheld until equipment-specific capacity rules are implemented and
+  tested.

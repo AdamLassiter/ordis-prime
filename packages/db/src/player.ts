@@ -3,6 +3,7 @@ import type Database from "better-sqlite3";
 import {
   BUILD_ENHANCEMENT_SLOTS,
   BUILD_MOD_SLOT_ROLES,
+  BUILD_MOD_SLOT_POLARITIES,
   BUILD_SLOTS,
   buildModSlotRolesFor,
   configureBuildEquipment,
@@ -30,7 +31,7 @@ import {
   type WorldStateWatch,
   type WorldStateWatchTrigger,
 } from "./world-state-watches.ts";
-import { MOD_POLARITIES, type WorldStateWindowKind } from "@ordis-prime/domain";
+import type { WorldStateWindowKind } from "@ordis-prime/domain";
 
 export interface InventoryValues {
   ownedCount: number;
@@ -1218,7 +1219,9 @@ function parsePortableBuild(value: unknown, index: number): PortableBuild {
         !(BUILD_MOD_SLOT_ROLES as readonly string[]).includes(modSlot.role) ||
         (modSlot.polarity !== undefined &&
           (typeof modSlot.polarity !== "string" ||
-            !(MOD_POLARITIES as readonly string[]).includes(modSlot.polarity)))
+            !(BUILD_MOD_SLOT_POLARITIES as readonly string[]).includes(
+              modSlot.polarity,
+            )))
       )
         throw new Error(`Profile ${label} mod slot ${modSlotIndex} is invalid`);
       if (modSlotPositions.has(modSlot.position as number))

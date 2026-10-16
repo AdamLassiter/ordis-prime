@@ -13,7 +13,10 @@ the mod installed at that position, so an empty Forma'd slot is not lost.
 When a mod has sourced rank and base-drain metadata, the editor constrains its
 selected rank and shows its unpolarized ranked drain. Positive drain increases
 by one per rank; negative aura/stance drain becomes a larger capacity bonus.
-Unknown metadata stays visibly absent rather than being guessed.
+When the mod's position has an explicitly configured slot, the editor also
+shows polarity-adjusted drain or bonus using the game's distinct normal and
+Aura/Stance rounding rules. Unknown metadata or slot configuration stays visibly
+absent rather than being guessed.
 Build-level enhancement slots record Warframe, operator/amp and weapon arcanes
 plus five positioned Archon Shards. Arcanes can retain an optional rank. Every
 new shard assignment chooses one active, cited effect option; the build stores
@@ -68,8 +71,8 @@ recipes and recommends nodes using the same canonical IDs.
   label, and player-authored mod-slot roles and polarities are recorded.
   The catalog now retains sourced mod maximum rank, base drain and polarity,
   and calculates each known mod's unpolarized ranked drain. Sourced factory slot
-  layouts, item-specific maximum rank rules, polarity-adjusted drain and
-  whole-build capacity are not yet modeled. Broad arcane
+  layouts, item-specific maximum rank rules and whole-build capacity are not yet
+  modeled. Broad arcane
   and specialized weapon compatibility are enforced from cited canonical
   facts. A Kitgun chamber or Zaw strike is currently the representative
   canonical weapon; the other modular parts and their stat composition are not

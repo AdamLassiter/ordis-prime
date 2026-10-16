@@ -30,5 +30,6 @@ snapshots. Do not persist the derived value in build tables.
 - Draft and shared-build views can explain each known mod's raw capacity effect.
 - Catalog corrections affect private drafts on their next read; an already
   published immutable snapshot retains the values visible when shared.
-- Whole-build used/available capacity remains intentionally absent until slot
-  polarity, aura/stance placement and related equipment rules are represented.
+- ADRs 0052 and 0053 subsequently add player-authored slot configuration and
+  derived polarity adjustment. Whole-build used/available capacity remains
+  intentionally absent until related equipment-capacity rules are represented.

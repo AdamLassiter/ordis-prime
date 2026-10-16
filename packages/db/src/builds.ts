@@ -18,6 +18,10 @@ export const BUILD_MOD_SLOT_ROLES = [
   "stance",
   "exilus",
 ] as const;
+export const BUILD_MOD_SLOT_POLARITIES = MOD_POLARITIES.filter(
+  (polarity): polarity is Exclude<ModPolarity, "universal"> =>
+    polarity !== "universal",
+);
 export type BuildModSlotRole = (typeof BUILD_MOD_SLOT_ROLES)[number];
 export interface BuildModSlot {
   position: number;
@@ -78,6 +82,7 @@ export interface BuildMod {
   baseDrain?: number;
   polarity?: ModPolarity;
   drain?: number;
+  adjustedDrain?: number;
 }
 export interface BuildEquipmentEntry {
   id: string;
@@ -654,7 +659,7 @@ export function setBuildModSlot(
     throw new Error("Mod slot role is invalid");
   if (
     polarity !== undefined &&
-    !(MOD_POLARITIES as readonly string[]).includes(polarity)
+    !(BUILD_MOD_SLOT_POLARITIES as readonly string[]).includes(polarity)
   )
     throw new Error("Mod slot polarity is invalid");
   if (role === "aura" && slot !== "warframe")
@@ -931,8 +936,11 @@ function hydrateBuild(
   const modsQuery = sqlite.prepare(`
     select mod.position, mod.rank, entity.kind, entity.slug, entity.name,
       entity.mod_max_rank as modMaxRank, entity.mod_base_drain as modBaseDrain,
-      entity.mod_polarity as modPolarity
+      entity.mod_polarity as modPolarity, slot.role as slotRole,
+      slot.polarity as slotPolarity
     from build_mods mod join entities entity on entity.id = mod.entity_id
+    left join build_mod_slots slot on slot.equipment_id = mod.equipment_id
+      and slot.position = mod.position
     where mod.equipment_id = ? order by mod.position
   `);
   const modSlotsQuery = sqlite.prepare(`
@@ -996,6 +1004,8 @@ function hydrateBuild(
           modMaxRank: number | null;
           modBaseDrain: number | null;
           modPolarity: ModPolarity | null;
+          slotRole: BuildModSlotRole | null;
+          slotPolarity: ModPolarity | null;
         }>
       ).map(
         ({
@@ -1007,25 +1017,35 @@ function hydrateBuild(
           modMaxRank,
           modBaseDrain,
           modPolarity,
-        }) => ({
-          position,
-          rank: rank ?? undefined,
-          ...(modMaxRank !== null ? { maxRank: modMaxRank } : {}),
-          ...(modBaseDrain !== null ? { baseDrain: modBaseDrain } : {}),
-          ...(modPolarity !== null ? { polarity: modPolarity } : {}),
-          ...(calculateRankedModDrain(
+          slotRole,
+          slotPolarity,
+        }) => {
+          const drain = calculateRankedModDrain(
             modBaseDrain ?? undefined,
             rank ?? undefined,
-          ) === undefined
-            ? {}
-            : {
-                drain: calculateRankedModDrain(
-                  modBaseDrain ?? undefined,
-                  rank ?? undefined,
-                ),
-              }),
-          entity: { kind, slug, name },
-        }),
+          );
+          const adjustedDrain = calculatePolarityAdjustedDrain(
+            drain,
+            modPolarity ?? undefined,
+            slotRole
+              ? {
+                  position,
+                  role: slotRole,
+                  polarity: slotPolarity ?? undefined,
+                }
+              : undefined,
+          );
+          return {
+            position,
+            rank: rank ?? undefined,
+            ...(modMaxRank !== null ? { maxRank: modMaxRank } : {}),
+            ...(modBaseDrain !== null ? { baseDrain: modBaseDrain } : {}),
+            ...(modPolarity !== null ? { polarity: modPolarity } : {}),
+            ...(drain === undefined ? {} : { drain }),
+            ...(adjustedDrain === undefined ? {} : { adjustedDrain }),
+            entity: { kind, slug, name },
+          };
+        },
       ),
     })),
     enhancements: enhancements.map(
@@ -1130,6 +1150,26 @@ export function calculateRankedModDrain(
 ): number | undefined {
   if (baseDrain === undefined || rank === undefined) return undefined;
   return baseDrain < 0 ? baseDrain - rank : baseDrain + rank;
+}
+export function calculatePolarityAdjustedDrain(
+  drain: number | undefined,
+  modPolarity: ModPolarity | undefined,
+  slot: BuildModSlot | undefined,
+): number | undefined {
+  if (drain === undefined || !slot) return undefined;
+  const special = slot.role === "aura" || slot.role === "stance";
+  if ((special && drain > 0) || (!special && drain < 0)) return undefined;
+  if (slot.polarity === undefined) return drain;
+  if (modPolarity === undefined) return undefined;
+  const matches =
+    modPolarity === slot.polarity ||
+    (modPolarity === "aura" && slot.polarity !== "umbra") ||
+    (slot.polarity === "aura" && modPolarity !== "umbra");
+  if (special) {
+    const bonus = Math.abs(drain);
+    return -(matches ? bonus * 2 : Math.floor(bonus * 0.8));
+  }
+  return matches ? Math.ceil(drain / 2) : Math.ceil(drain * 1.25);
 }
 function enhancementKind(slot: BuildEnhancementSlot): "arcane" | "shard" {
   if (!(BUILD_ENHANCEMENT_SLOTS as readonly string[]).includes(slot))

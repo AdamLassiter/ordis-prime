@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import {
   BUILD_ENHANCEMENT_SLOTS,
+  BUILD_MOD_SLOT_POLARITIES,
   BUILD_SLOTS,
   buildModSlotRolesFor,
   getPlayerBuild,
@@ -11,7 +12,6 @@ import {
   type BuildEnhancementSlot,
   type BuildSlot,
 } from "@ordis-prime/db";
-import { MOD_POLARITIES } from "@ordis-prime/domain";
 import { getDatabase } from "@/lib/database";
 import { getCurrentSession } from "@/lib/session";
 import {
@@ -260,7 +260,7 @@ export default async function BuildEditor({
                         Polarity
                         <select name="polarity" defaultValue="">
                           <option value="">Unpolarized</option>
-                          {MOD_POLARITIES.map((polarity) => (
+                          {BUILD_MOD_SLOT_POLARITIES.map((polarity) => (
                             <option key={polarity}>{polarity}</option>
                           ))}
                         </select>
@@ -282,6 +282,9 @@ export default async function BuildEditor({
                             {mod.drain === undefined
                               ? ""
                               : ` · ${mod.drain} drain`}
+                            {mod.adjustedDrain === undefined
+                              ? ""
+                              : ` · ${mod.adjustedDrain} after slot polarity`}
                             {mod.polarity ? ` · ${mod.polarity}` : ""}
                             <form
                               action={clearMod.bind(
