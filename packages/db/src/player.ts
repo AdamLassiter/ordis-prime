@@ -2,14 +2,18 @@ import { randomUUID } from "node:crypto";
 import type Database from "better-sqlite3";
 import {
   BUILD_ENHANCEMENT_SLOTS,
+  BUILD_MOD_SLOT_ROLES,
   BUILD_SLOTS,
+  buildModSlotRolesFor,
   configureBuildEquipment,
   createPlayerBuild,
   listPlayerBuilds,
   setBuildEnhancement,
   setBuildEquipment,
   setBuildMod,
+  setBuildModSlot,
   type BuildEnhancementSlot,
+  type BuildModSlot,
   type BuildSlot,
 } from "./builds.ts";
 import {
@@ -26,7 +30,7 @@ import {
   type WorldStateWatch,
   type WorldStateWatchTrigger,
 } from "./world-state-watches.ts";
-import type { WorldStateWindowKind } from "@ordis-prime/domain";
+import { MOD_POLARITIES, type WorldStateWindowKind } from "@ordis-prime/domain";
 
 export interface InventoryValues {
   ownedCount: number;
@@ -148,7 +152,7 @@ export interface PortableEntityReference {
 }
 
 export interface ProfileExport {
-  schemaVersion: 13;
+  schemaVersion: 14;
   exportedAt: string;
   player: PlayerSettings;
   inventory: Array<InventoryValues & { entity: PortableEntityReference }>;
@@ -188,6 +192,7 @@ export interface PortableBuild {
     rank?: number;
     formaCount: number;
     capacityUpgrade: boolean;
+    modSlots: BuildModSlot[];
     mods: Array<{
       position: number;
       rank?: number;
@@ -335,7 +340,7 @@ export function exportPlayerProfile(
              source_id, namespace, value
   `);
   return {
-    schemaVersion: 13,
+    schemaVersion: 14,
     exportedAt: new Date().toISOString(),
     player: getPlayerSettings(sqlite, userId),
     inventory: inventory.map(({ entityId, kind, slug, name, ...values }) => ({
@@ -479,6 +484,7 @@ export function exportPlayerProfile(
             rank,
             formaCount,
             capacityUpgrade,
+            modSlots,
             mods,
           }) => ({
             slot,
@@ -492,6 +498,7 @@ export function exportPlayerProfile(
             rank,
             formaCount,
             capacityUpgrade,
+            modSlots,
             mods: mods.map(({ position, rank, entity: mod }) => ({
               position,
               rank,
@@ -557,8 +564,10 @@ export function importPlayerProfile(
       reference: { kind: string; slug: string };
       notes?: string;
       configuration?: string;
+      rank?: number;
       formaCount: number;
       capacityUpgrade: boolean;
+      modSlots: BuildModSlot[];
       mods: Array<{
         position: number;
         rank?: number;
@@ -746,6 +755,7 @@ export function importPlayerProfile(
         rank: entry.rank,
         formaCount: entry.formaCount,
         capacityUpgrade: entry.capacityUpgrade,
+        modSlots: entry.modSlots,
         mods,
       };
     });
@@ -894,6 +904,16 @@ export function importPlayerProfile(
           entry.notes,
         );
         configureBuildEquipment(sqlite, userId, buildId, entry.slot, entry);
+        for (const modSlot of entry.modSlots)
+          setBuildModSlot(
+            sqlite,
+            userId,
+            buildId,
+            entry.slot,
+            modSlot.position,
+            modSlot.role,
+            modSlot.polarity,
+          );
         for (const mod of entry.mods)
           setBuildMod(
             sqlite,
@@ -932,7 +952,7 @@ export function importPlayerProfile(
 function parseProfile(value: unknown): ProfileExport {
   if (
     !isRecord(value) ||
-    value.schemaVersion !== 13 ||
+    value.schemaVersion !== 14 ||
     !isRecord(value.player) ||
     !Array.isArray(value.inventory) ||
     !Array.isArray(value.goals) ||
@@ -943,7 +963,7 @@ function parseProfile(value: unknown): ProfileExport {
     !Array.isArray(value.builds)
   )
     throw new Error(
-      "Profile must use schemaVersion 13 and contain player settings plus every portable state array",
+      "Profile must use schemaVersion 14 and contain player settings plus every portable state array",
     );
   const masteryRank = value.player.masteryRank;
   if (
@@ -1041,7 +1061,7 @@ function parseProfile(value: unknown): ProfileExport {
     parsePortableBuild(entry, index),
   );
   return {
-    schemaVersion: 13,
+    schemaVersion: 14,
     exportedAt: typeof value.exportedAt === "string" ? value.exportedAt : "",
     player: { masteryRank: masteryRank as number | undefined },
     inventory,
@@ -1169,6 +1189,7 @@ function parsePortableBuild(value: unknown, index: number): PortableBuild {
       !isRecord(entry) ||
       typeof entry.slot !== "string" ||
       !(BUILD_SLOTS as readonly string[]).includes(entry.slot) ||
+      !Array.isArray(entry.modSlots) ||
       !Array.isArray(entry.mods) ||
       (entry.rank !== undefined &&
         (!Number.isSafeInteger(entry.rank) ||
@@ -1185,6 +1206,45 @@ function parsePortableBuild(value: unknown, index: number): PortableBuild {
         `Profile build entry ${index} contains duplicate slot ${entry.slot}`,
       );
     slots.add(entry.slot);
+    const modSlotPositions = new Set<number>();
+    const specialRoles = new Set<string>();
+    const modSlots = entry.modSlots.map((modSlot, modSlotIndex) => {
+      if (
+        !isRecord(modSlot) ||
+        !Number.isSafeInteger(modSlot.position) ||
+        (modSlot.position as number) < 0 ||
+        (modSlot.position as number) > 19 ||
+        typeof modSlot.role !== "string" ||
+        !(BUILD_MOD_SLOT_ROLES as readonly string[]).includes(modSlot.role) ||
+        (modSlot.polarity !== undefined &&
+          (typeof modSlot.polarity !== "string" ||
+            !(MOD_POLARITIES as readonly string[]).includes(modSlot.polarity)))
+      )
+        throw new Error(`Profile ${label} mod slot ${modSlotIndex} is invalid`);
+      if (modSlotPositions.has(modSlot.position as number))
+        throw new Error(
+          `Profile ${label} contains duplicate mod slot position ${modSlot.position}`,
+        );
+      modSlotPositions.add(modSlot.position as number);
+      if (modSlot.role !== "normal") {
+        if (specialRoles.has(modSlot.role))
+          throw new Error(
+            `Profile ${label} contains duplicate ${modSlot.role} slots`,
+          );
+        specialRoles.add(modSlot.role);
+      }
+      if (
+        !buildModSlotRolesFor(entry.slot as BuildSlot).includes(
+          modSlot.role as BuildModSlot["role"],
+        )
+      )
+        throw new Error(`Profile ${label} has an invalid mod slot role`);
+      return {
+        position: modSlot.position as number,
+        role: modSlot.role as BuildModSlot["role"],
+        polarity: modSlot.polarity as BuildModSlot["polarity"],
+      };
+    });
     const positions = new Set<number>();
     const mods = entry.mods.map((mod, modIndex) => {
       if (
@@ -1221,6 +1281,7 @@ function parsePortableBuild(value: unknown, index: number): PortableBuild {
       rank: entry.rank as number | undefined,
       formaCount: entry.formaCount as number,
       capacityUpgrade: entry.capacityUpgrade,
+      modSlots,
       mods,
     };
   });

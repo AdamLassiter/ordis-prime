@@ -118,8 +118,10 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   capacity-upgrade flags, notes and immutable unlisted share snapshots.
   Authenticated editor and public snapshot routes use canonical catalog links. Sourced mod
   maximum-rank, base-drain and polarity facts validate selected ranks and expose
-  per-mod unpolarized drain. Equipment-slot polarity, sourced item-specific
-  maximum ranks and whole-build capacity calculation remain. Builds can assign
+  per-mod unpolarized drain. Player-authored mod-slot roles and polarities are
+  preserved independently of installed mods. Sourced factory slot layouts,
+  item-specific maximum ranks, polarity-adjusted drain and whole-build capacity
+  calculation remain. Builds can assign
   ranked arcanes and positioned Archon Shards with sourced effect selections.
   Arcane candidates and assignments enforce sourced broad and specialized weapon classes against
   equipped items in either assignment order. Equipment slots also enforce

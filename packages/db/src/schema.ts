@@ -7,6 +7,7 @@ import {
   text,
   uniqueIndex,
 } from "drizzle-orm/sqlite-core";
+import { sql } from "drizzle-orm";
 
 export const sources = sqliteTable("sources", {
   id: text().primaryKey(),
@@ -769,6 +770,23 @@ export const buildMods = sqliteTable(
   },
   (table) => [
     uniqueIndex("build_mod_position").on(table.equipmentId, table.position),
+  ],
+);
+export const buildModSlots = sqliteTable(
+  "build_mod_slots",
+  {
+    equipmentId: text("equipment_id")
+      .notNull()
+      .references(() => buildEquipment.id, { onDelete: "cascade" }),
+    position: integer().notNull(),
+    role: text().notNull(),
+    polarity: text(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.equipmentId, table.position] }),
+    uniqueIndex("build_mod_slot_special_role")
+      .on(table.equipmentId, table.role)
+      .where(sql`${table.role} <> 'normal'`),
   ],
 );
 export const buildEnhancements = sqliteTable(

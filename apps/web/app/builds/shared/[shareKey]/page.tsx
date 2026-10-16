@@ -59,6 +59,17 @@ export default async function SharedBuildPage({
               {equipment.notes && (
                 <p className="muted build-notes">{equipment.notes}</p>
               )}
+              {equipment.modSlots.length > 0 && (
+                <p className="muted">
+                  Slots:{" "}
+                  {equipment.modSlots
+                    .map(
+                      ({ position, role, polarity }) =>
+                        `${position} ${role} (${polarity ?? "unpolarized"})`,
+                    )
+                    .join(", ")}
+                </p>
+              )}
               {equipment.mods.length > 0 && (
                 <ol className="mod-list">
                   {equipment.mods.map((mod) => (

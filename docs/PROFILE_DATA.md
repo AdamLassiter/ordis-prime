@@ -5,7 +5,7 @@ canonical entity IDs inside one installation, while exported profiles use
 provider identifiers so they can be restored into another installation whose
 canonical UUIDs differ.
 
-## Version 13 export
+## Version 14 export
 
 The player section carries the optional Mastery Rank used to evaluate sourced
 star-chart gates. Legendary players record rank 30 because all current numeric
@@ -37,8 +37,9 @@ unresolved reference is reported. Recurring occurrence chains
 use array-index predecessor references so completed history and an existing next
 occurrence cannot generate duplicates after restoration. Generated notifications are
 not portable. Private build drafts include their details,
-equipment, configurations, current equipment ranks, positioned mods, and typed
-arcane/shard enhancement slots. Shards also carry their selected stable effect
+equipment, configurations, current equipment ranks, positioned mods, mod-slot
+roles and polarities independently of installed mods, plus typed arcane/shard
+enhancement slots. Shards also carry their selected stable effect
 key; import requires that effect to be active for the resolved shard, otherwise the whole build is
 reported unresolved. Every catalog member uses the same portable reference. Published share snapshots are intentionally
 excluded because they are server-hosted immutable artifacts and capability URLs.

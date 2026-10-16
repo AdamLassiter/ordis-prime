@@ -7,6 +7,9 @@ up to twenty positioned mods with optional ranks. It can also record a freeform
 configuration label (for example, an Incarnon or named config), Forma count, and
 whether an Orokin capacity upgrade is installed. An optional current equipment
 rank records the player's actual configuration independently from Forma count.
+Equipment also owns an optional mod-slot grid. A configured position records a
+normal, Aura, Stance or Exilus role and an optional polarity independently from
+the mod installed at that position, so an empty Forma'd slot is not lost.
 When a mod has sourced rank and base-drain metadata, the editor constrains its
 selected rank and shows its unpolarized ranked drain. Positive drain increases
 by one per rank; negative aura/stance drain becomes a larger capacity bonus.
@@ -61,12 +64,12 @@ recipes and recommends nodes using the same canonical IDs.
 
 ## Current limits
 
-- Current equipment rank, Forma count, a capacity-upgrade flag, and a
-  configuration label are recorded.
+- Current equipment rank, Forma count, a capacity-upgrade flag, a configuration
+  label, and player-authored mod-slot roles and polarities are recorded.
   The catalog now retains sourced mod maximum rank, base drain and polarity,
-  and calculates each known mod's unpolarized ranked drain, but equipment-slot
-  polarities, item-specific maximum rank rules and whole-build capacity are not
-  yet modeled. Broad arcane
+  and calculates each known mod's unpolarized ranked drain. Sourced factory slot
+  layouts, item-specific maximum rank rules, polarity-adjusted drain and
+  whole-build capacity are not yet modeled. Broad arcane
   and specialized weapon compatibility are enforced from cited canonical
   facts. A Kitgun chamber or Zaw strike is currently the representative
   canonical weapon; the other modular parts and their stat composition are not

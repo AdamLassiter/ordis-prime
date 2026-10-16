@@ -246,6 +246,13 @@
       "when": 1792165337204,
       "tag": "0034_perpetual_wolf_cub",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "6",
+      "when": 1792165963749,
+      "tag": "0035_uneven_toro",
+      "breakpoints": true
     }
   ]
 }

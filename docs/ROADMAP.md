@@ -34,8 +34,10 @@ Build drafts, editor/search workflow, class-checked arcanes, effect-selected
 Archon Shard slots, immutable public snapshots and a source-faithful editorial
 ranking comparison are implemented. Builds retain configuration labels, current
 equipment ranks, Forma counts and capacity-upgrade state. Equipment slots and
-specialized weapon arcanes enforce cited canonical classes. Calculated capacity/polarities,
-structured modular-weapon parts, and richer ranking methodology remain. An
+specialized weapon arcanes enforce cited canonical classes. Player-authored mod
+slot roles and polarities are preserved independently. Calculated capacity,
+sourced factory slot layouts, structured modular-weapon parts, and richer
+ranking methodology remain. An
 opt-in ordinal median/range summary is implemented with its assumptions visible.
 
 ## 4. Discovery and spatial navigation

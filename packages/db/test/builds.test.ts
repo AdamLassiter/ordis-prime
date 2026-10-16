@@ -24,6 +24,7 @@ import {
   setBuildEnhancement,
   setBuildEquipment,
   setBuildMod,
+  setBuildModSlot,
   setInventoryEntry,
   setPlayerGoal,
   updatePlayerBuild,
@@ -184,6 +185,16 @@ test("build drafts are private and share snapshots remain immutable", async (con
     formaCount: 3,
     capacityUpgrade: true,
   });
+  setBuildModSlot(database, owner, buildId, "primary", 0, "normal", "madurai");
+  setBuildModSlot(database, owner, buildId, "warframe", 10, "aura", "vazarin");
+  assert.throws(
+    () => setBuildModSlot(database, owner, buildId, "primary", 10, "aura"),
+    /Aura slots are only valid on Warframes/,
+  );
+  assert.throws(
+    () => setBuildModSlot(database, owner, buildId, "warframe", 11, "aura"),
+    /already has a configured aura slot/,
+  );
   setBuildMod(
     database,
     owner,
@@ -272,6 +283,7 @@ test("build drafts are private and share snapshots remain immutable", async (con
       formaCount: 3,
       capacityUpgrade: true,
       notes: undefined,
+      modSlots: [{ position: 0, role: "normal", polarity: "madurai" }],
       mods: [
         {
           position: 0,
@@ -318,6 +330,10 @@ test("build drafts are private and share snapshots remain immutable", async (con
   assert.equal(
     shared.equipment.find(({ slot }) => slot === "primary")?.rank,
     27,
+  );
+  assert.deepEqual(
+    shared.equipment.find(({ slot }) => slot === "warframe")?.modSlots,
+    [{ position: 10, role: "aura", polarity: "vazarin" }],
   );
   assert.deepEqual(shared.enhancements, [
     {
@@ -373,6 +389,10 @@ test("build drafts are private and share snapshots remain immutable", async (con
     publicClone.equipment.find(({ slot }) => slot === "primary")?.rank,
     27,
   );
+  assert.deepEqual(
+    publicClone.equipment.find(({ slot }) => slot === "primary")?.modSlots,
+    [{ position: 0, role: "normal", polarity: "madurai" }],
+  );
   assert.equal(
     publicClone.equipment.find(({ slot }) => slot === "primary")?.mods[0]?.rank,
     5,
@@ -417,6 +437,10 @@ test("build drafts are private and share snapshots remain immutable", async (con
   assert.equal(
     clone.equipment.find(({ slot }) => slot === "primary")?.rank,
     27,
+  );
+  assert.deepEqual(
+    clone.equipment.find(({ slot }) => slot === "warframe")?.modSlots,
+    [{ position: 10, role: "aura", polarity: "vazarin" }],
   );
   assert.equal(clone.enhancements.length, 3);
   revokeBuildShare(database, owner, buildId, shareKey);
@@ -493,6 +517,35 @@ test("build drafts are private and share snapshots remain immutable", async (con
   assert.throws(
     () => cloneSharedBuild(database, other, "missing-share"),
     /not found/,
+  );
+  setBuildEquipment(database, owner, buildId, "primary", {
+    kind: "weapon",
+    slug: "dread",
+  });
+  const replacedEquipment = getPlayerBuild(
+    database,
+    owner,
+    buildId,
+  )?.equipment.find(({ slot }) => slot === "primary");
+  assert.deepEqual(
+    {
+      name: replacedEquipment?.entity.name,
+      configuration: replacedEquipment?.configuration,
+      rank: replacedEquipment?.rank,
+      formaCount: replacedEquipment?.formaCount,
+      capacityUpgrade: replacedEquipment?.capacityUpgrade,
+      modSlots: replacedEquipment?.modSlots,
+      mods: replacedEquipment?.mods,
+    },
+    {
+      name: "Dread",
+      configuration: undefined,
+      rank: undefined,
+      formaCount: 0,
+      capacityUpgrade: false,
+      modSlots: [],
+      mods: [],
+    },
   );
 });
 

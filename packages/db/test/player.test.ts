@@ -27,6 +27,7 @@ import {
   setBuildEnhancement,
   setBuildEquipment,
   setBuildMod,
+  setBuildModSlot,
   setDiscoveryProgress,
   setInventoryEntry,
   setInventoryEntryByReference,
@@ -133,6 +134,15 @@ test("profiles resolve stable source IDs across installations with different can
     formaCount: 2,
     capacityUpgrade: true,
   });
+  setBuildModSlot(
+    first.sqlite,
+    firstUser,
+    buildId,
+    "primary",
+    0,
+    "normal",
+    "madurai",
+  );
   setBuildMod(
     first.sqlite,
     firstUser,
@@ -160,7 +170,7 @@ test("profiles resolve stable source IDs across installations with different can
     "ability-strength",
   );
   const profile = exportPlayerProfile(first.sqlite, firstUser);
-  assert.equal(profile.schemaVersion, 13);
+  assert.equal(profile.schemaVersion, 14);
   const secondUser = createLocalUser(second.sqlite, { username: "Importer" });
   const result = importPlayerProfile(second.sqlite, secondUser, profile);
 
@@ -286,6 +296,7 @@ test("profiles resolve stable source IDs across installations with different can
     rank: 24,
     formaCount: 2,
     capacityUpgrade: true,
+    modSlots: [{ position: 0, role: "normal", polarity: "madurai" }],
     mods: [
       {
         position: 0,
@@ -365,7 +376,7 @@ test("profile replacement is transactional and reports missing entities", async 
     wantedCount: 0,
   });
   const missingProfile = {
-    schemaVersion: 13,
+    schemaVersion: 14,
     exportedAt: "2026-10-13T12:00:00.000Z",
     player: {},
     inventory: [
@@ -428,6 +439,7 @@ test("profile replacement is transactional and reports missing entities", async 
             entity: missingProfile.inventory[0]!.entity,
             formaCount: 0,
             capacityUpgrade: false,
+            modSlots: [],
             mods: [],
           },
         ],
@@ -553,7 +565,7 @@ test("profile replacement is transactional and reports missing entities", async 
         ...missingProfile,
         schemaVersion: 10,
       }),
-    /schemaVersion 13/,
+    /schemaVersion 14/,
   );
   assert.throws(
     () =>
@@ -569,6 +581,24 @@ test("profile replacement is transactional and reports missing entities", async 
         ],
       }),
     /equipment 0 is invalid/,
+  );
+  assert.throws(
+    () =>
+      importPlayerProfile(catalog.sqlite, userId, {
+        ...missingBuildProfile,
+        builds: [
+          {
+            ...missingBuildProfile.builds[0],
+            equipment: [
+              {
+                ...missingBuildProfile.builds[0]!.equipment[0],
+                modSlots: [{ position: 0, role: "unknown" }],
+              },
+            ],
+          },
+        ],
+      }),
+    /mod slot 0 is invalid/,
   );
 });
 

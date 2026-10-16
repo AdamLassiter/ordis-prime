@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import {
   BUILD_ENHANCEMENT_SLOTS,
   BUILD_SLOTS,
+  buildModSlotRolesFor,
   getPlayerBuild,
   listBuildShares,
   searchBuildCandidates,
@@ -10,6 +11,7 @@ import {
   type BuildEnhancementSlot,
   type BuildSlot,
 } from "@ordis-prime/db";
+import { MOD_POLARITIES } from "@ordis-prime/domain";
 import { getDatabase } from "@/lib/database";
 import { getCurrentSession } from "@/lib/session";
 import {
@@ -19,6 +21,7 @@ import {
   clearEnhancement,
   clearEquipment,
   clearMod,
+  clearModSlot,
   cloneBuild,
   planBuildAcquisition,
   removeBuild,
@@ -26,6 +29,7 @@ import {
   saveBuildDetails,
   saveEquipmentConfiguration,
   saveEquipmentNotes,
+  saveModSlot,
   shareBuild,
 } from "../actions";
 
@@ -205,6 +209,63 @@ export default async function BuildEditor({
                         />
                       </label>
                       <button className="nav-button">Save notes</button>
+                    </form>
+                    {equipment.modSlots.length > 0 && (
+                      <ul className="mod-list">
+                        {equipment.modSlots.map((modSlot) => (
+                          <li key={modSlot.position}>
+                            Slot {modSlot.position} · {modSlot.role}
+                            {modSlot.polarity
+                              ? ` · ${modSlot.polarity}`
+                              : " · unpolarized"}
+                            <form
+                              action={clearModSlot.bind(
+                                null,
+                                id,
+                                slot,
+                                modSlot.position,
+                              )}
+                            >
+                              <button className="nav-button danger-text">
+                                Clear slot configuration
+                              </button>
+                            </form>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    <form
+                      className="inline-form"
+                      action={saveModSlot.bind(null, id, slot)}
+                    >
+                      <label>
+                        Mod position
+                        <input
+                          name="position"
+                          type="number"
+                          min="0"
+                          max="19"
+                          required
+                        />
+                      </label>
+                      <label>
+                        Slot role
+                        <select name="role" defaultValue="normal">
+                          {buildModSlotRolesFor(slot).map((role) => (
+                            <option key={role}>{role}</option>
+                          ))}
+                        </select>
+                      </label>
+                      <label>
+                        Polarity
+                        <select name="polarity" defaultValue="">
+                          <option value="">Unpolarized</option>
+                          {MOD_POLARITIES.map((polarity) => (
+                            <option key={polarity}>{polarity}</option>
+                          ))}
+                        </select>
+                      </label>
+                      <button className="nav-button">Save mod slot</button>
                     </form>
                     {equipment.mods.length > 0 && (
                       <ol className="mod-list">

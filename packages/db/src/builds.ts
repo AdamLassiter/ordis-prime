@@ -1,10 +1,29 @@
 import { randomBytes, randomUUID } from "node:crypto";
-import type {
-  ArcaneClass,
-  ModPolarity,
-  WeaponClass,
+import {
+  MOD_POLARITIES,
+  type ArcaneClass,
+  type ModPolarity,
+  type WeaponClass,
 } from "@ordis-prime/domain";
 import type Database from "better-sqlite3";
+
+/*
+ * Slot state belongs to the equipment grid, not to an installed mod. Keeping it
+ * separate preserves an empty Forma'd slot and lets mods move without rewriting
+ * the equipment configuration.
+ */
+export const BUILD_MOD_SLOT_ROLES = [
+  "normal",
+  "aura",
+  "stance",
+  "exilus",
+] as const;
+export type BuildModSlotRole = (typeof BUILD_MOD_SLOT_ROLES)[number];
+export interface BuildModSlot {
+  position: number;
+  role: BuildModSlotRole;
+  polarity?: ModPolarity;
+}
 
 export const BUILD_SLOTS = [
   "warframe",
@@ -19,6 +38,15 @@ export const BUILD_SLOTS = [
   "operator-amp",
 ] as const;
 export type BuildSlot = (typeof BUILD_SLOTS)[number];
+export function buildModSlotRolesFor(slot: BuildSlot): BuildModSlotRole[] {
+  return BUILD_MOD_SLOT_ROLES.filter(
+    (role) =>
+      role === "normal" ||
+      role === "exilus" ||
+      (role === "aura" && slot === "warframe") ||
+      (role === "stance" && slot === "melee"),
+  );
+}
 export const BUILD_ENHANCEMENT_SLOTS = [
   "warframe-arcane-1",
   "warframe-arcane-2",
@@ -60,6 +88,7 @@ export interface BuildEquipmentEntry {
   rank?: number;
   formaCount: number;
   capacityUpgrade: boolean;
+  modSlots: BuildModSlot[];
   mods: BuildMod[];
 }
 export interface BuildEnhancementOption {
@@ -251,6 +280,16 @@ function cloneBuildSnapshot(
         formaCount: equipment.formaCount,
         capacityUpgrade: equipment.capacityUpgrade,
       });
+      for (const modSlot of equipment.modSlots)
+        setBuildModSlot(
+          sqlite,
+          userId,
+          cloneId,
+          equipment.slot,
+          modSlot.position,
+          modSlot.role,
+          modSlot.polarity,
+        );
       for (const mod of equipment.mods)
         setBuildMod(
           sqlite,
@@ -510,6 +549,9 @@ export function setBuildEquipment(
           .prepare("delete from build_mods where equipment_id = ?")
           .run(existing.id);
         sqlite
+          .prepare("delete from build_mod_slots where equipment_id = ?")
+          .run(existing.id);
+        sqlite
           .prepare(
             "update build_equipment set entity_id = ?, notes = ?, configuration = null, rank = null, forma_count = 0, capacity_upgrade = 0 where id = ?",
           )
@@ -593,6 +635,73 @@ export function configureBuildEquipment(
         slot,
       );
     if (result.changes !== 1) throw new Error("Build equipment not found");
+    touchBuild(sqlite, buildId);
+  })();
+}
+
+export function setBuildModSlot(
+  sqlite: Database.Database,
+  userId: string,
+  buildId: string,
+  slot: BuildSlot,
+  position: number,
+  role: BuildModSlotRole,
+  polarity?: ModPolarity,
+): void {
+  if (!Number.isSafeInteger(position) || position < 0 || position > 19)
+    throw new Error("Mod slot position must be between 0 and 19");
+  if (!(BUILD_MOD_SLOT_ROLES as readonly string[]).includes(role))
+    throw new Error("Mod slot role is invalid");
+  if (
+    polarity !== undefined &&
+    !(MOD_POLARITIES as readonly string[]).includes(polarity)
+  )
+    throw new Error("Mod slot polarity is invalid");
+  if (role === "aura" && slot !== "warframe")
+    throw new Error("Aura slots are only valid on Warframes");
+  if (role === "stance" && slot !== "melee")
+    throw new Error("Stance slots are only valid on melee weapons");
+  sqlite.transaction(() => {
+    assertBuildOwner(sqlite, userId, buildId);
+    const equipment = sqlite
+      .prepare("select id from build_equipment where build_id = ? and slot = ?")
+      .get(buildId, slot) as { id: string } | undefined;
+    if (!equipment)
+      throw new Error("Add equipment before configuring mod slots");
+    if (role !== "normal") {
+      const duplicate = sqlite
+        .prepare(
+          "select position from build_mod_slots where equipment_id = ? and role = ? and position <> ?",
+        )
+        .get(equipment.id, role, position) as { position: number } | undefined;
+      if (duplicate)
+        throw new Error(`Equipment already has a configured ${role} slot`);
+    }
+    sqlite
+      .prepare(
+        `insert into build_mod_slots (equipment_id, position, role, polarity) values (?, ?, ?, ?)
+         on conflict(equipment_id, position) do update set role = excluded.role, polarity = excluded.polarity`,
+      )
+      .run(equipment.id, position, role, polarity ?? null);
+    touchBuild(sqlite, buildId);
+  })();
+}
+
+export function removeBuildModSlot(
+  sqlite: Database.Database,
+  userId: string,
+  buildId: string,
+  slot: BuildSlot,
+  position: number,
+): void {
+  sqlite.transaction(() => {
+    assertBuildOwner(sqlite, userId, buildId);
+    const result = sqlite
+      .prepare(
+        "delete from build_mod_slots where equipment_id in (select id from build_equipment where build_id = ? and slot = ?) and position = ?",
+      )
+      .run(buildId, slot, position);
+    if (result.changes !== 1) throw new Error("Configured mod slot not found");
     touchBuild(sqlite, buildId);
   })();
 }
@@ -826,6 +935,10 @@ function hydrateBuild(
     from build_mods mod join entities entity on entity.id = mod.entity_id
     where mod.equipment_id = ? order by mod.position
   `);
+  const modSlotsQuery = sqlite.prepare(`
+    select position, role, polarity from build_mod_slots
+    where equipment_id = ? order by position
+  `);
   const enhancements = sqlite
     .prepare(
       `
@@ -862,6 +975,17 @@ function hydrateBuild(
       rank: entry.rank ?? undefined,
       formaCount: entry.formaCount,
       capacityUpgrade: Boolean(entry.capacityUpgrade),
+      modSlots: (
+        modSlotsQuery.all(entry.id) as Array<{
+          position: number;
+          role: BuildModSlotRole;
+          polarity: ModPolarity | null;
+        }>
+      ).map(({ position, role, polarity }) => ({
+        position,
+        role,
+        ...(polarity ? { polarity } : {}),
+      })),
       mods: (
         modsQuery.all(entry.id) as Array<{
           position: number;

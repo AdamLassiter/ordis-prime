@@ -13,14 +13,18 @@ import {
   removeBuildEnhancement,
   removeBuildEquipment,
   removeBuildMod,
+  removeBuildModSlot,
   revokeBuildShare,
   setBuildEnhancement,
   setBuildEquipment,
   setBuildMod,
+  setBuildModSlot,
   updatePlayerBuild,
   type BuildEnhancementSlot,
+  type BuildModSlotRole,
   type BuildSlot,
 } from "@ordis-prime/db";
+import type { ModPolarity } from "@ordis-prime/domain";
 import { getDatabase } from "@/lib/database";
 import { requireCurrentSession } from "@/lib/session";
 
@@ -102,6 +106,38 @@ export async function saveEquipmentConfiguration(
 export async function clearEquipment(buildId: string, slot: BuildSlot) {
   const session = await requireCurrentSession();
   removeBuildEquipment(getDatabase(), session.user.id, buildId, slot);
+  revalidatePath(`/builds/${buildId}`);
+}
+
+export async function saveModSlot(
+  buildId: string,
+  slot: BuildSlot,
+  form: FormData,
+) {
+  const session = await requireCurrentSession();
+  const rawPosition = String(form.get("position") ?? "");
+  if (!/^\d+$/.test(rawPosition))
+    throw new Error("Mod slot position must be a non-negative integer");
+  const polarity = String(form.get("polarity") ?? "");
+  setBuildModSlot(
+    getDatabase(),
+    session.user.id,
+    buildId,
+    slot,
+    Number(rawPosition),
+    String(form.get("role") ?? "") as BuildModSlotRole,
+    polarity ? (polarity as ModPolarity) : undefined,
+  );
+  revalidatePath(`/builds/${buildId}`);
+}
+
+export async function clearModSlot(
+  buildId: string,
+  slot: BuildSlot,
+  position: number,
+) {
+  const session = await requireCurrentSession();
+  removeBuildModSlot(getDatabase(), session.user.id, buildId, slot, position);
   revalidatePath(`/builds/${buildId}`);
 }
 
