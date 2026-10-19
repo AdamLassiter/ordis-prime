@@ -12,6 +12,7 @@ import {
 import {
   DEFAULT_WARFRAME_WIKI_API_URL,
   fetchMediaWikiLuaSnapshot,
+  luaFieldKey,
   luaLiteralField,
   luaStringValue,
   parseLuaReturnTable,
@@ -20,8 +21,9 @@ import {
   wikiSlug,
 } from "./mediawiki-lua.ts";
 
-const PARSER_VERSION = "warframe-wiki-missions-v1";
+const PARSER_VERSION = "warframe-wiki-missions-v2";
 const MODULE_TITLE = "Module:Missions/data";
+const QUEST_MODULE_TITLE = "Module:Keys/data";
 
 interface MissionRecord {
   name: string;
@@ -33,13 +35,19 @@ interface MissionRecord {
   line?: number;
   next: string[];
   previous: string[];
+  requirements?: string;
+}
+
+interface QuestReference {
+  name: string;
+  link: string;
 }
 
 export class WarframeWikiMissionsAdapter implements SourceAdapter {
   readonly minimumRetainedObservationRatio = 0.5;
   readonly source = {
     id: "warframe-wiki-missions",
-    name: "WARFRAME Wiki mission connections",
+    name: "WARFRAME Wiki mission data",
     homepage: "https://wiki.warframe.com/w/Module:Missions/data",
     license: "CC BY-NC-SA 3.0",
     priority: 80,
@@ -53,7 +61,7 @@ export class WarframeWikiMissionsAdapter implements SourceAdapter {
   async fetch(context: FetchContext): Promise<Snapshot> {
     return fetchMediaWikiLuaSnapshot({
       apiUrl: this.apiUrl,
-      moduleTitles: [MODULE_TITLE],
+      moduleTitles: [MODULE_TITLE, QUEST_MODULE_TITLE],
       sourceId: this.source.id,
       parserVersion: PARSER_VERSION,
       signal: context.signal,
@@ -61,7 +69,12 @@ export class WarframeWikiMissionsAdapter implements SourceAdapter {
   }
 
   async *parse(snapshot: Snapshot): AsyncIterable<Observation> {
-    const page = readMediaWikiLuaPages(snapshot.bytes, [MODULE_TITLE])[0]!;
+    const pages = readMediaWikiLuaPages(snapshot.bytes, [
+      MODULE_TITLE,
+      QUEST_MODULE_TITLE,
+    ]);
+    const page = pages[0]!;
+    const questPage = pages[1]!;
     const root = parseLuaReturnTable(page.content, page.title);
     const details = luaLiteralField(root, "MissionDetails");
     if (details?.type !== "TableConstructorExpression")
@@ -76,6 +89,16 @@ export class WarframeWikiMissionsAdapter implements SourceAdapter {
       throw new Error(
         `WARFRAME Wiki ${MODULE_TITLE} has duplicate mission names`,
       );
+    const questReferences = parseQuestReferences(questPage.content);
+    const questRequirements = new Map(
+      records.map((record) => [
+        record.name,
+        parseQuestRequirements(record.requirements, questReferences),
+      ]),
+    );
+    const referencedQuests = new Map<string, QuestReference>();
+    for (const requirements of questRequirements.values())
+      for (const quest of requirements) referencedQuests.set(quest.name, quest);
 
     for (const record of records) {
       yield {
@@ -84,6 +107,19 @@ export class WarframeWikiMissionsAdapter implements SourceAdapter {
         externalIds: [missionExternalId(record.name)],
         fields: { name: record.name, slug: wikiSlug(record.name) },
         evidence: evidence(page.revisionId, snapshot, record.name, record.line),
+      };
+    }
+    for (const quest of referencedQuests.values()) {
+      yield {
+        type: "entity",
+        kind: "quest",
+        externalIds: [missionQuestExternalId(quest.name)],
+        fields: { name: quest.name, slug: wikiSlug(quest.name) },
+        evidence: evidence(
+          questPage.revisionId,
+          snapshot,
+          `quest:${quest.name}`,
+        ),
       };
     }
     for (const record of records) {
@@ -131,6 +167,23 @@ export class WarframeWikiMissionsAdapter implements SourceAdapter {
       throw new Error(
         `WARFRAME Wiki ${MODULE_TITLE} has no mission connections`,
       );
+
+    for (const record of records) {
+      for (const quest of questRequirements.get(record.name) ?? []) {
+        yield {
+          type: "entity-relation",
+          kind: "requires",
+          fromExternalId: missionExternalId(record.name),
+          toExternalId: missionQuestExternalId(quest.name),
+          evidence: evidence(
+            page.revisionId,
+            snapshot,
+            `${record.name}:Requirements:${quest.name}`,
+            record.line,
+          ),
+        };
+      }
+    }
   }
 }
 
@@ -160,9 +213,61 @@ function parseMissionRecords(
         line: field.loc?.start.line,
         next: stringList(luaLiteralField(field.value, "NextNodes")),
         previous: stringList(luaLiteralField(field.value, "PreviousNodes")),
+        requirements: optionalString(field.value, "Requirements"),
       },
     ];
   });
+}
+
+function parseQuestReferences(source: string): Map<string, QuestReference> {
+  const root = parseLuaReturnTable(source, QUEST_MODULE_TITLE);
+  const result = new Map<string, QuestReference>();
+  for (const field of root.fields) {
+    if (field.type === "TableValue") continue;
+    const key = luaFieldKey(field);
+    if (!key || field.value.type !== "TableConstructorExpression") continue;
+    const type = optionalString(field.value, "Type");
+    if (!type?.endsWith("Quest")) continue;
+    const name = optionalString(field.value, "Name");
+    if (!name) throw new Error(`WARFRAME Wiki quest ${key} has no Name`);
+    const quest = {
+      name,
+      link: optionalString(field.value, "Link") ?? name,
+    };
+    for (const label of new Set([key, name, quest.link])) {
+      if (result.has(label))
+        throw new Error(`WARFRAME Wiki quest reference ${label} is duplicated`);
+      result.set(label, quest);
+    }
+  }
+  if (!result.size)
+    throw new Error(`WARFRAME Wiki ${QUEST_MODULE_TITLE} has no quests`);
+  return result;
+}
+
+function parseQuestRequirements(
+  requirements: string | undefined,
+  quests: Map<string, QuestReference>,
+): QuestReference[] {
+  if (!requirements) return [];
+  const links = [...requirements.matchAll(/\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g)];
+  if (!links.length) return [];
+  const resolved = links.map((match) => quests.get(match[1]!.trim()));
+  if (resolved.some((quest) => quest === undefined)) return [];
+  const shape = requirements
+    .replace(/\[\[[^\]]+\]\]/g, "[[QUEST]]")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (
+    !new Set([
+      "Must have [[QUEST]] completed to access",
+      "Must complete [[QUEST]] to access",
+      "Must have [[QUEST]] completed",
+      "Must have [[QUEST]] and [[QUEST]] completed to access",
+    ]).has(shape)
+  )
+    return [];
+  return [...new Map(resolved.map((quest) => [quest!.name, quest!])).values()];
 }
 
 function optionalString(
@@ -198,6 +303,14 @@ function missionExternalId(name: string): ExternalIdentifier {
   return {
     sourceId: "warframe-wiki-missions",
     namespace: "mission-name",
+    value: name,
+  };
+}
+
+function missionQuestExternalId(name: string): ExternalIdentifier {
+  return {
+    sourceId: "warframe-wiki-missions",
+    namespace: "quest-name",
     value: name,
   };
 }

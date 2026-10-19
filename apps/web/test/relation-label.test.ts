@@ -11,3 +11,8 @@ test("relation labels render symmetric star-chart connections without syntax art
   assert.equal(relationLabel("connects-to", "outgoing"), "connects to");
   assert.equal(relationLabel("connects-to", "incoming"), "connects to");
 });
+
+test("relation labels make incoming access requirements readable", () => {
+  assert.equal(relationLabel("requires", "outgoing"), "requires");
+  assert.equal(relationLabel("requires", "incoming"), "required by");
+});

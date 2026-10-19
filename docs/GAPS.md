@@ -56,6 +56,9 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   adapter imports current abilities and typed Warframe/Archwing ownership links.
   Structured main and optional quest records contribute cited descriptions and
   sequence links, while intentionally not treating sequence as an access rule.
+  The mission adapter separately imports node requirements only when the entire
+  structured prose expression consists of completed quests; mixed conditions
+  remain absent rather than becoming unsafe partial rules.
   The Wiki companion
   module does not expose a maximum-rank field, so companion coverage remains
   absent rather than defaulted. The adapters do not cover factory polarities or
@@ -167,14 +170,16 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   YAML can add curated entities and typed links to nodes, rewards, or other
   topics. Players can privately mark topics unseen, discovered, or completed
   and filter the atlas by that state. Richer boss classification, quest-step
-  progress, actual quest access requirements, unsupported Necramech/Helminth
+  progress, broader quest requirements, unsupported Necramech/Helminth
   ability-owner kinds and conditional
   relations remain. Atlas cards preview up to three
   cited neighbors; a spatial graph view remains.
 - Acquisition recommendations compose active `requires` and `unlocks` relations
   with private discovery completion and sourced node Mastery Rank requirements
-  to show cited blockers. Nodes without access evidence stay unknown. Junction
-  conditions and other conditional access rules still need typed models.
+  to show cited blockers. Node pages expose the same cited requirements and
+  private progress. Nodes without access evidence stay unknown. Junction
+  objectives and compound rank, item, node or active-adversary conditions still
+  need typed models.
 
 ## Deliberate compromises
 

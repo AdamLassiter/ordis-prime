@@ -5,6 +5,7 @@ import { getCurrentSession } from "@/lib/session";
 import { getDatabase } from "@/lib/database";
 import { listPlayerTodos, listWorldStateWatches } from "@ordis-prime/db";
 import { addCatalogTodo, addCatalogWatch } from "@/app/todos/actions";
+import { relationLabel } from "@/lib/relation-label";
 
 export default async function NodePage({
   params,
@@ -92,6 +93,57 @@ export default async function NodePage({
         <dt>Mastery requirement</dt>
         <dd>{node.masteryRequirement ?? "Not recorded"}</dd>
       </dl>
+      <section>
+        <h2>Access requirements</h2>
+        {node.accessRequirements.length ? (
+          <ul>
+            {node.accessRequirements.map((requirement) => (
+              <li
+                key={`${requirement.relationKind}:${requirement.kind}:${requirement.slug}:${requirement.sourceName}`}
+              >
+                <span className="tag">
+                  {relationLabel(
+                    requirement.relationKind,
+                    requirement.relationKind === "requires"
+                      ? "outgoing"
+                      : "incoming",
+                  )}
+                </span>{" "}
+                <Link
+                  href={
+                    requirement.kind === "node"
+                      ? `/nodes/${requirement.slug}`
+                      : `/catalog/${requirement.kind}/${requirement.slug}`
+                  }
+                >
+                  {requirement.name}
+                </Link>{" "}
+                {requirement.progressState && (
+                  <span className={`tag progress-${requirement.progressState}`}>
+                    {requirement.progressState}
+                  </span>
+                )}{" "}
+                <span className="muted">
+                  (
+                  {requirement.citationUrl ? (
+                    <a href={requirement.citationUrl}>
+                      {requirement.sourceName}
+                    </a>
+                  ) : (
+                    requirement.sourceName
+                  )}
+                  )
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="notice">
+            No complete, structured access requirement is recorded for this
+            node.
+          </p>
+        )}
+      </section>
       <section>
         <h2>Connections</h2>
         {node.connections.length > 0 && (

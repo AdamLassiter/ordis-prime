@@ -63,4 +63,5 @@ those cited star-chart edges compose into node reads symmetrically. A shareable
 focus view supports direct traversal without manufacturing map coordinates.
 Stable coordinates and richer quest-step progress remain.
 Sourced Mastery Rank gates now compose with portable private player progression;
-junction and other structured conditional gates remain.
+the Wiki mission source also contributes complete quest-only node requirements.
+Junction objectives and compound rank, item, node or adversary conditions remain.

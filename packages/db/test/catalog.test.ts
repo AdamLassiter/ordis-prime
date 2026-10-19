@@ -15,6 +15,7 @@ import {
   promoteSource,
   searchCatalog,
   searchDiscoveryCatalog,
+  setDiscoveryProgress,
   setInventoryEntryByReference,
 } from "../src/index.ts";
 
@@ -348,5 +349,88 @@ test("catalog read models join active recipes, drops, provenance, and rankings",
       { id: "ranking", conflictCount: 0 },
       { id: "items", conflictCount: 0 },
     ],
+  );
+});
+
+test("node reads expose cited access requirements and private progress", async (context) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-node-access-"));
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const databasePath = path.join(root, "catalog.sqlite");
+  migrateDatabase(databasePath);
+  const sqlite = openSqliteDatabase(databasePath);
+  context.after(() => sqlite.close());
+  const evidence = {
+    sourceId: "access",
+    sourceRecordKey: "node:quest",
+    snapshotVersion: "v1",
+    retrievedAt: "2026-10-19T12:00:00.000Z",
+    citationUrl: "https://example.test/access",
+  };
+  const external = (value: string) => ({
+    sourceId: "access",
+    namespace: "id",
+    value,
+  });
+  promoteSource(sqlite, {
+    source: {
+      id: "access",
+      name: "Access source",
+      homepage: "https://example.test",
+      priority: 10,
+    },
+    version: "v1",
+    contentHash: "access-hash",
+    retrievedAt: evidence.retrievedAt,
+    observations: [
+      {
+        type: "entity",
+        kind: "node",
+        externalIds: [external("ganymede")],
+        fields: { name: "Ganymede", slug: "ganymede" },
+        evidence,
+      },
+      {
+        type: "entity",
+        kind: "quest",
+        externalIds: [external("natah")],
+        fields: { name: "Natah", slug: "natah" },
+        evidence,
+      },
+      {
+        type: "entity-relation",
+        kind: "requires",
+        fromExternalId: external("ganymede"),
+        toExternalId: external("natah"),
+        evidence,
+      },
+    ],
+  });
+
+  assert.deepEqual(findCatalogNode(sqlite, "ganymede")?.accessRequirements, [
+    {
+      kind: "quest",
+      slug: "natah",
+      name: "Natah",
+      relationKind: "requires",
+      sourceName: "Access source",
+      citationUrl: "https://example.test/access",
+    },
+  ]);
+  const userId = createLocalUser(sqlite, { username: "AccessPlayer" });
+  assert.equal(
+    findCatalogNode(sqlite, "ganymede", userId)?.accessRequirements[0]
+      ?.progressState,
+    "unseen",
+  );
+  setDiscoveryProgress(
+    sqlite,
+    userId,
+    { kind: "quest", slug: "natah" },
+    "completed",
+  );
+  assert.equal(
+    findCatalogNode(sqlite, "ganymede", userId)?.accessRequirements[0]
+      ?.progressState,
+    "completed",
   );
 });

@@ -141,7 +141,64 @@ test("wiki mission adapter rejects dangling connections", async () => {
   );
 });
 
-function wikiSnapshot(content: string): Snapshot {
+test("wiki mission adapter imports only complete quest-only access requirements", async () => {
+  const observations = await collect(
+    new WarframeWikiMissionsAdapter(),
+    wikiSnapshot(
+      `
+        return {
+          MissionDetails = {
+            { Name = "Sanctuary Onslaught", Planet = "Sanctuary", NextNodes = { "Armatus" }, Requirements = "Must have [[The New Strange (Quest)|The New Strange]] completed to access" },
+            { Name = "Armatus", Planet = "Deimos", PreviousNodes = { "Sanctuary Onslaught" }, NextNodes = { "Elite Sanctuary Onslaught" }, Requirements = "Must have [[The Deadlock Protocol]] and [[Whispers in the Walls]] completed to access" },
+            { Name = "Elite Sanctuary Onslaught", Planet = "Sanctuary", PreviousNodes = { "Armatus" }, Requirements = "Must have [[The New Strange]] completed to access and a level 30 Warframe" },
+          },
+        }
+      `,
+      `
+        return {
+          ["The New Strange"] = { Name = "The New Strange", Link = "The New Strange (Quest)", Type = "Optional Quest" },
+          ["The Deadlock Protocol"] = { Name = "The Deadlock Protocol", Link = "The Deadlock Protocol", Type = "Optional Quest" },
+          ["Whispers in the Walls"] = { Name = "Whispers in the Walls", Link = "Whispers in the Walls", Type = "Main Quest" },
+        }
+      `,
+    ),
+  );
+
+  assert.deepEqual(
+    observations.flatMap((observation) =>
+      observation.type === "entity" && observation.kind === "quest"
+        ? [observation.fields.name]
+        : [],
+    ),
+    ["The New Strange", "The Deadlock Protocol", "Whispers in the Walls"],
+  );
+  assert.deepEqual(
+    observations.flatMap((observation) =>
+      observation.type === "entity-relation" && observation.kind === "requires"
+        ? [
+            {
+              node: observation.fromExternalId.value,
+              quest: observation.toExternalId.value,
+            },
+          ]
+        : [],
+    ),
+    [
+      { node: "Sanctuary Onslaught", quest: "The New Strange" },
+      { node: "Armatus", quest: "The Deadlock Protocol" },
+      { node: "Armatus", quest: "Whispers in the Walls" },
+    ],
+  );
+});
+
+function wikiSnapshot(
+  content: string,
+  questContent = `
+    return {
+      Awakening = { Name = "Awakening", Link = "Awakening", Type = "Main Quest" },
+    }
+  `,
+): Snapshot {
   const bytes = new TextEncoder().encode(
     JSON.stringify({
       query: {
@@ -152,6 +209,15 @@ function wikiSnapshot(content: string): Snapshot {
               {
                 revid: 73,
                 slots: { main: { content } },
+              },
+            ],
+          },
+          {
+            title: "Module:Keys/data",
+            revisions: [
+              {
+                revid: 81,
+                slots: { main: { content: questContent } },
               },
             ],
           },

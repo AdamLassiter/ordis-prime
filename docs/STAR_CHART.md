@@ -18,6 +18,12 @@ without executing provider code. Reciprocal declarations collapse to one
 undirected `connects-to` observation, while missing referenced nodes reject the
 whole candidate instead of publishing a broken graph.
 
+The adapter also snapshots the structured quest-key module and accepts only
+requirement expressions made entirely from quest completion. These become cited
+`node requires quest` relations. Expressions that also require ranks, items,
+another node or an active adversary remain unmodeled as a whole; the parser does
+not publish a misleading partial rule.
+
 The public `/star-chart` view groups nodes by planet and filters by node, mission
 or faction text. Signed-in players can restrict it to nodes with at least one
 reward their inventory marks as unowned or still wanted. Node detail pages show
@@ -26,6 +32,8 @@ relations are treated as undirected navigation edges: either endpoint lists the
 other, even though a source only needs to state the edge once. A shareable
 `focus=` view lets a player traverse those direct connections and move between
 topology and a node's rewards without inventing spatial positions.
+Node pages list complete structured access requirements with their source and,
+when signed in, the player's private discovery state for each prerequisite.
 
 ## Current compromise
 

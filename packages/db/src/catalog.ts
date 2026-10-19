@@ -105,6 +105,15 @@ export interface CatalogNode {
     citationUrl?: string;
   }>;
   connections: Array<{ slug: string; name: string; planet?: string }>;
+  accessRequirements: Array<{
+    kind: string;
+    slug: string;
+    name: string;
+    relationKind: "requires" | "unlocks";
+    sourceName: string;
+    citationUrl?: string;
+    progressState?: "unseen" | "discovered" | "completed";
+  }>;
   drops: Array<{
     kind: string;
     slug: string;
@@ -586,12 +595,15 @@ export function findCatalogNode(
   );
   const details = loadNodeDetails(sqlite, [node.id]).get(node.id);
   const connections = loadNodeConnections(sqlite, [node.id]).get(node.id) ?? [];
+  const accessRequirements =
+    loadNodeAccessRequirements(sqlite, [node.id], userId).get(node.id) ?? [];
   const { id: _id, ...summary } = node;
   return {
     ...summary,
     ...details,
     detailEvidence: details?.detailEvidence ?? [],
     connections,
+    accessRequirements,
     drops,
   };
 }
@@ -619,11 +631,16 @@ export function listCatalogNodes(
     sqlite,
     nodes.map(({ id }) => id),
   );
+  const accessRequirements = loadNodeAccessRequirements(
+    sqlite,
+    nodes.map(({ id }) => id),
+  );
   return nodes.map(({ id, ...node }) => ({
     ...node,
     ...details.get(id),
     detailEvidence: details.get(id)?.detailEvidence ?? [],
     connections: connections.get(id) ?? [],
+    accessRequirements: accessRequirements.get(id) ?? [],
     drops: [],
   }));
 }
@@ -649,6 +666,11 @@ export function listStarChartNodes(
   const connections = loadNodeConnections(
     sqlite,
     nodes.map(({ id }) => id),
+  );
+  const accessRequirements = loadNodeAccessRequirements(
+    sqlite,
+    nodes.map(({ id }) => id),
+    userId,
   );
   const inventoryColumns = userId
     ? `coalesce(inventory.owned_count, 0) as ownedCount,
@@ -694,12 +716,73 @@ export function listStarChartNodes(
     ...details.get(id),
     detailEvidence: details.get(id)?.detailEvidence ?? [],
     connections: connections.get(id) ?? [],
+    accessRequirements: accessRequirements.get(id) ?? [],
     connectionCount: connections.get(id)?.length ?? 0,
     rewardCount: counts.get(id)?.rewardCount ?? 0,
     ...(userId
       ? { neededRewardCount: counts.get(id)?.neededRewardCount ?? 0 }
       : {}),
   }));
+}
+
+function loadNodeAccessRequirements(
+  sqlite: Database.Database,
+  nodeIds: string[],
+  userId?: string,
+): Map<string, CatalogNode["accessRequirements"]> {
+  const result = new Map<string, CatalogNode["accessRequirements"]>();
+  if (!nodeIds.length) return result;
+  const placeholders = nodeIds.map(() => "?").join(", ");
+  const progressJoin = userId
+    ? "left join player_discovery_progress progress on progress.entity_id = prerequisite.id and progress.user_id = ?"
+    : "";
+  const progressColumn = userId
+    ? ", coalesce(progress.state, 'unseen') as progressState"
+    : ", null as progressState";
+  const rows = sqlite
+    .prepare(
+      `
+    select relation.from_entity_id as nodeId, prerequisite.kind, prerequisite.slug,
+      prerequisite.name, 'requires' as relationKind, source.name as sourceName,
+      relation.citation_url as citationUrl${progressColumn}
+    from entity_relations relation
+    join source_runs run on run.id = relation.source_run_id and run.status = 'active'
+    join sources source on source.id = run.source_id
+    join entities prerequisite on prerequisite.id = relation.to_entity_id and prerequisite.retired = 0
+    ${progressJoin}
+    where relation.kind = 'requires' and relation.from_entity_id in (${placeholders})
+    union all
+    select relation.to_entity_id, prerequisite.kind, prerequisite.slug,
+      prerequisite.name, 'unlocks', source.name, relation.citation_url${progressColumn}
+    from entity_relations relation
+    join source_runs run on run.id = relation.source_run_id and run.status = 'active'
+    join sources source on source.id = run.source_id
+    join entities prerequisite on prerequisite.id = relation.from_entity_id and prerequisite.retired = 0
+    ${progressJoin}
+    where relation.kind = 'unlocks' and relation.to_entity_id in (${placeholders})
+    order by 1, 4 collate nocase, 2, 3, 5, 6
+  `,
+    )
+    .all(
+      ...(userId ? [userId] : []),
+      ...nodeIds,
+      ...(userId ? [userId] : []),
+      ...nodeIds,
+    ) as Array<
+    Omit<
+      { nodeId: string } & CatalogNode["accessRequirements"][number],
+      "progressState"
+    > & { progressState: "unseen" | "discovered" | "completed" | null }
+  >;
+  for (const { nodeId, progressState, ...requirement } of rows) {
+    const requirements = result.get(nodeId) ?? [];
+    requirements.push({
+      ...requirement,
+      ...(progressState ? { progressState } : {}),
+    });
+    result.set(nodeId, requirements);
+  }
+  return result;
 }
 
 export function listSourceStatuses(sqlite: Database.Database): SourceStatus[] {
