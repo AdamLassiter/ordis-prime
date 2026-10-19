@@ -43,6 +43,12 @@ every node and can filter by it. It does not persist that state or infer access
 from graph connectivity. Guests therefore see private-input-dependent evidence
 as conditional rather than available.
 
+Signed-in players can separately record whether each canonical node is complete
+and filter the chart by completed or incomplete nodes. Absence of private state
+means incomplete. Completion is not used as a synonym for access: clearing a
+node does not rewrite sourced prerequisites, and a connection does not mark
+either endpoint complete. Completed nodes are part of portable player profiles.
+
 ## Current compromise
 
 No imported source supplies stable visual coordinates. The current chart can
@@ -53,3 +59,4 @@ before a visual graph is honest.
 
 Enemy and quest identities are imported, but richer domain-specific facts and
 complete curated discovery links remain future work.
+There is not yet a bulk completion workflow or automatic account-state import.

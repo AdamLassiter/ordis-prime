@@ -10,6 +10,7 @@ import {
 } from "@ordis-prime/db";
 import { addCatalogTodo, addCatalogWatch } from "@/app/todos/actions";
 import { relationLabel } from "@/lib/relation-label";
+import { NodeCompletionForm } from "../completion-form";
 
 export default async function NodePage({
   params,
@@ -49,6 +50,16 @@ export default async function NodePage({
       <p className="eyebrow">Star chart node</p>
       <h1>{node.name}</h1>
       {node.description && <p className="lede">{node.description}</p>}
+      {session && node.completionState && (
+        <section className="card goal-editor">
+          <h2>Node completion</h2>
+          <p className="muted">
+            Track whether you have cleared this node. This private state is
+            independent of catalog access evidence.
+          </p>
+          <NodeCompletionForm slug={slug} state={node.completionState} />
+        </section>
+      )}
       {session && (
         <section className="card goal-editor">
           <h2>Todo</h2>

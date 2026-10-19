@@ -159,7 +159,7 @@ export interface PortableEntityReference {
 }
 
 export interface ProfileExport {
-  schemaVersion: 15;
+  schemaVersion: 16;
   exportedAt: string;
   player: PlayerSettings;
   inventory: Array<InventoryValues & { entity: PortableEntityReference }>;
@@ -172,6 +172,10 @@ export interface ProfileExport {
   discoveryProgress: Array<{
     entity: PortableEntityReference;
     state: "discovered" | "completed";
+  }>;
+  nodeProgress: Array<{
+    node: PortableEntityReference;
+    completedAt: string;
   }>;
   todos: Array<
     Pick<PlayerTodo, "title" | "notes" | "status" | "dueAt" | "recurrence"> & {
@@ -219,6 +223,7 @@ export interface ProfileImportResult {
   goalsImported: number;
   recipePreferencesImported: number;
   discoveryProgressImported: number;
+  nodeProgressImported: number;
   todosImported: number;
   watchesImported: number;
   buildsImported: number;
@@ -228,6 +233,7 @@ export interface ProfileImportResult {
       | "goals"
       | "recipePreferences"
       | "discoveryProgress"
+      | "nodeProgress"
       | "todos"
       | "watches"
       | "builds";
@@ -347,7 +353,7 @@ export function exportPlayerProfile(
              source_id, namespace, value
   `);
   return {
-    schemaVersion: 15,
+    schemaVersion: 16,
     exportedAt: new Date().toISOString(),
     player: getPlayerSettings(sqlite, userId),
     inventory: inventory.map(({ entityId, kind, slug, name, ...values }) => ({
@@ -444,6 +450,34 @@ export function exportPlayerProfile(
         name,
       },
       state,
+    })),
+    nodeProgress: (
+      sqlite
+        .prepare(
+          `select progress.node_id as entityId, node.kind, node.slug, node.name,
+                  progress.completed_at as completedAt
+           from player_node_progress progress
+           join entities node on node.id = progress.node_id
+           where progress.user_id = ?
+           order by node.name collate nocase`,
+        )
+        .all(userId) as Array<{
+        entityId: string;
+        kind: "node";
+        slug: string;
+        name: string;
+        completedAt: number;
+      }>
+    ).map(({ entityId, kind, slug, name, completedAt }) => ({
+      node: {
+        externalIds: identifiers.all(
+          entityId,
+        ) as PortableEntityReference["externalIds"],
+        kind,
+        slug,
+        name,
+      },
+      completedAt: new Date(completedAt).toISOString(),
     })),
     todos: playerTodos.map(
       ({
@@ -553,6 +587,10 @@ export function importPlayerProfile(
   const resolvedDiscoveryProgress: Array<{
     entityId: string;
     state: "discovered" | "completed";
+  }> = [];
+  const resolvedNodeProgress: Array<{
+    nodeId: string;
+    completedAt: number;
   }> = [];
   const resolvedTodos: Array<
     Omit<ProfileExport["todos"][number], "entity"> & {
@@ -674,6 +712,32 @@ export function importPlayerProfile(
     resolvedDiscoveryProgress.push({
       entityId: resolution.entityId!,
       state: progress.state,
+    });
+  }
+  for (const [index, progress] of profile.nodeProgress.entries()) {
+    const resolution = resolvePortableEntity(sqlite, progress.node);
+    if (resolution.reason) {
+      unresolved.push({
+        section: "nodeProgress",
+        index,
+        name: progress.node.name,
+        reason: resolution.reason,
+      });
+      continue;
+    }
+    const reference = catalogReferenceById(sqlite, resolution.entityId!);
+    if (reference.kind !== "node") {
+      unresolved.push({
+        section: "nodeProgress",
+        index,
+        name: progress.node.name,
+        reason: "missing",
+      });
+      continue;
+    }
+    resolvedNodeProgress.push({
+      nodeId: resolution.entityId!,
+      completedAt: Date.parse(progress.completedAt),
     });
   }
   for (const [index, todo] of profile.todos.entries()) {
@@ -822,6 +886,9 @@ export function importPlayerProfile(
       sqlite
         .prepare("delete from player_discovery_progress where user_id = ?")
         .run(userId);
+      sqlite
+        .prepare("delete from player_node_progress where user_id = ?")
+        .run(userId);
       sqlite.prepare("delete from player_todos where user_id = ?").run(userId);
       sqlite
         .prepare("delete from world_state_watches where user_id = ?")
@@ -867,6 +934,19 @@ export function importPlayerProfile(
     `);
     for (const progress of resolvedDiscoveryProgress)
       writeProgress.run(userId, progress.entityId, progress.state, Date.now());
+    const writeNodeProgress = sqlite.prepare(`
+      insert into player_node_progress (user_id, node_id, completed_at, updated_at)
+      values (?, ?, ?, ?)
+      on conflict(user_id, node_id) do update set completed_at = excluded.completed_at,
+        updated_at = excluded.updated_at
+    `);
+    for (const progress of resolvedNodeProgress)
+      writeNodeProgress.run(
+        userId,
+        progress.nodeId,
+        progress.completedAt,
+        Date.now(),
+      );
     const importedTodoIds: string[] = [];
     for (const todo of resolvedTodos) {
       const id = createPlayerTodo(sqlite, userId, todo);
@@ -949,6 +1029,7 @@ export function importPlayerProfile(
     goalsImported: resolvedGoals.length,
     recipePreferencesImported: resolvedRecipePreferences.length,
     discoveryProgressImported: resolvedDiscoveryProgress.length,
+    nodeProgressImported: resolvedNodeProgress.length,
     todosImported: resolvedTodos.length,
     watchesImported: resolvedWatches.length,
     buildsImported: resolvedBuilds.length,
@@ -959,18 +1040,19 @@ export function importPlayerProfile(
 function parseProfile(value: unknown): ProfileExport {
   if (
     !isRecord(value) ||
-    value.schemaVersion !== 15 ||
+    value.schemaVersion !== 16 ||
     !isRecord(value.player) ||
     !Array.isArray(value.inventory) ||
     !Array.isArray(value.goals) ||
     !Array.isArray(value.recipePreferences) ||
     !Array.isArray(value.discoveryProgress) ||
+    !Array.isArray(value.nodeProgress) ||
     !Array.isArray(value.todos) ||
     !Array.isArray(value.watches) ||
     !Array.isArray(value.builds)
   )
     throw new Error(
-      "Profile must use schemaVersion 15 and contain player settings plus every portable state array",
+      "Profile must use schemaVersion 16 and contain player settings plus every portable state array",
     );
   const masteryRank = value.player.masteryRank;
   if (
@@ -1040,6 +1122,26 @@ function parseProfile(value: unknown): ProfileExport {
       state: entry.state as "discovered" | "completed",
     };
   });
+  const nodeProgress = value.nodeProgress.map((entry, index) => {
+    const parsedCompletedAt =
+      isRecord(entry) && typeof entry.completedAt === "string"
+        ? Date.parse(entry.completedAt)
+        : Number.NaN;
+    if (
+      !isRecord(entry) ||
+      typeof entry.completedAt !== "string" ||
+      !Number.isFinite(parsedCompletedAt) ||
+      new Date(parsedCompletedAt).toISOString() !== entry.completedAt
+    )
+      throw new Error(`Profile node progress entry ${index} is invalid`);
+    const node = parsePortableEntity(
+      entry.node,
+      `node progress entry ${index}`,
+    );
+    if (node.kind !== "node")
+      throw new Error(`Profile node progress entry ${index} is not a node`);
+    return { node, completedAt: entry.completedAt };
+  });
   const todos = value.todos.map((entry, index) =>
     parsePortableTodo(entry, index),
   );
@@ -1068,13 +1170,14 @@ function parseProfile(value: unknown): ProfileExport {
     parsePortableBuild(entry, index),
   );
   return {
-    schemaVersion: 15,
+    schemaVersion: 16,
     exportedAt: typeof value.exportedAt === "string" ? value.exportedAt : "",
     player: { masteryRank: masteryRank as number | undefined },
     inventory,
     goals,
     recipePreferences,
     discoveryProgress,
+    nodeProgress,
     todos,
     watches,
     builds,

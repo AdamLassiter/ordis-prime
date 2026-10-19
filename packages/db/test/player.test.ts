@@ -14,6 +14,7 @@ import {
   exportPlayerProfile,
   findPlayerInventoryEntry,
   getDiscoveryProgress,
+  getNodeCompletion,
   getPlayerSettings,
   importPlayerProfile,
   listPlayerBuilds,
@@ -31,6 +32,7 @@ import {
   setDiscoveryProgress,
   setInventoryEntry,
   setInventoryEntryByReference,
+  setNodeCompletion,
   setPlayerGoal,
   setPlayerMasteryRank,
   setPlayerRecipePreference,
@@ -102,6 +104,7 @@ test("profiles resolve stable source IDs across installations with different can
     { kind: "quest", slug: "awakening" },
     "completed",
   );
+  setNodeCompletion(first.sqlite, firstUser, "e-prime", true);
   const todoDueAt = Date.parse("2027-01-31T00:00:00.000Z");
   const recurrence = { kind: "monthly-date", day: 31 } as const;
   const todoId = createPlayerTodo(first.sqlite, firstUser, {
@@ -174,7 +177,8 @@ test("profiles resolve stable source IDs across installations with different can
     "ability-strength",
   );
   const profile = exportPlayerProfile(first.sqlite, firstUser);
-  assert.equal(profile.schemaVersion, 15);
+  assert.equal(profile.schemaVersion, 16);
+  assert.equal(profile.nodeProgress[0]?.node.slug, "e-prime");
   const secondUser = createLocalUser(second.sqlite, { username: "Importer" });
   const result = importPlayerProfile(second.sqlite, secondUser, profile);
 
@@ -183,6 +187,7 @@ test("profiles resolve stable source IDs across installations with different can
     goalsImported: 1,
     recipePreferencesImported: 1,
     discoveryProgressImported: 1,
+    nodeProgressImported: 1,
     todosImported: 2,
     watchesImported: 1,
     buildsImported: 1,
@@ -224,6 +229,10 @@ test("profiles resolve stable source IDs across installations with different can
       kind: "quest",
       slug: "awakening",
     }),
+    "completed",
+  );
+  assert.equal(
+    getNodeCompletion(second.sqlite, secondUser, "e-prime"),
     "completed",
   );
   assert.deepEqual(
@@ -381,7 +390,7 @@ test("profile replacement is transactional and reports missing entities", async 
     wantedCount: 0,
   });
   const missingProfile = {
-    schemaVersion: 15,
+    schemaVersion: 16,
     exportedAt: "2026-10-13T12:00:00.000Z",
     player: {},
     inventory: [
@@ -402,6 +411,7 @@ test("profile replacement is transactional and reports missing entities", async 
     goals: [],
     recipePreferences: [],
     discoveryProgress: [],
+    nodeProgress: [],
     todos: [],
     watches: [],
     builds: [],
@@ -415,6 +425,7 @@ test("profile replacement is transactional and reports missing entities", async 
     goalsImported: 0,
     recipePreferencesImported: 0,
     discoveryProgressImported: 0,
+    nodeProgressImported: 0,
     todosImported: 0,
     watchesImported: 0,
     buildsImported: 0,
@@ -459,6 +470,7 @@ test("profile replacement is transactional and reports missing entities", async 
       goalsImported: 0,
       recipePreferencesImported: 0,
       discoveryProgressImported: 0,
+      nodeProgressImported: 0,
       todosImported: 0,
       watchesImported: 0,
       buildsImported: 0,
@@ -491,6 +503,7 @@ test("profile replacement is transactional and reports missing entities", async 
       goalsImported: 0,
       recipePreferencesImported: 0,
       discoveryProgressImported: 0,
+      nodeProgressImported: 0,
       todosImported: 1,
       watchesImported: 0,
       buildsImported: 0,
@@ -527,6 +540,7 @@ test("profile replacement is transactional and reports missing entities", async 
       goalsImported: 0,
       recipePreferencesImported: 0,
       discoveryProgressImported: 0,
+      nodeProgressImported: 0,
       todosImported: 0,
       watchesImported: 1,
       buildsImported: 0,
@@ -570,7 +584,7 @@ test("profile replacement is transactional and reports missing entities", async 
         ...missingProfile,
         schemaVersion: 10,
       }),
-    /schemaVersion 15/,
+    /schemaVersion 16/,
   );
   assert.throws(
     () =>
@@ -633,6 +647,13 @@ function createCatalog(databasePath: string): {
       externalIds: [{ sourceId: "items", namespace: "id", value: "awakening" }],
       fields: { name: "Awakening", slug: "awakening" },
       evidence: { ...evidence, sourceRecordKey: "awakening" },
+    },
+    {
+      type: "entity",
+      kind: "node",
+      externalIds: [{ sourceId: "items", namespace: "id", value: "e-prime" }],
+      fields: { name: "E Prime", slug: "e-prime" },
+      evidence: { ...evidence, sourceRecordKey: "e-prime" },
     },
     {
       type: "entity",

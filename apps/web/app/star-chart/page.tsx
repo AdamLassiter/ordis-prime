@@ -17,13 +17,18 @@ export default async function StarChartPage({
     needed?: string;
     focus?: string;
     access?: string;
+    completion?: string;
   }>;
 }) {
   const session = await getCurrentSession();
-  const { q = "", needed, focus, access } = await searchParams;
+  const { q = "", needed, focus, access, completion } = await searchParams;
   const normalized = q.trim().toLocaleLowerCase();
   const neededOnly = Boolean(session && needed === "1");
   const selectedAccess = isAccessStatus(access) ? access : undefined;
+  const selectedCompletion =
+    session && (completion === "completed" || completion === "incomplete")
+      ? completion
+      : undefined;
   const database = getDatabase();
   const playerRank = session
     ? getPlayerSettings(database, session.user.id).masteryRank
@@ -49,7 +54,8 @@ export default async function StarChartPage({
           value?.toLocaleLowerCase().includes(normalized),
         )) &&
       (!neededOnly || (node.neededRewardCount ?? 0) > 0) &&
-      (!selectedAccess || node.accessStatus === selectedAccess),
+      (!selectedAccess || node.accessStatus === selectedAccess) &&
+      (!selectedCompletion || node.completionState === selectedCompletion),
   );
   const planets = new Map<string, typeof nodes>();
   for (const node of nodes) {
@@ -77,6 +83,16 @@ export default async function StarChartPage({
             placeholder="Planet, node, mission, faction…"
           />
         </label>
+        {session && (
+          <label>
+            Completion
+            <select name="completion" defaultValue={selectedCompletion ?? ""}>
+              <option value="">Any completion state</option>
+              <option value="incomplete">Incomplete</option>
+              <option value="completed">Completed</option>
+            </select>
+          </label>
+        )}
         {session && (
           <label className="check-label">
             <input
@@ -114,6 +130,9 @@ export default async function StarChartPage({
               .filter(Boolean)
               .join(" · ") || "Mission details unavailable"}
             {` · Access ${focusedNode.accessStatus}`}
+            {focusedNode.completionState
+              ? ` · ${focusedNode.completionState}`
+              : ""}
           </p>
           <div className="filters">
             <Link className="button" href={`/nodes/${focusedNode.slug}`}>
@@ -196,6 +215,11 @@ export default async function StarChartPage({
                   <span className={`tag access-${node.accessStatus}`}>
                     {node.accessStatus}
                   </span>
+                  {node.completionState && (
+                    <span className={`tag progress-${node.completionState}`}>
+                      {node.completionState}
+                    </span>
+                  )}
                   {node.connectionCount > 0 && (
                     <Link
                       className="star-node-explore"

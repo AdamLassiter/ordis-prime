@@ -97,6 +97,7 @@ export interface CatalogNode {
   minimumEnemyLevel?: number;
   maximumEnemyLevel?: number;
   masteryRequirement?: number;
+  completionState?: "incomplete" | "completed";
   detailEvidence: Array<{
     sourceName: string;
     version: string;
@@ -597,6 +598,9 @@ export function findCatalogNode(
   const connections = loadNodeConnections(sqlite, [node.id]).get(node.id) ?? [];
   const accessRequirements =
     loadNodeAccessRequirements(sqlite, [node.id], userId).get(node.id) ?? [];
+  const completionState = userId
+    ? loadNodeCompletionStates(sqlite, [node.id], userId).get(node.id)
+    : undefined;
   const { id: _id, ...summary } = node;
   return {
     ...summary,
@@ -604,6 +608,7 @@ export function findCatalogNode(
     detailEvidence: details?.detailEvidence ?? [],
     connections,
     accessRequirements,
+    ...(completionState ? { completionState } : {}),
     drops,
   };
 }
@@ -672,6 +677,13 @@ export function listStarChartNodes(
     nodes.map(({ id }) => id),
     userId,
   );
+  const completionStates = userId
+    ? loadNodeCompletionStates(
+        sqlite,
+        nodes.map(({ id }) => id),
+        userId,
+      )
+    : undefined;
   const inventoryColumns = userId
     ? `coalesce(inventory.owned_count, 0) as ownedCount,
       coalesce(inventory.built_count, 0) as builtCount,
@@ -717,12 +729,40 @@ export function listStarChartNodes(
     detailEvidence: details.get(id)?.detailEvidence ?? [],
     connections: connections.get(id) ?? [],
     accessRequirements: accessRequirements.get(id) ?? [],
+    ...(completionStates
+      ? { completionState: completionStates.get(id) ?? "incomplete" }
+      : {}),
     connectionCount: connections.get(id)?.length ?? 0,
     rewardCount: counts.get(id)?.rewardCount ?? 0,
     ...(userId
       ? { neededRewardCount: counts.get(id)?.neededRewardCount ?? 0 }
       : {}),
   }));
+}
+
+function loadNodeCompletionStates(
+  sqlite: Database.Database,
+  nodeIds: string[],
+  userId: string,
+): Map<string, "incomplete" | "completed"> {
+  if (!nodeIds.length) return new Map();
+  const placeholders = nodeIds.map(() => "?").join(", ");
+  const completed = new Set(
+    (
+      sqlite
+        .prepare(
+          `select node_id as nodeId from player_node_progress
+           where user_id = ? and node_id in (${placeholders})`,
+        )
+        .all(userId, ...nodeIds) as Array<{ nodeId: string }>
+    ).map(({ nodeId }) => nodeId),
+  );
+  return new Map(
+    nodeIds.map((nodeId) => [
+      nodeId,
+      completed.has(nodeId) ? "completed" : "incomplete",
+    ]),
+  );
 }
 
 function loadNodeAccessRequirements(

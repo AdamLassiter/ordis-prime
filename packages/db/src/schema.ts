@@ -845,6 +845,23 @@ export const discoveryProgress = sqliteTable(
     index("player_discovery_progress_state").on(table.userId, table.state),
   ],
 );
+export const nodeProgress = sqliteTable(
+  "player_node_progress",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    nodeId: text("node_id")
+      .notNull()
+      .references(() => entities.id),
+    completedAt: integer("completed_at", { mode: "timestamp_ms" }).notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.userId, table.nodeId] }),
+    index("player_node_progress_completed").on(table.userId, table.completedAt),
+  ],
+);
 export const jobs = sqliteTable("jobs", {
   id: text().primaryKey(),
   kind: text().notNull(),

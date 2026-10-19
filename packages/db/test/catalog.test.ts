@@ -17,6 +17,7 @@ import {
   searchDiscoveryCatalog,
   setDiscoveryProgress,
   setInventoryEntryByReference,
+  setNodeCompletion,
 } from "../src/index.ts";
 
 test("catalog read models join active recipes, drops, provenance, and rankings", async (context) => {
@@ -278,6 +279,15 @@ test("catalog read models join active recipes, drops, provenance, and rankings",
     { slug: "mercury-terminus", name: "Terminus", planet: undefined },
   ]);
   const userId = createLocalUser(sqlite, { username: "Player" });
+  assert.equal(
+    findCatalogNode(sqlite, "mercury-caloris", userId)?.completionState,
+    "incomplete",
+  );
+  setNodeCompletion(sqlite, userId, "mercury-caloris", true);
+  assert.equal(
+    findCatalogNode(sqlite, "mercury-caloris", userId)?.completionState,
+    "completed",
+  );
   assert.deepEqual(
     listStarChartNodes(sqlite).map(
       ({ name, rewardCount, connectionCount, neededRewardCount }) => ({
@@ -304,11 +314,12 @@ test("catalog read models join active recipes, drops, provenance, and rankings",
   );
   assert.deepEqual(
     listStarChartNodes(sqlite, userId).map(
-      ({ name, planet, rewardCount, neededRewardCount }) => ({
+      ({ name, planet, rewardCount, neededRewardCount, completionState }) => ({
         name,
         planet,
         rewardCount,
         neededRewardCount,
+        completionState,
       }),
     ),
     [
@@ -317,12 +328,14 @@ test("catalog read models join active recipes, drops, provenance, and rankings",
         planet: "Mercury",
         rewardCount: 1,
         neededRewardCount: 1,
+        completionState: "completed",
       },
       {
         name: "Terminus",
         planet: undefined,
         rewardCount: 0,
         neededRewardCount: 0,
+        completionState: "incomplete",
       },
     ],
   );

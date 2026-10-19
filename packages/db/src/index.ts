@@ -6,6 +6,7 @@ export * from "./discovery-progress.ts";
 export * from "./builds.ts";
 export * from "./migrate.ts";
 export * from "./jobs.ts";
+export * from "./node-progress.ts";
 export * from "./player.ts";
 export * from "./planner.ts";
 export * from "./promotion.ts";

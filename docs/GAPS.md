@@ -167,7 +167,11 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   direct traversal. It derives and filters available, conditional, blocked and
   unknown access states from the same quest-progress and Mastery evidence as the
   planner. Connectivity remains navigation evidence rather than proof of player
-  completion. Stable visual positions are still missing.
+  completion. Signed-in players can record private node completion, filter the
+  chart by completion and transfer that state in profiles. There is no bulk
+  completion editor, automatic game-account import, Junction-objective progress
+  or node-variant completion model yet. Stable visual positions are still
+  missing.
 - A public discovery atlas searches canonical quest, ability, enemy, boss,
   mechanic and secret kinds. WFCD currently populates quests and enemies;
   structured Wiki data populates current abilities and their typed

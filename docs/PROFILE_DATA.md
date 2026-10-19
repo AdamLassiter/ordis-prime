@@ -5,7 +5,7 @@ canonical entity IDs inside one installation, while exported profiles use
 provider identifiers so they can be restored into another installation whose
 canonical UUIDs differ.
 
-## Version 15 export
+## Version 16 export
 
 The player section carries an optional combined Mastery Rank used to evaluate
 sourced star-chart gates and build capacity. Values 0 through 30 are ordinary
@@ -29,6 +29,10 @@ reported unresolved and the planner uses its deterministic fallback.
 Discovery progress uses the same reference and records either `discovered` or
 `completed`; unseen topics are represented by absence. Every entity-keyed
 section is validated and resolved before the transactional write begins.
+
+Node progress is separate from discovery progress. Each row identifies a
+canonical node through the same portable reference and records its ISO
+completion time; absent nodes are incomplete.
 
 Static todos, including structured calendar recurrence rules, and world-state watch
 rules are portable as user-authored intent. Their optional catalog links use
@@ -59,7 +63,8 @@ no pre-release backwards-compatibility requirement.
 Signed-in players can export from the inventory screen or import in merge or
 replace mode. The HTTP import boundary limits files to 5 MB. Replace mode clears
 all portable state—progression settings, inventory, goals, discovery progress,
-todos, watches and private build drafts—and writes all resolvable entries in one transaction.
+node completion, todos, watches and private build drafts—and writes all
+resolvable entries in one transaction.
 Deleting watches also deletes their derived notifications. Merge mode upserts
 identity-keyed state and appends todos, watches and builds. Unresolved build
 members skip that whole build; unresolved entries are reported and never guessed.
