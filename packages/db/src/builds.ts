@@ -84,6 +84,13 @@ export interface BuildMod {
   drain?: number;
   adjustedDrain?: number;
 }
+export interface BuildCapacity {
+  base?: number;
+  bonus?: number;
+  total?: number;
+  drain?: number;
+  remaining?: number;
+}
 export interface BuildEquipmentEntry {
   id: string;
   slot: BuildSlot;
@@ -94,6 +101,7 @@ export interface BuildEquipmentEntry {
   maxRank?: number;
   formaCount: number;
   capacityUpgrade: boolean;
+  capacity?: BuildCapacity;
   modSlots: BuildModSlot[];
   mods: BuildMod[];
 }
@@ -201,7 +209,12 @@ export function getPlayerBuild(
       }
     | undefined;
   if (!build) return undefined;
-  return hydrateBuild(sqlite, build);
+  const player = sqlite
+    .prepare(
+      "select mastery_rank as masteryRank from player_profiles where user_id = ?",
+    )
+    .get(userId) as { masteryRank: number | null } | undefined;
+  return hydrateBuild(sqlite, build, player?.masteryRank ?? undefined);
 }
 
 export function updatePlayerBuild(
@@ -941,6 +954,7 @@ function hydrateBuild(
     createdAt: number;
     updatedAt: number;
   },
+  playerMasteryRank: number | undefined,
 ): PlayerBuild {
   const equipmentRows = sqlite
     .prepare(
@@ -1008,19 +1022,8 @@ function hydrateBuild(
     revision: build.revision,
     createdAt: build.createdAt,
     updatedAt: build.updatedAt,
-    equipment: equipmentRows.map((entry) => ({
-      id: entry.id,
-      slot: entry.slot,
-      entity: { kind: entry.kind, slug: entry.slug, name: entry.name },
-      notes: entry.notes ?? undefined,
-      configuration: entry.configuration ?? undefined,
-      rank: entry.rank ?? undefined,
-      ...(entry.equipmentMaxRank !== null
-        ? { maxRank: entry.equipmentMaxRank }
-        : {}),
-      formaCount: entry.formaCount,
-      capacityUpgrade: Boolean(entry.capacityUpgrade),
-      modSlots: (
+    equipment: equipmentRows.map((entry) => {
+      const modSlots = (
         modSlotsQuery.all(entry.id) as Array<{
           position: number;
           role: BuildModSlotRole;
@@ -1030,8 +1033,8 @@ function hydrateBuild(
         position,
         role,
         ...(polarity ? { polarity } : {}),
-      })),
-      mods: (
+      }));
+      const mods = (
         modsQuery.all(entry.id) as Array<{
           position: number;
           rank: number | null;
@@ -1083,8 +1086,34 @@ function hydrateBuild(
             entity: { kind, slug, name },
           };
         },
-      ),
-    })),
+      );
+      return {
+        id: entry.id,
+        slot: entry.slot,
+        entity: { kind: entry.kind, slug: entry.slug, name: entry.name },
+        notes: entry.notes ?? undefined,
+        configuration: entry.configuration ?? undefined,
+        rank: entry.rank ?? undefined,
+        ...(entry.equipmentMaxRank !== null
+          ? { maxRank: entry.equipmentMaxRank }
+          : {}),
+        formaCount: entry.formaCount,
+        capacityUpgrade: Boolean(entry.capacityUpgrade),
+        ...(entry.slot === "operator-amp"
+          ? {}
+          : {
+              capacity: calculateBuildCapacity(
+                entry.rank ?? undefined,
+                entry.equipmentMaxRank ?? undefined,
+                playerMasteryRank,
+                Boolean(entry.capacityUpgrade),
+                mods,
+              ),
+            }),
+        modSlots,
+        mods,
+      };
+    }),
     enhancements: enhancements.map(
       ({ slot, rank, optionKey, optionLabel, entityId, kind, slug, name }) => ({
         slot,
@@ -1207,6 +1236,56 @@ export function calculatePolarityAdjustedDrain(
     return -(matches ? bonus * 2 : Math.floor(bonus * 0.8));
   }
   return matches ? Math.ceil(drain / 2) : Math.ceil(drain * 1.25);
+}
+export function calculateEquipmentBaseCapacity(
+  rank: number | undefined,
+  maxRank: number | undefined,
+  playerMasteryRank: number | undefined,
+  capacityUpgrade: boolean,
+): number | undefined {
+  let effectiveRank: number;
+  if (rank !== undefined && playerMasteryRank !== undefined) {
+    effectiveRank = Math.max(rank, playerMasteryRank);
+    if (effectiveRank > 30 && maxRank === undefined) return undefined;
+  } else {
+    const knownRank = rank ?? playerMasteryRank;
+    if (knownRank === undefined || maxRank === undefined || knownRank < maxRank)
+      return undefined;
+    effectiveRank = knownRank;
+  }
+  if (maxRank !== undefined) effectiveRank = Math.min(effectiveRank, maxRank);
+  const capacity =
+    effectiveRank <= 30 ? 15 + Math.floor(effectiveRank / 2) : effectiveRank;
+  return capacityUpgrade ? capacity * 2 : capacity;
+}
+export function calculateBuildCapacity(
+  rank: number | undefined,
+  maxRank: number | undefined,
+  playerMasteryRank: number | undefined,
+  capacityUpgrade: boolean,
+  mods: ReadonlyArray<Pick<BuildMod, "adjustedDrain">>,
+): BuildCapacity {
+  const base = calculateEquipmentBaseCapacity(
+    rank,
+    maxRank,
+    playerMasteryRank,
+    capacityUpgrade,
+  );
+  if (base === undefined) return {};
+  if (mods.some(({ adjustedDrain }) => adjustedDrain === undefined))
+    return { base };
+  const bonus = mods.reduce(
+    (sum, { adjustedDrain = 0 }) =>
+      sum + (adjustedDrain < 0 ? Math.abs(adjustedDrain) : 0),
+    0,
+  );
+  const drain = mods.reduce(
+    (sum, { adjustedDrain = 0 }) =>
+      sum + (adjustedDrain > 0 ? adjustedDrain : 0),
+    0,
+  );
+  const total = base + bonus;
+  return { base, bonus, total, drain, remaining: total - drain };
 }
 function enhancementKind(slot: BuildEnhancementSlot): "arcane" | "shard" {
   if (!(BUILD_ENHANCEMENT_SLOTS as readonly string[]).includes(slot))

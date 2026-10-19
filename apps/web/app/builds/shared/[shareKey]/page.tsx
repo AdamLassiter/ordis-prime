@@ -4,6 +4,7 @@ import { findSharedBuild } from "@ordis-prime/db";
 import { getDatabase } from "@/lib/database";
 import { getCurrentSession } from "@/lib/session";
 import { cloneSharedBuildToDraft } from "../../actions";
+import { BuildCapacitySummary } from "../../capacity-summary";
 
 export const dynamic = "force-dynamic";
 
@@ -56,6 +57,7 @@ export default async function SharedBuildPage({
                 {equipment.formaCount} Forma
                 {equipment.capacityUpgrade ? " · capacity upgraded" : ""}
               </p>
+              <BuildCapacitySummary capacity={equipment.capacity} />
               {equipment.notes && (
                 <p className="muted build-notes">{equipment.notes}</p>
               )}

@@ -32,6 +32,7 @@ import {
   saveModSlot,
   shareBuild,
 } from "../actions";
+import { BuildCapacitySummary } from "../capacity-summary";
 
 export const dynamic = "force-dynamic";
 
@@ -192,6 +193,7 @@ export default async function BuildEditor({
                       </div>
                       <button className="nav-button">Save configuration</button>
                     </form>
+                    <BuildCapacitySummary capacity={equipment.capacity} />
                     <form
                       className="form-stack compact-form"
                       action={saveEquipmentNotes.bind(

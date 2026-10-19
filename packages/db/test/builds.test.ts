@@ -5,6 +5,8 @@ import path from "node:path";
 import test from "node:test";
 import {
   addBuildAcquisitionGoals,
+  calculateBuildCapacity,
+  calculateEquipmentBaseCapacity,
   calculatePolarityAdjustedDrain,
   calculateRankedModDrain,
   clonePlayerBuild,
@@ -28,6 +30,7 @@ import {
   setBuildModSlot,
   setInventoryEntry,
   setPlayerGoal,
+  setPlayerMasteryRank,
   updatePlayerBuild,
 } from "../src/index.ts";
 
@@ -99,6 +102,50 @@ test("slot polarity adjusts ordinary drain and special-slot capacity bonuses", (
     calculatePolarityAdjustedDrain(-7, "madurai", normal),
     undefined,
   );
+});
+
+test("equipment capacity follows current rank, combined progression and upgrades", () => {
+  assert.equal(calculateEquipmentBaseCapacity(0, 30, 0, false), 15);
+  assert.equal(calculateEquipmentBaseCapacity(10, 30, 4, false), 20);
+  assert.equal(calculateEquipmentBaseCapacity(0, 30, 4, false), 17);
+  assert.equal(calculateEquipmentBaseCapacity(0, 40, 31, true), 62);
+  assert.equal(calculateEquipmentBaseCapacity(40, 40, 0, false), 40);
+  assert.equal(calculateEquipmentBaseCapacity(0, 30, 31, false), 30);
+  assert.equal(
+    calculateEquipmentBaseCapacity(27, 30, undefined, false),
+    undefined,
+  );
+  assert.equal(
+    calculateEquipmentBaseCapacity(undefined, 30, 27, false),
+    undefined,
+  );
+  assert.equal(
+    calculateEquipmentBaseCapacity(31, undefined, 31, false),
+    undefined,
+  );
+  assert.equal(
+    calculateEquipmentBaseCapacity(undefined, undefined, undefined, false),
+    undefined,
+  );
+});
+
+test("build capacity totals only fully known polarity-adjusted mods", () => {
+  assert.deepEqual(
+    calculateBuildCapacity(30, 30, 0, true, [
+      { adjustedDrain: 12 },
+      { adjustedDrain: -14 },
+      { adjustedDrain: 5 },
+    ]),
+    { base: 60, bonus: 14, total: 74, drain: 17, remaining: 57 },
+  );
+  assert.deepEqual(
+    calculateBuildCapacity(30, 30, 0, false, [
+      { adjustedDrain: 5 },
+      { adjustedDrain: undefined },
+    ]),
+    { base: 30 },
+  );
+  assert.deepEqual(calculateBuildCapacity(27, 30, undefined, true, []), {});
 });
 
 test("build drafts are private and share snapshots remain immutable", async (context) => {
@@ -258,6 +305,7 @@ test("build drafts are private and share snapshots remain immutable", async (con
     formaCount: 3,
     capacityUpgrade: true,
   });
+  setPlayerMasteryRank(database, owner, 4);
   setBuildModSlot(database, owner, buildId, "primary", 0, "normal", "madurai");
   setBuildModSlot(database, owner, buildId, "warframe", 10, "aura", "vazarin");
   assert.throws(
@@ -378,6 +426,13 @@ test("build drafts are private and share snapshots remain immutable", async (con
       maxRank: 30,
       formaCount: 3,
       capacityUpgrade: true,
+      capacity: {
+        base: 56,
+        bonus: 0,
+        total: 56,
+        drain: 5,
+        remaining: 51,
+      },
       notes: undefined,
       modSlots: [{ position: 0, role: "normal", polarity: "madurai" }],
       mods: [
@@ -427,6 +482,10 @@ test("build drafts are private and share snapshots remain immutable", async (con
   assert.equal(
     shared.equipment.find(({ slot }) => slot === "primary")?.rank,
     27,
+  );
+  assert.deepEqual(
+    shared.equipment.find(({ slot }) => slot === "primary")?.capacity,
+    { base: 56, bonus: 0, total: 56, drain: 5, remaining: 51 },
   );
   assert.deepEqual(
     shared.equipment.find(({ slot }) => slot === "warframe")?.modSlots,

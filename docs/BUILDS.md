@@ -16,7 +16,14 @@ by one per rank; negative aura/stance drain becomes a larger capacity bonus.
 When the mod's position has an explicitly configured slot, the editor also
 shows polarity-adjusted drain or bonus using the game's distinct normal and
 Aura/Stance rounding rules. Unknown metadata or slot configuration stays visibly
-absent rather than being guessed.
+absent rather than being guessed. The editor combines those adjusted values
+with current equipment rank, private combined Mastery/Legendary Rank, sourced
+maximum rank and the capacity-upgrade flag. It shows equipment capacity alone
+when only that subtotal is exact, and shows used, total and remaining capacity
+only when every installed mod is calculable. Rank-zero capacity follows the
+current 15-point base rule; progression through rank 30 is gained every two
+ranks, while rank-40 equipment continues one point per rank. Operator Amps are
+excluded because they do not use this mod-capacity system.
 Build-level enhancement slots record Warframe, operator/amp and weapon arcanes
 plus five positioned Archon Shards. Arcanes can retain an optional rank. Every
 new shard assignment chooses one active, cited effect option; the build stores
@@ -75,8 +82,9 @@ recipes and recommends nodes using the same canonical IDs.
   incomplete.
   The catalog now retains sourced mod maximum rank, base drain and polarity,
   and calculates each known mod's unpolarized ranked drain. Sourced factory slot
-  layouts, companion maximum-rank coverage and whole-build capacity are not yet
-  modeled. Broad arcane
+  layouts and companion maximum-rank coverage are not yet modeled. Whole-build
+  capacity is derived conservatively; those missing facts can leave a result
+  partial rather than estimated. Broad arcane
   and specialized weapon compatibility are enforced from cited canonical
   facts. A Kitgun chamber or Zaw strike is currently the representative
   canonical weapon; the other modular parts and their stat composition are not

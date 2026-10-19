@@ -127,8 +127,12 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   maximum-rank, base-drain and polarity facts validate selected ranks and expose
   per-mod unpolarized drain. Player-authored mod-slot roles and polarities are
   preserved independently of installed mods and drive a derived adjusted drain
-  or capacity bonus at matching positions. Sourced factory slot layouts,
-  comprehensive companion maximum ranks and whole-build capacity calculation remain. Builds can assign
+  or capacity bonus at matching positions. Whole-build capacity combines
+  Update 38.5 rank progression, private combined Mastery/Legendary Rank,
+  capacity upgrades and fully known adjusted mod values. Incomplete inputs
+  produce a partial or unknown result rather than an estimate, and Operator
+  Amps are excluded from this mod-capacity model. Sourced factory slot layouts
+  and comprehensive companion maximum ranks remain. Builds can assign
   ranked arcanes and positioned Archon Shards with sourced effect selections.
   Arcane candidates and assignments enforce sourced broad and specialized weapon classes against
   equipped items in either assignment order. Equipment slots also enforce
@@ -138,7 +142,7 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   portable and can be cloned; their snapshot history can be viewed or revoked.
   Authenticated recipients can clone a public snapshot into a private draft.
   Draft equipment and mods can seed missing-item acquisition goals, but the
-  planner does not yet understand build capacity, alternative mod ranks or
+  planner does not yet use build capacity to optimize alternative mod ranks or
   configuration-specific requirements.
 - Active cited editorial ranking sets have a public source-and-item comparison
   matrix with source-subset controls and coverage counts that preserve unlike

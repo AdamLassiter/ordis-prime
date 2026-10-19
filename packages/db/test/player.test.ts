@@ -300,6 +300,7 @@ test("profiles resolve stable source IDs across installations with different can
     rank: 24,
     formaCount: 2,
     capacityUpgrade: true,
+    capacity: {},
     modSlots: [{ position: 0, role: "normal", polarity: "madurai" }],
     mods: [
       {
