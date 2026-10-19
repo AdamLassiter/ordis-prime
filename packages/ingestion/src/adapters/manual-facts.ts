@@ -39,6 +39,7 @@ const ENTITY_KINDS = [
   "boss",
   "mechanic",
   "secret",
+  "ability",
   "archwing",
 ] as const satisfies readonly EntityKind[];
 

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import {
+  DISCOVERY_KINDS,
   createEntityTodo,
   createPlayerTodo,
   createWorldStateWatch,
@@ -120,7 +121,7 @@ export async function addCatalogWatch(kind: string, slug: string) {
 }
 
 function discoveryWatchKind(kind: string): boolean {
-  return ["quest", "mechanic", "secret", "enemy", "boss"].includes(kind);
+  return (DISCOVERY_KINDS as readonly string[]).includes(kind);
 }
 
 export async function editWatch(watchId: string, form: FormData) {

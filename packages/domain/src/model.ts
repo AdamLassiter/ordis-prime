@@ -19,6 +19,7 @@ export type EntityKind =
   | "boss"
   | "mechanic"
   | "secret"
+  | "ability"
   | "archwing";
 
 export const EQUIPMENT_KINDS = [

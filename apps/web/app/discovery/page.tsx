@@ -33,11 +33,13 @@ export default async function DiscoveryPage({
   return (
     <>
       <p className="eyebrow">Systems and lore index</p>
-      <h1><u>Discovery</u> atlas</h1>
+      <h1>
+        <u>Discovery</u> atlas
+      </h1>
       <p className="lede">
-        Explore quests, enemies, bosses, mechanics and secrets in one canonical
-        catalog. Sparse sections are visible on purpose: they show where
-        attributed data still needs to be added.
+        Explore quests, abilities, enemies, bosses, mechanics and secrets in one
+        canonical catalog. Sparse sections are visible on purpose: they show
+        where attributed data still needs to be added.
       </p>
       <form className="inline-form">
         <label>

@@ -21,6 +21,7 @@ const DISCOVERY_ENTITY_KINDS = [
   "secret",
   "enemy",
   "boss",
+  "ability",
   "node",
 ] as const satisfies readonly EntityKind[];
 

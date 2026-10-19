@@ -23,6 +23,7 @@ export const DISCOVERY_KINDS = [
   "secret",
   "enemy",
   "boss",
+  "ability",
 ] as const;
 export type DiscoveryKind = (typeof DISCOVERY_KINDS)[number];
 export interface DiscoveryCatalogEntry extends CatalogSummary {

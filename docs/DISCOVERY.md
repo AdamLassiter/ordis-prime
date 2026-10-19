@@ -1,10 +1,10 @@
 # Discovery atlas
 
 The discovery atlas is intended to answer “what systems have I not even heard
-of?” without creating a second encyclopedia detached from acquisition and player
-progress. Quests, mechanics, secrets, enemies and bosses are canonical entity
-kinds, so future prerequisites and node links can join the same identities used
-by inventory, builds and drops.
+of?” without creating a second encyclopedia detached from acquisition and
+player progress. Quests, abilities, mechanics, secrets, enemies and bosses are
+canonical entity kinds, so future prerequisites and node links can join the
+same identities used by inventory, builds and drops.
 
 The public `/discovery` route searches and filters those entity kinds. WFCD item
 data provides quest and enemy identities and descriptions. A cited manual YAML
@@ -12,6 +12,11 @@ source can add curated topics and typed `requires`, `unlocks`, `occurs-at`,
 `involves`, `rewards` and node `connects-to` links. Both ends resolve through external identifiers;
 relationships are source-run scoped and disappear from reads when that source
 is superseded. Catalog pages show incoming and outgoing links with attribution.
+The structured Wiki ability adapter adds current abilities and their in-game
+descriptions, then links each ability to a typed Warframe or Archwing identity
+validated against the paired Wiki powersuit module. Archived abilities stay
+out of the current atlas. Abilities owned by unsupported equipment families
+remain searchable but deliberately unlinked rather than inventing a kind.
 
 Signed-in players can independently mark a topic unseen, discovered or
 completed. The absence of a row means unseen, keeping default state compact.

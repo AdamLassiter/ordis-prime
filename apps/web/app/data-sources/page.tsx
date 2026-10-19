@@ -123,6 +123,7 @@ export default async function Sources({
               ["warframe-wiki-weapons", "Wiki weapons"],
               ["warframe-wiki-warframes", "Wiki Warframes"],
               ["warframe-wiki-missions", "Wiki missions"],
+              ["warframe-wiki-abilities", "Wiki abilities"],
               ["wfcd-worldstate", "World state"],
             ].map(([id, label]) => (
               <form action={queueSourceRefresh.bind(null, id!)} key={id}>

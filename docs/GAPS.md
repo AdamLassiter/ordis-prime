@@ -52,11 +52,13 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   are queued immediately, while manual sources require re-upload.
   Structured WARFRAME Wiki adapters also import cited weapon, Warframe and
   Archwing maximum ranks plus mission metadata and star-chart connections from
-  versioned Lua data modules without executing provider code. The Wiki companion
+  versioned Lua data modules without executing provider code. A separate Wiki
+  adapter imports current abilities and typed Warframe/Archwing ownership links.
+  The Wiki companion
   module does not expose a maximum-rank field, so companion coverage remains
   absent rather than defaulted. The adapters do not cover factory polarities or
   arbitrary article content. The leased worker schedules WFCD item, drop, Wiki
-  weapon, Wiki Warframe and Wiki mission refreshes daily, and an
+  weapon, Wiki Warframe, Wiki mission and Wiki ability refreshes daily, and an
   administrator can bring supported source jobs forward from the source UI. A provider-neutral world-state
   pipeline snapshots and transactionally promotes WFCD cycles, events, alerts,
   fissures and traders. A provider response older than the active observation
@@ -156,12 +158,15 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   supplies the current attributed node and connection set; `connects-to`
   observations are shown symmetrically and a focused topology explorer supports
   direct traversal. Stable visual positions are still missing.
-- A public discovery atlas searches canonical quest, enemy, boss, mechanic and
-  secret kinds. WFCD currently populates quests and enemies; cited discovery
+- A public discovery atlas searches canonical quest, ability, enemy, boss,
+  mechanic and secret kinds. WFCD currently populates quests and enemies;
+  structured Wiki data populates current abilities and their typed
+  Warframe/Archwing links. Cited discovery
   YAML can add curated entities and typed links to nodes, rewards, or other
   topics. Players can privately mark topics unseen, discovered, or completed
   and filter the atlas by that state. Richer boss classification, quest-step
-  progress and conditional relations remain. Atlas cards preview up to three
+  progress, unsupported Necramech/Helminth ability-owner kinds and conditional
+  relations remain. Atlas cards preview up to three
   cited neighbors; a spatial graph view remains.
 - Acquisition recommendations compose active `requires` and `unlocks` relations
   with private discovery completion and sourced node Mastery Rank requirements

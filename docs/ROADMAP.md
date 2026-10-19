@@ -54,6 +54,8 @@ and relations, not a second data model.
 Composed node metadata, a planet-grouped chart with inventory-aware filtering,
 a searchable canonical discovery atlas, and cited typed discovery relations are
 implemented. Private discovery progress and filtering are also implemented.
+Current Wiki abilities are searchable discovery topics linked to their
+Warframes or Archwings.
 Wiki mission data supplies the attributed current node and connection set, and
 those cited star-chart edges compose into node reads symmetrically. A shareable
 focus view supports direct traversal without manufacturing map coordinates.
