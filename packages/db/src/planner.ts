@@ -21,6 +21,7 @@ export interface PlayerGoal {
 
 export interface AcquisitionPlan {
   playerMasteryRank?: number;
+  playerRailjackIntrinsicRank?: number;
   goals: PlayerGoal[];
   missing: Array<{
     entityId: string;
@@ -45,6 +46,12 @@ export interface AcquisitionPlan {
     reasons: string[];
     accessStatus: "available" | "conditional" | "blocked" | "unknown";
     masteryRequirement?: {
+      required: number;
+      playerRank?: number;
+      state: "met" | "blocked" | "unknown";
+      source: { name: string; citationUrl?: string };
+    };
+    railjackIntrinsicRequirement?: {
       required: number;
       playerRank?: number;
       state: "met" | "blocked" | "unknown";
@@ -207,7 +214,9 @@ export function buildAcquisitionPlan(
   sqlite: Database.Database,
   userId: string,
 ): AcquisitionPlan {
-  const playerMasteryRank = getPlayerSettings(sqlite, userId).masteryRank;
+  const playerSettings = getPlayerSettings(sqlite, userId);
+  const playerMasteryRank = playerSettings.masteryRank;
+  const playerRailjackIntrinsicRank = playerSettings.railjackIntrinsicRank;
   const goals = listPlayerGoals(sqlite, userId);
   const inventoryRows = sqlite
     .prepare(
@@ -376,6 +385,12 @@ export function buildAcquisitionPlan(
     new Set(recommendedNodes.flatMap(({ nodeId }) => (nodeId ? [nodeId] : []))),
     playerMasteryRank,
   );
+  const railjackIntrinsicRequirements = loadNodeRankRequirements(
+    sqlite,
+    new Set(recommendedNodes.flatMap(({ nodeId }) => (nodeId ? [nodeId] : []))),
+    "railjack_intrinsic_requirement",
+    playerRailjackIntrinsicRank,
+  );
   const recommendations = recommendedNodes
     .map((recommendation) => {
       const node = recommendation.nodeId
@@ -386,6 +401,9 @@ export function buildAcquisitionPlan(
         : [];
       const masteryRequirement = recommendation.nodeId
         ? masteryRequirements.get(recommendation.nodeId)
+        : undefined;
+      const railjackIntrinsicRequirement = recommendation.nodeId
+        ? railjackIntrinsicRequirements.get(recommendation.nodeId)
         : undefined;
       const neededRewards = recommendation.neededRewards.map((reward) => ({
         ...entityDetails(entities, reward.entityId),
@@ -403,9 +421,12 @@ export function buildAcquisitionPlan(
           requirementStates: accessRequirements.map(({ state }) => state),
           masteryRequirement: masteryRequirement?.required,
           playerRank: masteryRequirement?.playerRank,
+          railjackIntrinsicRequirement: railjackIntrinsicRequirement?.required,
+          playerRailjackIntrinsicRank: railjackIntrinsicRequirement?.playerRank,
         }),
         accessRequirements,
         masteryRequirement,
+        railjackIntrinsicRequirement,
         reasons: [
           `Drops ${neededRewards.length} missing goal ${neededRewards.length === 1 ? "item" : "items"}`,
           ...neededRewards.map(
@@ -445,12 +466,36 @@ export function buildAcquisitionPlan(
         })),
       })),
     }));
-  return { playerMasteryRank, goals, missing, recommendations, recipeChoices };
+  return {
+    playerMasteryRank,
+    playerRailjackIntrinsicRank,
+    goals,
+    missing,
+    recommendations,
+    recipeChoices,
+  };
 }
 
 function loadNodeMasteryRequirements(
   sqlite: Database.Database,
   nodeIds: Set<EntityId>,
+  playerRank: number | undefined,
+): Map<
+  string,
+  NonNullable<AcquisitionPlan["recommendations"][number]["masteryRequirement"]>
+> {
+  return loadNodeRankRequirements(
+    sqlite,
+    nodeIds,
+    "mastery_requirement",
+    playerRank,
+  );
+}
+
+function loadNodeRankRequirements(
+  sqlite: Database.Database,
+  nodeIds: Set<EntityId>,
+  column: "mastery_requirement" | "railjack_intrinsic_requirement",
   playerRank: number | undefined,
 ): Map<
   string,
@@ -463,7 +508,7 @@ function loadNodeMasteryRequirements(
     .prepare(
       `
     with ranked as (
-      select detail.entity_id as nodeId, detail.mastery_requirement as required,
+      select detail.entity_id as nodeId, detail.${column} as required,
         source.name as sourceName, detail.citation_url as citationUrl,
         row_number() over (
           partition by detail.entity_id
@@ -472,7 +517,7 @@ function loadNodeMasteryRequirements(
       from node_details detail
       join source_runs run on run.id = detail.source_run_id and run.status = 'active'
       join sources source on source.id = run.source_id
-      where detail.entity_id in (${placeholders}) and detail.mastery_requirement is not null
+      where detail.entity_id in (${placeholders}) and detail.${column} is not null
     )
     select nodeId, required, sourceName, citationUrl from ranked where preference = 1
   `,

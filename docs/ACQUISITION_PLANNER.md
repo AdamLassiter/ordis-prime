@@ -37,6 +37,9 @@ The highest-priority active node-detail fact may also provide a numeric Mastery
 Rank gate. A private, portable player rank marks that gate met or blocked. If
 the gate is documented but the player has not recorded a rank, the node is
 shown as conditional rather than guessed available or collapsed into unknown.
+Railjack Intrinsics use an independent cited 0–10 gate and the player's private
+highest rank in any Intrinsics category, with the same met, blocked and unknown
+input semantics.
 
 The planner also joins current and upcoming world-state windows whose
 conservatively reconciled canonical node appears in its recommendations. These
@@ -46,8 +49,9 @@ documented drop chance. Unresolved provider node labels cannot produce an
 opportunity.
 
 Node access currently covers curated quest, mechanic, secret, enemy and boss
-relations, structured quest and node-completion Wiki requirements, and sourced
-numeric Mastery Rank gates. Junction rules and other compound conditions, market acquisition, relic
+relations, structured quest, node-completion and Railjack Intrinsics Wiki
+requirements, and sourced numeric Mastery Rank gates. Junction rules and other
+compound conditions, market acquisition, relic
 refinement, and rotation-specific mission duration are not yet modeled.
 Those inputs should extend the planning read model rather than becoming UI-only
 heuristics.

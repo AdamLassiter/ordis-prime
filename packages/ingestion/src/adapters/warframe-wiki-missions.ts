@@ -21,7 +21,7 @@ import {
   wikiSlug,
 } from "./mediawiki-lua.ts";
 
-const PARSER_VERSION = "warframe-wiki-missions-v4";
+const PARSER_VERSION = "warframe-wiki-missions-v5";
 const MODULE_TITLE = "Module:Missions/data";
 const QUEST_MODULE_TITLE = "Module:Keys/data";
 
@@ -47,6 +47,11 @@ interface QuestReference {
 interface AccessReference {
   kind: "quest" | "node";
   name: string;
+}
+
+interface ParsedAccessRequirements {
+  references: AccessReference[];
+  railjackIntrinsicRequirement?: number;
 }
 
 export class WarframeWikiMissionsAdapter implements SourceAdapter {
@@ -107,7 +112,7 @@ export class WarframeWikiMissionsAdapter implements SourceAdapter {
       [...questReferences.values()].map((quest) => [quest.name, quest]),
     );
     for (const requirements of accessRequirements.values())
-      for (const requirement of requirements) {
+      for (const requirement of requirements.references) {
         if (requirement.kind !== "quest") continue;
         const quest = questsByName.get(requirement.name);
         if (quest) referencedQuests.set(quest.name, quest);
@@ -145,6 +150,8 @@ export class WarframeWikiMissionsAdapter implements SourceAdapter {
         minimumEnemyLevel: record.minimumEnemyLevel,
         maximumEnemyLevel: record.maximumEnemyLevel,
         masteryRequirement: record.masteryRequirement,
+        railjackIntrinsicRequirement: accessRequirements.get(record.name)
+          ?.railjackIntrinsicRequirement,
         evidence: evidence(page.revisionId, snapshot, record.name, record.line),
       };
     }
@@ -183,7 +190,8 @@ export class WarframeWikiMissionsAdapter implements SourceAdapter {
       );
 
     for (const record of records) {
-      for (const requirement of accessRequirements.get(record.name) ?? []) {
+      for (const requirement of accessRequirements.get(record.name)
+        ?.references ?? []) {
         yield {
           type: "entity-relation",
           kind: "requires",
@@ -284,12 +292,13 @@ function parseAccessRequirements(
   requirements: string | undefined,
   quests: Map<string, QuestReference>,
   nodes: Set<string>,
-): AccessReference[] {
-  if (!requirements) return [];
+): ParsedAccessRequirements {
+  if (!requirements) return { references: [] };
   const links = [...requirements.matchAll(/\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g)];
-  if (!links.length) return [];
+  if (!links.length) return { references: [] };
   const resolved = links.map((match) => {
     const label = match[1]!.trim();
+    if (label === "Intrinsics") return { kind: "intrinsics" } as const;
     const quest = quests.get(label);
     const node = nodes.has(label) ? label : undefined;
     if (Boolean(quest) === Boolean(node)) return undefined;
@@ -297,7 +306,8 @@ function parseAccessRequirements(
       ? ({ kind: "quest", name: quest.name } as const)
       : ({ kind: "node", name: node! } as const);
   });
-  if (resolved.some((reference) => reference === undefined)) return [];
+  if (resolved.some((reference) => reference === undefined))
+    return { references: [] };
   let linkIndex = 0;
   const shape = requirements
     .replace(/\[\[[^\]]+\]\]/g, () => {
@@ -306,6 +316,10 @@ function parseAccessRequirements(
     })
     .replace(/\s+/g, " ")
     .trim();
+  const normalizedShape = shape.replace(
+    /(\[\[INTRINSICS\]\] Rank) \d+/,
+    "$1 [[RANK]]",
+  );
   if (
     !new Set([
       "Must have [[QUEST]] completed to access",
@@ -316,17 +330,43 @@ function parseAccessRequirements(
       "Must have [[NODE]] completed to access",
       "Must complete [[NODE]] to access",
       "Must have [[QUEST]] completed to access Must have [[NODE]] completed",
-    ]).has(shape)
+      "Must have [[INTRINSICS]] Rank [[RANK]] or higher to access",
+      "Must have [[INTRINSICS]] Rank [[RANK]] or higher to access and [[QUEST]] completed",
+      "Must have [[QUEST]] completed and [[INTRINSICS]] Rank [[RANK]] or higher to access",
+      "Must have [[QUEST]] completed and [[INTRINSICS]] Rank [[RANK]] or higher to access and [[QUEST]] completed",
+    ]).has(normalizedShape)
   )
-    return [];
-  return [
-    ...new Map(
-      resolved.map((reference) => [
-        `${reference!.kind}:${reference!.name}`,
-        reference!,
-      ]),
-    ).values(),
-  ];
+    return { references: [] };
+  const intrinsicMatch = shape.match(/\[\[INTRINSICS\]\] Rank (\d+)/);
+  const railjackIntrinsicRequirement = intrinsicMatch
+    ? Number(intrinsicMatch[1])
+    : undefined;
+  if (
+    railjackIntrinsicRequirement !== undefined &&
+    (!Number.isSafeInteger(railjackIntrinsicRequirement) ||
+      railjackIntrinsicRequirement < 0 ||
+      railjackIntrinsicRequirement > 10)
+  )
+    throw new Error(
+      "WARFRAME Wiki mission Railjack Intrinsic requirement is invalid",
+    );
+  const references = resolved.filter(
+    (reference): reference is AccessReference =>
+      reference !== undefined && reference.kind !== "intrinsics",
+  );
+  return {
+    references: [
+      ...new Map(
+        references.map((reference) => [
+          `${reference.kind}:${reference.name}`,
+          reference,
+        ]),
+      ).values(),
+    ],
+    ...(railjackIntrinsicRequirement === undefined
+      ? {}
+      : { railjackIntrinsicRequirement }),
+  };
 }
 
 function optionalString(

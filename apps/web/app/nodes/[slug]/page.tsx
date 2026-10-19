@@ -129,6 +129,28 @@ export default async function NodePage({
             </span>
           )}
         </dd>
+        <dt>Railjack Intrinsic requirement</dt>
+        <dd>
+          {node.railjackIntrinsicRequirement ?? "Not recorded"}
+          {node.railjackIntrinsicRequirement !== undefined && settings && (
+            <span
+              className={
+                settings.railjackIntrinsicRank !== undefined &&
+                settings.railjackIntrinsicRank >=
+                  node.railjackIntrinsicRequirement
+                  ? "tag progress-completed"
+                  : "tag status-needed"
+              }
+            >
+              {settings.railjackIntrinsicRank === undefined
+                ? "highest player rank not recorded"
+                : settings.railjackIntrinsicRank >=
+                    node.railjackIntrinsicRequirement
+                  ? "met"
+                  : `blocked at ${settings.railjackIntrinsicRank}`}
+            </span>
+          )}
+        </dd>
       </dl>
       <section>
         <h2>Access requirements</h2>

@@ -35,6 +35,7 @@ import {
   setNodeCompletion,
   setPlayerGoal,
   setPlayerMasteryRank,
+  setPlayerRailjackIntrinsicRank,
   setPlayerRecipePreference,
   setPlayerTodoStatus,
 } from "../src/index.ts";
@@ -60,10 +61,27 @@ test("profiles resolve stable source IDs across installations with different can
 
   const firstUser = createLocalUser(first.sqlite, { username: "Exporter" });
   setPlayerMasteryRank(first.sqlite, firstUser, 31);
+  setPlayerRailjackIntrinsicRank(first.sqlite, firstUser, 7);
   assert.throws(
     () => setPlayerMasteryRank(first.sqlite, firstUser, 41),
     /between 0 and 40/,
   );
+  assert.throws(
+    () => setPlayerRailjackIntrinsicRank(first.sqlite, firstUser, 11),
+    /between 0 and 10/,
+  );
+  setPlayerMasteryRank(first.sqlite, firstUser, undefined);
+  assert.deepEqual(getPlayerSettings(first.sqlite, firstUser), {
+    masteryRank: undefined,
+    railjackIntrinsicRank: 7,
+  });
+  setPlayerMasteryRank(first.sqlite, firstUser, 31);
+  setPlayerRailjackIntrinsicRank(first.sqlite, firstUser, undefined);
+  assert.deepEqual(getPlayerSettings(first.sqlite, firstUser), {
+    masteryRank: 31,
+    railjackIntrinsicRank: undefined,
+  });
+  setPlayerRailjackIntrinsicRank(first.sqlite, firstUser, 7);
   assert.deepEqual(
     findPlayerInventoryEntry(first.sqlite, firstUser, "weapon", "braton"),
     {
@@ -177,7 +195,7 @@ test("profiles resolve stable source IDs across installations with different can
     "ability-strength",
   );
   const profile = exportPlayerProfile(first.sqlite, firstUser);
-  assert.equal(profile.schemaVersion, 16);
+  assert.equal(profile.schemaVersion, 17);
   assert.equal(profile.nodeProgress[0]?.node.slug, "e-prime");
   const secondUser = createLocalUser(second.sqlite, { username: "Importer" });
   const result = importPlayerProfile(second.sqlite, secondUser, profile);
@@ -195,6 +213,7 @@ test("profiles resolve stable source IDs across installations with different can
   });
   assert.deepEqual(getPlayerSettings(second.sqlite, secondUser), {
     masteryRank: 31,
+    railjackIntrinsicRank: 7,
   });
   assert.deepEqual(listPlayerInventory(second.sqlite, secondUser), [
     {
@@ -390,7 +409,7 @@ test("profile replacement is transactional and reports missing entities", async 
     wantedCount: 0,
   });
   const missingProfile = {
-    schemaVersion: 16,
+    schemaVersion: 17,
     exportedAt: "2026-10-13T12:00:00.000Z",
     player: {},
     inventory: [
@@ -584,7 +603,7 @@ test("profile replacement is transactional and reports missing entities", async 
         ...missingProfile,
         schemaVersion: 10,
       }),
-    /schemaVersion 16/,
+    /schemaVersion 17/,
   );
   assert.throws(
     () =>

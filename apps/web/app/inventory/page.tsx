@@ -4,7 +4,7 @@ import { getPlayerSettings, listPlayerInventory } from "@ordis-prime/db";
 import { getDatabase } from "@/lib/database";
 import { getCurrentSession } from "@/lib/session";
 import { ProfileTransfer } from "./profile-transfer";
-import { updateMasteryRank } from "./actions";
+import { updateProgression } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -28,10 +28,11 @@ export default async function InventoryPage() {
         <h2>Progression</h2>
         <p className="muted">
           Your combined rank is used for documented star-chart gates and build
-          capacity. Enter 31 for Legendary Rank 1, 32 for Legendary Rank 2, and
-          so on.
+          capacity; enter 31 for Legendary Rank 1, 32 for Legendary Rank 2, and
+          so on. Railjack access uses the highest rank you have reached in any
+          Railjack Intrinsics category.
         </p>
-        <form className="form-stack compact-form" action={updateMasteryRank}>
+        <form className="form-stack compact-form" action={updateProgression}>
           <label>
             Combined Mastery Rank
             <input
@@ -40,6 +41,17 @@ export default async function InventoryPage() {
               min="0"
               max="40"
               defaultValue={settings.masteryRank}
+              placeholder="Not recorded"
+            />
+          </label>
+          <label>
+            Highest Railjack Intrinsic Rank
+            <input
+              name="railjackIntrinsicRank"
+              type="number"
+              min="0"
+              max="10"
+              defaultValue={settings.railjackIntrinsicRank}
               placeholder="Not recorded"
             />
           </label>

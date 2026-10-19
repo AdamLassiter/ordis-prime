@@ -237,6 +237,66 @@ test("wiki mission adapter imports only complete quest and node requirements", a
   );
 });
 
+test("wiki mission adapter imports only complete Railjack Intrinsic expressions", async () => {
+  const observations = await collect(
+    new WarframeWikiMissionsAdapter(),
+    wikiSnapshot(
+      `
+        return {
+          MissionDetails = {
+            { Name = "Saturn Gate", Planet = "Saturn Proxima", NextNodes = { "Veil Gate" }, Requirements = "Must have [[Intrinsics]] Rank 3 or higher to access" },
+            { Name = "Veil Gate", Planet = "Veil Proxima", PreviousNodes = { "Saturn Gate" }, NextNodes = { "Erato" }, Requirements = "Must have [[Intrinsics]] Rank 7 or higher to access and [[Chimera Prologue]] completed" },
+            { Name = "Erato", Planet = "Veil Proxima", PreviousNodes = { "Veil Gate" }, NextNodes = { "Lich Gate" }, Requirements = "Must have [[The War Within]] completed and [[Intrinsics]] Rank 7 or higher to access and [[Chimera Prologue]] completed" },
+            { Name = "Lich Gate", Planet = "Saturn Proxima", PreviousNodes = { "Erato" }, Requirements = "Must have [[Intrinsics]] Rank 3 or higher and an active [[Kuva Lich]] to access" },
+          },
+        }
+      `,
+      `
+        return {
+          ["The War Within"] = { Name = "The War Within", Link = "The War Within", Type = "Main Quest" },
+          ["Chimera Prologue"] = { Name = "Chimera Prologue", Link = "Chimera Prologue", Type = "Main Quest" },
+        }
+      `,
+    ),
+  );
+
+  assert.deepEqual(
+    observations.flatMap((observation) =>
+      observation.type === "node-detail"
+        ? [
+            {
+              node: observation.nodeExternalId.value,
+              rank: observation.railjackIntrinsicRequirement,
+            },
+          ]
+        : [],
+    ),
+    [
+      { node: "Saturn Gate", rank: 3 },
+      { node: "Veil Gate", rank: 7 },
+      { node: "Erato", rank: 7 },
+      { node: "Lich Gate", rank: undefined },
+    ],
+  );
+  assert.deepEqual(
+    observations.flatMap((observation) =>
+      observation.type === "entity-relation" && observation.kind === "requires"
+        ? [
+            {
+              node: observation.fromExternalId.value,
+              quest: observation.toExternalId.value,
+            },
+          ]
+        : [],
+    ),
+    [
+      { node: "Veil Gate", quest: "Chimera Prologue" },
+      { node: "Erato", quest: "The War Within" },
+      { node: "Erato", quest: "Chimera Prologue" },
+    ],
+  );
+});
+
 test("wiki mission adapter rejects an out-of-range exact Mastery gate", async () => {
   await assert.rejects(
     collect(
@@ -251,6 +311,23 @@ test("wiki mission adapter rejects an out-of-range exact Mastery gate", async ()
       `),
     ),
     /Mastery Rank requirement is invalid/,
+  );
+});
+
+test("wiki mission adapter rejects an out-of-range Railjack Intrinsic gate", async () => {
+  await assert.rejects(
+    collect(
+      new WarframeWikiMissionsAdapter(),
+      wikiSnapshot(`
+        return {
+          MissionDetails = {
+            { Name = "Railjack", Planet = "Proxima", NextNodes = { "Node" }, Requirements = "Must have [[Intrinsics]] Rank 11 or higher to access" },
+            { Name = "Node", Planet = "Proxima", PreviousNodes = { "Railjack" } },
+          },
+        }
+      `),
+    ),
+    /Railjack Intrinsic requirement is invalid/,
   );
 });
 

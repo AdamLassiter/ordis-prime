@@ -17,6 +17,7 @@ import {
   setNodeCompletion,
   setPlayerGoal,
   setPlayerMasteryRank,
+  setPlayerRailjackIntrinsicRank,
   setPlayerRecipePreference,
 } from "../src/index.ts";
 
@@ -116,6 +117,7 @@ test("persisted goals expand through active recipes and produce named node reaso
       nodeExternalId: external("node"),
       planet: "Earth",
       masteryRequirement: 10,
+      railjackIntrinsicRequirement: 7,
       evidence: { ...evidence, sourceRecordKey: "node:details" },
     },
     {
@@ -164,6 +166,12 @@ test("persisted goals expand through active recipes and produce named node reaso
   assert.equal(plan.recommendations[0]?.accessStatus, "blocked");
   assert.deepEqual(plan.recommendations[0]?.masteryRequirement, {
     required: 10,
+    playerRank: undefined,
+    state: "unknown",
+    source: { name: "Items", citationUrl: undefined },
+  });
+  assert.deepEqual(plan.recommendations[0]?.railjackIntrinsicRequirement, {
+    required: 7,
     playerRank: undefined,
     state: "unknown",
     source: { name: "Items", citationUrl: undefined },
@@ -231,6 +239,16 @@ test("persisted goals expand through active recipes and produce named node reaso
     "blocked",
   );
   setPlayerMasteryRank(sqlite, userId, 10);
+  assert.equal(
+    buildAcquisitionPlan(sqlite, userId).recommendations[0]?.accessStatus,
+    "conditional",
+  );
+  setPlayerRailjackIntrinsicRank(sqlite, userId, 6);
+  assert.equal(
+    buildAcquisitionPlan(sqlite, userId).recommendations[0]?.accessStatus,
+    "blocked",
+  );
+  setPlayerRailjackIntrinsicRank(sqlite, userId, 7);
   assert.equal(
     buildAcquisitionPlan(sqlite, userId).recommendations[0]?.accessStatus,
     "available",

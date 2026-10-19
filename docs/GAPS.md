@@ -60,9 +60,10 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   structured prose expression matches an allow-listed combination of completed
   quests and nodes; the current Vehrvod District quest-plus-node condition is
   fully represented. Other mixed conditions remain absent rather than becoming
-  unsafe partial rules. Exact Mastery
-  Rank-only expressions populate the existing numeric gate, while Intrinsics
-  ranks remain distinct and unmodeled.
+  unsafe partial rules. Exact Mastery Rank-only expressions populate the
+  existing numeric gate. Supported Railjack Intrinsics-only and
+  quest-and-Intrinsics expressions populate a separate cited gate; adversary mixtures
+  still fail closed as a whole.
   The Wiki companion
   module does not expose a maximum-rank field, so companion coverage remains
   absent rather than defaulted. The adapters do not cover factory polarities or
@@ -114,11 +115,12 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   Live windows on reconciled recommended nodes surface as expiring acquisition
   opportunities. Players can inspect and persist alternative recipe choices by
   stable source record identity. Profiles also carry the player's optional
-  Mastery Rank as private progression input. Planning composes cited discovery prerequisites
+  Mastery Rank and highest Railjack Intrinsic category rank as private
+  progression inputs. Planning composes cited discovery prerequisites
   into available, conditional, blocked and unknown node access states. Sourced
-  numeric Mastery Rank gates compose with a private portable player rank, but
-  other conditional gates, markets, relic refinement, and mission duration are
-  not yet modeled.
+  numeric Mastery and Railjack Intrinsics gates compose with separate private
+  portable player ranks, but other conditional gates, markets, relic refinement,
+  and mission duration are not yet modeled.
 - Authenticated players can keep private static todos with optional notes and due
   dates. Source-neutral world-state watches match current window fields and
   create deduplicated private in-app alerts. Detail pages can create todos and
@@ -186,7 +188,8 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   relations remain. Atlas cards preview up to three
   cited neighbors; a spatial graph view remains.
 - Acquisition recommendations compose active `requires` and `unlocks` relations
-  with private discovery completion and sourced node Mastery Rank requirements
+  with private discovery completion and sourced node Mastery Rank or Railjack
+  Intrinsics requirements
   to show cited blockers. Node pages expose the same cited requirements and
   private discovery or node-completion progress. Nodes without access evidence
   stay unknown. Junction objectives and compound rank, item or active-adversary

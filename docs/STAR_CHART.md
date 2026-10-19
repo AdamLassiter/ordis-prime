@@ -25,7 +25,10 @@ quest-plus-node expression for Vehrvod District is fully modeled; expressions
 that also require unsupported ranks, items or an active adversary remain
 unmodeled as a whole, so the parser does not publish a misleading partial rule.
 An exact Mastery Rank-only expression becomes the existing typed numeric node
-gate; Intrinsics ranks and mixed expressions are not coerced into that field.
+gate. Complete allow-listed Railjack Intrinsics expressions populate a separate
+0–10 gate and retain every supported quest clause; Intrinsics are never coerced
+into Mastery Rank. Expressions containing unsupported conditions still fail
+closed as a whole.
 
 The public `/star-chart` view groups nodes by planet and filters by node, mission
 or faction text. Signed-in players can restrict it to nodes with at least one
@@ -40,6 +43,8 @@ when signed in, the player's private discovery or node-completion state for each
 prerequisite.
 They also compare a sourced Mastery gate with the player's private combined
 Mastery/Legendary Rank when one has been recorded.
+Railjack nodes similarly compare their sourced Intrinsics gate with the
+player's private highest rank in any Railjack Intrinsics category.
 The chart derives the same available, conditional, blocked or unknown state for
 every node and can filter by it. It does not persist that state or infer access
 from graph connectivity. Guests therefore see private-input-dependent evidence

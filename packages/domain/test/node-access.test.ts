@@ -47,4 +47,27 @@ test("missing private progress remains conditional rather than guessed", () => {
     }),
     "conditional",
   );
+  assert.equal(
+    deriveNodeAccessStatus({
+      requirementStates: [],
+      railjackIntrinsicRequirement: 7,
+    }),
+    "conditional",
+  );
+  assert.equal(
+    deriveNodeAccessStatus({
+      requirementStates: [],
+      railjackIntrinsicRequirement: 7,
+      playerRailjackIntrinsicRank: 6,
+    }),
+    "blocked",
+  );
+  assert.equal(
+    deriveNodeAccessStatus({
+      requirementStates: [],
+      railjackIntrinsicRequirement: 7,
+      playerRailjackIntrinsicRank: 7,
+    }),
+    "available",
+  );
 });

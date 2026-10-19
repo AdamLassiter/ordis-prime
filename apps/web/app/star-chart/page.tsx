@@ -30,8 +30,8 @@ export default async function StarChartPage({
       ? completion
       : undefined;
   const database = getDatabase();
-  const playerRank = session
-    ? getPlayerSettings(database, session.user.id).masteryRank
+  const playerSettings = session
+    ? getPlayerSettings(database, session.user.id)
     : undefined;
   const allNodes = listStarChartNodes(database, session?.user.id).map(
     (node) => ({
@@ -41,7 +41,9 @@ export default async function StarChartPage({
           ({ progressState }) => progressState,
         ),
         masteryRequirement: node.masteryRequirement,
-        playerRank,
+        playerRank: playerSettings?.masteryRank,
+        railjackIntrinsicRequirement: node.railjackIntrinsicRequirement,
+        playerRailjackIntrinsicRank: playerSettings?.railjackIntrinsicRank,
       }),
     }),
   );

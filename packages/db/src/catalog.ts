@@ -97,6 +97,7 @@ export interface CatalogNode {
   minimumEnemyLevel?: number;
   maximumEnemyLevel?: number;
   masteryRequirement?: number;
+  railjackIntrinsicRequirement?: number;
   completionState?: "incomplete" | "completed";
   detailEvidence: Array<{
     sourceName: string;
@@ -872,6 +873,7 @@ type NodeDetails = Pick<
   | "minimumEnemyLevel"
   | "maximumEnemyLevel"
   | "masteryRequirement"
+  | "railjackIntrinsicRequirement"
   | "detailEvidence"
 >;
 function loadNodeDetails(
@@ -886,6 +888,7 @@ function loadNodeDetails(
     select detail.entity_id as entityId, detail.planet, detail.mission_type as missionType,
       detail.faction, detail.minimum_enemy_level as minimumEnemyLevel,
       detail.maximum_enemy_level as maximumEnemyLevel, detail.mastery_requirement as masteryRequirement,
+      detail.railjack_intrinsic_requirement as railjackIntrinsicRequirement,
       source.name as sourceName, run.version, detail.source_record_key as recordKey,
       detail.source_path as sourcePath, detail.citation_url as citationUrl
     from node_details detail
@@ -903,6 +906,7 @@ function loadNodeDetails(
     minimumEnemyLevel: number | null;
     maximumEnemyLevel: number | null;
     masteryRequirement: number | null;
+    railjackIntrinsicRequirement: number | null;
     sourceName: string;
     version: string;
     recordKey: string;
@@ -918,6 +922,8 @@ function loadNodeDetails(
     current.minimumEnemyLevel ??= row.minimumEnemyLevel ?? undefined;
     current.maximumEnemyLevel ??= row.maximumEnemyLevel ?? undefined;
     current.masteryRequirement ??= row.masteryRequirement ?? undefined;
+    current.railjackIntrinsicRequirement ??=
+      row.railjackIntrinsicRequirement ?? undefined;
     current.detailEvidence.push({
       sourceName: row.sourceName,
       version: row.version,

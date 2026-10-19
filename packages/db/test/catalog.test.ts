@@ -94,6 +94,7 @@ test("catalog read models join active recipes, drops, provenance, and rankings",
       missionType: "Rescue",
       minimumEnemyLevel: 6,
       maximumEnemyLevel: 8,
+      railjackIntrinsicRequirement: 3,
       evidence: { ...evidence, sourceRecordKey: "caloris" },
     },
     {
@@ -267,12 +268,14 @@ test("catalog read models join active recipes, drops, provenance, and rankings",
       missionType: node.missionType,
       minimumEnemyLevel: node.minimumEnemyLevel,
       maximumEnemyLevel: node.maximumEnemyLevel,
+      railjackIntrinsicRequirement: node.railjackIntrinsicRequirement,
     },
     {
       planet: "Mercury",
       missionType: "Rescue",
       minimumEnemyLevel: 6,
       maximumEnemyLevel: 8,
+      railjackIntrinsicRequirement: 3,
     },
   );
   assert.deepEqual(node.connections, [

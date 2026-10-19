@@ -285,6 +285,7 @@ export const nodeDetails = sqliteTable(
     minimumEnemyLevel: integer("minimum_enemy_level"),
     maximumEnemyLevel: integer("maximum_enemy_level"),
     masteryRequirement: integer("mastery_requirement"),
+    railjackIntrinsicRequirement: integer("railjack_intrinsic_requirement"),
     nodeType: integer("node_type"),
     sourceRunId: text("source_run_id")
       .notNull()
@@ -437,6 +438,7 @@ export const playerProfiles = sqliteTable("player_profiles", {
     .primaryKey()
     .references(() => users.id, { onDelete: "cascade" }),
   masteryRank: integer("mastery_rank"),
+  railjackIntrinsicRank: integer("railjack_intrinsic_rank"),
   updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
 });
 export const sessions = sqliteTable(

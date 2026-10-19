@@ -380,8 +380,9 @@ function promoteInTransaction(
           `
         insert into node_details
           (id, entity_id, planet, mission_type, faction, minimum_enemy_level, maximum_enemy_level,
-           mastery_requirement, node_type, source_run_id, source_record_key, citation_url, source_path)
-        values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+           mastery_requirement, railjack_intrinsic_requirement, node_type, source_run_id,
+           source_record_key, citation_url, source_path)
+        values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
         )
         .run(
@@ -393,6 +394,7 @@ function promoteInTransaction(
           observation.minimumEnemyLevel ?? null,
           observation.maximumEnemyLevel ?? null,
           observation.masteryRequirement ?? null,
+          observation.railjackIntrinsicRequirement ?? null,
           observation.nodeType ?? null,
           sourceRunId,
           observation.evidence.sourceRecordKey,
@@ -1285,6 +1287,10 @@ function validateInput(input: PromoteSourceInput): void {
         ["minimum enemy level", observation.minimumEnemyLevel],
         ["maximum enemy level", observation.maximumEnemyLevel],
         ["mastery requirement", observation.masteryRequirement],
+        [
+          "Railjack Intrinsic requirement",
+          observation.railjackIntrinsicRequirement,
+        ],
         ["node type", observation.nodeType],
       ] as const) {
         if (value !== undefined && (!Number.isInteger(value) || value < 0))
@@ -1298,6 +1304,13 @@ function validateInput(input: PromoteSourceInput): void {
         observation.maximumEnemyLevel < observation.minimumEnemyLevel
       )
         throw new Error("Node detail level range is inverted");
+      if (
+        observation.railjackIntrinsicRequirement !== undefined &&
+        observation.railjackIntrinsicRequirement > 10
+      )
+        throw new Error(
+          "Node detail Railjack Intrinsic requirement cannot exceed 10",
+        );
     }
   }
   validateCandidateSet(input.observations);

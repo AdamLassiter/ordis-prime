@@ -1,6 +1,6 @@
 # 0065: Exact Mastery prose maps to the numeric gate
 
-Status: accepted
+Status: accepted; Railjack Intrinsics added separately by decision 0069
 
 ## Context
 
@@ -30,5 +30,6 @@ not a rank of zero.
   Oro at rank 5 and Orcus Relay at rank 8. WFCD independently agrees on Oro.
 - The planner and node page consume one provider-neutral numeric fact; neither
   parses source prose.
-- Railjack Intrinsics and compound conditions remain explicit gaps rather than
-  misleading Mastery gates.
+- Railjack Intrinsics remain separate from ordinary Mastery gates and are
+  modeled under decision 0069. Other unsupported compound conditions remain
+  explicit gaps.

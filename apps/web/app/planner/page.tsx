@@ -293,6 +293,42 @@ export default async function Planner() {
                           </span>
                         </p>
                       )}
+                      {recommendation.railjackIntrinsicRequirement && (
+                        <p>
+                          Highest Railjack Intrinsic Rank{" "}
+                          {recommendation.railjackIntrinsicRequirement.required}
+                          :{" "}
+                          {recommendation.railjackIntrinsicRequirement.state ===
+                          "met"
+                            ? "met"
+                            : recommendation.railjackIntrinsicRequirement
+                                  .state === "blocked"
+                              ? `blocked at your rank ${recommendation.railjackIntrinsicRequirement.playerRank}`
+                              : "your rank is not recorded"}{" "}
+                          <span className="muted">
+                            (
+                            {recommendation.railjackIntrinsicRequirement.source
+                              .citationUrl ? (
+                              <a
+                                href={
+                                  recommendation.railjackIntrinsicRequirement
+                                    .source.citationUrl
+                                }
+                                rel="noreferrer"
+                              >
+                                {
+                                  recommendation.railjackIntrinsicRequirement
+                                    .source.name
+                                }
+                              </a>
+                            ) : (
+                              recommendation.railjackIntrinsicRequirement.source
+                                .name
+                            )}
+                            )
+                          </span>
+                        </p>
+                      )}
                       {recommendation.accessRequirements.length > 0 && (
                         <ul>
                           {recommendation.accessRequirements.map(

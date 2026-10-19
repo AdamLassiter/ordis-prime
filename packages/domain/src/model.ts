@@ -153,6 +153,7 @@ export interface NodeDetailObservation {
   minimumEnemyLevel?: number;
   maximumEnemyLevel?: number;
   masteryRequirement?: number;
+  railjackIntrinsicRequirement?: number;
   nodeType?: number;
   evidence: Evidence;
 }

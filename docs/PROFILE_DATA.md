@@ -5,12 +5,14 @@ canonical entity IDs inside one installation, while exported profiles use
 provider identifiers so they can be restored into another installation whose
 canonical UUIDs differ.
 
-## Version 16 export
+## Version 17 export
 
 The player section carries an optional combined Mastery Rank used to evaluate
 sourced star-chart gates and build capacity. Values 0 through 30 are ordinary
 Mastery Ranks; 31 represents Legendary Rank 1, 32 represents Legendary Rank 2,
-and so on through the current forward-compatible input ceiling of 40.
+and so on through the current forward-compatible input ceiling of 40. It also
+carries an optional highest Railjack Intrinsic category rank from 0 through 10,
+used only for sourced Railjack access gates.
 
 Each inventory entry includes:
 
