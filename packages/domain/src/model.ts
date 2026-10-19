@@ -164,6 +164,7 @@ export const RELATION_KINDS = [
   "involves",
   "rewards",
   "connects-to",
+  "follows",
 ] as const;
 export type RelationKind = (typeof RELATION_KINDS)[number];
 

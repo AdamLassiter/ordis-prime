@@ -8,6 +8,7 @@ import {
 } from "@ordis-prime/db";
 import { getDatabase } from "@/lib/database";
 import { getCurrentSession } from "@/lib/session";
+import { relationLabel } from "@/lib/relation-label";
 import { DiscoveryProgressForm } from "./progress-form";
 
 export const dynamic = "force-dynamic";
@@ -119,9 +120,10 @@ export default async function DiscoveryPage({
                       key={`${neighbor.direction}:${neighbor.relationKind}:${neighbor.kind}:${neighbor.slug}`}
                     >
                       <span className="tag">
-                        {neighbor.direction === "outgoing"
-                          ? neighbor.relationKind
-                          : `is ${neighbor.relationKind} by`}
+                        {relationLabel(
+                          neighbor.relationKind,
+                          neighbor.direction,
+                        )}
                       </span>{" "}
                       <Link
                         href={

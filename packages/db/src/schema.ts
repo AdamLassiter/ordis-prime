@@ -316,6 +316,7 @@ export const entityRelations = sqliteTable(
         "involves",
         "rewards",
         "connects-to",
+        "follows",
       ],
     }).notNull(),
     notes: text(),

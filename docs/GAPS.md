@@ -54,6 +54,8 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   Archwing maximum ranks plus mission metadata and star-chart connections from
   versioned Lua data modules without executing provider code. A separate Wiki
   adapter imports current abilities and typed Warframe/Archwing ownership links.
+  Structured main and optional quest records contribute cited descriptions and
+  sequence links, while intentionally not treating sequence as an access rule.
   The Wiki companion
   module does not expose a maximum-rank field, so companion coverage remains
   absent rather than defaulted. The adapters do not cover factory polarities or
@@ -161,11 +163,12 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
 - A public discovery atlas searches canonical quest, ability, enemy, boss,
   mechanic and secret kinds. WFCD currently populates quests and enemies;
   structured Wiki data populates current abilities and their typed
-  Warframe/Archwing links. Cited discovery
+  Warframe/Archwing links plus current quests and their sequence. Cited discovery
   YAML can add curated entities and typed links to nodes, rewards, or other
   topics. Players can privately mark topics unseen, discovered, or completed
   and filter the atlas by that state. Richer boss classification, quest-step
-  progress, unsupported Necramech/Helminth ability-owner kinds and conditional
+  progress, actual quest access requirements, unsupported Necramech/Helminth
+  ability-owner kinds and conditional
   relations remain. Atlas cards preview up to three
   cited neighbors; a spatial graph view remains.
 - Acquisition recommendations compose active `requires` and `unlocks` relations

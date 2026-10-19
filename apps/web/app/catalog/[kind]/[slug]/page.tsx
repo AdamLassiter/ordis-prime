@@ -11,6 +11,7 @@ import {
 import { findItem } from "@/lib/catalog";
 import { getDatabase } from "@/lib/database";
 import { getCurrentSession } from "@/lib/session";
+import { relationLabel } from "@/lib/relation-label";
 import { InventoryForm } from "./inventory-form";
 import { GoalForm } from "@/app/planner/goal-form";
 import { DiscoveryProgressForm } from "@/app/discovery/progress-form";
@@ -169,9 +170,7 @@ export default async function ItemPage({
                   key={`${relation.direction}:${relation.kind}:${relation.subject.kind}:${relation.subject.slug}:${index}`}
                 >
                   <span className="tag">
-                    {relation.direction === "outgoing"
-                      ? relation.kind
-                      : `is ${relation.kind} by`}
+                    {relationLabel(relation.kind, relation.direction)}
                   </span>{" "}
                   <Link
                     href={`/catalog/${relation.subject.kind}/${relation.subject.slug}`}

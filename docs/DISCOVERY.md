@@ -9,7 +9,7 @@ same identities used by inventory, builds and drops.
 The public `/discovery` route searches and filters those entity kinds. WFCD item
 data provides quest and enemy identities and descriptions. A cited manual YAML
 source can add curated topics and typed `requires`, `unlocks`, `occurs-at`,
-`involves`, `rewards` and node `connects-to` links. Both ends resolve through external identifiers;
+`involves`, `rewards`, `follows` and node `connects-to` links. Both ends resolve through external identifiers;
 relationships are source-run scoped and disappear from reads when that source
 is superseded. Catalog pages show incoming and outgoing links with attribution.
 The structured Wiki ability adapter adds current abilities and their in-game
@@ -17,6 +17,9 @@ descriptions, then links each ability to a typed Warframe or Archwing identity
 validated against the paired Wiki powersuit module. Archived abilities stay
 out of the current atlas. Abilities owned by unsupported equipment families
 remain searchable but deliberately unlinked rather than inventing a kind.
+The Wiki quest adapter adds current main and optional quests with their in-game
+descriptions. Its `PreviousQuest` field becomes a sequence-only `follows` link;
+it does not masquerade as an access prerequisite.
 
 Signed-in players can independently mark a topic unseen, discovered or
 completed. The absence of a row means unseen, keeping default state compact.
