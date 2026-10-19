@@ -17,6 +17,33 @@ export interface NodeRecommendation {
   reasons: string[];
 }
 
+export type NodeAccessStatus =
+  "available" | "conditional" | "blocked" | "unknown";
+
+export function deriveNodeAccessStatus(input: {
+  requirementStates: Array<"unseen" | "discovered" | "completed" | undefined>;
+  masteryRequirement?: number;
+  playerRank?: number;
+}): NodeAccessStatus {
+  if (
+    input.requirementStates.some(
+      (state) => state !== undefined && state !== "completed",
+    ) ||
+    (input.masteryRequirement !== undefined &&
+      input.playerRank !== undefined &&
+      input.playerRank < input.masteryRequirement)
+  )
+    return "blocked";
+  if (
+    input.requirementStates.some((state) => state === undefined) ||
+    (input.masteryRequirement !== undefined && input.playerRank === undefined)
+  )
+    return "conditional";
+  if (input.requirementStates.length || input.masteryRequirement !== undefined)
+    return "available";
+  return "unknown";
+}
+
 export function expandMissingRequirements(
   goals: Array<{ entityId: EntityId; quantity: number }>,
   inventory: readonly InventoryEntry[],

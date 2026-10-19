@@ -1,5 +1,6 @@
 import type Database from "better-sqlite3";
 import {
+  deriveNodeAccessStatus,
   expandMissingRequirements,
   recommendNodes,
   type DropSource,
@@ -398,7 +399,11 @@ export function buildAcquisitionPlan(
         nodeSlug: node?.slug,
         locationLabel: recommendation.locationLabel,
         neededRewards,
-        accessStatus: accessStatus(accessRequirements, masteryRequirement),
+        accessStatus: deriveNodeAccessStatus({
+          requirementStates: accessRequirements.map(({ state }) => state),
+          masteryRequirement: masteryRequirement?.required,
+          playerRank: masteryRequirement?.playerRank,
+        }),
         accessRequirements,
         masteryRequirement,
         reasons: [
@@ -497,20 +502,6 @@ function loadNodeMasteryRequirements(
       },
     ]),
   );
-}
-
-function accessStatus(
-  requirements: AcquisitionPlan["recommendations"][number]["accessRequirements"],
-  mastery: AcquisitionPlan["recommendations"][number]["masteryRequirement"],
-): AcquisitionPlan["recommendations"][number]["accessStatus"] {
-  if (
-    requirements.some(({ state }) => state !== "completed") ||
-    mastery?.state === "blocked"
-  )
-    return "blocked";
-  if (mastery?.state === "unknown") return "conditional";
-  if (requirements.length || mastery) return "available";
-  return "unknown";
 }
 
 function loadNodeAccess(

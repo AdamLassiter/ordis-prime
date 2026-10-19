@@ -65,4 +65,6 @@ Stable coordinates and richer quest-step progress remain.
 Sourced Mastery Rank gates, including exact Wiki mission requirements, compose
 with portable private player progression; the Wiki mission source also
 contributes complete quest-only node requirements.
+The star chart derives and filters the same player-aware access states used by
+planning.
 Junction objectives and compound rank, item, node or adversary conditions remain.

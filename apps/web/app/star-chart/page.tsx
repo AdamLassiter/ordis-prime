@@ -1,5 +1,9 @@
 import Link from "next/link";
-import { listStarChartNodes } from "@ordis-prime/db";
+import { getPlayerSettings, listStarChartNodes } from "@ordis-prime/db";
+import {
+  deriveNodeAccessStatus,
+  type NodeAccessStatus,
+} from "@ordis-prime/domain";
 import { getDatabase } from "@/lib/database";
 import { getCurrentSession } from "@/lib/session";
 
@@ -8,13 +12,34 @@ export const dynamic = "force-dynamic";
 export default async function StarChartPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; needed?: string; focus?: string }>;
+  searchParams: Promise<{
+    q?: string;
+    needed?: string;
+    focus?: string;
+    access?: string;
+  }>;
 }) {
   const session = await getCurrentSession();
-  const { q = "", needed, focus } = await searchParams;
+  const { q = "", needed, focus, access } = await searchParams;
   const normalized = q.trim().toLocaleLowerCase();
   const neededOnly = Boolean(session && needed === "1");
-  const allNodes = listStarChartNodes(getDatabase(), session?.user.id);
+  const selectedAccess = isAccessStatus(access) ? access : undefined;
+  const database = getDatabase();
+  const playerRank = session
+    ? getPlayerSettings(database, session.user.id).masteryRank
+    : undefined;
+  const allNodes = listStarChartNodes(database, session?.user.id).map(
+    (node) => ({
+      ...node,
+      accessStatus: deriveNodeAccessStatus({
+        requirementStates: node.accessRequirements.map(
+          ({ progressState }) => progressState,
+        ),
+        masteryRequirement: node.masteryRequirement,
+        playerRank,
+      }),
+    }),
+  );
   const nodesBySlug = new Map(allNodes.map((node) => [node.slug, node]));
   const focusedNode = focus ? nodesBySlug.get(focus) : undefined;
   const nodes = allNodes.filter(
@@ -23,7 +48,8 @@ export default async function StarChartPage({
         [node.name, node.planet, node.missionType, node.faction].some((value) =>
           value?.toLocaleLowerCase().includes(normalized),
         )) &&
-      (!neededOnly || (node.neededRewardCount ?? 0) > 0),
+      (!neededOnly || (node.neededRewardCount ?? 0) > 0) &&
+      (!selectedAccess || node.accessStatus === selectedAccess),
   );
   const planets = new Map<string, typeof nodes>();
   for (const node of nodes) {
@@ -62,6 +88,16 @@ export default async function StarChartPage({
             Only nodes with unowned rewards
           </label>
         )}
+        <label>
+          Access
+          <select name="access" defaultValue={selectedAccess ?? ""}>
+            <option value="">Any access state</option>
+            <option value="available">Available</option>
+            <option value="conditional">Conditional</option>
+            <option value="blocked">Blocked</option>
+            <option value="unknown">Unknown</option>
+          </select>
+        </label>
         <button className="button">Apply</button>
       </form>
       {focus && !focusedNode && (
@@ -77,6 +113,7 @@ export default async function StarChartPage({
             {[focusedNode.planet, focusedNode.missionType, focusedNode.faction]
               .filter(Boolean)
               .join(" · ") || "Mission details unavailable"}
+            {` · Access ${focusedNode.accessStatus}`}
           </p>
           <div className="filters">
             <Link className="button" href={`/nodes/${focusedNode.slug}`}>
@@ -156,6 +193,9 @@ export default async function StarChartPage({
                     {node.connectionCount} cited{" "}
                     {node.connectionCount === 1 ? "connection" : "connections"}
                   </span>
+                  <span className={`tag access-${node.accessStatus}`}>
+                    {node.accessStatus}
+                  </span>
                   {node.connectionCount > 0 && (
                     <Link
                       className="star-node-explore"
@@ -176,4 +216,10 @@ export default async function StarChartPage({
 
 function focusHref(slug: string): string {
   return `/star-chart?${new URLSearchParams({ focus: slug })}`;
+}
+
+function isAccessStatus(value: string | undefined): value is NodeAccessStatus {
+  return ["available", "conditional", "blocked", "unknown"].includes(
+    value ?? "",
+  );
 }

@@ -164,7 +164,10 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   not yet an interactive visual graph. The structured Wiki mission adapter now
   supplies the current attributed node and connection set; `connects-to`
   observations are shown symmetrically and a focused topology explorer supports
-  direct traversal. Stable visual positions are still missing.
+  direct traversal. It derives and filters available, conditional, blocked and
+  unknown access states from the same quest-progress and Mastery evidence as the
+  planner. Connectivity remains navigation evidence rather than proof of player
+  completion. Stable visual positions are still missing.
 - A public discovery atlas searches canonical quest, ability, enemy, boss,
   mechanic and secret kinds. WFCD currently populates quests and enemies;
   structured Wiki data populates current abilities and their typed

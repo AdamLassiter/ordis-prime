@@ -38,6 +38,10 @@ Node pages list complete structured access requirements with their source and,
 when signed in, the player's private discovery state for each prerequisite.
 They also compare a sourced Mastery gate with the player's private combined
 Mastery/Legendary Rank when one has been recorded.
+The chart derives the same available, conditional, blocked or unknown state for
+every node and can filter by it. It does not persist that state or infer access
+from graph connectivity. Guests therefore see private-input-dependent evidence
+as conditional rather than available.
 
 ## Current compromise
 
