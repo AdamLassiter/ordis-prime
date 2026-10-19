@@ -23,14 +23,17 @@ or faction text. Signed-in players can restrict it to nodes with at least one
 reward their inventory marks as unowned or still wanted. Node detail pages show
 the same metadata beside their full reward lists. Active cited `connects-to`
 relations are treated as undirected navigation edges: either endpoint lists the
-other, even though a source only needs to state the edge once.
+other, even though a source only needs to state the edge once. A shareable
+`focus=` view lets a player traverse those direct connections and move between
+topology and a node's rewards without inventing spatial positions.
 
 ## Current compromise
 
 No imported source supplies stable visual coordinates. The current chart can
 answer node-adjacency questions from the attributed Wiki graph, but remains a
-planet-grouped spatial index rather than a reproduction of the in-game map.
-Positions still need another attributed source before a visual graph is honest.
+planet-grouped index plus a topological connection explorer rather than a
+reproduction of the in-game map. Positions still need another attributed source
+before a visual graph is honest.
 
 Enemy and quest identities are imported, but richer domain-specific facts and
 complete curated discovery links remain future work.

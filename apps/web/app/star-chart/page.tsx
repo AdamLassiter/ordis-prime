@@ -8,13 +8,16 @@ export const dynamic = "force-dynamic";
 export default async function StarChartPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; needed?: string }>;
+  searchParams: Promise<{ q?: string; needed?: string; focus?: string }>;
 }) {
   const session = await getCurrentSession();
-  const { q = "", needed } = await searchParams;
+  const { q = "", needed, focus } = await searchParams;
   const normalized = q.trim().toLocaleLowerCase();
   const neededOnly = Boolean(session && needed === "1");
-  const nodes = listStarChartNodes(getDatabase(), session?.user.id).filter(
+  const allNodes = listStarChartNodes(getDatabase(), session?.user.id);
+  const nodesBySlug = new Map(allNodes.map((node) => [node.slug, node]));
+  const focusedNode = focus ? nodesBySlug.get(focus) : undefined;
+  const nodes = allNodes.filter(
     (node) =>
       (!normalized ||
         [node.name, node.planet, node.missionType, node.faction].some((value) =>
@@ -30,11 +33,14 @@ export default async function StarChartPage({
   return (
     <>
       <p className="eyebrow">Spatial acquisition index</p>
-      <h1><u>Star chart</u></h1>
+      <h1>
+        <u>Star chart</u>
+      </h1>
       <p className="lede">
         Browse canonical mission nodes by planet and see where your collection
-        still has gaps. Cited connection edges appear when an active source
-        supplies them; the WFCD datasets currently do not.
+        still has gaps. The connection explorer follows the current cited Wiki
+        graph; its topology is useful even though it does not claim the game's
+        visual coordinates.
       </p>
       <form className="inline-form">
         <label>
@@ -58,6 +64,66 @@ export default async function StarChartPage({
         )}
         <button className="button">Apply</button>
       </form>
+      {focus && !focusedNode && (
+        <p className="notice">
+          That focused node is not in the active catalog.
+        </p>
+      )}
+      {focusedNode && (
+        <section className="card connection-explorer">
+          <p className="eyebrow">Connection explorer</p>
+          <h2>{focusedNode.name}</h2>
+          <p className="muted">
+            {[focusedNode.planet, focusedNode.missionType, focusedNode.faction]
+              .filter(Boolean)
+              .join(" · ") || "Mission details unavailable"}
+          </p>
+          <div className="filters">
+            <Link className="button" href={`/nodes/${focusedNode.slug}`}>
+              Open node and rewards
+            </Link>
+            <Link className="nav-button" href="/star-chart">
+              Clear focus
+            </Link>
+          </div>
+          <h3>Directly connected nodes</h3>
+          {focusedNode.connections.length ? (
+            <div className="connection-grid">
+              {focusedNode.connections.map((connection) => {
+                const neighbor = nodesBySlug.get(connection.slug);
+                return (
+                  <Link
+                    className="connection-node"
+                    href={focusHref(connection.slug)}
+                    key={connection.slug}
+                  >
+                    <strong>{connection.name}</strong>
+                    <span>
+                      {[
+                        connection.planet,
+                        neighbor?.missionType,
+                        neighbor?.faction,
+                      ]
+                        .filter(Boolean)
+                        .join(" · ") || "Mission details unavailable"}
+                    </span>
+                    {neighbor && (
+                      <span>
+                        {neighbor.rewardCount} recorded rewards ·{" "}
+                        {neighbor.connectionCount} connections
+                      </span>
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="notice">
+              No active cited navigation edges are recorded for this node.
+            </p>
+          )}
+        </section>
+      )}
       {[...planets.entries()]
         .sort(([left], [right]) => left.localeCompare(right))
         .map(([planet, planetNodes]) => (
@@ -65,12 +131,10 @@ export default async function StarChartPage({
             <h2>{planet}</h2>
             <div className="node-grid">
               {planetNodes.map((node) => (
-                <Link
-                  className="star-node"
-                  href={`/nodes/${node.slug}`}
-                  key={node.slug}
-                >
-                  <strong>{node.name}</strong>
+                <article className="star-node" key={node.slug}>
+                  <h3>
+                    <Link href={`/nodes/${node.slug}`}>{node.name}</Link>
+                  </h3>
                   <span>
                     {[node.missionType, node.faction]
                       .filter(Boolean)
@@ -92,7 +156,15 @@ export default async function StarChartPage({
                     {node.connectionCount} cited{" "}
                     {node.connectionCount === 1 ? "connection" : "connections"}
                   </span>
-                </Link>
+                  {node.connectionCount > 0 && (
+                    <Link
+                      className="star-node-explore"
+                      href={focusHref(node.slug)}
+                    >
+                      Explore connections →
+                    </Link>
+                  )}
+                </article>
               ))}
             </div>
           </section>
@@ -100,4 +172,8 @@ export default async function StarChartPage({
       {!nodes.length && <p className="notice">No nodes match these filters.</p>}
     </>
   );
+}
+
+function focusHref(slug: string): string {
+  return `/star-chart?${new URLSearchParams({ focus: slug })}`;
 }

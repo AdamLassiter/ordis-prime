@@ -572,8 +572,38 @@ textarea {
   border: 1px solid var(--line);
   border-radius: 10px;
 }
+.star-node h3 {
+  margin: 0;
+}
+.star-node-explore {
+  margin-top: 0.35rem;
+  font-size: 0.85rem;
+}
 .star-node:hover {
   border-color: var(--cyan);
+}
+.connection-explorer {
+  margin-top: 1.5rem;
+}
+.connection-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 0.65rem;
+}
+.connection-node {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #0d131e;
+}
+.connection-node:hover {
+  border-color: var(--cyan);
+}
+.connection-node span {
+  color: var(--muted);
+  font-size: 0.82rem;
 }
 .star-node span {
   color: var(--muted);

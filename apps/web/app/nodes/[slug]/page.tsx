@@ -94,6 +94,13 @@ export default async function NodePage({
       </dl>
       <section>
         <h2>Connections</h2>
+        {node.connections.length > 0 && (
+          <p>
+            <Link href={`/star-chart?focus=${encodeURIComponent(node.slug)}`}>
+              Explore this node in the connection graph →
+            </Link>
+          </p>
+        )}
         {node.connections.length ? (
           <div className="filters">
             {node.connections.map((connection) => (

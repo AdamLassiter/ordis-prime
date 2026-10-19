@@ -154,8 +154,8 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   imported WFCD sources do not provide connection edges or coordinates, so it is
   not yet an interactive visual graph. The structured Wiki mission adapter now
   supplies the current attributed node and connection set; `connects-to`
-  observations are shown symmetrically. Stable visual positions are still
-  missing.
+  observations are shown symmetrically and a focused topology explorer supports
+  direct traversal. Stable visual positions are still missing.
 - A public discovery atlas searches canonical quest, enemy, boss, mechanic and
   secret kinds. WFCD currently populates quests and enemies; cited discovery
   YAML can add curated entities and typed links to nodes, rewards, or other
