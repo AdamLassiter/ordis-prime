@@ -113,7 +113,7 @@ export interface CatalogNode {
     relationKind: "requires" | "unlocks";
     sourceName: string;
     citationUrl?: string;
-    progressState?: "unseen" | "discovered" | "completed";
+    progressState?: "unseen" | "discovered" | "incomplete" | "completed";
   }>;
   drops: Array<{
     kind: string;
@@ -774,10 +774,17 @@ function loadNodeAccessRequirements(
   if (!nodeIds.length) return result;
   const placeholders = nodeIds.map(() => "?").join(", ");
   const progressJoin = userId
-    ? "left join player_discovery_progress progress on progress.entity_id = prerequisite.id and progress.user_id = ?"
+    ? `left join player_discovery_progress discovery_progress
+         on discovery_progress.entity_id = prerequisite.id and prerequisite.kind <> 'node'
+        and discovery_progress.user_id = ?
+       left join player_node_progress node_progress
+         on node_progress.node_id = prerequisite.id and prerequisite.kind = 'node'
+        and node_progress.user_id = ?`
     : "";
   const progressColumn = userId
-    ? ", coalesce(progress.state, 'unseen') as progressState"
+    ? `, case when prerequisite.kind = 'node'
+          then case when node_progress.node_id is null then 'incomplete' else 'completed' end
+          else coalesce(discovery_progress.state, 'unseen') end as progressState`
     : ", null as progressState";
   const rows = sqlite
     .prepare(
@@ -804,15 +811,18 @@ function loadNodeAccessRequirements(
   `,
     )
     .all(
-      ...(userId ? [userId] : []),
+      ...(userId ? [userId, userId] : []),
       ...nodeIds,
-      ...(userId ? [userId] : []),
+      ...(userId ? [userId, userId] : []),
       ...nodeIds,
     ) as Array<
     Omit<
       { nodeId: string } & CatalogNode["accessRequirements"][number],
       "progressState"
-    > & { progressState: "unseen" | "discovered" | "completed" | null }
+    > & {
+      progressState:
+        "unseen" | "discovered" | "incomplete" | "completed" | null;
+    }
   >;
   for (const { nodeId, progressState, ...requirement } of rows) {
     const requirements = result.get(nodeId) ?? [];

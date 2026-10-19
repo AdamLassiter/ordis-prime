@@ -24,14 +24,14 @@ does not yet carry reliable mission-duration or expected-run evidence.
 For a canonical node, the planner also composes active cited access relations.
 Both `node requires prerequisite` and `prerequisite unlocks node` express a
 requirement. A player has satisfied that requirement only when the related
-discovery topic is completed. Candidate nodes with satisfied documented
+discovery topic or prerequisite node is completed. Candidate nodes with satisfied documented
 requirements are listed first, nodes without access evidence remain explicitly
 unknown, and documented blocked nodes remain visible with their blockers. The
 planner does not infer access from graph connectivity or from an absent fact.
-Structured Wiki mission data supplies requirements whose complete source
-expression is one or more completed quests. Compound prose conditions are not
-partially imported, because satisfying the imported subset would otherwise
-produce a false available state.
+Structured Wiki mission data supplies allow-listed complete expressions made
+from completed quests and nodes, including Vehrvod District's quest-plus-node
+condition. Other compound prose conditions are not partially imported, because
+satisfying the imported subset would otherwise produce a false available state.
 
 The highest-priority active node-detail fact may also provide a numeric Mastery
 Rank gate. A private, portable player rank marks that gate met or blocked. If
@@ -46,8 +46,8 @@ documented drop chance. Unresolved provider node labels cannot produce an
 opportunity.
 
 Node access currently covers curated quest, mechanic, secret, enemy and boss
-relations, structured quest-only Wiki requirements, and sourced numeric Mastery
-Rank gates. Junction rules and compound conditions, market acquisition, relic
+relations, structured quest and node-completion Wiki requirements, and sourced
+numeric Mastery Rank gates. Junction rules and other compound conditions, market acquisition, relic
 refinement, and rotation-specific mission duration are not yet modeled.
 Those inputs should extend the planning read model rather than becoming UI-only
 heuristics.

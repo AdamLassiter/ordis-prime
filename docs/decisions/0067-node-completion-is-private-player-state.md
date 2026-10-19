@@ -32,7 +32,7 @@ derive it from sourced connections or access requirements.
 - Catalog truth and private progress remain independently replaceable.
 - A profile transfer can retain both completion identity and timing.
 - Signed-out users do not receive a fabricated default for private state.
-- Imported node-completion prerequisites can later consume this state without
-  overloading discovery progress.
+- Imported node-completion prerequisites consume this state without overloading
+  discovery progress, as specified by decision 0068.
 - The current UI records only completed versus incomplete; objective-level
   Junction progress and mission variants need their own models.

@@ -145,7 +145,7 @@ test("wiki mission adapter rejects dangling connections", async () => {
   );
 });
 
-test("wiki mission adapter imports only complete quest-only access requirements", async () => {
+test("wiki mission adapter imports only complete quest and node requirements", async () => {
   const observations = await collect(
     new WarframeWikiMissionsAdapter(),
     wikiSnapshot(
@@ -154,7 +154,10 @@ test("wiki mission adapter imports only complete quest-only access requirements"
           MissionDetails = {
             { Name = "Sanctuary Onslaught", Planet = "Sanctuary", NextNodes = { "Armatus" }, Requirements = "Must have [[The New Strange (Quest)|The New Strange]] completed to access" },
             { Name = "Armatus", Planet = "Deimos", PreviousNodes = { "Sanctuary Onslaught" }, NextNodes = { "Elite Sanctuary Onslaught" }, Requirements = "Must have [[The Deadlock Protocol]] and [[Whispers in the Walls]] completed to access" },
-            { Name = "Elite Sanctuary Onslaught", Planet = "Sanctuary", PreviousNodes = { "Armatus" }, Requirements = "Must have [[The New Strange]] completed to access and a level 30 Warframe" },
+            { Name = "Elite Sanctuary Onslaught", Planet = "Sanctuary", PreviousNodes = { "Armatus" }, NextNodes = { "Lower Vehrvod" }, Requirements = "Must have [[The New Strange]] completed to access and a level 30 Warframe" },
+            { Name = "Lower Vehrvod", Planet = "Tau", PreviousNodes = { "Elite Sanctuary Onslaught" }, NextNodes = { "Vehrvod District" }, Requirements = "Must have [[The Hex (Quest)]] completed to access" },
+            { Name = "Vehrvod District", Planet = "Tau", PreviousNodes = { "Lower Vehrvod" }, NextNodes = { "Node Gate" }, Requirements = "Must have [[The Hex (Quest)]] completed to access\\nMust have [[Lower Vehrvod]] completed" },
+            { Name = "Node Gate", Planet = "Tau", PreviousNodes = { "Vehrvod District" }, Requirements = "Must have [[Vehrvod District]] completed to access" },
           },
         }
       `,
@@ -163,6 +166,7 @@ test("wiki mission adapter imports only complete quest-only access requirements"
           ["The New Strange"] = { Name = "The New Strange", Link = "The New Strange (Quest)", Type = "Optional Quest" },
           ["The Deadlock Protocol"] = { Name = "The Deadlock Protocol", Link = "The Deadlock Protocol", Type = "Optional Quest" },
           ["Whispers in the Walls"] = { Name = "Whispers in the Walls", Link = "Whispers in the Walls", Type = "Main Quest" },
+          ["The Hex"] = { Name = "The Hex", Link = "The Hex (Quest)", Type = "Main Quest" },
         }
       `,
     ),
@@ -174,7 +178,12 @@ test("wiki mission adapter imports only complete quest-only access requirements"
         ? [observation.fields.name]
         : [],
     ),
-    ["The New Strange", "The Deadlock Protocol", "Whispers in the Walls"],
+    [
+      "The New Strange",
+      "The Deadlock Protocol",
+      "Whispers in the Walls",
+      "The Hex",
+    ],
   );
   assert.deepEqual(
     observations.flatMap((observation) =>
@@ -182,15 +191,48 @@ test("wiki mission adapter imports only complete quest-only access requirements"
         ? [
             {
               node: observation.fromExternalId.value,
-              quest: observation.toExternalId.value,
+              prerequisite: observation.toExternalId.value,
+              namespace: observation.toExternalId.namespace,
             },
           ]
         : [],
     ),
     [
-      { node: "Sanctuary Onslaught", quest: "The New Strange" },
-      { node: "Armatus", quest: "The Deadlock Protocol" },
-      { node: "Armatus", quest: "Whispers in the Walls" },
+      {
+        node: "Sanctuary Onslaught",
+        prerequisite: "The New Strange",
+        namespace: "quest-name",
+      },
+      {
+        node: "Armatus",
+        prerequisite: "The Deadlock Protocol",
+        namespace: "quest-name",
+      },
+      {
+        node: "Armatus",
+        prerequisite: "Whispers in the Walls",
+        namespace: "quest-name",
+      },
+      {
+        node: "Lower Vehrvod",
+        prerequisite: "The Hex",
+        namespace: "quest-name",
+      },
+      {
+        node: "Vehrvod District",
+        prerequisite: "The Hex",
+        namespace: "quest-name",
+      },
+      {
+        node: "Vehrvod District",
+        prerequisite: "Lower Vehrvod",
+        namespace: "mission-name",
+      },
+      {
+        node: "Node Gate",
+        prerequisite: "Vehrvod District",
+        namespace: "mission-name",
+      },
     ],
   );
 });

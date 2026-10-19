@@ -410,16 +410,38 @@ test("node reads expose cited access requirements and private progress", async (
         evidence,
       },
       {
+        type: "entity",
+        kind: "node",
+        externalIds: [external("lower-vehrvod")],
+        fields: { name: "Lower Vehrvod", slug: "lower-vehrvod" },
+        evidence,
+      },
+      {
         type: "entity-relation",
         kind: "requires",
         fromExternalId: external("ganymede"),
         toExternalId: external("natah"),
         evidence,
       },
+      {
+        type: "entity-relation",
+        kind: "requires",
+        fromExternalId: external("ganymede"),
+        toExternalId: external("lower-vehrvod"),
+        evidence,
+      },
     ],
   });
 
   assert.deepEqual(findCatalogNode(sqlite, "ganymede")?.accessRequirements, [
+    {
+      kind: "node",
+      slug: "lower-vehrvod",
+      name: "Lower Vehrvod",
+      relationKind: "requires",
+      sourceName: "Access source",
+      citationUrl: "https://example.test/access",
+    },
     {
       kind: "quest",
       slug: "natah",
@@ -431,9 +453,16 @@ test("node reads expose cited access requirements and private progress", async (
   ]);
   const userId = createLocalUser(sqlite, { username: "AccessPlayer" });
   assert.equal(
-    findCatalogNode(sqlite, "ganymede", userId)?.accessRequirements[0]
-      ?.progressState,
+    findCatalogNode(sqlite, "ganymede", userId)?.accessRequirements.find(
+      ({ kind }) => kind === "quest",
+    )?.progressState,
     "unseen",
+  );
+  assert.equal(
+    findCatalogNode(sqlite, "ganymede", userId)?.accessRequirements.find(
+      ({ kind }) => kind === "node",
+    )?.progressState,
+    "incomplete",
   );
   setDiscoveryProgress(
     sqlite,
@@ -442,8 +471,16 @@ test("node reads expose cited access requirements and private progress", async (
     "completed",
   );
   assert.equal(
-    findCatalogNode(sqlite, "ganymede", userId)?.accessRequirements[0]
-      ?.progressState,
+    findCatalogNode(sqlite, "ganymede", userId)?.accessRequirements.find(
+      ({ kind }) => kind === "quest",
+    )?.progressState,
+    "completed",
+  );
+  setNodeCompletion(sqlite, userId, "lower-vehrvod", true);
+  assert.equal(
+    findCatalogNode(sqlite, "ganymede", userId)?.accessRequirements.find(
+      ({ kind }) => kind === "node",
+    )?.progressState,
     "completed",
   );
 });

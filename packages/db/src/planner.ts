@@ -55,7 +55,7 @@ export interface AcquisitionPlan {
       kind: string;
       slug: string;
       name: string;
-      state: "unseen" | "discovered" | "completed";
+      state: "unseen" | "discovered" | "incomplete" | "completed";
       relationKinds: Array<"requires" | "unlocks">;
       sources: Array<{ name: string; citationUrl?: string }>;
     }>;
@@ -524,28 +524,43 @@ function loadNodeAccess(
       `
     select relation.from_entity_id as nodeId, prerequisite.id as entityId, prerequisite.kind, prerequisite.slug, prerequisite.name,
       'requires' as relationKind, source.name as sourceName, relation.citation_url as citationUrl,
-      coalesce(progress.state, 'unseen') as state
+      case when prerequisite.kind = 'node'
+        then case when node_progress.node_id is null then 'incomplete' else 'completed' end
+        else coalesce(discovery_progress.state, 'unseen') end as state
     from entity_relations relation
     join source_runs run on run.id = relation.source_run_id and run.status = 'active'
     join sources source on source.id = run.source_id
     join entities prerequisite on prerequisite.id = relation.to_entity_id and prerequisite.retired = 0
-    left join player_discovery_progress progress on progress.entity_id = prerequisite.id and progress.user_id = ?
+    left join player_discovery_progress discovery_progress
+      on discovery_progress.entity_id = prerequisite.id and prerequisite.kind <> 'node'
+     and discovery_progress.user_id = ?
+    left join player_node_progress node_progress
+      on node_progress.node_id = prerequisite.id and prerequisite.kind = 'node'
+     and node_progress.user_id = ?
     where relation.kind = 'requires' and relation.from_entity_id in (${placeholders})
-      and prerequisite.kind in ('quest', 'mechanic', 'secret', 'enemy', 'boss')
+      and prerequisite.kind in ('quest', 'mechanic', 'secret', 'enemy', 'boss', 'node')
     union all
     select relation.to_entity_id, prerequisite.id, prerequisite.kind, prerequisite.slug, prerequisite.name,
-      'unlocks', source.name, relation.citation_url, coalesce(progress.state, 'unseen')
+      'unlocks', source.name, relation.citation_url,
+      case when prerequisite.kind = 'node'
+        then case when node_progress.node_id is null then 'incomplete' else 'completed' end
+        else coalesce(discovery_progress.state, 'unseen') end
     from entity_relations relation
     join source_runs run on run.id = relation.source_run_id and run.status = 'active'
     join sources source on source.id = run.source_id
     join entities prerequisite on prerequisite.id = relation.from_entity_id and prerequisite.retired = 0
-    left join player_discovery_progress progress on progress.entity_id = prerequisite.id and progress.user_id = ?
+    left join player_discovery_progress discovery_progress
+      on discovery_progress.entity_id = prerequisite.id and prerequisite.kind <> 'node'
+     and discovery_progress.user_id = ?
+    left join player_node_progress node_progress
+      on node_progress.node_id = prerequisite.id and prerequisite.kind = 'node'
+     and node_progress.user_id = ?
     where relation.kind = 'unlocks' and relation.to_entity_id in (${placeholders})
-      and prerequisite.kind in ('quest', 'mechanic', 'secret', 'enemy', 'boss')
+      and prerequisite.kind in ('quest', 'mechanic', 'secret', 'enemy', 'boss', 'node')
     order by 1, 5, 2, 6, 7
   `,
     )
-    .all(userId, ...ids, userId, ...ids) as Array<{
+    .all(userId, userId, ...ids, userId, userId, ...ids) as Array<{
     nodeId: string;
     entityId: string;
     kind: string;
@@ -554,7 +569,7 @@ function loadNodeAccess(
     relationKind: "requires" | "unlocks";
     sourceName: string;
     citationUrl: string | null;
-    state: "unseen" | "discovered" | "completed";
+    state: "unseen" | "discovered" | "incomplete" | "completed";
   }>;
   const indexed = new Map<
     string,

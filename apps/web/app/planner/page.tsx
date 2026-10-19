@@ -299,7 +299,11 @@ export default async function Planner() {
                             (requirement) => (
                               <li key={requirement.entityId}>
                                 <Link
-                                  href={`/catalog/${requirement.kind}/${requirement.slug}`}
+                                  href={
+                                    requirement.kind === "node"
+                                      ? `/nodes/${requirement.slug}`
+                                      : `/catalog/${requirement.kind}/${requirement.slug}`
+                                  }
                                 >
                                   {requirement.name}
                                 </Link>

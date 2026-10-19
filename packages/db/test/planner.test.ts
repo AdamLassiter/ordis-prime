@@ -14,6 +14,7 @@ import {
   promoteWorldState,
   setDiscoveryProgress,
   setInventoryEntryByReference,
+  setNodeCompletion,
   setPlayerGoal,
   setPlayerMasteryRank,
   setPlayerRecipePreference,
@@ -68,6 +69,13 @@ test("persisted goals expand through active recipes and produce named node reaso
     },
     {
       type: "entity",
+      kind: "node",
+      externalIds: [external("prerequisite-node")],
+      fields: { name: "Prerequisite Node", slug: "prerequisite-node" },
+      evidence: { ...evidence, sourceRecordKey: "prerequisite-node" },
+    },
+    {
+      type: "entity",
       kind: "mechanic",
       externalIds: [external("mechanic")],
       fields: { name: "Test Mechanic", slug: "test-mechanic" },
@@ -95,6 +103,13 @@ test("persisted goals expand through active recipes and produce named node reaso
       toExternalId: external("quest"),
       kind: "requires",
       evidence: { ...evidence, sourceRecordKey: "node:quest" },
+    },
+    {
+      type: "entity-relation",
+      fromExternalId: external("node"),
+      toExternalId: external("prerequisite-node"),
+      kind: "requires",
+      evidence: { ...evidence, sourceRecordKey: "node:prerequisite-node" },
     },
     {
       type: "node-detail",
@@ -164,6 +179,12 @@ test("persisted goals expand through active recipes and produce named node reaso
     ),
     [
       {
+        name: "Prerequisite Node",
+        state: "incomplete",
+        relationKinds: ["requires"],
+        sources: ["Items"],
+      },
+      {
         name: "Test Mechanic",
         state: "unseen",
         relationKinds: ["unlocks"],
@@ -199,6 +220,7 @@ test("persisted goals expand through active recipes and produce named node reaso
     { kind: "quest", slug: "test-quest" },
     "completed",
   );
+  setNodeCompletion(sqlite, userId, "prerequisite-node", true);
   assert.equal(
     buildAcquisitionPlan(sqlite, userId).recommendations[0]?.accessStatus,
     "conditional",

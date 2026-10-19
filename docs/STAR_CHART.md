@@ -19,10 +19,11 @@ undirected `connects-to` observation, while missing referenced nodes reject the
 whole candidate instead of publishing a broken graph.
 
 The adapter also snapshots the structured quest-key module and accepts only
-requirement expressions made entirely from quest completion. These become cited
-`node requires quest` relations. Expressions that also require ranks, items,
-another node or an active adversary remain unmodeled as a whole; the parser does
-not publish a misleading partial rule.
+allow-listed complete requirement expressions made from quest and node
+completion. These become cited `node requires prerequisite` relations. The
+quest-plus-node expression for Vehrvod District is fully modeled; expressions
+that also require unsupported ranks, items or an active adversary remain
+unmodeled as a whole, so the parser does not publish a misleading partial rule.
 An exact Mastery Rank-only expression becomes the existing typed numeric node
 gate; Intrinsics ranks and mixed expressions are not coerced into that field.
 
@@ -35,7 +36,8 @@ other, even though a source only needs to state the edge once. A shareable
 `focus=` view lets a player traverse those direct connections and move between
 topology and a node's rewards without inventing spatial positions.
 Node pages list complete structured access requirements with their source and,
-when signed in, the player's private discovery state for each prerequisite.
+when signed in, the player's private discovery or node-completion state for each
+prerequisite.
 They also compare a sourced Mastery gate with the player's private combined
 Mastery/Legendary Rank when one has been recorded.
 The chart derives the same available, conditional, blocked or unknown state for

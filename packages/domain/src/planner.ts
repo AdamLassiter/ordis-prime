@@ -21,7 +21,9 @@ export type NodeAccessStatus =
   "available" | "conditional" | "blocked" | "unknown";
 
 export function deriveNodeAccessStatus(input: {
-  requirementStates: Array<"unseen" | "discovered" | "completed" | undefined>;
+  requirementStates: Array<
+    "unseen" | "discovered" | "incomplete" | "completed" | undefined
+  >;
   masteryRequirement?: number;
   playerRank?: number;
 }): NodeAccessStatus {

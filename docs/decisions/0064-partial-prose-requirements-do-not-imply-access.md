@@ -1,6 +1,6 @@
 # 0064: Partial prose requirements do not imply access
 
-Status: accepted
+Status: accepted; grammar extended by decision 0068
 
 ## Context
 
@@ -35,7 +35,7 @@ quest source later composes through canonical name and kind identity.
   acquisition planner consumes the same relations without provider-specific
   logic.
 - Elite Sanctuary Onslaught's level requirement, Railjack Intrinsics gates,
-  locator and beacon costs, node-completion rules, and active-adversary checks
-  remain unknown rather than being understated.
+  locator and beacon costs, and active-adversary checks remain unknown rather
+  than being understated. Exact node-completion rules are covered by decision 0068.
 - New upstream wording fails closed until its complete semantics are modeled or
   the anchored grammar is deliberately extended with regression fixtures.

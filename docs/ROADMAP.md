@@ -66,7 +66,7 @@ Private node completion tracking, chart filtering and portable profile transfer
 are implemented independently of sourced access evidence.
 Sourced Mastery Rank gates, including exact Wiki mission requirements, compose
 with portable private player progression; the Wiki mission source also
-contributes complete quest-only node requirements.
+contributes complete allow-listed quest and node-completion requirements.
 The star chart derives and filters the same player-aware access states used by
 planning.
-Junction objectives and compound rank, item, node or adversary conditions remain.
+Junction objectives and other compound rank, item or adversary conditions remain.

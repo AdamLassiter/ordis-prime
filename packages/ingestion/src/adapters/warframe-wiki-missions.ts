@@ -21,7 +21,7 @@ import {
   wikiSlug,
 } from "./mediawiki-lua.ts";
 
-const PARSER_VERSION = "warframe-wiki-missions-v3";
+const PARSER_VERSION = "warframe-wiki-missions-v4";
 const MODULE_TITLE = "Module:Missions/data";
 const QUEST_MODULE_TITLE = "Module:Keys/data";
 
@@ -42,6 +42,11 @@ interface MissionRecord {
 interface QuestReference {
   name: string;
   link: string;
+}
+
+interface AccessReference {
+  kind: "quest" | "node";
+  name: string;
 }
 
 export class WarframeWikiMissionsAdapter implements SourceAdapter {
@@ -91,15 +96,22 @@ export class WarframeWikiMissionsAdapter implements SourceAdapter {
         `WARFRAME Wiki ${MODULE_TITLE} has duplicate mission names`,
       );
     const questReferences = parseQuestReferences(questPage.content);
-    const questRequirements = new Map(
+    const accessRequirements = new Map(
       records.map((record) => [
         record.name,
-        parseQuestRequirements(record.requirements, questReferences),
+        parseAccessRequirements(record.requirements, questReferences, names),
       ]),
     );
     const referencedQuests = new Map<string, QuestReference>();
-    for (const requirements of questRequirements.values())
-      for (const quest of requirements) referencedQuests.set(quest.name, quest);
+    const questsByName = new Map(
+      [...questReferences.values()].map((quest) => [quest.name, quest]),
+    );
+    for (const requirements of accessRequirements.values())
+      for (const requirement of requirements) {
+        if (requirement.kind !== "quest") continue;
+        const quest = questsByName.get(requirement.name);
+        if (quest) referencedQuests.set(quest.name, quest);
+      }
 
     for (const record of records) {
       yield {
@@ -171,16 +183,19 @@ export class WarframeWikiMissionsAdapter implements SourceAdapter {
       );
 
     for (const record of records) {
-      for (const quest of questRequirements.get(record.name) ?? []) {
+      for (const requirement of accessRequirements.get(record.name) ?? []) {
         yield {
           type: "entity-relation",
           kind: "requires",
           fromExternalId: missionExternalId(record.name),
-          toExternalId: missionQuestExternalId(quest.name),
+          toExternalId:
+            requirement.kind === "quest"
+              ? missionQuestExternalId(requirement.name)
+              : missionExternalId(requirement.name),
           evidence: evidence(
             page.revisionId,
             snapshot,
-            `${record.name}:Requirements:${quest.name}`,
+            `${record.name}:Requirements:${requirement.kind}:${requirement.name}`,
             record.line,
           ),
         };
@@ -265,17 +280,30 @@ function parseQuestReferences(source: string): Map<string, QuestReference> {
   return result;
 }
 
-function parseQuestRequirements(
+function parseAccessRequirements(
   requirements: string | undefined,
   quests: Map<string, QuestReference>,
-): QuestReference[] {
+  nodes: Set<string>,
+): AccessReference[] {
   if (!requirements) return [];
   const links = [...requirements.matchAll(/\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g)];
   if (!links.length) return [];
-  const resolved = links.map((match) => quests.get(match[1]!.trim()));
-  if (resolved.some((quest) => quest === undefined)) return [];
+  const resolved = links.map((match) => {
+    const label = match[1]!.trim();
+    const quest = quests.get(label);
+    const node = nodes.has(label) ? label : undefined;
+    if (Boolean(quest) === Boolean(node)) return undefined;
+    return quest
+      ? ({ kind: "quest", name: quest.name } as const)
+      : ({ kind: "node", name: node! } as const);
+  });
+  if (resolved.some((reference) => reference === undefined)) return [];
+  let linkIndex = 0;
   const shape = requirements
-    .replace(/\[\[[^\]]+\]\]/g, "[[QUEST]]")
+    .replace(/\[\[[^\]]+\]\]/g, () => {
+      const reference = resolved[linkIndex++]!;
+      return `[[${reference.kind.toUpperCase()}]]`;
+    })
     .replace(/\s+/g, " ")
     .trim();
   if (
@@ -284,10 +312,21 @@ function parseQuestRequirements(
       "Must complete [[QUEST]] to access",
       "Must have [[QUEST]] completed",
       "Must have [[QUEST]] and [[QUEST]] completed to access",
+      "Must have [[NODE]] completed",
+      "Must have [[NODE]] completed to access",
+      "Must complete [[NODE]] to access",
+      "Must have [[QUEST]] completed to access Must have [[NODE]] completed",
     ]).has(shape)
   )
     return [];
-  return [...new Map(resolved.map((quest) => [quest!.name, quest!])).values()];
+  return [
+    ...new Map(
+      resolved.map((reference) => [
+        `${reference!.kind}:${reference!.name}`,
+        reference!,
+      ]),
+    ).values(),
+  ];
 }
 
 function optionalString(

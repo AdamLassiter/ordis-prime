@@ -9,6 +9,12 @@ test("node access remains unknown without evidence", () => {
 test("node access composes quest progress and Mastery Rank", () => {
   assert.equal(
     deriveNodeAccessStatus({
+      requirementStates: ["incomplete"],
+    }),
+    "blocked",
+  );
+  assert.equal(
+    deriveNodeAccessStatus({
       requirementStates: ["completed"],
       masteryRequirement: 8,
       playerRank: 8,
