@@ -120,9 +120,19 @@ export function parseLuaReturnTable(
       (statement) => statement.type === "ReturnStatement",
     );
     const expression = returned?.arguments[0];
-    if (expression?.type !== "TableConstructorExpression")
-      throw new Error("module does not return a table");
-    return expression;
+    if (expression?.type === "TableConstructorExpression") return expression;
+    if (expression?.type === "Identifier") {
+      for (const statement of chunk.body) {
+        if (statement.type !== "LocalStatement") continue;
+        const index = statement.variables.findIndex(
+          (variable) =>
+            variable.type === "Identifier" && variable.name === expression.name,
+        );
+        const value = statement.init[index];
+        if (value?.type === "TableConstructorExpression") return value;
+      }
+    }
+    throw new Error("module does not return a table");
   } catch (error) {
     throw new Error(
       `Cannot parse ${title}: ${error instanceof Error ? error.message : String(error)}`,

@@ -10,6 +10,7 @@ import {
   WORLD_STATE_REFRESH_JOB,
 } from "@ordis-prime/db";
 import {
+  AUTOMATIC_CATALOG_SOURCE_IDS,
   collect,
   ManualDiscoveryAdapter,
   ManualFactsAdapter,
@@ -22,11 +23,9 @@ import {
 import { getDatabase, getDataDirectory } from "@/lib/database";
 import { requireCurrentSession } from "@/lib/session";
 
-const CATALOG_SOURCES = ["wfcd-items", "wfcd-drops"] as const;
 const MANUAL_TYPES = ["ranking", "discovery", "facts"] as const;
 const RESERVED_SOURCE_IDS = new Set([
-  "wfcd-items",
-  "wfcd-drops",
+  ...AUTOMATIC_CATALOG_SOURCE_IDS,
   "wfcd-worldstate",
 ]);
 
@@ -34,7 +33,9 @@ export async function queueSourceRefresh(sourceId: string) {
   const session = await requireCurrentSession();
   if (session.user.role !== "admin")
     throw new Error("Administrator access required");
-  const isCatalog = (CATALOG_SOURCES as readonly string[]).includes(sourceId);
+  const isCatalog = (
+    AUTOMATIC_CATALOG_SOURCE_IDS as readonly string[]
+  ).includes(sourceId);
   if (!isCatalog && sourceId !== "wfcd-worldstate")
     throw new Error("Source cannot be refreshed by the automatic worker");
   enqueueJobNow(getDatabase(), {

@@ -9,14 +9,18 @@ import { ManualDiscoveryAdapter } from "./adapters/manual-discovery.ts";
 import { ManualFactsAdapter } from "./adapters/manual-facts.ts";
 import { WarframeWikiWeaponsAdapter } from "./adapters/warframe-wiki-weapons.ts";
 import { WarframeWikiWarframesAdapter } from "./adapters/warframe-wiki-warframes.ts";
+import { WarframeWikiMissionsAdapter } from "./adapters/warframe-wiki-missions.ts";
 import { refreshWorldState, WfcdWorldStateAdapter } from "./world-state.ts";
+import type { SourceAdapter } from "./adapter.ts";
+import type { AutomaticCatalogSourceId } from "./automatic-sources.ts";
 
 const adapters = {
   "wfcd-items": () => new WfcdItemsAdapter(),
   "wfcd-drops": () => new WfcdDropsAdapter(),
   "warframe-wiki-weapons": () => new WarframeWikiWeaponsAdapter(),
   "warframe-wiki-warframes": () => new WarframeWikiWarframesAdapter(),
-} as const;
+  "warframe-wiki-missions": () => new WarframeWikiMissionsAdapter(),
+} as const satisfies Record<AutomaticCatalogSourceId, () => SourceAdapter>;
 
 async function main(): Promise<void> {
   const requested = process.argv.slice(2);

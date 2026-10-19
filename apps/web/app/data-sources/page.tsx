@@ -3,6 +3,7 @@ import {
   listRecentJobs,
   listSourceStatuses,
 } from "@ordis-prime/db";
+import { AUTOMATIC_CATALOG_SOURCE_IDS } from "@ordis-prime/ingestion";
 import { getDatabase } from "@/lib/database";
 import { getCurrentSession } from "@/lib/session";
 import Link from "next/link";
@@ -17,8 +18,7 @@ export const dynamic = "force-dynamic";
 const JOB_KINDS = ["refresh-world-state", "refresh-catalog-source"] as const;
 const JOB_STATUSES = ["queued", "running", "succeeded", "failed"] as const;
 const AUTOMATIC_SOURCES = [
-  "wfcd-items",
-  "wfcd-drops",
+  ...AUTOMATIC_CATALOG_SOURCE_IDS,
   "wfcd-worldstate",
 ] as const;
 
@@ -120,6 +120,9 @@ export default async function Sources({
             {[
               ["wfcd-items", "WFCD items"],
               ["wfcd-drops", "WFCD drops"],
+              ["warframe-wiki-weapons", "Wiki weapons"],
+              ["warframe-wiki-warframes", "Wiki Warframes"],
+              ["warframe-wiki-missions", "Wiki missions"],
               ["wfcd-worldstate", "World state"],
             ].map(([id, label]) => (
               <form action={queueSourceRefresh.bind(null, id!)} key={id}>

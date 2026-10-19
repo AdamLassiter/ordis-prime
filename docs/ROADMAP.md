@@ -54,7 +54,8 @@ and relations, not a second data model.
 Composed node metadata, a planet-grouped chart with inventory-aware filtering,
 a searchable canonical discovery atlas, and cited typed discovery relations are
 implemented. Private discovery progress and filtering are also implemented.
-Cited star-chart connection edges compose into node reads when supplied. Stable
-coordinates, an attributed complete edge dataset, and richer quest-step progress remain.
+Wiki mission data supplies the attributed current node and connection set, and
+those cited star-chart edges compose into node reads symmetrically.
+Stable coordinates and richer quest-step progress remain.
 Sourced Mastery Rank gates now compose with portable private player progression;
 junction and other structured conditional gates remain.

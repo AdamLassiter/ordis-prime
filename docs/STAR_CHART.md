@@ -11,6 +11,13 @@ field by field in source-priority order, so one source can fill a missing field
 without replacing another source's complete record. Exact source run, record key
 and payload path remain attached to every metadata row.
 
+The structured Wiki mission adapter independently supplies the current
+`MissionDetails` node set, planet, mission type, faction, enemy-level range and
+the `NextNodes`/`PreviousNodes` graph. It parses the versioned Lua table as data
+without executing provider code. Reciprocal declarations collapse to one
+undirected `connects-to` observation, while missing referenced nodes reject the
+whole candidate instead of publishing a broken graph.
+
 The public `/star-chart` view groups nodes by planet and filters by node, mission
 or faction text. Signed-in players can restrict it to nodes with at least one
 reward their inventory marks as unowned or still wanted. Node detail pages show
@@ -20,12 +27,10 @@ other, even though a source only needs to state the edge once.
 
 ## Current compromise
 
-Neither imported WFCD dataset contains navigation edges or stable visual
-coordinates. The current chart is therefore a planet-grouped spatial index, not
-a claim to reproduce the in-game map. The ingestion and read models accept cited
-manual or provider-supplied edges, but the application does not ship an
-unattributed map. Positions still need another attributed source before a visual
-graph is honest.
+No imported source supplies stable visual coordinates. The current chart can
+answer node-adjacency questions from the attributed Wiki graph, but remains a
+planet-grouped spatial index rather than a reproduction of the in-game map.
+Positions still need another attributed source before a visual graph is honest.
 
 Enemy and quest identities are imported, but richer domain-specific facts and
 complete curated discovery links remain future work.

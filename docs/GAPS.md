@@ -51,12 +51,12 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   promote as a new run so skipped observations can replay. Automatic sources
   are queued immediately, while manual sources require re-upload.
   Structured WARFRAME Wiki adapters also import cited weapon, Warframe and
-  Archwing maximum ranks from versioned Lua data modules without executing
-  provider code. The Wiki companion module does not expose a maximum-rank
-  field, so companion coverage remains absent rather than defaulted. The
-  adapters do not cover factory polarities or arbitrary article content. The
-  leased worker schedules WFCD item, drop, Wiki weapon and Wiki Warframe
-  refreshes daily, and an
+  Archwing maximum ranks plus mission metadata and star-chart connections from
+  versioned Lua data modules without executing provider code. The Wiki companion
+  module does not expose a maximum-rank field, so companion coverage remains
+  absent rather than defaulted. The adapters do not cover factory polarities or
+  arbitrary article content. The leased worker schedules WFCD item, drop, Wiki
+  weapon, Wiki Warframe and Wiki mission refreshes daily, and an
   administrator can bring supported source jobs forward from the source UI. A provider-neutral world-state
   pipeline snapshots and transactionally promotes WFCD cycles, events, alerts,
   fissures and traders. A provider response older than the active observation
@@ -152,9 +152,10 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
 - WFCD item and drop observations compose planet, mission and level metadata in
   a public planet-grouped star-chart explorer with a player-needed overlay. The
   imported WFCD sources do not provide connection edges or coordinates, so it is
-  not yet an interactive graph. Cited `connects-to` observations are supported
-  and shown symmetrically when another source supplies them, but a complete
-  attributed edge dataset and stable positions are still missing.
+  not yet an interactive visual graph. The structured Wiki mission adapter now
+  supplies the current attributed node and connection set; `connects-to`
+  observations are shown symmetrically. Stable visual positions are still
+  missing.
 - A public discovery atlas searches canonical quest, enemy, boss, mechanic and
   secret kinds. WFCD currently populates quests and enemies; cited discovery
   YAML can add curated entities and typed links to nodes, rewards, or other

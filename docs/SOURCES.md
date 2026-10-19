@@ -6,7 +6,7 @@
 | WFCD warframe-drop-data | mission metadata, enemy, relic and rotation drops                                                                                                                             | Snapshot mission rewards with payload and retain upstream attribution                                                                                |
 | WFCD WarframeStat.us    | live cycles, events, alerts, fissures and traders                                                                                                                             | Snapshot the PC English aggregate response; normalize absolute availability windows and retain MIT attribution                                       |
 | Manual YAML             | published editorial rankings; curated discovery facts and relations; factual overlays                                                                                         | Require source-specific citations and licence notes; retain each source as an independent versioned set and resolve overlays by explicit external ID |
-| WARFRAME Wiki           | weapon, Warframe and Archwing maximum ranks; external detail links; a curated Archon Shard effect vocabulary                                                                  | Fetch selected structured data modules through MediaWiki; parse Lua syntax without executing it; retain CC BY-NC-SA 3.0 attribution per fact         |
+| WARFRAME Wiki           | weapon, Warframe and Archwing maximum ranks; mission metadata and star-chart connections; external detail links; a curated Archon Shard effect vocabulary                     | Fetch selected structured data modules through MediaWiki; parse Lua syntax without executing it; retain CC BY-NC-SA 3.0 attribution per fact         |
 
 Provider absence never means deletion. Removals require an explicit tombstone,
 and records referenced by player data are retired rather than physically deleted.
@@ -140,8 +140,9 @@ Revocation removes both the override and that materialized mapping, reopens the
 origin conflict, and changes the replay revision.
 
 The leased worker schedules `wfcd-items`, `wfcd-drops`,
-`warframe-wiki-weapons`, and `warframe-wiki-warframes` independently once per
-day by default, while world state runs every five minutes. An administrator can
+`warframe-wiki-weapons`, `warframe-wiki-warframes`, and
+`warframe-wiki-missions` independently once per day by default, while world
+state runs every five minutes. An administrator can
 bring any of those queued jobs forward from `/data-sources`; this does not run
 network work in the web request or create a duplicate queued job. Manual files
 remain explicit imports because the server cannot infer which local documents

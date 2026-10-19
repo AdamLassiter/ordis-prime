@@ -10,6 +10,7 @@ import {
   reviewSourceConflict,
 } from "@ordis-prime/db";
 import type { ExternalIdentifier } from "@ordis-prime/domain";
+import { AUTOMATIC_CATALOG_SOURCE_IDS } from "@ordis-prime/ingestion";
 import { getDatabase } from "@/lib/database";
 import { requireCurrentSession } from "@/lib/session";
 
@@ -91,7 +92,8 @@ function queueAutomaticReplay(
   database: ReturnType<typeof getDatabase>,
   sourceId: string,
 ): void {
-  if (sourceId !== "wfcd-items" && sourceId !== "wfcd-drops") return;
+  if (!(AUTOMATIC_CATALOG_SOURCE_IDS as readonly string[]).includes(sourceId))
+    return;
   enqueueJobNow(database, {
     kind: CATALOG_SOURCE_REFRESH_JOB,
     payload: { source: sourceId },

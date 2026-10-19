@@ -8,6 +8,7 @@ import { WfcdDropsAdapter } from "./adapters/wfcd-drops.ts";
 import { WfcdItemsAdapter } from "./adapters/wfcd-items.ts";
 import { WarframeWikiWeaponsAdapter } from "./adapters/warframe-wiki-weapons.ts";
 import { WarframeWikiWarframesAdapter } from "./adapters/warframe-wiki-warframes.ts";
+import { WarframeWikiMissionsAdapter } from "./adapters/warframe-wiki-missions.ts";
 
 const dataDirectory =
   process.env.ORDIS_DATA_DIR ??
@@ -74,6 +75,7 @@ const catalogAdapters = [
   new WfcdDropsAdapter(),
   new WarframeWikiWeaponsAdapter(),
   new WarframeWikiWarframesAdapter(),
+  new WarframeWikiMissionsAdapter(),
 ];
 process.stdout.write(
   `${JSON.stringify({ event: "worker-started", owner, databasePath, refreshInterval, catalogRefreshInterval, jobHistoryLimit, worldStateSnapshotHistoryLimit, notificationRetentionMilliseconds, catalogReleaseHistoryLimit, sourceRefreshHistoryLimit, snapshotPruneGraceMilliseconds })}\n`,
