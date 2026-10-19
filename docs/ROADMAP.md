@@ -62,6 +62,7 @@ Wiki mission data supplies the attributed current node and connection set, and
 those cited star-chart edges compose into node reads symmetrically. A shareable
 focus view supports direct traversal without manufacturing map coordinates.
 Stable coordinates and richer quest-step progress remain.
-Sourced Mastery Rank gates now compose with portable private player progression;
-the Wiki mission source also contributes complete quest-only node requirements.
+Sourced Mastery Rank gates, including exact Wiki mission requirements, compose
+with portable private player progression; the Wiki mission source also
+contributes complete quest-only node requirements.
 Junction objectives and compound rank, item, node or adversary conditions remain.

@@ -3,7 +3,11 @@ import { notFound } from "next/navigation";
 import { findNode } from "@/lib/catalog";
 import { getCurrentSession } from "@/lib/session";
 import { getDatabase } from "@/lib/database";
-import { listPlayerTodos, listWorldStateWatches } from "@ordis-prime/db";
+import {
+  getPlayerSettings,
+  listPlayerTodos,
+  listWorldStateWatches,
+} from "@ordis-prime/db";
 import { addCatalogTodo, addCatalogWatch } from "@/app/todos/actions";
 import { relationLabel } from "@/lib/relation-label";
 
@@ -17,10 +21,14 @@ export default async function NodePage({
   const { slug } = await params;
   const { needed } = await searchParams;
   const session = await getCurrentSession();
+  const database = getDatabase();
   const node = await findNode(slug, session?.user.id);
   if (!node) notFound();
+  const settings = session
+    ? getPlayerSettings(database, session.user.id)
+    : undefined;
   const openTodo = session
-    ? listPlayerTodos(getDatabase(), session.user.id).find(
+    ? listPlayerTodos(database, session.user.id).find(
         (todo) =>
           todo.status === "open" &&
           todo.entity?.kind === "node" &&
@@ -28,7 +36,7 @@ export default async function NodePage({
       )
     : undefined;
   const linkedWatch = session
-    ? listWorldStateWatches(getDatabase(), session.user.id).find(
+    ? listWorldStateWatches(database, session.user.id).find(
         (watch) => watch.entity?.kind === "node" && watch.entity.slug === slug,
       )
     : undefined;
@@ -91,7 +99,25 @@ export default async function NodePage({
             : `${node.minimumEnemyLevel}–${node.maximumEnemyLevel ?? node.minimumEnemyLevel}`}
         </dd>
         <dt>Mastery requirement</dt>
-        <dd>{node.masteryRequirement ?? "Not recorded"}</dd>
+        <dd>
+          {node.masteryRequirement ?? "Not recorded"}
+          {node.masteryRequirement !== undefined && settings && (
+            <span
+              className={
+                settings.masteryRank !== undefined &&
+                settings.masteryRank >= node.masteryRequirement
+                  ? "tag progress-completed"
+                  : "tag status-needed"
+              }
+            >
+              {settings.masteryRank === undefined
+                ? "player rank not recorded"
+                : settings.masteryRank >= node.masteryRequirement
+                  ? "met"
+                  : `blocked at ${settings.masteryRank}`}
+            </span>
+          )}
+        </dd>
       </dl>
       <section>
         <h2>Access requirements</h2>

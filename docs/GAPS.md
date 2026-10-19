@@ -58,7 +58,9 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   sequence links, while intentionally not treating sequence as an access rule.
   The mission adapter separately imports node requirements only when the entire
   structured prose expression consists of completed quests; mixed conditions
-  remain absent rather than becoming unsafe partial rules.
+  remain absent rather than becoming unsafe partial rules. Exact Mastery
+  Rank-only expressions populate the existing numeric gate, while Intrinsics
+  ranks remain distinct and unmodeled.
   The Wiki companion
   module does not expose a maximum-rank field, so companion coverage remains
   absent rather than defaulted. The adapters do not cover factory polarities or

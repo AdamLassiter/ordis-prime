@@ -21,7 +21,7 @@ import {
   wikiSlug,
 } from "./mediawiki-lua.ts";
 
-const PARSER_VERSION = "warframe-wiki-missions-v2";
+const PARSER_VERSION = "warframe-wiki-missions-v3";
 const MODULE_TITLE = "Module:Missions/data";
 const QUEST_MODULE_TITLE = "Module:Keys/data";
 
@@ -36,6 +36,7 @@ interface MissionRecord {
   next: string[];
   previous: string[];
   requirements?: string;
+  masteryRequirement?: number;
 }
 
 interface QuestReference {
@@ -131,6 +132,7 @@ export class WarframeWikiMissionsAdapter implements SourceAdapter {
         faction: record.faction,
         minimumEnemyLevel: record.minimumEnemyLevel,
         maximumEnemyLevel: record.maximumEnemyLevel,
+        masteryRequirement: record.masteryRequirement,
         evidence: evidence(page.revisionId, snapshot, record.name, record.line),
       };
     }
@@ -214,9 +216,27 @@ function parseMissionRecords(
         next: stringList(luaLiteralField(field.value, "NextNodes")),
         previous: stringList(luaLiteralField(field.value, "PreviousNodes")),
         requirements: optionalString(field.value, "Requirements"),
+        masteryRequirement: parseMasteryRequirement(
+          optionalString(field.value, "Requirements"),
+        ),
       },
     ];
   });
+}
+
+function parseMasteryRequirement(
+  requirements: string | undefined,
+): number | undefined {
+  const match = requirements?.match(
+    /^Must be \[\[Mastery Rank\]\] (\d+) or higher to access$/,
+  );
+  if (!match) return undefined;
+  const rank = Number(match[1]);
+  if (!Number.isSafeInteger(rank) || rank < 0 || rank > 30)
+    throw new Error(
+      "WARFRAME Wiki mission Mastery Rank requirement is invalid",
+    );
+  return rank;
 }
 
 function parseQuestReferences(source: string): Map<string, QuestReference> {

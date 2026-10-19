@@ -14,7 +14,7 @@ test("wiki mission adapter imports nodes and deduplicated connections", async ()
       local MissionData = {
         FactionImages = { Grineer = "grineer.svg" },
         MissionDetails = {
-          { Name = "E Gate", Planet = "Venus", Type = "Exterminate", Enemy = "Corpus", MinLevel = 3, MaxLevel = 5, NextNodes = { "Tessera", "Fortuna" } },
+          { Name = "E Gate", Planet = "Venus", Type = "Exterminate", Enemy = "Corpus", MinLevel = 3, MaxLevel = 5, NextNodes = { "Tessera", "Fortuna" }, Requirements = "Must be [[Mastery Rank]] 5 or higher to access" },
           { Name = "Tessera", Planet = "Venus", PreviousNodes = { "E Gate" } },
           { Name = "Fortuna", Planet = "Venus", PreviousNodes = { "E Gate" } },
         },
@@ -42,6 +42,7 @@ test("wiki mission adapter imports nodes and deduplicated connections", async ()
                 observation.minimumEnemyLevel,
                 observation.maximumEnemyLevel,
               ],
+              masteryRequirement: observation.masteryRequirement,
             }
           : observation.type === "entity-relation"
             ? {
@@ -88,6 +89,7 @@ test("wiki mission adapter imports nodes and deduplicated connections", async ()
         missionType: "Exterminate",
         faction: "Corpus",
         levels: [3, 5],
+        masteryRequirement: 5,
       },
       {
         type: "node-detail",
@@ -96,6 +98,7 @@ test("wiki mission adapter imports nodes and deduplicated connections", async ()
         missionType: undefined,
         faction: undefined,
         levels: [undefined, undefined],
+        masteryRequirement: undefined,
       },
       {
         type: "node-detail",
@@ -104,6 +107,7 @@ test("wiki mission adapter imports nodes and deduplicated connections", async ()
         missionType: undefined,
         faction: undefined,
         levels: [undefined, undefined],
+        masteryRequirement: undefined,
       },
       {
         type: "entity-relation",
@@ -188,6 +192,23 @@ test("wiki mission adapter imports only complete quest-only access requirements"
       { node: "Armatus", quest: "The Deadlock Protocol" },
       { node: "Armatus", quest: "Whispers in the Walls" },
     ],
+  );
+});
+
+test("wiki mission adapter rejects an out-of-range exact Mastery gate", async () => {
+  await assert.rejects(
+    collect(
+      new WarframeWikiMissionsAdapter(),
+      wikiSnapshot(`
+        return {
+          MissionDetails = {
+            { Name = "Relay", Planet = "Earth", NextNodes = { "Node" }, Requirements = "Must be [[Mastery Rank]] 31 or higher to access" },
+            { Name = "Node", Planet = "Earth", PreviousNodes = { "Relay" } },
+          },
+        }
+      `),
+    ),
+    /Mastery Rank requirement is invalid/,
   );
 });
 
