@@ -62,7 +62,7 @@ const categories: Record<string, EntityKind> = {
   Enemy: "enemy",
 };
 export const DEFAULT_WFCD_ITEMS_URL = "https://api.warframestat.us/items";
-const PARSER_VERSION = "wfcd-items-v7";
+const PARSER_VERSION = "wfcd-items-v8";
 const ARCHON_SHARD_PREFIX = "/Lotus/Types/Gameplay/NarmerSorties/ArchonCrystal";
 const resourceTypes = new Set([
   "Resource",
@@ -290,7 +290,7 @@ function kindFor(
   if (item.type === "Kitgun Component")
     return item.uniqueName?.includes("/Barrel/") ? "weapon" : "component";
   if (item.type === "Zaw Component")
-    return item.uniqueName?.includes("/Tip/") ? "weapon" : "component";
+    return /\/Tips?\//.test(item.uniqueName ?? "") ? "weapon" : "component";
   return (
     categories[item.category ?? ""] ??
     (item.type === "Blueprint" ? "blueprint" : fallback)

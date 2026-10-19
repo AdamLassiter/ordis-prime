@@ -70,10 +70,12 @@ recipes and recommends nodes using the same canonical IDs.
 - Current equipment rank, Forma count, a capacity-upgrade flag, a configuration
   label, and player-authored mod-slot roles and polarities are recorded.
   A sourced equipment maximum rank constrains current rank when available and
-  remains absent otherwise.
+  remains absent otherwise. Structured Wiki weapon data now supplies broad
+  weapon maximum-rank coverage; Warframe, companion and Archwing coverage is
+  still incomplete.
   The catalog now retains sourced mod maximum rank, base drain and polarity,
   and calculates each known mod's unpolarized ranked drain. Sourced factory slot
-  layouts, broad maximum-rank coverage and whole-build capacity are not yet
+  layouts, non-weapon maximum-rank coverage and whole-build capacity are not yet
   modeled. Broad arcane
   and specialized weapon compatibility are enforced from cited canonical
   facts. A Kitgun chamber or Zaw strike is currently the representative

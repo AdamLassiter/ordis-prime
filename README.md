@@ -20,10 +20,12 @@ from.
 - portable profile export and merge/replace import
 - two-service Docker Compose deployment over one durable data volume
 - deterministic domain and adapter tests
+- automated, source-attributed WARFRAME Wiki weapon-rank enrichment
 - generated initial SQLite migration
 
-The application treats WFCD datasets as structured inputs and links to the
-Warframe Wiki for detail. It does not scrape the wiki in v1.
+The application treats WFCD datasets and selected structured WARFRAME Wiki
+modules as attributed inputs. Wiki enrichment is deliberately adapter-specific
+rather than a generic page scraper.
 
 Design intent, decisions, roadmap, and honest implementation gaps are indexed in
 [`docs/README.md`](docs/README.md).
@@ -39,7 +41,7 @@ pnpm test
 pnpm check
 pnpm build
 pnpm db:migrate
-pnpm data:refresh wfcd-items wfcd-drops
+pnpm data:refresh wfcd-items wfcd-drops warframe-wiki-weapons
 pnpm data:refresh manual-ranking:data/manual/editorial.example.yaml
 pnpm data:refresh manual-discovery:data/manual/discovery.example.yaml
 pnpm data:refresh manual-facts:data/manual/facts.example.yaml
@@ -55,7 +57,7 @@ administrator. Registration remains closed unless explicitly enabled.
 fetch, immutable snapshot storage, parsing, validation, and transactional
 promotion. Omit names to refresh every registered adapter.
 
-`data:worker` runs recurring world-state and static WFCD catalog refreshes for
+`data:worker` runs recurring world-state and static catalog refreshes for
 development. Docker Compose runs that worker alongside the web service over the
 same durable volume.
 

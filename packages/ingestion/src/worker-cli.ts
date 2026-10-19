@@ -6,6 +6,7 @@ import { WfcdWorldStateAdapter } from "./world-state.ts";
 import { runWorkerCycle } from "./worker.ts";
 import { WfcdDropsAdapter } from "./adapters/wfcd-drops.ts";
 import { WfcdItemsAdapter } from "./adapters/wfcd-items.ts";
+import { WarframeWikiWeaponsAdapter } from "./adapters/warframe-wiki-weapons.ts";
 
 const dataDirectory =
   process.env.ORDIS_DATA_DIR ??
@@ -67,7 +68,11 @@ migrateDatabase(databasePath);
 const database = openSqliteDatabase(databasePath);
 const snapshotStore = new SnapshotStore(path.join(dataDirectory, "sources"));
 const adapter = new WfcdWorldStateAdapter();
-const catalogAdapters = [new WfcdItemsAdapter(), new WfcdDropsAdapter()];
+const catalogAdapters = [
+  new WfcdItemsAdapter(),
+  new WfcdDropsAdapter(),
+  new WarframeWikiWeaponsAdapter(),
+];
 process.stdout.write(
   `${JSON.stringify({ event: "worker-started", owner, databasePath, refreshInterval, catalogRefreshInterval, jobHistoryLimit, worldStateSnapshotHistoryLimit, notificationRetentionMilliseconds, catalogReleaseHistoryLimit, sourceRefreshHistoryLimit, snapshotPruneGraceMilliseconds })}\n`,
 );

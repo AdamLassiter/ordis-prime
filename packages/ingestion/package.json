@@ -14,9 +14,11 @@
   "dependencies": {
     "@ordis-prime/db": "workspace:*",
     "@ordis-prime/domain": "workspace:*",
+    "luaparse": "^0.3.1",
     "yaml": "^2.9.1"
   },
   "devDependencies": {
+    "@types/luaparse": "^0.2.13",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3"
   }

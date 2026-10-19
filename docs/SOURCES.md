@@ -6,7 +6,7 @@
 | WFCD warframe-drop-data | mission metadata, enemy, relic and rotation drops                                                                                                                             | Snapshot mission rewards with payload and retain upstream attribution                                                                                |
 | WFCD WarframeStat.us    | live cycles, events, alerts, fissures and traders                                                                                                                             | Snapshot the PC English aggregate response; normalize absolute availability windows and retain MIT attribution                                       |
 | Manual YAML             | published editorial rankings; curated discovery facts and relations; factual overlays                                                                                         | Require source-specific citations and licence notes; retain each source as an independent versioned set and resolve overlays by explicit external ID |
-| Warframe Wiki           | external detail links and a curated Archon Shard effect vocabulary                                                                                                            | No automated fetching; the checked-in effect source is a cited CC BY-NC-SA 3.0 manual snapshot, and future facts remain segregated and attributable  |
+| WARFRAME Wiki           | weapon maximum ranks, external detail links, and a curated Archon Shard effect vocabulary                                                                                     | Fetch selected structured weapon-data modules through MediaWiki; parse Lua syntax without executing it; retain CC BY-NC-SA 3.0 attribution per fact  |
 
 Provider absence never means deletion. Removals require an explicit tombstone,
 and records referenced by player data are retired rather than physically deleted.
@@ -51,8 +51,9 @@ their stable `/Lotus/Types/Gameplay/NarmerSorties/ArchonCrystal` internal-name
 prefix because the aggregate currently labels both their category and type as
 `Misc`; this provider-specific rule is isolated in the adapter.
 
-The two automatic WFCD catalog adapters reject a candidate that emits fewer
-than half as many normalized observations as their previous active run. Each
+The automatic WFCD catalog adapters and structured Wiki weapon adapter reject a
+candidate that emits fewer than half as many normalized observations as their
+previous active run. Each
 source run records its input observation count, so this guard is independent of
 shorter operational-history retention. The threshold is adapter policy rather
 than a global rule: manual sources may intentionally publish a much smaller
@@ -138,8 +139,9 @@ successful replay materializes the approved external ID in the canonical map.
 Revocation removes both the override and that materialized mapping, reopens the
 origin conflict, and changes the replay revision.
 
-The leased worker schedules `wfcd-items` and `wfcd-drops` independently once per
-day by default, while world state runs every five minutes. An administrator can
+The leased worker schedules `wfcd-items`, `wfcd-drops`, and
+`warframe-wiki-weapons` independently once per day by default, while world state
+runs every five minutes. An administrator can
 bring any of those queued jobs forward from `/data-sources`; this does not run
 network work in the web request or create a duplicate queued job. Manual files
 remain explicit imports because the server cannot infer which local documents

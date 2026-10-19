@@ -17,8 +17,9 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   facts that would reference a retired entity, use non-node entities in
   node-only positions, attach enhancement options to non-shards, or introduce
   a cycle through active recipe alternatives. Broader cross-source semantic
-  completeness checks remain unimplemented. Automatic WFCD catalog adapters reject
-  candidates below half their preceding observation count, but this coarse guard
+  completeness checks remain unimplemented. Automatic WFCD and structured Wiki
+  catalog adapters reject candidates below half their preceding observation
+  count, but this coarse guard
   does not detect selective omissions or semantically implausible changes above
   that floor. The worker retains a configurable number of inactive
   catalog releases and removes unreferenced clean source runs and their facts;
@@ -49,7 +50,11 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   are reversible and audited; their revision causes unchanged source bytes to
   promote as a new run so skipped observations can replay. Automatic sources
   are queued immediately, while manual sources require re-upload.
-  The leased worker schedules WFCD item and drop refreshes daily, and an
+  A structured WARFRAME Wiki adapter also imports cited weapon maximum ranks
+  from versioned Lua data modules without executing provider code. It does not
+  yet cover Warframe, companion or Archwing maximum ranks, factory polarities,
+  or arbitrary article content. The leased worker schedules WFCD item, drop,
+  and Wiki weapon refreshes daily, and an
   administrator can bring supported source jobs forward from the source UI. A provider-neutral world-state
   pipeline snapshots and transactionally promotes WFCD cycles, events, alerts,
   fissures and traders. A provider response older than the active observation
@@ -121,7 +126,7 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   per-mod unpolarized drain. Player-authored mod-slot roles and polarities are
   preserved independently of installed mods and drive a derived adjusted drain
   or capacity bonus at matching positions. Sourced factory slot layouts,
-  comprehensive item-specific maximum ranks and whole-build capacity calculation remain. Builds can assign
+  comprehensive non-weapon maximum ranks and whole-build capacity calculation remain. Builds can assign
   ranked arcanes and positioned Archon Shards with sourced effect selections.
   Arcane candidates and assignments enforce sourced broad and specialized weapon classes against
   equipped items in either assignment order. Equipment slots also enforce

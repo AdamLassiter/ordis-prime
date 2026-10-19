@@ -386,7 +386,7 @@ test("WFCD adapter maps equipment classes and modular weapon representatives", a
           type: "Kitgun Component",
         },
         {
-          uniqueName: "/Lotus/Weapons/Ostron/Melee/Set/Tip/Balla",
+          uniqueName: "/Lotus/Weapons/Ostron/Melee/Set/Tips/Balla",
           name: "Balla",
           category: "Melee",
           type: "Zaw Component",
@@ -500,7 +500,7 @@ test("WFCD adapter defaults to the maintained aggregate endpoint", async () => {
     const adapter = new WfcdItemsAdapter();
     const fetched = await adapter.fetch({});
     assert.equal(requestedUrl, DEFAULT_WFCD_ITEMS_URL);
-    assert.equal(fetched.version, "fixture-etag|wfcd-items-v7");
+    assert.equal(fetched.version, "fixture-etag|wfcd-items-v8");
     assert.equal(adapter.minimumRetainedObservationRatio, 0.5);
   } finally {
     globalThis.fetch = originalFetch;

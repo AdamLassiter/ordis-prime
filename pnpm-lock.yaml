@@ -94,10 +94,16 @@ importers:
       '@ordis-prime/domain':
         specifier: workspace:*
         version: link:../domain
+      luaparse:
+        specifier: ^0.3.1
+        version: 0.3.1
       yaml:
         specifier: ^2.9.1
         version: 2.9.1
     devDependencies:
+      '@types/luaparse':
+        specifier: ^0.2.13
+        version: 0.2.13
       tsx:
         specifier: ^4.20.6
         version: 4.23.15
@@ -862,6 +868,9 @@ packages:
   '@types/better-sqlite3@7.6.13':
     resolution: {integrity: sha512-NMv9ASNARoKksWtsq/SHakpYAYnhBrQgGD8zkLYk/jaK8jUGn08CfEdTRgYhMypUQAfzSP8W6gNLe0q19/t4VA==}
 
+  '@types/luaparse@0.2.13':
+    resolution: {integrity: sha512-nWs2m9b/zrMcAA2Rs+wTxdIsBkSYMo0+6ko8mpeqS5dhchU3hQN9kZGcSw96n497Vc7kGpDLtSicjdpaUrRAkw==}
+
   '@types/node@24.19.2':
     resolution: {integrity: sha512-93d49wCWJkCyN87MxLpNN6KXPCwFw7bVUg79mGUV1OS40JGWwVCr8n61DXCSqz7CV6/VfPkb7xec7uP2M+QHWQ==}
 
@@ -1141,6 +1150,10 @@ packages:
   kysely@0.29.6:
     resolution: {integrity: sha512-hHaB8C/rfzDDtr/t8YZwxAuPJTT0zHyaPoVzcXwDYhYNAgH/4sIfVhi/XLLIY+bL/FqaIJnjATDbi8ObSELmxg==}
     engines: {node: '>=22.0.0'}
+
+  luaparse@0.3.1:
+    resolution: {integrity: sha512-b21h2bFEbtGXmVqguHogbyrMAA0wOHyp9u/rx+w6Yc9pW1t9YjhGUsp87lYcp7pFRqSWN/PhFkrdIqKEUzRjjQ==}
+    hasBin: true
 
   mimic-response@3.1.0:
     resolution: {integrity: sha512-z0yWI+4FDrrweS8Zmt4Ej5HdJmky15+L2e6Wgn3+iK5fWzb6T3fhNFq2+MeTRb064c6Wr4N/wv0DzQTjNzHNGQ==}
@@ -1781,6 +1794,8 @@ snapshots:
     dependencies:
       '@types/node': 24.19.2
 
+  '@types/luaparse@0.2.13': {}
+
   '@types/node@24.19.2':
     dependencies:
       undici-types: 7.24.6
@@ -1997,6 +2012,8 @@ snapshots:
   jose@6.2.12: {}
 
   kysely@0.29.6: {}
+
+  luaparse@0.3.1: {}
 
   mimic-response@3.1.0: {}
 
