@@ -1,6 +1,6 @@
 # 0035: Mastery Rank is private planner input
 
-Status: accepted
+Status: superseded in part by ADR 0058
 
 ## Context
 
@@ -13,8 +13,9 @@ into an unreliable Mastery calculator.
 ## Decision
 
 Store an optional player-entered Mastery Rank in a separate private profile row.
-Accept ranks zero through thirty; Legendary players use thirty because current
-numeric node gates do not distinguish Legendary progression. Include the value
+The original representation accepted ranks zero through thirty and collapsed
+Legendary progression to thirty; ADR 0058 replaces that bound with a combined
+rank so the same private value can drive capacity. Include the value
 in portable profile schema version 12 and clear it with replace-mode imports.
 
 For each recommended node, select the highest-priority active sourced node

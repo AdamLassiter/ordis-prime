@@ -57,7 +57,11 @@ test("profiles resolve stable source IDs across installations with different can
   assert.notEqual(first.entityId, second.entityId);
 
   const firstUser = createLocalUser(first.sqlite, { username: "Exporter" });
-  setPlayerMasteryRank(first.sqlite, firstUser, 18);
+  setPlayerMasteryRank(first.sqlite, firstUser, 31);
+  assert.throws(
+    () => setPlayerMasteryRank(first.sqlite, firstUser, 41),
+    /between 0 and 40/,
+  );
   assert.deepEqual(
     findPlayerInventoryEntry(first.sqlite, firstUser, "weapon", "braton"),
     {
@@ -170,7 +174,7 @@ test("profiles resolve stable source IDs across installations with different can
     "ability-strength",
   );
   const profile = exportPlayerProfile(first.sqlite, firstUser);
-  assert.equal(profile.schemaVersion, 14);
+  assert.equal(profile.schemaVersion, 15);
   const secondUser = createLocalUser(second.sqlite, { username: "Importer" });
   const result = importPlayerProfile(second.sqlite, secondUser, profile);
 
@@ -185,7 +189,7 @@ test("profiles resolve stable source IDs across installations with different can
     unresolved: [],
   });
   assert.deepEqual(getPlayerSettings(second.sqlite, secondUser), {
-    masteryRank: 18,
+    masteryRank: 31,
   });
   assert.deepEqual(listPlayerInventory(second.sqlite, secondUser), [
     {
@@ -376,7 +380,7 @@ test("profile replacement is transactional and reports missing entities", async 
     wantedCount: 0,
   });
   const missingProfile = {
-    schemaVersion: 14,
+    schemaVersion: 15,
     exportedAt: "2026-10-13T12:00:00.000Z",
     player: {},
     inventory: [
@@ -565,7 +569,7 @@ test("profile replacement is transactional and reports missing entities", async 
         ...missingProfile,
         schemaVersion: 10,
       }),
-    /schemaVersion 14/,
+    /schemaVersion 15/,
   );
   assert.throws(
     () =>

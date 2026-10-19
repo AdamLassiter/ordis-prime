@@ -5,11 +5,12 @@ canonical entity IDs inside one installation, while exported profiles use
 provider identifiers so they can be restored into another installation whose
 canonical UUIDs differ.
 
-## Version 14 export
+## Version 15 export
 
-The player section carries the optional Mastery Rank used to evaluate sourced
-star-chart gates. Legendary players record rank 30 because all current numeric
-Mastery Rank gates are satisfied at that point.
+The player section carries an optional combined Mastery Rank used to evaluate
+sourced star-chart gates and build capacity. Values 0 through 30 are ordinary
+Mastery Ranks; 31 represents Legendary Rank 1, 32 represents Legendary Rank 2,
+and so on through the current forward-compatible input ceiling of 40.
 
 Each inventory entry includes:
 

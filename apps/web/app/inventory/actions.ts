@@ -12,4 +12,5 @@ export async function updateMasteryRank(form: FormData) {
   setPlayerMasteryRank(getDatabase(), session.user.id, masteryRank);
   revalidatePath("/inventory");
   revalidatePath("/planner");
+  revalidatePath("/builds");
 }

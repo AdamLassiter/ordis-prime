@@ -53,6 +53,8 @@ export interface PlayerSettings {
   masteryRank?: number;
 }
 
+export const MAX_COMBINED_MASTERY_RANK = 40;
+
 export function getPlayerSettings(
   sqlite: Database.Database,
   userId: string,
@@ -74,9 +76,13 @@ export function setPlayerMasteryRank(
   assertUser(sqlite, userId);
   if (
     masteryRank !== undefined &&
-    (!Number.isSafeInteger(masteryRank) || masteryRank < 0 || masteryRank > 30)
+    (!Number.isSafeInteger(masteryRank) ||
+      masteryRank < 0 ||
+      masteryRank > MAX_COMBINED_MASTERY_RANK)
   )
-    throw new Error("Mastery rank must be an integer between 0 and 30");
+    throw new Error(
+      `Combined mastery rank must be an integer between 0 and ${MAX_COMBINED_MASTERY_RANK}`,
+    );
   if (masteryRank === undefined) {
     sqlite.prepare("delete from player_profiles where user_id = ?").run(userId);
     return;
@@ -153,7 +159,7 @@ export interface PortableEntityReference {
 }
 
 export interface ProfileExport {
-  schemaVersion: 14;
+  schemaVersion: 15;
   exportedAt: string;
   player: PlayerSettings;
   inventory: Array<InventoryValues & { entity: PortableEntityReference }>;
@@ -341,7 +347,7 @@ export function exportPlayerProfile(
              source_id, namespace, value
   `);
   return {
-    schemaVersion: 14,
+    schemaVersion: 15,
     exportedAt: new Date().toISOString(),
     player: getPlayerSettings(sqlite, userId),
     inventory: inventory.map(({ entityId, kind, slug, name, ...values }) => ({
@@ -953,7 +959,7 @@ export function importPlayerProfile(
 function parseProfile(value: unknown): ProfileExport {
   if (
     !isRecord(value) ||
-    value.schemaVersion !== 14 ||
+    value.schemaVersion !== 15 ||
     !isRecord(value.player) ||
     !Array.isArray(value.inventory) ||
     !Array.isArray(value.goals) ||
@@ -964,17 +970,17 @@ function parseProfile(value: unknown): ProfileExport {
     !Array.isArray(value.builds)
   )
     throw new Error(
-      "Profile must use schemaVersion 14 and contain player settings plus every portable state array",
+      "Profile must use schemaVersion 15 and contain player settings plus every portable state array",
     );
   const masteryRank = value.player.masteryRank;
   if (
     masteryRank !== undefined &&
     (!Number.isSafeInteger(masteryRank) ||
       (masteryRank as number) < 0 ||
-      (masteryRank as number) > 30)
+      (masteryRank as number) > MAX_COMBINED_MASTERY_RANK)
   )
     throw new Error(
-      "Profile player masteryRank must be an integer between 0 and 30",
+      `Profile player masteryRank must be an integer between 0 and ${MAX_COMBINED_MASTERY_RANK}`,
     );
   const inventory = value.inventory.map((entry, index) => {
     if (!isRecord(entry))
@@ -1062,7 +1068,7 @@ function parseProfile(value: unknown): ProfileExport {
     parsePortableBuild(entry, index),
   );
   return {
-    schemaVersion: 14,
+    schemaVersion: 15,
     exportedAt: typeof value.exportedAt === "string" ? value.exportedAt : "",
     player: { masteryRank: masteryRank as number | undefined },
     inventory,

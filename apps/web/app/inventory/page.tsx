@@ -27,17 +27,18 @@ export default async function InventoryPage() {
       <section className="card">
         <h2>Progression</h2>
         <p className="muted">
-          Your rank is used only to explain documented star-chart gates.
-          Legendary players can use rank 30.
+          Your combined rank is used for documented star-chart gates and build
+          capacity. Enter 31 for Legendary Rank 1, 32 for Legendary Rank 2, and
+          so on.
         </p>
         <form className="form-stack compact-form" action={updateMasteryRank}>
           <label>
-            Mastery Rank
+            Combined Mastery Rank
             <input
               name="masteryRank"
               type="number"
               min="0"
-              max="30"
+              max="40"
               defaultValue={settings.masteryRank}
               placeholder="Not recorded"
             />
