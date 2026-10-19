@@ -4,6 +4,7 @@ import {
   externalKey,
   normalizedAlias,
   resolveEntity,
+  type CanonicalEntity,
   type EntityId,
   type EntityObservation,
   type ResolutionState,
@@ -124,5 +125,44 @@ test("alias matching respects known kinds and only typed evidence refines unknow
       { entities, aliases, externalIds: new Map() },
     ),
     { status: "matched", entityId: unknown, by: "alias" },
+  );
+});
+
+test("an exact kind alias outranks an unknown placeholder", () => {
+  const placeholder = "unknown:jade" as EntityId;
+  const warframe = "warframe:jade" as EntityId;
+  const entities = new Map<EntityId, CanonicalEntity>([
+    [
+      placeholder,
+      {
+        id: placeholder,
+        kind: "unknown",
+        name: "Jade",
+        slug: "jade-colour-picker",
+        retired: false,
+      },
+    ],
+    [
+      warframe,
+      {
+        id: warframe,
+        kind: "warframe",
+        name: "Jade",
+        slug: "jade",
+        retired: false,
+      },
+    ],
+  ]);
+
+  assert.deepEqual(
+    resolveEntity(
+      { ...base, kind: "warframe", fields: { name: "Jade" } },
+      {
+        entities,
+        aliases: new Map([[normalizedAlias("Jade"), [placeholder, warframe]]]),
+        externalIds: new Map(),
+      },
+    ),
+    { status: "matched", entityId: warframe, by: "alias" },
   );
 });

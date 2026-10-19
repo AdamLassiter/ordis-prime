@@ -36,7 +36,7 @@ ranking comparison are implemented. Builds retain configuration labels, current
 equipment ranks, Forma counts and capacity-upgrade state. Equipment slots and
 specialized weapon arcanes enforce cited canonical classes. Player-authored mod
 slot roles and polarities are preserved independently. Calculated capacity,
-sourced factory slot layouts and non-weapon maximum-rank coverage, structured
+sourced factory slot layouts and companion maximum-rank coverage, structured
 modular-weapon parts, and richer
 ranking methodology remain. An
 opt-in ordinal median/range summary is implemented with its assumptions visible.

@@ -8,12 +8,14 @@ import { ManualRankingAdapter } from "./adapters/manual-ranking.ts";
 import { ManualDiscoveryAdapter } from "./adapters/manual-discovery.ts";
 import { ManualFactsAdapter } from "./adapters/manual-facts.ts";
 import { WarframeWikiWeaponsAdapter } from "./adapters/warframe-wiki-weapons.ts";
+import { WarframeWikiWarframesAdapter } from "./adapters/warframe-wiki-warframes.ts";
 import { refreshWorldState, WfcdWorldStateAdapter } from "./world-state.ts";
 
 const adapters = {
   "wfcd-items": () => new WfcdItemsAdapter(),
   "wfcd-drops": () => new WfcdDropsAdapter(),
   "warframe-wiki-weapons": () => new WarframeWikiWeaponsAdapter(),
+  "warframe-wiki-warframes": () => new WarframeWikiWarframesAdapter(),
 } as const;
 
 async function main(): Promise<void> {

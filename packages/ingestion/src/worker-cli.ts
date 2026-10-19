@@ -7,6 +7,7 @@ import { runWorkerCycle } from "./worker.ts";
 import { WfcdDropsAdapter } from "./adapters/wfcd-drops.ts";
 import { WfcdItemsAdapter } from "./adapters/wfcd-items.ts";
 import { WarframeWikiWeaponsAdapter } from "./adapters/warframe-wiki-weapons.ts";
+import { WarframeWikiWarframesAdapter } from "./adapters/warframe-wiki-warframes.ts";
 
 const dataDirectory =
   process.env.ORDIS_DATA_DIR ??
@@ -72,6 +73,7 @@ const catalogAdapters = [
   new WfcdItemsAdapter(),
   new WfcdDropsAdapter(),
   new WarframeWikiWeaponsAdapter(),
+  new WarframeWikiWarframesAdapter(),
 ];
 process.stdout.write(
   `${JSON.stringify({ event: "worker-started", owner, databasePath, refreshInterval, catalogRefreshInterval, jobHistoryLimit, worldStateSnapshotHistoryLimit, notificationRetentionMilliseconds, catalogReleaseHistoryLimit, sourceRefreshHistoryLimit, snapshotPruneGraceMilliseconds })}\n`,

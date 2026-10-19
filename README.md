@@ -20,7 +20,7 @@ from.
 - portable profile export and merge/replace import
 - two-service Docker Compose deployment over one durable data volume
 - deterministic domain and adapter tests
-- automated, source-attributed WARFRAME Wiki weapon-rank enrichment
+- automated, source-attributed WARFRAME Wiki equipment-rank enrichment
 - generated initial SQLite migration
 
 The application treats WFCD datasets and selected structured WARFRAME Wiki
@@ -41,7 +41,7 @@ pnpm test
 pnpm check
 pnpm build
 pnpm db:migrate
-pnpm data:refresh wfcd-items wfcd-drops warframe-wiki-weapons
+pnpm data:refresh wfcd-items wfcd-drops warframe-wiki-weapons warframe-wiki-warframes
 pnpm data:refresh manual-ranking:data/manual/editorial.example.yaml
 pnpm data:refresh manual-discovery:data/manual/discovery.example.yaml
 pnpm data:refresh manual-facts:data/manual/facts.example.yaml

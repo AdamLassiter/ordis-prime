@@ -45,7 +45,7 @@ export function resolveEntity(
     observation.fields.name,
     ...(observation.aliases ?? []),
   ].filter((value): value is string => Boolean(value));
-  const aliases = new Set(
+  let aliases = new Set(
     names
       .flatMap((name) => state.aliases.get(normalizedAlias(name)) ?? [])
       .filter((entityId) => {
@@ -57,6 +57,14 @@ export function resolveEntity(
         );
       }),
   );
+  if (observation.kind !== "unknown") {
+    const exactKind = new Set(
+      [...aliases].filter(
+        (entityId) => state.entities.get(entityId)?.kind === observation.kind,
+      ),
+    );
+    if (exactKind.size) aliases = exactKind;
+  }
   if (aliases.size === 1)
     return { status: "matched", entityId: [...aliases][0]!, by: "alias" };
   if (aliases.size > 1)

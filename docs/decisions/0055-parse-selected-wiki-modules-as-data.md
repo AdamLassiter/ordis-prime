@@ -43,5 +43,5 @@ active run intact.
 - The Lua parser is an ingestion dependency, but provider code is never run.
 - The adapter is intentionally not a general-purpose Wiki scraper. Other data
   modules require their own schema validation, identity rules and ADR updates.
-- Maximum-rank coverage for Warframes, companions and Archwings remains a
-  documented gap.
+- ADR 0056 applies the same boundary to a separate Warframe/Archwing schema;
+  companion maximum rank remains a documented gap.

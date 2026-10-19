@@ -50,11 +50,13 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   are reversible and audited; their revision causes unchanged source bytes to
   promote as a new run so skipped observations can replay. Automatic sources
   are queued immediately, while manual sources require re-upload.
-  A structured WARFRAME Wiki adapter also imports cited weapon maximum ranks
-  from versioned Lua data modules without executing provider code. It does not
-  yet cover Warframe, companion or Archwing maximum ranks, factory polarities,
-  or arbitrary article content. The leased worker schedules WFCD item, drop,
-  and Wiki weapon refreshes daily, and an
+  Structured WARFRAME Wiki adapters also import cited weapon, Warframe and
+  Archwing maximum ranks from versioned Lua data modules without executing
+  provider code. The Wiki companion module does not expose a maximum-rank
+  field, so companion coverage remains absent rather than defaulted. The
+  adapters do not cover factory polarities or arbitrary article content. The
+  leased worker schedules WFCD item, drop, Wiki weapon and Wiki Warframe
+  refreshes daily, and an
   administrator can bring supported source jobs forward from the source UI. A provider-neutral world-state
   pipeline snapshots and transactionally promotes WFCD cycles, events, alerts,
   fissures and traders. A provider response older than the active observation
@@ -126,7 +128,7 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   per-mod unpolarized drain. Player-authored mod-slot roles and polarities are
   preserved independently of installed mods and drive a derived adjusted drain
   or capacity bonus at matching positions. Sourced factory slot layouts,
-  comprehensive non-weapon maximum ranks and whole-build capacity calculation remain. Builds can assign
+  comprehensive companion maximum ranks and whole-build capacity calculation remain. Builds can assign
   ranked arcanes and positioned Archon Shards with sourced effect selections.
   Arcane candidates and assignments enforce sourced broad and specialized weapon classes against
   equipped items in either assignment order. Equipment slots also enforce
