@@ -582,6 +582,27 @@ textarea {
 .star-node:hover {
   border-color: var(--cyan);
 }
+.star-chart-bulk {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+.star-chart-bulk:hover {
+  transform: none;
+  border-color: var(--line);
+}
+.star-chart-bulk h2,
+.star-chart-bulk p {
+  margin: 0;
+}
+.node-completion-check {
+  gap: 0.4rem;
+  color: var(--muted);
+  font-size: 0.82rem;
+  margin-top: 0.35rem;
+}
 .connection-explorer {
   margin-top: 1.5rem;
 }
@@ -624,4 +645,10 @@ textarea {
 }
 .progress-completed {
   border-color: var(--accent);
+}
+@media (max-width: 600px) {
+  .star-chart-bulk {
+    align-items: flex-start;
+    flex-direction: column;
+  }
 }

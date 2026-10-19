@@ -63,7 +63,9 @@ those cited star-chart edges compose into node reads symmetrically. A shareable
 focus view supports direct traversal without manufacturing map coordinates.
 Stable coordinates and richer quest-step progress remain.
 Private node completion tracking, chart filtering and portable profile transfer
-are implemented independently of sourced access evidence.
+are implemented independently of sourced access evidence. A filtered-scope bulk
+editor supports initial and ongoing completion entry without changing hidden
+nodes.
 Sourced Mastery Rank gates, including exact Wiki mission requirements, compose
 with portable private player progression; the Wiki mission source also
 contributes complete allow-listed quest and node-completion requirements.

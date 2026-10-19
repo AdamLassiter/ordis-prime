@@ -8,6 +8,8 @@
 - As a player, I can record quantities, built and wanted copies, and optional
   mastered or subsumed state.
 - As a player, I can filter a node to rewards I still need.
+- As a player, I can record completion for a filtered group of star-chart nodes
+  without changing nodes hidden by those filters.
 - As a player, I can set goals and receive candidate nodes with a visible reason,
   rather than an unexplained score.
 - As an administrator, I can see dataset freshness, import failures, conflicts

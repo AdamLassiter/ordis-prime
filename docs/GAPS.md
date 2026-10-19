@@ -172,8 +172,9 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   unknown access states from the same quest-progress and Mastery evidence as the
   planner. Connectivity remains navigation evidence rather than proof of player
   completion. Signed-in players can record private node completion, filter the
-  chart by completion and transfer that state in profiles. There is no bulk
-  completion editor, automatic game-account import, Junction-objective progress
+  chart by completion and transfer that state in profiles. A bulk editor
+  atomically replaces completion only for its explicitly submitted filtered
+  scope. There is no automatic game-account import, Junction-objective progress
   or node-variant completion model yet. Stable visual positions are still
   missing.
 - A public discovery atlas searches canonical quest, ability, enemy, boss,

@@ -6,6 +6,7 @@ import {
 } from "@ordis-prime/domain";
 import { getDatabase } from "@/lib/database";
 import { getCurrentSession } from "@/lib/session";
+import { updateVisibleNodeCompletions } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -182,6 +183,24 @@ export default async function StarChartPage({
           )}
         </section>
       )}
+      {session && nodes.length > 0 && (
+        <form
+          action={updateVisibleNodeCompletions}
+          className="card star-chart-bulk"
+          id="star-chart-completion"
+        >
+          <div>
+            <h2>Edit visible node completion</h2>
+            <p className="muted">
+              Check every completed node below, then save. Only these{" "}
+              {nodes.length} filtered{" "}
+              {nodes.length === 1 ? "node is" : "nodes are"} changed; nodes
+              hidden by the current filters keep their existing state.
+            </p>
+          </div>
+          <button className="button">Save visible completion</button>
+        </form>
+      )}
       {[...planets.entries()]
         .sort(([left], [right]) => left.localeCompare(right))
         .map(([planet, planetNodes]) => (
@@ -190,6 +209,14 @@ export default async function StarChartPage({
             <div className="node-grid">
               {planetNodes.map((node) => (
                 <article className="star-node" key={node.slug}>
+                  {session && (
+                    <input
+                      form="star-chart-completion"
+                      name="node"
+                      type="hidden"
+                      value={node.slug}
+                    />
+                  )}
                   <h3>
                     <Link href={`/nodes/${node.slug}`}>{node.name}</Link>
                   </h3>
@@ -221,6 +248,18 @@ export default async function StarChartPage({
                     <span className={`tag progress-${node.completionState}`}>
                       {node.completionState}
                     </span>
+                  )}
+                  {session && node.completionState && (
+                    <label className="check-label node-completion-check">
+                      <input
+                        defaultChecked={node.completionState === "completed"}
+                        form="star-chart-completion"
+                        name="completed"
+                        type="checkbox"
+                        value={node.slug}
+                      />
+                      Completed
+                    </label>
                   )}
                   {node.connectionCount > 0 && (
                     <Link

@@ -1,6 +1,6 @@
 # 0067: Node completion is private player state
 
-Status: accepted
+Status: accepted; bulk editing added by decision 0070
 
 ## Context
 
@@ -34,5 +34,7 @@ derive it from sourced connections or access requirements.
 - Signed-out users do not receive a fabricated default for private state.
 - Imported node-completion prerequisites consume this state without overloading
   discovery progress, as specified by decision 0068.
+- Filtered bulk edits replace only their explicit visible scope, as specified by
+  decision 0070.
 - The current UI records only completed versus incomplete; objective-level
   Junction progress and mission variants need their own models.

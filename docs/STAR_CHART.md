@@ -55,6 +55,9 @@ and filter the chart by completed or incomplete nodes. Absence of private state
 means incomplete. Completion is not used as a synonym for access: clearing a
 node does not rewrite sourced prerequisites, and a connection does not mark
 either endpoint complete. Completed nodes are part of portable player profiles.
+The chart also provides a bulk editor for the currently filtered nodes. Its
+explicit submitted scope means checked and unchecked visible nodes are updated
+atomically while nodes hidden by the filters remain untouched.
 
 ## Current compromise
 
@@ -66,4 +69,4 @@ before a visual graph is honest.
 
 Enemy and quest identities are imported, but richer domain-specific facts and
 complete curated discovery links remain future work.
-There is not yet a bulk completion workflow or automatic account-state import.
+There is not yet automatic account-state import.
