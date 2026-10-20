@@ -214,6 +214,11 @@ test("wiki mission adapter imports only complete quest and node requirements", a
         namespace: "quest-name",
       },
       {
+        node: "Elite Sanctuary Onslaught",
+        prerequisite: "The New Strange",
+        namespace: "quest-name",
+      },
+      {
         node: "Lower Vehrvod",
         prerequisite: "The Hex",
         namespace: "quest-name",
@@ -234,6 +239,15 @@ test("wiki mission adapter imports only complete quest and node requirements", a
         namespace: "mission-name",
       },
     ],
+  );
+  assert.deepEqual(
+    observations.flatMap((observation) =>
+      observation.type === "node-detail" &&
+      observation.nodeExternalId.value === "Elite Sanctuary Onslaught"
+        ? [observation.warframeRankRequirement]
+        : [],
+    ),
+    [30],
   );
 });
 
@@ -406,6 +420,29 @@ test("wiki mission adapter rejects an out-of-range Railjack Intrinsic gate", asy
       `),
     ),
     /Railjack Intrinsic requirement is invalid/,
+  );
+});
+
+test("wiki mission adapter rejects an out-of-range Warframe rank gate", async () => {
+  await assert.rejects(
+    collect(
+      new WarframeWikiMissionsAdapter(),
+      wikiSnapshot(
+        `
+          return {
+            MissionDetails = {
+              { Name = "Elite", Planet = "Sanctuary", Requirements = "Must have [[The New Strange]] completed to access and a level 31 Warframe" },
+            },
+          }
+        `,
+        `
+          return {
+            ["The New Strange"] = { Name = "The New Strange", Link = "The New Strange", Type = "Optional Quest" },
+          }
+        `,
+      ),
+    ),
+    /Warframe rank requirement is invalid/,
   );
 });
 

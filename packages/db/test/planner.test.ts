@@ -17,6 +17,7 @@ import {
   setNodeCompletion,
   setPlayerGoal,
   setPlayerActiveAdversary,
+  setPlayerHighestWarframeRank,
   setPlayerMasteryRank,
   setPlayerRailjackIntrinsicRank,
   setPlayerRecipePreference,
@@ -126,6 +127,7 @@ test("persisted goals expand through active recipes and produce named node reaso
       planet: "Earth",
       masteryRequirement: 10,
       railjackIntrinsicRequirement: 7,
+      warframeRankRequirement: 30,
       activeAdversaryRequirement: "kuva-lich",
       evidence: { ...evidence, sourceRecordKey: "node:details" },
     },
@@ -199,6 +201,12 @@ test("persisted goals expand through active recipes and produce named node reaso
   assert.deepEqual(plan.recommendations[0]?.activeAdversaryRequirement, {
     required: "kuva-lich",
     playerValue: undefined,
+    state: "unknown",
+    source: { name: "Items", citationUrl: undefined },
+  });
+  assert.deepEqual(plan.recommendations[0]?.warframeRankRequirement, {
+    required: 30,
+    playerRank: undefined,
     state: "unknown",
     source: { name: "Items", citationUrl: undefined },
   });
@@ -314,6 +322,16 @@ test("persisted goals expand through active recipes and produce named node reaso
     "blocked",
   );
   setPlayerActiveAdversary(sqlite, userId, "kuva-lich");
+  assert.equal(
+    buildAcquisitionPlan(sqlite, userId).recommendations[0]?.accessStatus,
+    "conditional",
+  );
+  setPlayerHighestWarframeRank(sqlite, userId, 29);
+  assert.equal(
+    buildAcquisitionPlan(sqlite, userId).recommendations[0]?.accessStatus,
+    "blocked",
+  );
+  setPlayerHighestWarframeRank(sqlite, userId, 30);
   assert.equal(
     buildAcquisitionPlan(sqlite, userId).recommendations[0]?.accessStatus,
     "available",

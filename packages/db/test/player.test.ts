@@ -35,6 +35,7 @@ import {
   setNodeCompletion,
   setPlayerGoal,
   setPlayerActiveAdversary,
+  setPlayerHighestWarframeRank,
   setPlayerMasteryRank,
   setPlayerRailjackIntrinsicRank,
   setPlayerRecipePreference,
@@ -64,6 +65,7 @@ test("profiles resolve stable source IDs across installations with different can
   setPlayerMasteryRank(first.sqlite, firstUser, 31);
   setPlayerRailjackIntrinsicRank(first.sqlite, firstUser, 7);
   setPlayerActiveAdversary(first.sqlite, firstUser, "kuva-lich");
+  setPlayerHighestWarframeRank(first.sqlite, firstUser, 30);
   assert.throws(
     () => setPlayerActiveAdversary(first.sqlite, firstUser, "wolf" as never),
     /Active adversary is invalid/,
@@ -82,10 +84,15 @@ test("profiles resolve stable source IDs across installations with different can
     () => setPlayerRailjackIntrinsicRank(first.sqlite, firstUser, 11),
     /between 0 and 10/,
   );
+  assert.throws(
+    () => setPlayerHighestWarframeRank(first.sqlite, firstUser, 31),
+    /between 0 and 30/,
+  );
   setPlayerMasteryRank(first.sqlite, firstUser, undefined);
   assert.deepEqual(getPlayerSettings(first.sqlite, firstUser), {
     masteryRank: undefined,
     railjackIntrinsicRank: 7,
+    highestWarframeRank: 30,
     activeAdversary: "kuva-lich",
   });
   setPlayerMasteryRank(first.sqlite, firstUser, 31);
@@ -93,6 +100,7 @@ test("profiles resolve stable source IDs across installations with different can
   assert.deepEqual(getPlayerSettings(first.sqlite, firstUser), {
     masteryRank: 31,
     railjackIntrinsicRank: undefined,
+    highestWarframeRank: 30,
     activeAdversary: "kuva-lich",
   });
   setPlayerRailjackIntrinsicRank(first.sqlite, firstUser, 7);
@@ -209,7 +217,7 @@ test("profiles resolve stable source IDs across installations with different can
     "ability-strength",
   );
   const profile = exportPlayerProfile(first.sqlite, firstUser);
-  assert.equal(profile.schemaVersion, 18);
+  assert.equal(profile.schemaVersion, 19);
   assert.equal(profile.nodeProgress[0]?.node.slug, "e-prime");
   const secondUser = createLocalUser(second.sqlite, { username: "Importer" });
   const result = importPlayerProfile(second.sqlite, secondUser, profile);
@@ -228,6 +236,7 @@ test("profiles resolve stable source IDs across installations with different can
   assert.deepEqual(getPlayerSettings(second.sqlite, secondUser), {
     masteryRank: 31,
     railjackIntrinsicRank: 7,
+    highestWarframeRank: 30,
     activeAdversary: "kuva-lich",
   });
   assert.deepEqual(listPlayerInventory(second.sqlite, secondUser), [
@@ -424,7 +433,7 @@ test("profile replacement is transactional and reports missing entities", async 
     wantedCount: 0,
   });
   const missingProfile = {
-    schemaVersion: 18,
+    schemaVersion: 19,
     exportedAt: "2026-10-13T12:00:00.000Z",
     player: {},
     inventory: [
@@ -618,7 +627,7 @@ test("profile replacement is transactional and reports missing entities", async 
         ...missingProfile,
         schemaVersion: 10,
       }),
-    /schemaVersion 18/,
+    /schemaVersion 19/,
   );
   assert.throws(
     () =>
@@ -627,6 +636,14 @@ test("profile replacement is transactional and reports missing entities", async 
         player: { activeAdversary: "wolf" },
       }),
     /activeAdversary is invalid/,
+  );
+  assert.throws(
+    () =>
+      importPlayerProfile(catalog.sqlite, userId, {
+        ...missingProfile,
+        player: { highestWarframeRank: 31 },
+      }),
+    /highestWarframeRank must be an integer between 0 and 30/,
   );
   assert.throws(
     () =>

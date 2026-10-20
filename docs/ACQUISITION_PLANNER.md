@@ -44,6 +44,9 @@ Active-adversary confrontation gates retain their complete Intrinsics or quest
 clauses and compare the cited kind with the player's private none-or-kind
 setting. An unrecorded setting remains conditional rather than being treated as
 none.
+The Elite Sanctuary Onslaught recommendation similarly retains The New Strange
+and compares its cited level-30 Warframe gate with the player's private highest
+currently available Warframe rank.
 Exact item-only gates for supported beacons, Judgement Points, Grendel Locators
 and the Mutalist Alad V key retain a canonical inventory item and required
 quantity. The planner compares that fact with private owned plus built counts
@@ -59,9 +62,10 @@ documented drop chance. Unresolved provider node labels cannot produce an
 opportunity.
 
 Node access currently covers curated quest, mechanic, secret, enemy and boss
-relations, structured quest, node-completion, Railjack Intrinsics and active
-adversary Wiki requirements, sourced numeric Mastery Rank gates, and
-allow-listed exact item quantity gates. Junction rules and other compound conditions, market acquisition, relic
-refinement, and rotation-specific mission duration are not yet modeled.
+relations; structured quest, node-completion, Railjack Intrinsics, active
+adversary and Warframe-rank Wiki requirements; sourced numeric Mastery Rank
+gates; and allow-listed exact item quantity gates. Junction rules, other
+compound conditions, market acquisition, relic refinement and
+rotation-specific mission duration are not yet modeled.
 Those inputs should extend the planning read model rather than becoming UI-only
 heuristics.

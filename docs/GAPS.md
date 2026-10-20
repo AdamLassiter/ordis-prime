@@ -70,6 +70,8 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   quest-and-Intrinsics expressions populate a separate cited gate. Exact Kuva
   Lich, Sister of Parvos and Technocyte Coda confrontation expressions retain
   every supported rank or quest clause plus a typed active-adversary gate.
+  The complete Elite Sanctuary Onslaught expression retains The New Strange
+  plus its typed level-30 Warframe gate.
   Exact item-only Animo Nav Beacon, Judgement Point, Grendel Locator and
   Mutalist Alad V Assassinate Key expressions populate cited quantity gates
   that compose with private inventory. Other items and mixed item conditions
@@ -130,8 +132,9 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   opportunities. Players can inspect and persist alternative recipe choices by
   stable source record identity. Profiles also carry the player's optional
   Mastery Rank, highest Railjack Intrinsic category rank and current
-  none-or-kind adversary state as private progression inputs. Planning composes
-  cited discovery prerequisites
+  none-or-kind adversary state as private progression inputs. A separate
+  highest currently available Warframe rank supports equipment-rank gates.
+  Planning composes cited discovery prerequisites
   into available, conditional, blocked and unknown node access states. Sourced
   numeric Mastery and Railjack Intrinsics gates compose with separate private
   portable player ranks. Exact cited beacon, Judgement Point, Grendel Locator
@@ -209,11 +212,11 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   cited neighbors; a spatial graph view remains.
 - Acquisition recommendations compose active `requires` and `unlocks` relations
   with private discovery completion and sourced node Mastery Rank or Railjack
-  Intrinsics requirements
-  and allow-listed item quantities to show cited blockers. Node pages expose the same cited requirements and
+  Intrinsics requirements and allow-listed item quantities to show cited
+  blockers. Node pages expose the same cited requirements and
   private discovery or node-completion progress. Nodes without access evidence
-  stay unknown. Junction objectives and other compound rank or item conditions
-  still need typed models.
+  stay unknown. Junction objectives and other compound equipment or item
+  conditions still need typed models.
 
 ## Deliberate compromises
 

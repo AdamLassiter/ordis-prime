@@ -13,6 +13,7 @@ export async function updateProgression(form: FormData) {
   const session = await requireCurrentSession();
   const masteryRaw = String(form.get("masteryRank") ?? "").trim();
   const intrinsicRaw = String(form.get("railjackIntrinsicRank") ?? "").trim();
+  const warframeRankRaw = String(form.get("highestWarframeRank") ?? "").trim();
   const adversaryRaw = String(form.get("activeAdversary") ?? "").trim();
   let activeAdversary: PlayerActiveAdversary | undefined;
   if (adversaryRaw) {
@@ -24,6 +25,8 @@ export async function updateProgression(form: FormData) {
     masteryRank: masteryRaw === "" ? undefined : Number(masteryRaw),
     railjackIntrinsicRank:
       intrinsicRaw === "" ? undefined : Number(intrinsicRaw),
+    highestWarframeRank:
+      warframeRankRaw === "" ? undefined : Number(warframeRankRaw),
     activeAdversary,
   });
   revalidatePath("/inventory");

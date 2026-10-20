@@ -31,7 +31,9 @@ export default async function InventoryPage() {
           capacity; enter 31 for Legendary Rank 1, 32 for Legendary Rank 2, and
           so on. Railjack access uses the highest rank you have reached in any
           Railjack Intrinsics category. Only one adversary can be active; choose
-          None to record that explicitly, or leave it unknown.
+          None to record that explicitly, or leave it unknown. The highest
+          available Warframe rank is used only for node rules that require a
+          currently usable ranked Warframe.
         </p>
         <form className="form-stack compact-form" action={updateProgression}>
           <label>
@@ -68,6 +70,17 @@ export default async function InventoryPage() {
               <option value="sister-of-parvos">Sister of Parvos</option>
               <option value="technocyte-coda">Technocyte Coda</option>
             </select>
+          </label>
+          <label>
+            Highest available Warframe rank
+            <input
+              name="highestWarframeRank"
+              type="number"
+              min="0"
+              max="30"
+              defaultValue={settings.highestWarframeRank}
+              placeholder="Not recorded"
+            />
           </label>
           <button className="button">Save progression</button>
         </form>

@@ -59,6 +59,12 @@ export interface AcquisitionPlan {
       state: "met" | "blocked" | "unknown";
       source: { name: string; citationUrl?: string };
     };
+    warframeRankRequirement?: {
+      required: number;
+      playerRank?: number;
+      state: "met" | "blocked" | "unknown";
+      source: { name: string; citationUrl?: string };
+    };
     activeAdversaryRequirement?: {
       required: AdversaryKind;
       playerValue?: PlayerActiveAdversary;
@@ -235,6 +241,7 @@ export function buildAcquisitionPlan(
   const playerSettings = getPlayerSettings(sqlite, userId);
   const playerMasteryRank = playerSettings.masteryRank;
   const playerRailjackIntrinsicRank = playerSettings.railjackIntrinsicRank;
+  const playerHighestWarframeRank = playerSettings.highestWarframeRank;
   const playerActiveAdversary = playerSettings.activeAdversary;
   const goals = listPlayerGoals(sqlite, userId);
   const inventoryRows = sqlite
@@ -410,6 +417,12 @@ export function buildAcquisitionPlan(
     "railjack_intrinsic_requirement",
     playerRailjackIntrinsicRank,
   );
+  const warframeRankRequirements = loadNodeRankRequirements(
+    sqlite,
+    new Set(recommendedNodes.flatMap(({ nodeId }) => (nodeId ? [nodeId] : []))),
+    "warframe_rank_requirement",
+    playerHighestWarframeRank,
+  );
   const itemRequirements = loadNodeItemRequirements(
     sqlite,
     userId,
@@ -433,6 +446,9 @@ export function buildAcquisitionPlan(
         : undefined;
       const railjackIntrinsicRequirement = recommendation.nodeId
         ? railjackIntrinsicRequirements.get(recommendation.nodeId)
+        : undefined;
+      const warframeRankRequirement = recommendation.nodeId
+        ? warframeRankRequirements.get(recommendation.nodeId)
         : undefined;
       const nodeItemRequirements = recommendation.nodeId
         ? (itemRequirements.get(recommendation.nodeId) ?? [])
@@ -458,6 +474,8 @@ export function buildAcquisitionPlan(
           playerRank: masteryRequirement?.playerRank,
           railjackIntrinsicRequirement: railjackIntrinsicRequirement?.required,
           playerRailjackIntrinsicRank: railjackIntrinsicRequirement?.playerRank,
+          warframeRankRequirement: warframeRankRequirement?.required,
+          playerHighestWarframeRank: warframeRankRequirement?.playerRank,
           itemRequirementStates: nodeItemRequirements.map(({ state }) => state),
           activeAdversaryRequirement: activeAdversaryRequirement?.required,
           playerActiveAdversary: activeAdversaryRequirement?.playerValue,
@@ -465,6 +483,7 @@ export function buildAcquisitionPlan(
         accessRequirements,
         masteryRequirement,
         railjackIntrinsicRequirement,
+        warframeRankRequirement,
         itemRequirements: nodeItemRequirements,
         activeAdversaryRequirement,
         reasons: [
@@ -650,7 +669,10 @@ function loadNodeAdversaryRequirements(
 function loadNodeRankRequirements(
   sqlite: Database.Database,
   nodeIds: Set<EntityId>,
-  column: "mastery_requirement" | "railjack_intrinsic_requirement",
+  column:
+    | "mastery_requirement"
+    | "railjack_intrinsic_requirement"
+    | "warframe_rank_requirement",
   playerRank: number | undefined,
 ): Map<
   string,

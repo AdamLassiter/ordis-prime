@@ -32,6 +32,8 @@ closed as a whole.
 Exact Kuva Lich, Sister of Parvos and Technocyte Coda confrontation expressions
 become typed adversary gates while retaining their complete Intrinsics or quest
 clauses.
+The exact Elite Sanctuary Onslaught expression retains its quest relation and
+adds a numeric level-30 Warframe gate.
 Exact item-only expressions for Animo Nav Beacons, Judgement Points, Grendel
 Locators and the Mutalist Alad V Assassinate Key become cited
 node/item/quantity facts. They reconcile to the same canonical resources used
@@ -58,6 +60,9 @@ the item page links back to nodes that consume it for access.
 Adversary gates compare the required kind with the player's private active
 adversary. Explicitly recording none or another kind blocks the node; leaving
 the setting unrecorded keeps it conditional.
+The Warframe-rank gate compares with the player's private highest rank among
+currently available Warframes; it is not inferred from mastery history or build
+drafts.
 The chart derives the same available, conditional, blocked or unknown state for
 every node and can filter by it. It does not persist that state or infer access
 from graph connectivity. Guests therefore see private-input-dependent evidence

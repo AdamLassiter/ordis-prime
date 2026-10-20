@@ -115,6 +115,7 @@ export interface CatalogNode {
   maximumEnemyLevel?: number;
   masteryRequirement?: number;
   railjackIntrinsicRequirement?: number;
+  warframeRankRequirement?: number;
   activeAdversaryRequirement?: AdversaryKind;
   completionState?: "incomplete" | "completed";
   detailEvidence: Array<{
@@ -1054,6 +1055,7 @@ type NodeDetails = Pick<
   | "maximumEnemyLevel"
   | "masteryRequirement"
   | "railjackIntrinsicRequirement"
+  | "warframeRankRequirement"
   | "activeAdversaryRequirement"
   | "detailEvidence"
 >;
@@ -1070,6 +1072,7 @@ function loadNodeDetails(
       detail.faction, detail.minimum_enemy_level as minimumEnemyLevel,
       detail.maximum_enemy_level as maximumEnemyLevel, detail.mastery_requirement as masteryRequirement,
       detail.railjack_intrinsic_requirement as railjackIntrinsicRequirement,
+      detail.warframe_rank_requirement as warframeRankRequirement,
       detail.active_adversary_requirement as activeAdversaryRequirement,
       source.name as sourceName, run.version, detail.source_record_key as recordKey,
       detail.source_path as sourcePath, detail.citation_url as citationUrl
@@ -1089,6 +1092,7 @@ function loadNodeDetails(
     maximumEnemyLevel: number | null;
     masteryRequirement: number | null;
     railjackIntrinsicRequirement: number | null;
+    warframeRankRequirement: number | null;
     activeAdversaryRequirement: AdversaryKind | null;
     sourceName: string;
     version: string;
@@ -1107,6 +1111,8 @@ function loadNodeDetails(
     current.masteryRequirement ??= row.masteryRequirement ?? undefined;
     current.railjackIntrinsicRequirement ??=
       row.railjackIntrinsicRequirement ?? undefined;
+    current.warframeRankRequirement ??=
+      row.warframeRankRequirement ?? undefined;
     current.activeAdversaryRequirement ??=
       row.activeAdversaryRequirement ?? undefined;
     current.detailEvidence.push({

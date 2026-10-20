@@ -459,9 +459,10 @@ function promoteInTransaction(
           `
         insert into node_details
           (id, entity_id, planet, mission_type, faction, minimum_enemy_level, maximum_enemy_level,
-           mastery_requirement, railjack_intrinsic_requirement, active_adversary_requirement,
-           node_type, source_run_id, source_record_key, citation_url, source_path)
-        values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+           mastery_requirement, railjack_intrinsic_requirement, warframe_rank_requirement,
+           active_adversary_requirement, node_type, source_run_id, source_record_key,
+           citation_url, source_path)
+        values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
         )
         .run(
@@ -474,6 +475,7 @@ function promoteInTransaction(
           observation.maximumEnemyLevel ?? null,
           observation.masteryRequirement ?? null,
           observation.railjackIntrinsicRequirement ?? null,
+          observation.warframeRankRequirement ?? null,
           observation.activeAdversaryRequirement ?? null,
           observation.nodeType ?? null,
           sourceRunId,
@@ -1451,6 +1453,7 @@ function validateInput(input: PromoteSourceInput): void {
           "Railjack Intrinsic requirement",
           observation.railjackIntrinsicRequirement,
         ],
+        ["Warframe rank requirement", observation.warframeRankRequirement],
         ["node type", observation.nodeType],
       ] as const) {
         if (value !== undefined && (!Number.isInteger(value) || value < 0))
@@ -1470,6 +1473,13 @@ function validateInput(input: PromoteSourceInput): void {
       )
         throw new Error(
           "Node detail Railjack Intrinsic requirement cannot exceed 10",
+        );
+      if (
+        observation.warframeRankRequirement !== undefined &&
+        observation.warframeRankRequirement > 30
+      )
+        throw new Error(
+          "Node detail Warframe rank requirement cannot exceed 30",
         );
       if (
         observation.activeAdversaryRequirement !== undefined &&

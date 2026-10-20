@@ -185,6 +185,7 @@ export interface NodeDetailObservation {
   maximumEnemyLevel?: number;
   masteryRequirement?: number;
   railjackIntrinsicRequirement?: number;
+  warframeRankRequirement?: number;
   activeAdversaryRequirement?: AdversaryKind;
   nodeType?: number;
   evidence: Evidence;

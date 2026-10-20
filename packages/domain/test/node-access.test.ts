@@ -122,4 +122,27 @@ test("missing private progress remains conditional rather than guessed", () => {
     }),
     "available",
   );
+  assert.equal(
+    deriveNodeAccessStatus({
+      requirementStates: [],
+      warframeRankRequirement: 30,
+    }),
+    "conditional",
+  );
+  assert.equal(
+    deriveNodeAccessStatus({
+      requirementStates: [],
+      warframeRankRequirement: 30,
+      playerHighestWarframeRank: 29,
+    }),
+    "blocked",
+  );
+  assert.equal(
+    deriveNodeAccessStatus({
+      requirementStates: [],
+      warframeRankRequirement: 30,
+      playerHighestWarframeRank: 30,
+    }),
+    "available",
+  );
 });

@@ -22,7 +22,7 @@ import {
   wikiSlug,
 } from "./mediawiki-lua.ts";
 
-const PARSER_VERSION = "warframe-wiki-missions-v8";
+const PARSER_VERSION = "warframe-wiki-missions-v9";
 const MODULE_TITLE = "Module:Missions/data";
 const QUEST_MODULE_TITLE = "Module:Keys/data";
 
@@ -53,6 +53,7 @@ interface AccessReference {
 interface ParsedAccessRequirements {
   references: AccessReference[];
   railjackIntrinsicRequirement?: number;
+  warframeRankRequirement?: number;
   activeAdversaryRequirement?: AdversaryKind;
 }
 
@@ -218,6 +219,8 @@ export class WarframeWikiMissionsAdapter implements SourceAdapter {
         masteryRequirement: record.masteryRequirement,
         railjackIntrinsicRequirement: accessRequirements.get(record.name)
           ?.railjackIntrinsicRequirement,
+        warframeRankRequirement: accessRequirements.get(record.name)
+          ?.warframeRankRequirement,
         activeAdversaryRequirement: accessRequirements.get(record.name)
           ?.activeAdversaryRequirement,
         evidence: evidence(page.revisionId, snapshot, record.name, record.line),
@@ -425,10 +428,9 @@ function parseAccessRequirements(
     })
     .replace(/\s+/g, " ")
     .trim();
-  const normalizedShape = shape.replace(
-    /(\[\[INTRINSICS\]\] Rank) \d+/,
-    "$1 [[RANK]]",
-  );
+  const normalizedShape = shape
+    .replace(/(\[\[INTRINSICS\]\] Rank) \d+/, "$1 [[RANK]]")
+    .replace(/(a level) \d+ (Warframe)/, "$1 [[WARFRAME_RANK]] $2");
   if (
     !new Set([
       "Must have [[QUEST]] completed to access",
@@ -445,6 +447,7 @@ function parseAccessRequirements(
       "Must have [[QUEST]] completed and [[INTRINSICS]] Rank [[RANK]] or higher to access and [[QUEST]] completed",
       "Must have [[INTRINSICS]] Rank [[RANK]] or higher and an active [[ADVERSARY]] to access",
       "Must complete [[QUEST]] quest to access and active [[ADVERSARY]].",
+      "Must have [[QUEST]] completed to access and a level [[WARFRAME_RANK]] Warframe",
     ]).has(normalizedShape)
   )
     return { references: [] };
@@ -460,6 +463,19 @@ function parseAccessRequirements(
   )
     throw new Error(
       "WARFRAME Wiki mission Railjack Intrinsic requirement is invalid",
+    );
+  const warframeRankMatch = shape.match(/a level (\d+) Warframe/);
+  const warframeRankRequirement = warframeRankMatch
+    ? Number(warframeRankMatch[1])
+    : undefined;
+  if (
+    warframeRankRequirement !== undefined &&
+    (!Number.isSafeInteger(warframeRankRequirement) ||
+      warframeRankRequirement < 0 ||
+      warframeRankRequirement > 30)
+  )
+    throw new Error(
+      "WARFRAME Wiki mission Warframe rank requirement is invalid",
     );
   const references = resolved.filter(
     (reference): reference is AccessReference =>
@@ -482,6 +498,9 @@ function parseAccessRequirements(
     ...(railjackIntrinsicRequirement === undefined
       ? {}
       : { railjackIntrinsicRequirement }),
+    ...(warframeRankRequirement === undefined
+      ? {}
+      : { warframeRankRequirement }),
     ...(activeAdversaryRequirement === undefined
       ? {}
       : { activeAdversaryRequirement }),

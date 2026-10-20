@@ -45,6 +45,8 @@ export default async function StarChartPage({
         playerRank: playerSettings?.masteryRank,
         railjackIntrinsicRequirement: node.railjackIntrinsicRequirement,
         playerRailjackIntrinsicRank: playerSettings?.railjackIntrinsicRank,
+        warframeRankRequirement: node.warframeRankRequirement,
+        playerHighestWarframeRank: playerSettings?.highestWarframeRank,
         itemRequirementStates: node.itemRequirements.map(({ state }) => state),
         activeAdversaryRequirement: node.activeAdversaryRequirement,
         playerActiveAdversary: playerSettings?.activeAdversary,

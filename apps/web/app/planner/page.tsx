@@ -373,6 +373,40 @@ export default async function Planner() {
                           </span>
                         </p>
                       )}
+                      {recommendation.warframeRankRequirement && (
+                        <p>
+                          Available Warframe Rank{" "}
+                          {recommendation.warframeRankRequirement.required}:{" "}
+                          {recommendation.warframeRankRequirement.state ===
+                          "met"
+                            ? "met"
+                            : recommendation.warframeRankRequirement.state ===
+                                "blocked"
+                              ? `blocked at your rank ${recommendation.warframeRankRequirement.playerRank}`
+                              : "your available Warframe rank is not recorded"}{" "}
+                          <span className="muted">
+                            (
+                            {recommendation.warframeRankRequirement.source
+                              .citationUrl ? (
+                              <a
+                                href={
+                                  recommendation.warframeRankRequirement.source
+                                    .citationUrl
+                                }
+                                rel="noreferrer"
+                              >
+                                {
+                                  recommendation.warframeRankRequirement.source
+                                    .name
+                                }
+                              </a>
+                            ) : (
+                              recommendation.warframeRankRequirement.source.name
+                            )}
+                            )
+                          </span>
+                        </p>
+                      )}
                       {recommendation.itemRequirements.length > 0 && (
                         <ul>
                           {recommendation.itemRequirements.map(

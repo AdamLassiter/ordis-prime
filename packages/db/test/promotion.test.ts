@@ -423,6 +423,27 @@ test("candidate-wide validation rejects contradictory and duplicate source facts
       ),
     /active adversary requirement is invalid/,
   );
+  assert.throws(
+    () =>
+      promoteSource(
+        sqlite,
+        input("v1", [
+          entity("node", "Falling Glory", "node"),
+          {
+            type: "node-detail",
+            nodeExternalId: {
+              sourceId: "fixture",
+              namespace: "id",
+              value: "node",
+            },
+            planet: "Venus",
+            warframeRankRequirement: 31,
+            evidence: { ...evidence(), sourceRecordKey: "node:warframe-rank" },
+          },
+        ]),
+      ),
+    /Warframe rank requirement cannot exceed 30/,
+  );
   assert.deepEqual(
     sqlite
       .prepare(

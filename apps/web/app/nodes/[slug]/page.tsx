@@ -175,6 +175,26 @@ export default async function NodePage({
             </span>
           )}
         </dd>
+        <dt>Warframe rank requirement</dt>
+        <dd>
+          {node.warframeRankRequirement ?? "Not recorded"}
+          {node.warframeRankRequirement !== undefined && settings && (
+            <span
+              className={
+                settings.highestWarframeRank !== undefined &&
+                settings.highestWarframeRank >= node.warframeRankRequirement
+                  ? "tag progress-completed"
+                  : "tag status-needed"
+              }
+            >
+              {settings.highestWarframeRank === undefined
+                ? "available Warframe rank not recorded"
+                : settings.highestWarframeRank >= node.warframeRankRequirement
+                  ? "met"
+                  : `blocked at ${settings.highestWarframeRank}`}
+            </span>
+          )}
+        </dd>
       </dl>
       <section>
         <h2>Access requirements</h2>

@@ -286,6 +286,7 @@ export const nodeDetails = sqliteTable(
     maximumEnemyLevel: integer("maximum_enemy_level"),
     masteryRequirement: integer("mastery_requirement"),
     railjackIntrinsicRequirement: integer("railjack_intrinsic_requirement"),
+    warframeRankRequirement: integer("warframe_rank_requirement"),
     activeAdversaryRequirement: text("active_adversary_requirement", {
       enum: ["kuva-lich", "sister-of-parvos", "technocyte-coda"],
     }),
@@ -493,6 +494,7 @@ export const playerProfiles = sqliteTable("player_profiles", {
     .references(() => users.id, { onDelete: "cascade" }),
   masteryRank: integer("mastery_rank"),
   railjackIntrinsicRank: integer("railjack_intrinsic_rank"),
+  highestWarframeRank: integer("highest_warframe_rank"),
   activeAdversary: text("active_adversary", {
     enum: ["none", "kuva-lich", "sister-of-parvos", "technocyte-coda"],
   }),

@@ -16,6 +16,9 @@
   and follow that item back to every node that requires it.
 - As a player, I can record my current adversary and see only the matching final
   confrontation as available while unrecorded state stays conditional.
+- As a player, I can record my highest currently available Warframe rank and see
+  the complete Elite Sanctuary Onslaught gate without conflating it with
+  mastery history.
 - As an administrator, I can see dataset freshness, import failures, conflicts
   and the exact upstream record behind a fact.
 

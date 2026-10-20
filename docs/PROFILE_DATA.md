@@ -5,7 +5,7 @@ canonical entity IDs inside one installation, while exported profiles use
 provider identifiers so they can be restored into another installation whose
 canonical UUIDs differ.
 
-## Version 18 export
+## Version 19 export
 
 The player section carries an optional combined Mastery Rank used to evaluate
 sourced star-chart gates and build capacity. Values 0 through 30 are ordinary
@@ -16,6 +16,9 @@ used only for sourced Railjack access gates.
 The player section also carries an optional active adversary value: explicit
 none, Kuva Lich, Sister of Parvos or Technocyte Coda. Absence means the player
 has not recorded this state, not that no adversary is active.
+An optional highest currently available Warframe rank from 0 through 30 is used
+for equipment-rank node gates. It is deliberately independent of mastered
+history and build drafts.
 
 Each inventory entry includes:
 
