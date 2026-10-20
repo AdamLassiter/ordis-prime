@@ -784,6 +784,54 @@ test("node item requirements preserve quantities and require inventory items", a
   );
 });
 
+test("node objectives preserve stable keys and ordered cited text", async (context) => {
+  const root = await fs.mkdtemp(
+    path.join(os.tmpdir(), "ordis-node-objectives-"),
+  );
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const databasePath = path.join(root, "catalog.sqlite");
+  migrateDatabase(databasePath);
+  const sqlite = new Database(databasePath);
+  sqlite.pragma("foreign_keys = ON");
+  context.after(() => sqlite.close());
+  const objective = (sortOrder: number, version = "v1"): Observation => ({
+    type: "node-objective",
+    nodeExternalId: { sourceId: "fixture", namespace: "id", value: "node" },
+    key: "scan-targets",
+    label: "Scan three targets",
+    hint: "Equip a Codex Scanner.",
+    sortOrder,
+    evidence: {
+      ...evidence(version),
+      sourceRecordKey: "node:objective:scan-targets",
+      citationUrl: "https://example.test/node",
+    },
+  });
+  const promoted = promoteSource(
+    sqlite,
+    input("v1", [entity("node", "Node", "node"), objective(2)]),
+  );
+  assert.equal(promoted.nodeObjectivesCreated, 1);
+  assert.deepEqual(
+    sqlite
+      .prepare(
+        "select key, label, hint, sort_order as sortOrder, citation_url as citationUrl from node_objectives",
+      )
+      .get(),
+    {
+      key: "scan-targets",
+      label: "Scan three targets",
+      hint: "Equip a Codex Scanner.",
+      sortOrder: 2,
+      citationUrl: "https://example.test/node",
+    },
+  );
+  assert.throws(
+    () => promoteSource(sqlite, input("bad", [objective(-1, "bad")])),
+    /sort order must be a non-negative integer/,
+  );
+});
+
 test("composed validation rejects recipe cycles across sources", async (context) => {
   const root = await fs.mkdtemp(
     path.join(os.tmpdir(), "ordis-composed-recipe-cycle-"),

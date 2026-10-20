@@ -330,6 +330,37 @@ export const nodeItemRequirements = sqliteTable(
     index("node_item_requirement_item").on(table.itemId),
   ],
 );
+export const nodeObjectives = sqliteTable(
+  "node_objectives",
+  {
+    id: text().primaryKey(),
+    nodeId: text("node_id")
+      .notNull()
+      .references(() => entities.id),
+    key: text().notNull(),
+    label: text().notNull(),
+    hint: text(),
+    sortOrder: integer("sort_order").notNull(),
+    sourceRunId: text("source_run_id")
+      .notNull()
+      .references(() => sourceRuns.id),
+    sourceRecordKey: text("source_record_key").notNull(),
+    citationUrl: text("citation_url"),
+    sourcePath: text("source_path"),
+  },
+  (table) => [
+    uniqueIndex("node_objective_run_record").on(
+      table.sourceRunId,
+      table.sourceRecordKey,
+    ),
+    uniqueIndex("node_objective_run_node_key").on(
+      table.sourceRunId,
+      table.nodeId,
+      table.key,
+    ),
+    index("node_objective_node").on(table.nodeId),
+  ],
+);
 export const entityRelations = sqliteTable(
   "entity_relations",
   {

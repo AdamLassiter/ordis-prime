@@ -125,6 +125,19 @@ test("catalog read models join active recipes, drops, provenance, and rankings",
       },
     },
     {
+      type: "node-objective",
+      nodeExternalId: external("caloris"),
+      key: "open-lockers",
+      label: "Open 3 lockers",
+      hint: "Explore the whole mission.",
+      sortOrder: 0,
+      evidence: {
+        ...evidence,
+        sourceRecordKey: "caloris:objective:open-lockers",
+        citationUrl: "https://example.test/caloris-objectives",
+      },
+    },
+    {
       type: "recipe",
       outputExternalId: external("braton"),
       ingredients: [{ externalId: external("alloy"), quantity: 200 }],
@@ -357,6 +370,15 @@ test("catalog read models join active recipes, drops, provenance, and rankings",
       requiredCount: 100,
       sourceName: "Items",
       citationUrl: "https://example.test/caloris-access",
+    },
+  ]);
+  assert.deepEqual(node.objectives, [
+    {
+      key: "open-lockers",
+      label: "Open 3 lockers",
+      hint: "Explore the whole mission.",
+      sourceName: "Items",
+      citationUrl: "https://example.test/caloris-objectives",
     },
   ]);
   const userId = createLocalUser(sqlite, { username: "Player" });

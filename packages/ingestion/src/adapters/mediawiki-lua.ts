@@ -13,10 +13,10 @@ export const DEFAULT_WARFRAME_WIKI_API_URL =
 
 interface MediaWikiResponse {
   error?: { code?: string; info?: string };
-  query?: { pages?: MediaWikiPage[] };
+  query?: { pages?: MediaWikiApiPage[] };
 }
 
-interface MediaWikiPage {
+interface MediaWikiApiPage {
   title?: string;
   missing?: boolean;
   revisions?: Array<{
@@ -31,9 +31,11 @@ export interface LuaModulePage {
   content: string;
 }
 
-export async function fetchMediaWikiLuaSnapshot(input: {
+export type MediaWikiRevisionPage = LuaModulePage;
+
+export async function fetchMediaWikiPagesSnapshot(input: {
   apiUrl: string;
-  moduleTitles: readonly string[];
+  pageTitles: readonly string[];
   sourceId: string;
   parserVersion: string;
   signal?: AbortSignal;
@@ -46,7 +48,7 @@ export async function fetchMediaWikiLuaSnapshot(input: {
     prop: "revisions",
     rvprop: "ids|timestamp|content",
     rvslots: "main",
-    titles: input.moduleTitles.join("|"),
+    titles: input.pageTitles.join("|"),
   }).toString();
   const response = await fetch(url, {
     signal: input.signal,
@@ -58,7 +60,7 @@ export async function fetchMediaWikiLuaSnapshot(input: {
   if (!response.ok)
     throw new Error(`WARFRAME Wiki fetch failed: ${response.status}`);
   const bytes = new Uint8Array(await response.arrayBuffer());
-  const versions = readMediaWikiLuaPages(bytes, input.moduleTitles).map(
+  const versions = readMediaWikiPages(bytes, input.pageTitles).map(
     (page) => `${page.title}@${page.revisionId}`,
   );
   return createSnapshot({
@@ -70,10 +72,30 @@ export async function fetchMediaWikiLuaSnapshot(input: {
   });
 }
 
+export async function fetchMediaWikiLuaSnapshot(input: {
+  apiUrl: string;
+  moduleTitles: readonly string[];
+  sourceId: string;
+  parserVersion: string;
+  signal?: AbortSignal;
+}): Promise<Snapshot> {
+  return fetchMediaWikiPagesSnapshot({
+    ...input,
+    pageTitles: input.moduleTitles,
+  });
+}
+
 export function readMediaWikiLuaPages(
   bytes: Uint8Array,
   requiredTitles: readonly string[],
 ): LuaModulePage[] {
+  return readMediaWikiPages(bytes, requiredTitles);
+}
+
+export function readMediaWikiPages(
+  bytes: Uint8Array,
+  requiredTitles: readonly string[],
+): MediaWikiRevisionPage[] {
   let payload: MediaWikiResponse;
   try {
     payload = JSON.parse(new TextDecoder().decode(bytes)) as MediaWikiResponse;

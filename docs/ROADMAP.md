@@ -80,4 +80,6 @@ The star chart derives and filters the same player-aware access states used by
 planning.
 Exact Animo Nav Beacon, Judgement Point, Grendel Locator and Mutalist Alad V
 Assassinate Key quantity gates now compose with private inventory. Junction
-objectives and other item or equipment conditions remain.
+objective descriptions and hints are now imported as ordered, cited public
+facts. Private objective completion, Junction access composition, rewards and
+other item or equipment conditions remain.

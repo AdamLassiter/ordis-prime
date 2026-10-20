@@ -7,6 +7,7 @@ export * from "./adapters/wfcd-drops.ts";
 export * from "./adapters/warframe-wiki-weapons.ts";
 export * from "./adapters/warframe-wiki-warframes.ts";
 export * from "./adapters/warframe-wiki-missions.ts";
+export * from "./adapters/warframe-wiki-junctions.ts";
 export * from "./adapters/warframe-wiki-abilities.ts";
 export * from "./adapters/warframe-wiki-quests.ts";
 export * from "./adapters/manual-ranking.ts";

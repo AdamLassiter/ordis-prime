@@ -34,6 +34,9 @@ become typed adversary gates while retaining their complete Intrinsics or quest
 clauses.
 The exact Elite Sanctuary Onslaught expression retains its quest relation and
 adds a numeric level-30 Warframe gate.
+The 13 Junction pages independently contribute their four ordered objective
+descriptions and hints. These are cited public facts displayed on the matching
+canonical node; they are not inferred from mission requirement prose.
 Exact item-only expressions for Animo Nav Beacons, Judgement Points, Grendel
 Locators and the Mutalist Alad V Assassinate Key become cited
 node/item/quantity facts. They reconcile to the same canonical resources used
@@ -77,6 +80,10 @@ The chart also provides a bulk editor for the currently filtered nodes. Its
 explicit submitted scope means checked and unchecked visible nodes are updated
 atomically while nodes hidden by the filters remain untouched.
 
+Junction node pages list the current four sourced objectives in Wiki order with
+their hints and revision citations. Objective completion is not yet private
+player state and does not currently affect the derived node access state.
+
 ## Current compromise
 
 No imported source supplies stable visual coordinates. The current chart can
@@ -87,4 +94,8 @@ before a visual graph is honest.
 
 Enemy and quest identities are imported, but richer domain-specific facts and
 complete curated discovery links remain future work.
+Junction rewards remain unmodeled because their table cells mix items,
+currencies and quest unlocks; importing the task text does not imply reward
+semantics. Per-objective progress and its contribution to Junction access are
+also future work.
 There is not yet automatic account-state import.

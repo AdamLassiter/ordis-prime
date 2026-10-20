@@ -45,6 +45,7 @@ export interface PromotionResult {
   dropsCreated: number;
   nodeDetailsCreated: number;
   nodeItemRequirementsCreated: number;
+  nodeObjectivesCreated: number;
   relationsCreated: number;
   enhancementOptionsCreated: number;
   equipmentPolaritySetsCreated: number;
@@ -115,6 +116,7 @@ function promoteInTransaction(
         dropsCreated: 0,
         nodeDetailsCreated: 0,
         nodeItemRequirementsCreated: 0,
+        nodeObjectivesCreated: 0,
         relationsCreated: 0,
         enhancementOptionsCreated: 0,
         equipmentPolaritySetsCreated: 0,
@@ -196,6 +198,7 @@ function promoteInTransaction(
     dropsCreated: 0,
     nodeDetailsCreated: 0,
     nodeItemRequirementsCreated: 0,
+    nodeObjectivesCreated: 0,
     relationsCreated: 0,
     enhancementOptionsCreated: 0,
     equipmentPolaritySetsCreated: 0,
@@ -292,6 +295,42 @@ function promoteInTransaction(
   }
 
   for (const observation of input.observations) {
+    if (observation.type === "node-objective") {
+      const nodeId = state.externalIds.get(
+        externalKey(observation.nodeExternalId),
+      );
+      if (!nodeId) {
+        writeConflict(
+          sqlite,
+          sourceRunId,
+          observation.evidence.sourceRecordKey,
+          "Node objective refers to an unresolved entity",
+          [],
+          counts,
+        );
+        continue;
+      }
+      sqlite
+        .prepare(
+          `insert into node_objectives
+            (id, node_id, key, label, hint, sort_order, source_run_id,
+             source_record_key, citation_url, source_path)
+           values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        )
+        .run(
+          randomUUID(),
+          nodeId,
+          observation.key,
+          observation.label,
+          observation.hint ?? null,
+          observation.sortOrder,
+          sourceRunId,
+          observation.evidence.sourceRecordKey,
+          observation.evidence.citationUrl ?? null,
+          observation.evidence.path ?? null,
+        );
+      counts.nodeObjectivesCreated += 1;
+    }
     if (observation.type === "node-item-requirement") {
       const nodeId = state.externalIds.get(
         externalKey(observation.nodeExternalId),
@@ -492,6 +531,17 @@ function promoteInTransaction(
       throw new Error(
         "Node item requirement quantity must be a positive safe integer",
       );
+    if (observation.type === "node-objective") {
+      if (!observation.key || !observation.label)
+        throw new Error("Node objective key and label are required");
+      if (
+        !Number.isSafeInteger(observation.sortOrder) ||
+        observation.sortOrder < 0
+      )
+        throw new Error(
+          "Node objective sort order must be a non-negative integer",
+        );
+    }
     if (observation.type === "drop") {
       const rewardId = state.externalIds.get(
         externalKey(observation.rewardExternalId),
@@ -685,6 +735,9 @@ function validateComposedCatalog(sqlite: Database.Database): void {
         select 'node item requirement item', requirement.source_record_key, requirement.item_id
           from node_item_requirements requirement join source_runs run on run.id = requirement.source_run_id and run.status = 'active'
         union all
+        select 'node objective', objective.source_record_key, objective.node_id
+          from node_objectives objective join source_runs run on run.id = objective.source_run_id and run.status = 'active'
+        union all
         select 'relation origin', relation.source_record_key, relation.from_entity_id
           from entity_relations relation join source_runs run on run.id = relation.source_run_id and run.status = 'active'
         union all
@@ -727,6 +780,10 @@ function validateComposedCatalog(sqlite: Database.Database): void {
         select 'node item requirement', requirement.source_record_key, entity.kind, entity.slug
           from node_item_requirements requirement join source_runs run on run.id = requirement.source_run_id and run.status = 'active'
           join entities entity on entity.id = requirement.node_id where entity.kind != 'node'
+        union all
+        select 'node objective', objective.source_record_key, entity.kind, entity.slug
+          from node_objectives objective join source_runs run on run.id = objective.source_run_id and run.status = 'active'
+          join entities entity on entity.id = objective.node_id where entity.kind != 'node'
         union all
         select 'connection origin', relation.source_record_key, entity.kind, entity.slug
           from entity_relations relation join source_runs run on run.id = relation.source_run_id and run.status = 'active'
@@ -1542,6 +1599,8 @@ function validateCandidateSet(observations: Observation[]): void {
       factKey = `node-detail:${externalKey(observation.nodeExternalId)}`;
     if (observation.type === "node-item-requirement")
       factKey = `node-item-requirement:${externalKey(observation.nodeExternalId)}:${externalKey(observation.itemExternalId)}`;
+    if (observation.type === "node-objective")
+      factKey = `node-objective:${externalKey(observation.nodeExternalId)}:${observation.key}`;
     if (observation.type === "enhancement-option")
       factKey = `enhancement-option:${externalKey(observation.subjectExternalId)}:${observation.key}`;
     if (observation.type === "equipment-polarity-set")

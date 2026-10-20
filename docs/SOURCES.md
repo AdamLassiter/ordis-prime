@@ -1,12 +1,12 @@
 # Source policy
 
-| Source                  | Initial use                                                                                                                                                                                                                                                                                             | Policy                                                                                                                                               |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| WFCD warframe-items     | identities, items, weapon and arcane classes, mod rank/drain/polarity facts, disclosed companion factory-polarity sets, modular weapon representatives/components, Archwings, Archon Shards, node levels/planets, quests                                                                                | Fetch the maintained aggregate API endpoint; snapshot, validate, retain version/hash and MIT attribution                                             |
-| WFCD warframe-drop-data | mission metadata, enemy, relic and rotation drops                                                                                                                                                                                                                                                       | Snapshot mission rewards with payload and retain upstream attribution                                                                                |
-| WFCD WarframeStat.us    | live cycles, events, alerts, fissures and traders                                                                                                                                                                                                                                                       | Snapshot the PC English aggregate response; normalize absolute availability windows and retain MIT attribution                                       |
-| Manual YAML             | published editorial rankings; curated discovery facts and relations; factual overlays                                                                                                                                                                                                                   | Require source-specific citations and licence notes; retain each source as an independent versioned set and resolve overlays by explicit external ID |
-| WARFRAME Wiki           | weapon, Warframe and Archwing maximum ranks and factory-polarity sets; abilities and powersuit links; quests, sequence, allow-listed quest/node/Intrinsics access and exact Mastery gates; mission metadata and star-chart connections; external detail links; a curated Archon Shard effect vocabulary | Fetch selected structured data modules through MediaWiki; parse Lua syntax without executing it; retain CC BY-NC-SA 3.0 attribution per fact         |
+| Source                  | Initial use                                                                                                                                                                                                                                                                                                                  | Policy                                                                                                                                                               |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| WFCD warframe-items     | identities, items, weapon and arcane classes, mod rank/drain/polarity facts, disclosed companion factory-polarity sets, modular weapon representatives/components, Archwings, Archon Shards, node levels/planets, quests                                                                                                     | Fetch the maintained aggregate API endpoint; snapshot, validate, retain version/hash and MIT attribution                                                             |
+| WFCD warframe-drop-data | mission metadata, enemy, relic and rotation drops                                                                                                                                                                                                                                                                            | Snapshot mission rewards with payload and retain upstream attribution                                                                                                |
+| WFCD WarframeStat.us    | live cycles, events, alerts, fissures and traders                                                                                                                                                                                                                                                                            | Snapshot the PC English aggregate response; normalize absolute availability windows and retain MIT attribution                                                       |
+| Manual YAML             | published editorial rankings; curated discovery facts and relations; factual overlays                                                                                                                                                                                                                                        | Require source-specific citations and licence notes; retain each source as an independent versioned set and resolve overlays by explicit external ID                 |
+| WARFRAME Wiki           | weapon, Warframe and Archwing maximum ranks and factory-polarity sets; abilities and powersuit links; quests, sequence, allow-listed quest/node/Intrinsics access and exact Mastery gates; mission metadata, star-chart connections and Junction objectives; external detail links; a curated Archon Shard effect vocabulary | Fetch selected structured modules and narrowly scoped pages through MediaWiki; parse source syntax without executing it; retain CC BY-NC-SA 3.0 attribution per fact |
 
 Provider absence never means deletion. Removals require an explicit tombstone,
 and records referenced by player data are retired rather than physically deleted.
@@ -51,9 +51,10 @@ their stable `/Lotus/Types/Gameplay/NarmerSorties/ArchonCrystal` internal-name
 prefix because the aggregate currently labels both their category and type as
 `Misc`; this provider-specific rule is isolated in the adapter.
 
-The automatic WFCD catalog adapters and structured Wiki adapters reject a
+The automatic WFCD catalog adapters and most structured Wiki adapters reject a
 candidate that emits fewer than half as many normalized observations as their
-previous active run. Each
+previous active run. The Junction page adapter uses a stricter 75 percent floor
+in addition to requiring all 13 pages and exactly four tasks per page. Each
 source run records its input observation count, so this guard is independent of
 shorter operational-history retention. The threshold is adapter policy rather
 than a global rule: manual sources may intentionally publish a much smaller
@@ -160,6 +161,14 @@ The exact Elite Sanctuary Onslaught expression emits both its quest relation
 and a numeric Warframe-rank requirement. Other equipment-specific prose remains
 absent unless its complete expression has a typed representation.
 
+The Junction adapter snapshots the 13 named Junction pages and reads only their
+`Junction Tasks` tables. It emits four ordered, cited objective facts per node;
+the final `Complete the Junction` action and heterogeneous reward cells are not
+objectives. Objective keys are derived from normalized task text, so reordering
+does not lose identity while a materially changed task does not silently inherit
+future player progress. The page parser validates the full expected shape and
+publishes independently from mission metadata.
+
 Resolver conflicts store the exact external IDs that participated in an entity
 observation and the candidate canonical entities. An administrator can close a
 conflict as reviewed without changing identity, or bind one of those external
@@ -172,7 +181,7 @@ origin conflict, and changes the replay revision.
 
 The leased worker schedules `wfcd-items`, `wfcd-drops`,
 `warframe-wiki-weapons`, `warframe-wiki-warframes`,
-`warframe-wiki-missions`, `warframe-wiki-abilities`, and
+`warframe-wiki-missions`, `warframe-wiki-junctions`, `warframe-wiki-abilities`, and
 `warframe-wiki-quests` independently once per
 day by default, while world state runs every five minutes. An administrator can
 bring any of those queued jobs forward from `/data-sources`; this does not run

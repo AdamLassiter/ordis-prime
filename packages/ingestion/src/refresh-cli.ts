@@ -10,6 +10,7 @@ import { ManualFactsAdapter } from "./adapters/manual-facts.ts";
 import { WarframeWikiWeaponsAdapter } from "./adapters/warframe-wiki-weapons.ts";
 import { WarframeWikiWarframesAdapter } from "./adapters/warframe-wiki-warframes.ts";
 import { WarframeWikiMissionsAdapter } from "./adapters/warframe-wiki-missions.ts";
+import { WarframeWikiJunctionsAdapter } from "./adapters/warframe-wiki-junctions.ts";
 import { WarframeWikiAbilitiesAdapter } from "./adapters/warframe-wiki-abilities.ts";
 import { WarframeWikiQuestsAdapter } from "./adapters/warframe-wiki-quests.ts";
 import { refreshWorldState, WfcdWorldStateAdapter } from "./world-state.ts";
@@ -22,6 +23,7 @@ const adapters = {
   "warframe-wiki-weapons": () => new WarframeWikiWeaponsAdapter(),
   "warframe-wiki-warframes": () => new WarframeWikiWarframesAdapter(),
   "warframe-wiki-missions": () => new WarframeWikiMissionsAdapter(),
+  "warframe-wiki-junctions": () => new WarframeWikiJunctionsAdapter(),
   "warframe-wiki-abilities": () => new WarframeWikiAbilitiesAdapter(),
   "warframe-wiki-quests": () => new WarframeWikiQuestsAdapter(),
 } as const satisfies Record<AutomaticCatalogSourceId, () => SourceAdapter>;

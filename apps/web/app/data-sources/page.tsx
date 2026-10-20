@@ -123,6 +123,7 @@ export default async function Sources({
               ["warframe-wiki-weapons", "Wiki weapons"],
               ["warframe-wiki-warframes", "Wiki Warframes"],
               ["warframe-wiki-missions", "Wiki missions"],
+              ["warframe-wiki-junctions", "Wiki Junction tasks"],
               ["warframe-wiki-abilities", "Wiki abilities"],
               ["warframe-wiki-quests", "Wiki quests"],
               ["wfcd-worldstate", "World state"],

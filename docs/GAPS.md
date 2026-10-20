@@ -196,9 +196,10 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   completion. Signed-in players can record private node completion, filter the
   chart by completion and transfer that state in profiles. A bulk editor
   atomically replaces completion only for its explicitly submitted filtered
-  scope. There is no automatic game-account import, Junction-objective progress
-  or node-variant completion model yet. Stable visual positions are still
-  missing.
+  scope. Junction pages now supply four ordered, cited public objectives per
+  Junction, but there is no automatic game-account import, objective-level
+  progress, objective-derived access or node-variant completion model yet.
+  Stable visual positions are still missing.
 - A public discovery atlas searches canonical quest, ability, enemy, boss,
   mechanic and secret kinds. WFCD currently populates quests and enemies;
   structured Wiki data populates current abilities and their typed
@@ -215,13 +216,15 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   Intrinsics requirements and allow-listed item quantities to show cited
   blockers. Node pages expose the same cited requirements and
   private discovery or node-completion progress. Nodes without access evidence
-  stay unknown. Junction objectives and other compound equipment or item
-  conditions still need typed models.
+  stay unknown. Junction objective text has a typed public model, but private
+  completion and its access semantics, objective rewards, and other compound
+  equipment or item conditions still need typed models.
 
 ## Deliberate compromises
 
-- Wiki pages are external detail links in v1; automated wiki ingestion is not a
-  dependency of the catalog.
+- Broad Wiki pages remain external detail links. Automated Wiki ingestion is
+  limited to selected structured modules and the narrowly validated Junction
+  task tables rather than treating arbitrary prose as catalog truth.
 - Recommendations explain goal coverage and documented chance but do not claim
   time efficiency without reliable mission-duration data.
 - SQLite and one application instance are the deployment target. PostgreSQL and

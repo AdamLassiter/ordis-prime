@@ -285,6 +285,27 @@ export default async function NodePage({
           </p>
         ) : null}
       </section>
+      {node.objectives.length > 0 && (
+        <section>
+          <h2>Junction objectives</h2>
+          <ol>
+            {node.objectives.map((objective) => (
+              <li key={`${objective.key}:${objective.sourceName}`}>
+                <strong>{objective.label}</strong>
+                {objective.hint && <p className="muted">{objective.hint}</p>}
+                <span className="muted">
+                  Source:{" "}
+                  {objective.citationUrl ? (
+                    <a href={objective.citationUrl}>{objective.sourceName}</a>
+                  ) : (
+                    objective.sourceName
+                  )}
+                </span>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
       <section>
         <h2>Connections</h2>
         {node.connections.length > 0 && (

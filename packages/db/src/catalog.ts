@@ -145,6 +145,13 @@ export interface CatalogNode {
     sourceName: string;
     citationUrl?: string;
   }>;
+  objectives: Array<{
+    key: string;
+    label: string;
+    hint?: string;
+    sourceName: string;
+    citationUrl?: string;
+  }>;
   drops: Array<{
     kind: string;
     slug: string;
@@ -709,6 +716,7 @@ export function findCatalogNode(
     loadNodeAccessRequirements(sqlite, [node.id], userId).get(node.id) ?? [];
   const itemRequirements =
     loadNodeItemRequirements(sqlite, [node.id], userId).get(node.id) ?? [];
+  const objectives = loadNodeObjectives(sqlite, [node.id]).get(node.id) ?? [];
   const completionState = userId
     ? loadNodeCompletionStates(sqlite, [node.id], userId).get(node.id)
     : undefined;
@@ -720,6 +728,7 @@ export function findCatalogNode(
     connections,
     accessRequirements,
     itemRequirements,
+    objectives,
     ...(completionState ? { completionState } : {}),
     drops,
   };
@@ -756,6 +765,10 @@ export function listCatalogNodes(
     sqlite,
     nodes.map(({ id }) => id),
   );
+  const objectives = loadNodeObjectives(
+    sqlite,
+    nodes.map(({ id }) => id),
+  );
   return nodes.map(({ id, ...node }) => ({
     ...node,
     ...details.get(id),
@@ -763,6 +776,7 @@ export function listCatalogNodes(
     connections: connections.get(id) ?? [],
     accessRequirements: accessRequirements.get(id) ?? [],
     itemRequirements: itemRequirements.get(id) ?? [],
+    objectives: objectives.get(id) ?? [],
     drops: [],
   }));
 }
@@ -798,6 +812,10 @@ export function listStarChartNodes(
     sqlite,
     nodes.map(({ id }) => id),
     userId,
+  );
+  const objectives = loadNodeObjectives(
+    sqlite,
+    nodes.map(({ id }) => id),
   );
   const completionStates = userId
     ? loadNodeCompletionStates(
@@ -852,6 +870,7 @@ export function listStarChartNodes(
     connections: connections.get(id) ?? [],
     accessRequirements: accessRequirements.get(id) ?? [],
     itemRequirements: itemRequirements.get(id) ?? [],
+    objectives: objectives.get(id) ?? [],
     ...(completionStates
       ? { completionState: completionStates.get(id) ?? "incomplete" }
       : {}),
@@ -1013,6 +1032,45 @@ function loadNodeItemRequirements(
       citationUrl: citationUrl ?? undefined,
     });
     result.set(nodeId, requirements);
+  }
+  return result;
+}
+
+function loadNodeObjectives(
+  sqlite: Database.Database,
+  nodeIds: string[],
+): Map<string, CatalogNode["objectives"]> {
+  const result = new Map<string, CatalogNode["objectives"]>();
+  if (!nodeIds.length) return result;
+  const placeholders = nodeIds.map(() => "?").join(", ");
+  const rows = sqlite
+    .prepare(
+      `select objective.node_id as nodeId, objective.key, objective.label,
+              objective.hint, source.name as sourceName,
+              objective.citation_url as citationUrl
+       from node_objectives objective
+       join source_runs run on run.id = objective.source_run_id and run.status = 'active'
+       join sources source on source.id = run.source_id
+       where objective.node_id in (${placeholders})
+       order by objective.node_id, source.priority desc, run.retrieved_at desc,
+                source.id, objective.sort_order, objective.source_record_key`,
+    )
+    .all(...nodeIds) as Array<{
+    nodeId: string;
+    key: string;
+    label: string;
+    hint: string | null;
+    sourceName: string;
+    citationUrl: string | null;
+  }>;
+  for (const { nodeId, hint, citationUrl, ...objective } of rows) {
+    const objectives = result.get(nodeId) ?? [];
+    objectives.push({
+      ...objective,
+      hint: hint ?? undefined,
+      citationUrl: citationUrl ?? undefined,
+    });
+    result.set(nodeId, objectives);
   }
   return result;
 }
