@@ -96,6 +96,74 @@ test("WFCD adapter retains sane canonical mod capacity facts", async () => {
   );
 });
 
+test("WFCD adapter retains only disclosed companion factory polarities", async () => {
+  const companionSnapshot = {
+    ...snapshot,
+    bytes: new TextEncoder().encode(
+      JSON.stringify([
+        {
+          uniqueName: "/carrier-prime",
+          name: "Carrier Prime",
+          category: "Sentinels",
+          polarities: ["penjaga", "madurai", "penjaga"],
+        },
+        {
+          uniqueName: "/hound",
+          name: "Dorma Hound",
+          category: "Pets",
+        },
+        {
+          uniqueName: "/braton",
+          name: "Braton",
+          category: "Primary",
+          polarities: ["madurai"],
+        },
+      ]),
+    ),
+  };
+  const observations = await collect(new WfcdItemsAdapter(), companionSnapshot);
+  assert.deepEqual(
+    observations.flatMap((entry) =>
+      entry.type === "equipment-polarity-set"
+        ? [
+            {
+              subject: entry.subjectExternalId.value,
+              polarities: entry.polarities,
+              record: entry.evidence.sourceRecordKey,
+            },
+          ]
+        : [],
+    ),
+    [
+      {
+        subject: "/carrier-prime",
+        polarities: [
+          { role: "normal", polarity: "madurai", quantity: 1 },
+          { role: "normal", polarity: "penjaga", quantity: 2 },
+        ],
+        record: "/carrier-prime:factory-polarities",
+      },
+    ],
+  );
+
+  await assert.rejects(
+    collect(new WfcdItemsAdapter(), {
+      ...snapshot,
+      bytes: new TextEncoder().encode(
+        JSON.stringify([
+          {
+            uniqueName: "/invalid-companion",
+            name: "Invalid Companion",
+            category: "Sentinels",
+            polarities: ["future"],
+          },
+        ]),
+      ),
+    }),
+    /Invalid Companion has invalid polarity/,
+  );
+});
+
 test("WFCD component references retain trustworthy item kinds and qualified part names", async () => {
   const componentSnapshot = {
     ...snapshot,
@@ -500,7 +568,7 @@ test("WFCD adapter defaults to the maintained aggregate endpoint", async () => {
     const adapter = new WfcdItemsAdapter();
     const fetched = await adapter.fetch({});
     assert.equal(requestedUrl, DEFAULT_WFCD_ITEMS_URL);
-    assert.equal(fetched.version, "fixture-etag|wfcd-items-v8");
+    assert.equal(fetched.version, "fixture-etag|wfcd-items-v9");
     assert.equal(adapter.minimumRetainedObservationRatio, 0.5);
   } finally {
     globalThis.fetch = originalFetch;

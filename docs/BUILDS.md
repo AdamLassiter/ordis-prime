@@ -86,8 +86,9 @@ recipes and recommends nodes using the same canonical IDs.
   incomplete.
   The catalog now retains sourced mod maximum rank, base drain and polarity,
   and calculates each known mod's unpolarized ranked drain. Structured Wiki
-  factory polarity roles and counts are shown with citations, but exact source
-  positions are unavailable. Companion maximum-rank coverage is not yet
+  equipment sets and disclosed WFCD companion sets show factory polarity roles
+  and counts with citations, but exact source positions are unavailable.
+  Companion maximum-rank coverage is not yet
   modeled. Whole-build
   capacity is derived conservatively; those missing facts can leave a result
   partial rather than estimated. Broad arcane

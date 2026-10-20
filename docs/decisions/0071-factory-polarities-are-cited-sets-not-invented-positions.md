@@ -24,6 +24,10 @@ a source configuration label, and may be empty either by an empty array or the
 schema-defined omitted-field convention. Preserve multiple
 configuration records that resolve to the same canonical equipment entity.
 
+WFCD companion records may contribute normal-role sets when their `polarities`
+field is present. Do not turn an omitted companion field into an empty set, and
+do not import partial WFCD Warframe or weapon sets that omit special-slot roles.
+
 Show these sets on catalog and build pages as setup guidance. Keep the
 player-authored positioned mod-slot grid independent, and continue to derive
 capacity only from that explicit positioned state. Do not assign source counts
@@ -40,5 +44,7 @@ to positions or mutate a draft when the catalog refreshes.
 - Live adoption imported 737 weapon sets and 124 Warframe or Archwing sets with
   no resolver conflicts; 72 weapon records resolve to an empty set under the
   source schema.
+- A fresh live WFCD import adds 34 disclosed companion sets with no resolver
+  conflicts; other companion records remain unknown rather than empty.
 - Exact factory positions remain unavailable. Players position current or
   Forma-modified polarities themselves before capacity arithmetic uses them.

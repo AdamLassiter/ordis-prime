@@ -4,6 +4,7 @@ import {
   type ArcaneClass,
   type EntityKind,
   type EntityObservation,
+  type EquipmentPolarity,
   type ModPolarity,
   type Observation,
   type WeaponClass,
@@ -31,6 +32,7 @@ interface WfcdItem {
   fusionLimit?: number;
   baseDrain?: number;
   polarity?: string;
+  polarities?: unknown;
 }
 interface WfcdComponent {
   uniqueName?: string;
@@ -62,7 +64,7 @@ const categories: Record<string, EntityKind> = {
   Enemy: "enemy",
 };
 export const DEFAULT_WFCD_ITEMS_URL = "https://api.warframestat.us/items";
-const PARSER_VERSION = "wfcd-items-v8";
+const PARSER_VERSION = "wfcd-items-v9";
 const ARCHON_SHARD_PREFIX = "/Lotus/Types/Gameplay/NarmerSorties/ArchonCrystal";
 const resourceTypes = new Set([
   "Resource",
@@ -199,6 +201,24 @@ export class WfcdItemsAdapter implements SourceAdapter {
         },
         evidence,
       };
+      const companionPolarities =
+        kind === "companion"
+          ? parseCompanionPolarities(item.polarities, name)
+          : undefined;
+      if (companionPolarities)
+        yield {
+          type: "equipment-polarity-set",
+          subjectExternalId: {
+            sourceId: this.source.id,
+            namespace: "uniqueName",
+            value: item.uniqueName,
+          },
+          polarities: companionPolarities,
+          evidence: {
+            ...evidence,
+            sourceRecordKey: `${item.uniqueName}:factory-polarities`,
+          },
+        };
       if (kind === "node" && item.systemName)
         yield {
           type: "node-detail",
@@ -276,9 +296,32 @@ export class WfcdItemsAdapter implements SourceAdapter {
   }
 }
 
-function isModPolarity(value: string | undefined): value is ModPolarity {
+function parseCompanionPolarities(
+  value: unknown,
+  name: string,
+): EquipmentPolarity[] | undefined {
+  if (value === undefined) return undefined;
+  if (!Array.isArray(value))
+    throw new Error(`WFCD companion ${name} has invalid polarities`);
+  const counts = new Map<ModPolarity, number>();
+  for (const polarity of value) {
+    if (!isModPolarity(polarity))
+      throw new Error(`WFCD companion ${name} has invalid polarity`);
+    counts.set(polarity, (counts.get(polarity) ?? 0) + 1);
+  }
+  return [...counts.entries()]
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([polarity, quantity]) => ({
+      role: "normal",
+      polarity,
+      quantity,
+    }));
+}
+
+function isModPolarity(value: unknown): value is ModPolarity {
   return (
-    value !== undefined && (MOD_POLARITIES as readonly string[]).includes(value)
+    typeof value === "string" &&
+    (MOD_POLARITIES as readonly string[]).includes(value)
   );
 }
 function kindFor(

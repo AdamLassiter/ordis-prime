@@ -66,8 +66,10 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   still fail closed as a whole.
   The Wiki companion
   module does not expose a maximum-rank field, so companion coverage remains
-  absent rather than defaulted. Weapon, Warframe and Archwing records do expose
-  complete factory-polarity sets by role and count; these retain empty and
+  absent rather than defaulted. Wiki weapon, Warframe and Archwing records expose
+  complete factory-polarity sets by role and count, while WFCD supplies normal
+  factory polarities for the companion records that disclose them. Missing
+  companion polarity fields remain unknown. These sets retain empty and
   configuration-specific assertions, but not invented grid positions. The
   adapters do not cover arbitrary article content. The leased worker schedules WFCD item, drop, Wiki
   weapon, Wiki Warframe, Wiki mission and Wiki ability refreshes daily, and an
