@@ -40,11 +40,12 @@ shown as conditional rather than guessed available or collapsed into unknown.
 Railjack Intrinsics use an independent cited 0–10 gate and the player's private
 highest rank in any Intrinsics category, with the same met, blocked and unknown
 input semantics.
-Exact item-only gates retain a canonical inventory item and required quantity.
-The planner compares that fact with private owned plus built counts and links
-both the cited node rule and the item. Guests do not receive an invented
-inventory result. An unmet known quantity blocks access; missing private input
-is conditional.
+Exact item-only gates for supported beacons, Judgement Points, Grendel Locators
+and the Mutalist Alad V key retain a canonical inventory item and required
+quantity. The planner compares that fact with private owned plus built counts
+and links both the cited node rule and the item. Guests do not receive an
+invented inventory result. An unmet known quantity blocks access; missing
+private input is conditional.
 
 The planner also joins current and upcoming world-state windows whose
 conservatively reconciled canonical node appears in its recommendations. These

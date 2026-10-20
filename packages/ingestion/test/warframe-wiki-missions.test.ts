@@ -308,6 +308,10 @@ test("wiki mission adapter imports exact inventory requirements", async () => {
           { Name = "Vodyanoi", Planet = "Sedna", PreviousNodes = { "Yam" }, NextNodes = { "Hades" }, Requirements = "Must have 15 [[Judgement Points]] to access" },
           { Name = "Hades", Planet = "Pluto", PreviousNodes = { "Vodyanoi" }, NextNodes = { "Grendel" }, Requirements = "Must have 5 [[Animo Nav Beacon]]s to access" },
           { Name = "Grendel", Planet = "Europa", PreviousNodes = { "Hades" }, Requirements = "Must have [[Grendel Chassis Locator]] to access" },
+          { Name = "Grendel Neuroptics", Planet = "Europa", Requirements = "Must have [[Grendel Neuroptics Locator]] to access" },
+          { Name = "Grendel Systems", Planet = "Europa", Requirements = "Must have [[Grendel Systems Locator]] to access" },
+          { Name = "Mutalist Alad V Assassinate", Planet = "Eris", Requirements = "Must have [[Mutalist Alad V Assassinate Key]] to access" },
+          { Name = "Unsupported Signal", Planet = "Void", Requirements = "Must have [[Baro Void-Signal]] to access" },
         },
       }
     `),
@@ -319,7 +323,14 @@ test("wiki mission adapter imports exact inventory requirements", async () => {
         ? [observation.fields.name]
         : [],
     ),
-    ["Judgement Points", "Animo Nav Beacon"],
+    [
+      "Judgement Points",
+      "Animo Nav Beacon",
+      "Grendel Chassis Locator",
+      "Grendel Neuroptics Locator",
+      "Grendel Systems Locator",
+      "Mutalist Alad V Assassinate Key",
+    ],
   );
   assert.deepEqual(
     observations.flatMap((observation) =>
@@ -337,6 +348,22 @@ test("wiki mission adapter imports exact inventory requirements", async () => {
       { node: "Yam", item: "Judgement Points", quantity: 10 },
       { node: "Vodyanoi", item: "Judgement Points", quantity: 15 },
       { node: "Hades", item: "Animo Nav Beacon", quantity: 5 },
+      { node: "Grendel", item: "Grendel Chassis Locator", quantity: 1 },
+      {
+        node: "Grendel Neuroptics",
+        item: "Grendel Neuroptics Locator",
+        quantity: 1,
+      },
+      {
+        node: "Grendel Systems",
+        item: "Grendel Systems Locator",
+        quantity: 1,
+      },
+      {
+        node: "Mutalist Alad V Assassinate",
+        item: "Mutalist Alad V Assassinate Key",
+        quantity: 1,
+      },
     ],
   );
 });

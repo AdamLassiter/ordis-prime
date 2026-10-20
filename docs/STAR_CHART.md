@@ -29,10 +29,11 @@ gate. Complete allow-listed Railjack Intrinsics expressions populate a separate
 0–10 gate and retain every supported quest clause; Intrinsics are never coerced
 into Mastery Rank. Expressions containing unsupported conditions still fail
 closed as a whole.
-Exact item-only expressions for Animo Nav Beacons and Judgement Points become
-cited node/item/quantity facts. They reconcile to the same canonical resources
-used by inventory. Other item and mixed expressions remain absent rather than
-being reduced to a misleading subset.
+Exact item-only expressions for Animo Nav Beacons, Judgement Points, Grendel
+Locators and the Mutalist Alad V Assassinate Key become cited
+node/item/quantity facts. They reconcile to the same canonical resources used
+by inventory. Other item and mixed expressions remain absent rather than being
+reduced to a misleading subset.
 
 The public `/star-chart` view groups nodes by planet and filters by node, mission
 or faction text. Signed-in players can restrict it to nodes with at least one

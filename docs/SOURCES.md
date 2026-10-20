@@ -145,10 +145,11 @@ The modules do not provide stable grid positions, so consumers must not assign
 these counts to build positions automatically.
 
 The structured mission adapter recognizes complete item-only access expressions
-for Animo Nav Beacons and Judgement Points. It emits cited node/item/quantity
-facts plus typed Wiki item identities that reconcile with WFCD resources.
-Unrecognized items and expressions mixing an item with another condition are
-omitted as a whole.
+for Animo Nav Beacons, Judgement Points, the three Grendel Locators and the
+Mutalist Alad V Assassinate Key. It emits cited node/item/quantity facts plus
+typed Wiki item identities that reconcile with WFCD resources. Unrecognized
+items and expressions mixing an item with another condition are omitted as a
+whole.
 
 Resolver conflicts store the exact external IDs that participated in an entity
 observation and the candidate canonical entities. An administrator can close a

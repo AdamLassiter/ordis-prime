@@ -21,7 +21,7 @@ import {
   wikiSlug,
 } from "./mediawiki-lua.ts";
 
-const PARSER_VERSION = "warframe-wiki-missions-v6";
+const PARSER_VERSION = "warframe-wiki-missions-v7";
 const MODULE_TITLE = "Module:Missions/data";
 const QUEST_MODULE_TITLE = "Module:Keys/data";
 
@@ -55,9 +55,36 @@ interface ParsedAccessRequirements {
 }
 
 interface ParsedItemRequirement {
-  name: "Animo Nav Beacon" | "Judgement Points";
+  name:
+    | "Animo Nav Beacon"
+    | "Judgement Points"
+    | "Grendel Chassis Locator"
+    | "Grendel Neuroptics Locator"
+    | "Grendel Systems Locator"
+    | "Mutalist Alad V Assassinate Key";
   quantity: number;
 }
+
+const SINGLE_ITEM_REQUIREMENTS = new Map<string, ParsedItemRequirement["name"]>(
+  [
+    [
+      "Must have [[Grendel Chassis Locator]] to access",
+      "Grendel Chassis Locator",
+    ],
+    [
+      "Must have [[Grendel Neuroptics Locator]] to access",
+      "Grendel Neuroptics Locator",
+    ],
+    [
+      "Must have [[Grendel Systems Locator]] to access",
+      "Grendel Systems Locator",
+    ],
+    [
+      "Must have [[Mutalist Alad V Assassinate Key]] to access",
+      "Mutalist Alad V Assassinate Key",
+    ],
+  ],
+);
 
 export class WarframeWikiMissionsAdapter implements SourceAdapter {
   readonly minimumRetainedObservationRatio = 0.5;
@@ -263,6 +290,8 @@ function parseItemRequirement(
   requirements: string | undefined,
 ): ParsedItemRequirement | undefined {
   if (!requirements) return undefined;
+  const singleItem = SINGLE_ITEM_REQUIREMENTS.get(requirements);
+  if (singleItem) return { name: singleItem, quantity: 1 };
   const animo = requirements.match(
     /^Must have (\d+) \[\[Animo Nav Beacon\]\]s to access$/,
   );

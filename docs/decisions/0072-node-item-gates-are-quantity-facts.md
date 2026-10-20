@@ -29,8 +29,9 @@ inventory entry independent.
 - Node pages and acquisition recommendations explain the required and owned
   quantities with citations.
 - Item pages link back to every node for which the item is an access cost.
-- The initial allow-list covers Animo Nav Beacons and Judgement Points, producing
-  four current live node gates. Locator, key and mixed active-adversary
-  conditions remain absent rather than partially modeled.
+- The allow-list covers Animo Nav Beacons, Judgement Points, the three Grendel
+  Locators and the Mutalist Alad V Assassinate Key, producing eight current live
+  node gates. Other keys and mixed active-adversary conditions remain absent
+  rather than partially modeled.
 - Inventory changes alter derived access immediately without rewriting the
   catalog or persisting a redundant access status.
