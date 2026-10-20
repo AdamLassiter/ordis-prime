@@ -154,6 +154,44 @@ export default async function NodePage({
       </dl>
       <section>
         <h2>Access requirements</h2>
+        {node.itemRequirements.length > 0 && (
+          <ul>
+            {node.itemRequirements.map((requirement) => (
+              <li
+                key={`item:${requirement.kind}:${requirement.slug}:${requirement.sourceName}`}
+              >
+                Requires {requirement.requiredCount} ×{" "}
+                <Link href={`/catalog/${requirement.kind}/${requirement.slug}`}>
+                  {requirement.name}
+                </Link>{" "}
+                {requirement.state && (
+                  <span
+                    className={
+                      requirement.state === "met"
+                        ? "tag progress-completed"
+                        : "tag status-needed"
+                    }
+                  >
+                    {requirement.state === "met"
+                      ? `met (${requirement.ownedCount} owned)`
+                      : `blocked (${requirement.ownedCount} owned)`}
+                  </span>
+                )}{" "}
+                <span className="muted">
+                  (
+                  {requirement.citationUrl ? (
+                    <a href={requirement.citationUrl}>
+                      {requirement.sourceName}
+                    </a>
+                  ) : (
+                    requirement.sourceName
+                  )}
+                  )
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
         {node.accessRequirements.length ? (
           <ul>
             {node.accessRequirements.map((requirement) => (
@@ -196,12 +234,12 @@ export default async function NodePage({
               </li>
             ))}
           </ul>
-        ) : (
+        ) : node.itemRequirements.length === 0 ? (
           <p className="notice">
             No complete, structured access requirement is recorded for this
             node.
           </p>
-        )}
+        ) : null}
       </section>
       <section>
         <h2>Connections</h2>

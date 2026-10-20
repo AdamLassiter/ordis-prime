@@ -40,6 +40,11 @@ shown as conditional rather than guessed available or collapsed into unknown.
 Railjack Intrinsics use an independent cited 0–10 gate and the player's private
 highest rank in any Intrinsics category, with the same met, blocked and unknown
 input semantics.
+Exact item-only gates retain a canonical inventory item and required quantity.
+The planner compares that fact with private owned plus built counts and links
+both the cited node rule and the item. Guests do not receive an invented
+inventory result. An unmet known quantity blocks access; missing private input
+is conditional.
 
 The planner also joins current and upcoming world-state windows whose
 conservatively reconciled canonical node appears in its recommendations. These
@@ -50,8 +55,8 @@ opportunity.
 
 Node access currently covers curated quest, mechanic, secret, enemy and boss
 relations, structured quest, node-completion and Railjack Intrinsics Wiki
-requirements, and sourced numeric Mastery Rank gates. Junction rules and other
-compound conditions, market acquisition, relic
+requirements, sourced numeric Mastery Rank gates, and allow-listed exact item
+quantity gates. Junction rules and other compound conditions, market acquisition, relic
 refinement, and rotation-specific mission duration are not yet modeled.
 Those inputs should extend the planning read model rather than becoming UI-only
 heuristics.

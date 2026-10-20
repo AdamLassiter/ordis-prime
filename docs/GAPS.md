@@ -69,6 +69,9 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   existing numeric gate. Supported Railjack Intrinsics-only and
   quest-and-Intrinsics expressions populate a separate cited gate; adversary mixtures
   still fail closed as a whole.
+  Exact item-only Animo Nav Beacon and Judgement Point expressions populate
+  cited quantity gates that compose with private inventory. Other items and
+  mixed item conditions still fail closed as a whole.
   The Wiki companion
   module does not expose a maximum-rank field, so companion coverage remains
   absent rather than defaulted. Wiki weapon, Warframe and Archwing records expose
@@ -128,7 +131,8 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   progression inputs. Planning composes cited discovery prerequisites
   into available, conditional, blocked and unknown node access states. Sourced
   numeric Mastery and Railjack Intrinsics gates compose with separate private
-  portable player ranks, but other conditional gates, markets, relic refinement,
+  portable player ranks. Exact cited Animo Nav Beacon and Judgement Point gates
+  compose with owned plus built inventory, but other conditional gates, markets, relic refinement,
   and mission duration are not yet modeled.
 - Authenticated players can keep private static todos with optional notes and due
   dates. Source-neutral world-state watches match current window fields and
@@ -201,9 +205,9 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
 - Acquisition recommendations compose active `requires` and `unlocks` relations
   with private discovery completion and sourced node Mastery Rank or Railjack
   Intrinsics requirements
-  to show cited blockers. Node pages expose the same cited requirements and
+  and allow-listed item quantities to show cited blockers. Node pages expose the same cited requirements and
   private discovery or node-completion progress. Nodes without access evidence
-  stay unknown. Junction objectives and compound rank, item or active-adversary
+  stay unknown. Junction objectives and other compound rank, item or active-adversary
   conditions still need typed models.
 
 ## Deliberate compromises

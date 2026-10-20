@@ -299,6 +299,33 @@ export const nodeDetails = sqliteTable(
     index("node_details_planet").on(table.planet),
   ],
 );
+export const nodeItemRequirements = sqliteTable(
+  "node_item_requirements",
+  {
+    id: text().primaryKey(),
+    nodeId: text("node_id")
+      .notNull()
+      .references(() => entities.id),
+    itemId: text("item_id")
+      .notNull()
+      .references(() => entities.id),
+    quantity: integer().notNull(),
+    sourceRunId: text("source_run_id")
+      .notNull()
+      .references(() => sourceRuns.id),
+    sourceRecordKey: text("source_record_key").notNull(),
+    citationUrl: text("citation_url"),
+    sourcePath: text("source_path"),
+  },
+  (table) => [
+    uniqueIndex("node_item_requirement_run_record").on(
+      table.sourceRunId,
+      table.sourceRecordKey,
+    ),
+    index("node_item_requirement_node").on(table.nodeId),
+    index("node_item_requirement_item").on(table.itemId),
+  ],
+);
 export const entityRelations = sqliteTable(
   "entity_relations",
   {

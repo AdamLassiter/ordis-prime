@@ -172,6 +172,32 @@ export default async function ItemPage({
               ))
             : "No cited rankings recorded"}
         </dd>
+        {item.requiredForNodeAccess.length > 0 && (
+          <>
+            <dt>Required for node access</dt>
+            <dd>
+              {item.requiredForNodeAccess.map((requirement) => (
+                <div key={`${requirement.nodeSlug}:${requirement.sourceName}`}>
+                  {requirement.quantity} × for{" "}
+                  <Link href={`/nodes/${requirement.nodeSlug}`}>
+                    {requirement.nodeName}
+                  </Link>{" "}
+                  <span className="muted">
+                    (
+                    {requirement.citationUrl ? (
+                      <a href={requirement.citationUrl}>
+                        {requirement.sourceName}
+                      </a>
+                    ) : (
+                      requirement.sourceName
+                    )}
+                    )
+                  </span>
+                </div>
+              ))}
+            </dd>
+          </>
+        )}
         {item.enhancementOptions.length > 0 && (
           <>
             <dt>Selectable effects</dt>

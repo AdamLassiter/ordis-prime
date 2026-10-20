@@ -683,6 +683,65 @@ test("composed validation requires equipment polarity set subjects", async (cont
   );
 });
 
+test("node item requirements preserve quantities and require inventory items", async (context) => {
+  const root = await fs.mkdtemp(
+    path.join(os.tmpdir(), "ordis-node-item-requirements-"),
+  );
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const databasePath = path.join(root, "catalog.sqlite");
+  migrateDatabase(databasePath);
+  const sqlite = new Database(databasePath);
+  sqlite.pragma("foreign_keys = ON");
+  context.after(() => sqlite.close());
+  const requirement = (
+    item: string,
+    quantity: number,
+    version = "v1",
+    sourceId = "fixture",
+  ): Observation => ({
+    type: "node-item-requirement",
+    nodeExternalId: { sourceId: "fixture", namespace: "id", value: "node" },
+    itemExternalId: { sourceId: "fixture", namespace: "id", value: item },
+    quantity,
+    evidence: {
+      ...evidence(version, sourceId),
+      sourceRecordKey: `node:item:${item}`,
+    },
+  });
+  const promoted = promoteSource(
+    sqlite,
+    input("v1", [
+      entity("node", "Node", "node"),
+      entity("token", "Token", "component"),
+      entity("quest", "Quest", "quest"),
+      requirement("token", 5),
+    ]),
+  );
+  assert.equal(promoted.nodeItemRequirementsCreated, 1);
+  assert.deepEqual(
+    sqlite
+      .prepare(
+        "select quantity, source_record_key as recordKey from node_item_requirements",
+      )
+      .get(),
+    { quantity: 5, recordKey: "node:item:token" },
+  );
+
+  assert.throws(
+    () =>
+      promoteSource(sqlite, {
+        ...input("bad", [requirement("quest", 1, "bad", "fixture-b")]),
+        source: { ...source, id: "fixture-b" },
+      }),
+    /node item requirement node:item:quest requires an inventory item but resolved quest:quest/,
+  );
+  assert.throws(
+    () =>
+      promoteSource(sqlite, input("zero", [requirement("token", 0, "zero")])),
+    /quantity must be a positive safe integer/,
+  );
+});
+
 test("composed validation rejects recipe cycles across sources", async (context) => {
   const root = await fs.mkdtemp(
     path.join(os.tmpdir(), "ordis-composed-recipe-cycle-"),

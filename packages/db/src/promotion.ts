@@ -43,6 +43,7 @@ export interface PromotionResult {
   recipesCreated: number;
   dropsCreated: number;
   nodeDetailsCreated: number;
+  nodeItemRequirementsCreated: number;
   relationsCreated: number;
   enhancementOptionsCreated: number;
   equipmentPolaritySetsCreated: number;
@@ -112,6 +113,7 @@ function promoteInTransaction(
         recipesCreated: 0,
         dropsCreated: 0,
         nodeDetailsCreated: 0,
+        nodeItemRequirementsCreated: 0,
         relationsCreated: 0,
         enhancementOptionsCreated: 0,
         equipmentPolaritySetsCreated: 0,
@@ -192,6 +194,7 @@ function promoteInTransaction(
     recipesCreated: 0,
     dropsCreated: 0,
     nodeDetailsCreated: 0,
+    nodeItemRequirementsCreated: 0,
     relationsCreated: 0,
     enhancementOptionsCreated: 0,
     equipmentPolaritySetsCreated: 0,
@@ -288,6 +291,42 @@ function promoteInTransaction(
   }
 
   for (const observation of input.observations) {
+    if (observation.type === "node-item-requirement") {
+      const nodeId = state.externalIds.get(
+        externalKey(observation.nodeExternalId),
+      );
+      const itemId = state.externalIds.get(
+        externalKey(observation.itemExternalId),
+      );
+      if (!nodeId || !itemId) {
+        writeConflict(
+          sqlite,
+          sourceRunId,
+          observation.evidence.sourceRecordKey,
+          "Node item requirement refers to an unresolved entity",
+          [nodeId, itemId].filter((id): id is EntityId => Boolean(id)),
+          counts,
+        );
+        continue;
+      }
+      sqlite
+        .prepare(
+          `insert into node_item_requirements
+            (id, node_id, item_id, quantity, source_run_id, source_record_key, citation_url, source_path)
+           values (?, ?, ?, ?, ?, ?, ?, ?)`,
+        )
+        .run(
+          randomUUID(),
+          nodeId,
+          itemId,
+          observation.quantity,
+          sourceRunId,
+          observation.evidence.sourceRecordKey,
+          observation.evidence.citationUrl ?? null,
+          observation.evidence.path ?? null,
+        );
+      counts.nodeItemRequirementsCreated += 1;
+    }
     if (observation.type === "equipment-polarity-set") {
       const entityId = state.externalIds.get(
         externalKey(observation.subjectExternalId),
@@ -442,6 +481,13 @@ function promoteInTransaction(
         );
       counts.nodeDetailsCreated += 1;
     }
+    if (
+      observation.type === "node-item-requirement" &&
+      (!Number.isSafeInteger(observation.quantity) || observation.quantity < 1)
+    )
+      throw new Error(
+        "Node item requirement quantity must be a positive safe integer",
+      );
     if (observation.type === "drop") {
       const rewardId = state.externalIds.get(
         externalKey(observation.rewardExternalId),
@@ -629,6 +675,12 @@ function validateComposedCatalog(sqlite: Database.Database): void {
         select 'node detail', detail.source_record_key, detail.entity_id
           from node_details detail join source_runs run on run.id = detail.source_run_id and run.status = 'active'
         union all
+        select 'node item requirement node', requirement.source_record_key, requirement.node_id
+          from node_item_requirements requirement join source_runs run on run.id = requirement.source_run_id and run.status = 'active'
+        union all
+        select 'node item requirement item', requirement.source_record_key, requirement.item_id
+          from node_item_requirements requirement join source_runs run on run.id = requirement.source_run_id and run.status = 'active'
+        union all
         select 'relation origin', relation.source_record_key, relation.from_entity_id
           from entity_relations relation join source_runs run on run.id = relation.source_run_id and run.status = 'active'
         union all
@@ -668,6 +720,10 @@ function validateComposedCatalog(sqlite: Database.Database): void {
           from node_details detail join source_runs run on run.id = detail.source_run_id and run.status = 'active'
           join entities entity on entity.id = detail.entity_id where entity.kind != 'node'
         union all
+        select 'node item requirement', requirement.source_record_key, entity.kind, entity.slug
+          from node_item_requirements requirement join source_runs run on run.id = requirement.source_run_id and run.status = 'active'
+          join entities entity on entity.id = requirement.node_id where entity.kind != 'node'
+        union all
         select 'connection origin', relation.source_record_key, entity.kind, entity.slug
           from entity_relations relation join source_runs run on run.id = relation.source_run_id and run.status = 'active'
           join entities entity on entity.id = relation.from_entity_id
@@ -685,6 +741,20 @@ function validateComposedCatalog(sqlite: Database.Database): void {
   if (invalidNodeReference)
     throw new Error(
       `Composed catalog ${invalidNodeReference.factType} ${invalidNodeReference.recordKey ?? "without record key"} requires a node but resolved ${invalidNodeReference.kind}:${invalidNodeReference.slug}`,
+    );
+
+  const invalidNodeItemRequirement = sqlite
+    .prepare(
+      `select requirement.source_record_key as recordKey, entity.kind, entity.slug
+       from node_item_requirements requirement
+       join source_runs run on run.id = requirement.source_run_id and run.status = 'active'
+       join entities entity on entity.id = requirement.item_id
+       where entity.kind not in ('resource', 'component', 'blueprint') limit 1`,
+    )
+    .get() as { recordKey: string; kind: string; slug: string } | undefined;
+  if (invalidNodeItemRequirement)
+    throw new Error(
+      `Composed catalog node item requirement ${invalidNodeItemRequirement.recordKey} requires an inventory item but resolved ${invalidNodeItemRequirement.kind}:${invalidNodeItemRequirement.slug}`,
     );
 
   const invalidEnhancementSubject = sqlite
@@ -1453,6 +1523,8 @@ function validateCandidateSet(observations: Observation[]): void {
     let factKey: string | undefined;
     if (observation.type === "node-detail")
       factKey = `node-detail:${externalKey(observation.nodeExternalId)}`;
+    if (observation.type === "node-item-requirement")
+      factKey = `node-item-requirement:${externalKey(observation.nodeExternalId)}:${externalKey(observation.itemExternalId)}`;
     if (observation.type === "enhancement-option")
       factKey = `enhancement-option:${externalKey(observation.subjectExternalId)}:${observation.key}`;
     if (observation.type === "equipment-polarity-set")

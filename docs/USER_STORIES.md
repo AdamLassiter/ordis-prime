@@ -12,6 +12,8 @@
   without changing nodes hidden by those filters.
 - As a player, I can set goals and receive candidate nodes with a visible reason,
   rather than an unexplained score.
+- As a player, I can see whether my inventory meets a cited node-entry quantity
+  and follow that item back to every node that requires it.
 - As an administrator, I can see dataset freshness, import failures, conflicts
   and the exact upstream record behind a fact.
 

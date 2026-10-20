@@ -55,6 +55,13 @@ export interface CatalogItem extends CatalogSummary {
     chance?: number;
     rotation?: string;
   }>;
+  requiredForNodeAccess: Array<{
+    nodeSlug: string;
+    nodeName: string;
+    quantity: number;
+    sourceName: string;
+    citationUrl?: string;
+  }>;
   sources: Array<{ name: string; homepage: string }>;
   rankings: Array<{
     title: string;
@@ -124,6 +131,16 @@ export interface CatalogNode {
     sourceName: string;
     citationUrl?: string;
     progressState?: "unseen" | "discovered" | "incomplete" | "completed";
+  }>;
+  itemRequirements: Array<{
+    kind: string;
+    slug: string;
+    name: string;
+    requiredCount: number;
+    ownedCount?: number;
+    state?: "met" | "blocked";
+    sourceName: string;
+    citationUrl?: string;
   }>;
   drops: Array<{
     kind: string;
@@ -358,6 +375,33 @@ export function findCatalogItem(
   `,
     )
     .all(item.id) as CatalogItem["drops"];
+  const requiredForNodeAccess = sqlite
+    .prepare(
+      `select node.slug as nodeSlug, node.name as nodeName,
+              requirement.quantity, source.name as sourceName,
+              requirement.citation_url as citationUrl
+       from node_item_requirements requirement
+       join source_runs run on run.id = requirement.source_run_id and run.status = 'active'
+       join sources source on source.id = run.source_id
+       join entities node on node.id = requirement.node_id and node.retired = 0
+       where requirement.item_id = ?
+       order by node.name collate nocase, source.priority desc,
+                run.retrieved_at desc, source.id, requirement.source_record_key`,
+    )
+    .all(item.id)
+    .map((row) => {
+      const requirement = row as {
+        nodeSlug: string;
+        nodeName: string;
+        quantity: number;
+        sourceName: string;
+        citationUrl: string | null;
+      };
+      return {
+        ...requirement,
+        citationUrl: requirement.citationUrl ?? undefined,
+      };
+    });
   const sources = sqlite
     .prepare(
       `
@@ -491,6 +535,13 @@ export function findCatalogItem(
     join sources source on source.id = run.source_id
     where polarity.entity_id = ?
     union all
+    select 'node-item-requirement' as fact, source.name, run.version, requirement.source_record_key,
+           requirement.citation_url, requirement.source_path, run.snapshot_path
+    from node_item_requirements requirement
+    join source_runs run on run.id = requirement.source_run_id and run.status = 'active'
+    join sources source on source.id = run.source_id
+    where requirement.item_id = ?
+    union all
     select 'relation.' || relation.kind as fact, source.name, run.version, relation.source_record_key,
            relation.citation_url, relation.source_path, run.snapshot_path
     from entity_relations relation
@@ -501,6 +552,7 @@ export function findCatalogItem(
   `,
     )
     .all(
+      item.id,
       item.id,
       item.id,
       item.id,
@@ -539,6 +591,7 @@ export function findCatalogItem(
     factoryPolaritySets,
     components,
     drops,
+    requiredForNodeAccess,
     sources,
     rankings,
     enhancementOptions,
@@ -651,6 +704,8 @@ export function findCatalogNode(
   const connections = loadNodeConnections(sqlite, [node.id]).get(node.id) ?? [];
   const accessRequirements =
     loadNodeAccessRequirements(sqlite, [node.id], userId).get(node.id) ?? [];
+  const itemRequirements =
+    loadNodeItemRequirements(sqlite, [node.id], userId).get(node.id) ?? [];
   const completionState = userId
     ? loadNodeCompletionStates(sqlite, [node.id], userId).get(node.id)
     : undefined;
@@ -661,6 +716,7 @@ export function findCatalogNode(
     detailEvidence: details?.detailEvidence ?? [],
     connections,
     accessRequirements,
+    itemRequirements,
     ...(completionState ? { completionState } : {}),
     drops,
   };
@@ -693,12 +749,17 @@ export function listCatalogNodes(
     sqlite,
     nodes.map(({ id }) => id),
   );
+  const itemRequirements = loadNodeItemRequirements(
+    sqlite,
+    nodes.map(({ id }) => id),
+  );
   return nodes.map(({ id, ...node }) => ({
     ...node,
     ...details.get(id),
     detailEvidence: details.get(id)?.detailEvidence ?? [],
     connections: connections.get(id) ?? [],
     accessRequirements: accessRequirements.get(id) ?? [],
+    itemRequirements: itemRequirements.get(id) ?? [],
     drops: [],
   }));
 }
@@ -726,6 +787,11 @@ export function listStarChartNodes(
     nodes.map(({ id }) => id),
   );
   const accessRequirements = loadNodeAccessRequirements(
+    sqlite,
+    nodes.map(({ id }) => id),
+    userId,
+  );
+  const itemRequirements = loadNodeItemRequirements(
     sqlite,
     nodes.map(({ id }) => id),
     userId,
@@ -782,6 +848,7 @@ export function listStarChartNodes(
     detailEvidence: details.get(id)?.detailEvidence ?? [],
     connections: connections.get(id) ?? [],
     accessRequirements: accessRequirements.get(id) ?? [],
+    itemRequirements: itemRequirements.get(id) ?? [],
     ...(completionStates
       ? { completionState: completionStates.get(id) ?? "incomplete" }
       : {}),
@@ -882,6 +949,65 @@ function loadNodeAccessRequirements(
     requirements.push({
       ...requirement,
       ...(progressState ? { progressState } : {}),
+    });
+    result.set(nodeId, requirements);
+  }
+  return result;
+}
+
+function loadNodeItemRequirements(
+  sqlite: Database.Database,
+  nodeIds: string[],
+  userId?: string,
+): Map<string, CatalogNode["itemRequirements"]> {
+  const result = new Map<string, CatalogNode["itemRequirements"]>();
+  if (!nodeIds.length) return result;
+  const placeholders = nodeIds.map(() => "?").join(", ");
+  const inventoryJoin = userId
+    ? `left join player_inventory inventory
+         on inventory.entity_id = item.id and inventory.user_id = ?`
+    : "";
+  const inventoryColumn = userId
+    ? "coalesce(inventory.owned_count, 0) + coalesce(inventory.built_count, 0) as ownedCount"
+    : "null as ownedCount";
+  const rows = sqlite
+    .prepare(
+      `select requirement.node_id as nodeId, item.kind, item.slug, item.name,
+              requirement.quantity as requiredCount, ${inventoryColumn},
+              source.name as sourceName, requirement.citation_url as citationUrl
+       from node_item_requirements requirement
+       join source_runs run on run.id = requirement.source_run_id and run.status = 'active'
+       join sources source on source.id = run.source_id
+       join entities item on item.id = requirement.item_id and item.retired = 0
+       ${inventoryJoin}
+       where requirement.node_id in (${placeholders})
+       order by requirement.node_id, item.name collate nocase, source.priority desc,
+                run.retrieved_at desc, source.id, requirement.source_record_key`,
+    )
+    .all(...(userId ? [userId] : []), ...nodeIds) as Array<{
+    nodeId: string;
+    kind: string;
+    slug: string;
+    name: string;
+    requiredCount: number;
+    ownedCount: number | null;
+    sourceName: string;
+    citationUrl: string | null;
+  }>;
+  for (const { nodeId, ownedCount, citationUrl, ...requirement } of rows) {
+    const requirements = result.get(nodeId) ?? [];
+    requirements.push({
+      ...requirement,
+      ...(ownedCount === null
+        ? {}
+        : {
+            ownedCount,
+            state:
+              ownedCount >= requirement.requiredCount
+                ? ("met" as const)
+                : ("blocked" as const),
+          }),
+      citationUrl: citationUrl ?? undefined,
     });
     result.set(nodeId, requirements);
   }

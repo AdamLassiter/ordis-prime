@@ -166,6 +166,14 @@ export interface NodeDetailObservation {
   evidence: Evidence;
 }
 
+export interface NodeItemRequirementObservation {
+  type: "node-item-requirement";
+  nodeExternalId: ExternalIdentifier;
+  itemExternalId: ExternalIdentifier;
+  quantity: number;
+  evidence: Evidence;
+}
+
 export const RELATION_KINDS = [
   "requires",
   "unlocks",
@@ -237,6 +245,7 @@ export type Observation =
   | DropObservation
   | RecipeObservation
   | NodeDetailObservation
+  | NodeItemRequirementObservation
   | EntityRelationObservation
   | EnhancementOptionObservation
   | EquipmentPolaritySetObservation

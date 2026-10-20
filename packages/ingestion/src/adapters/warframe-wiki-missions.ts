@@ -21,7 +21,7 @@ import {
   wikiSlug,
 } from "./mediawiki-lua.ts";
 
-const PARSER_VERSION = "warframe-wiki-missions-v5";
+const PARSER_VERSION = "warframe-wiki-missions-v6";
 const MODULE_TITLE = "Module:Missions/data";
 const QUEST_MODULE_TITLE = "Module:Keys/data";
 
@@ -52,6 +52,11 @@ interface AccessReference {
 interface ParsedAccessRequirements {
   references: AccessReference[];
   railjackIntrinsicRequirement?: number;
+}
+
+interface ParsedItemRequirement {
+  name: "Animo Nav Beacon" | "Judgement Points";
+  quantity: number;
 }
 
 export class WarframeWikiMissionsAdapter implements SourceAdapter {
@@ -107,6 +112,12 @@ export class WarframeWikiMissionsAdapter implements SourceAdapter {
         parseAccessRequirements(record.requirements, questReferences, names),
       ]),
     );
+    const itemRequirements = new Map(
+      records.map((record) => [
+        record.name,
+        parseItemRequirement(record.requirements),
+      ]),
+    );
     const referencedQuests = new Map<string, QuestReference>();
     const questsByName = new Map(
       [...questReferences.values()].map((quest) => [quest.name, quest]),
@@ -137,6 +148,26 @@ export class WarframeWikiMissionsAdapter implements SourceAdapter {
           questPage.revisionId,
           snapshot,
           `quest:${quest.name}`,
+        ),
+      };
+    }
+    const referencedItems = new Set(
+      [...itemRequirements.values()]
+        .filter((requirement): requirement is ParsedItemRequirement =>
+          Boolean(requirement),
+        )
+        .map(({ name }) => name),
+    );
+    for (const name of referencedItems) {
+      yield {
+        type: "entity",
+        kind: "resource",
+        externalIds: [missionRequirementItemExternalId(name)],
+        fields: { name, slug: wikiSlug(name) },
+        evidence: evidence(
+          page.revisionId,
+          snapshot,
+          `requirement-item:${name}`,
         ),
       };
     }
@@ -209,7 +240,44 @@ export class WarframeWikiMissionsAdapter implements SourceAdapter {
         };
       }
     }
+    for (const record of records) {
+      const requirement = itemRequirements.get(record.name);
+      if (!requirement) continue;
+      yield {
+        type: "node-item-requirement",
+        nodeExternalId: missionExternalId(record.name),
+        itemExternalId: missionRequirementItemExternalId(requirement.name),
+        quantity: requirement.quantity,
+        evidence: evidence(
+          page.revisionId,
+          snapshot,
+          `${record.name}:Requirements:item:${requirement.name}`,
+          record.line,
+        ),
+      };
+    }
   }
+}
+
+function parseItemRequirement(
+  requirements: string | undefined,
+): ParsedItemRequirement | undefined {
+  if (!requirements) return undefined;
+  const animo = requirements.match(
+    /^Must have (\d+) \[\[Animo Nav Beacon\]\]s to access$/,
+  );
+  const judgement = requirements.match(
+    /^Must have (\d+) \[\[Judgement Points\]\] to access$/,
+  );
+  const match = animo ?? judgement;
+  if (!match) return undefined;
+  const quantity = Number(match[1]);
+  if (!Number.isSafeInteger(quantity) || quantity < 1)
+    throw new Error("WARFRAME Wiki mission item requirement is invalid");
+  return {
+    name: animo ? "Animo Nav Beacon" : "Judgement Points",
+    quantity,
+  };
 }
 
 function parseMissionRecords(
@@ -410,6 +478,16 @@ function missionQuestExternalId(name: string): ExternalIdentifier {
   return {
     sourceId: "warframe-wiki-missions",
     namespace: "quest-name",
+    value: name,
+  };
+}
+
+function missionRequirementItemExternalId(
+  name: ParsedItemRequirement["name"],
+): ExternalIdentifier {
+  return {
+    sourceId: "warframe-wiki-missions",
+    namespace: "requirement-item",
     value: name,
   };
 }

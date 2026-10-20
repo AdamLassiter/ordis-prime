@@ -70,4 +70,25 @@ test("missing private progress remains conditional rather than guessed", () => {
     }),
     "available",
   );
+  assert.equal(
+    deriveNodeAccessStatus({
+      requirementStates: [],
+      itemRequirementStates: [undefined],
+    }),
+    "conditional",
+  );
+  assert.equal(
+    deriveNodeAccessStatus({
+      requirementStates: [],
+      itemRequirementStates: ["blocked"],
+    }),
+    "blocked",
+  );
+  assert.equal(
+    deriveNodeAccessStatus({
+      requirementStates: [],
+      itemRequirementStates: ["met"],
+    }),
+    "available",
+  );
 });

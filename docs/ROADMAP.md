@@ -74,4 +74,6 @@ Railjack Intrinsics gates and their complete supported quest combinations
 compose separately with a private highest-category rank.
 The star chart derives and filters the same player-aware access states used by
 planning.
-Junction objectives and other compound rank, item or adversary conditions remain.
+Exact Animo Nav Beacon and Judgement Point quantity gates now compose with
+private inventory. Junction objectives and other item, rank or active-adversary
+conditions remain.

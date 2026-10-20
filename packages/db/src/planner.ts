@@ -57,6 +57,16 @@ export interface AcquisitionPlan {
       state: "met" | "blocked" | "unknown";
       source: { name: string; citationUrl?: string };
     };
+    itemRequirements: Array<{
+      entityId: string;
+      kind: string;
+      slug: string;
+      name: string;
+      requiredCount: number;
+      ownedCount: number;
+      state: "met" | "blocked";
+      source: { name: string; citationUrl?: string };
+    }>;
     accessRequirements: Array<{
       entityId: string;
       kind: string;
@@ -391,6 +401,11 @@ export function buildAcquisitionPlan(
     "railjack_intrinsic_requirement",
     playerRailjackIntrinsicRank,
   );
+  const itemRequirements = loadNodeItemRequirements(
+    sqlite,
+    userId,
+    new Set(recommendedNodes.flatMap(({ nodeId }) => (nodeId ? [nodeId] : []))),
+  );
   const recommendations = recommendedNodes
     .map((recommendation) => {
       const node = recommendation.nodeId
@@ -405,6 +420,9 @@ export function buildAcquisitionPlan(
       const railjackIntrinsicRequirement = recommendation.nodeId
         ? railjackIntrinsicRequirements.get(recommendation.nodeId)
         : undefined;
+      const nodeItemRequirements = recommendation.nodeId
+        ? (itemRequirements.get(recommendation.nodeId) ?? [])
+        : [];
       const neededRewards = recommendation.neededRewards.map((reward) => ({
         ...entityDetails(entities, reward.entityId),
         entityId: reward.entityId,
@@ -423,10 +441,12 @@ export function buildAcquisitionPlan(
           playerRank: masteryRequirement?.playerRank,
           railjackIntrinsicRequirement: railjackIntrinsicRequirement?.required,
           playerRailjackIntrinsicRank: railjackIntrinsicRequirement?.playerRank,
+          itemRequirementStates: nodeItemRequirements.map(({ state }) => state),
         }),
         accessRequirements,
         masteryRequirement,
         railjackIntrinsicRequirement,
+        itemRequirements: nodeItemRequirements,
         reasons: [
           `Drops ${neededRewards.length} missing goal ${neededRewards.length === 1 ? "item" : "items"}`,
           ...neededRewards.map(
@@ -474,6 +494,61 @@ export function buildAcquisitionPlan(
     recommendations,
     recipeChoices,
   };
+}
+
+function loadNodeItemRequirements(
+  sqlite: Database.Database,
+  userId: string,
+  nodeIds: Set<EntityId>,
+): Map<string, AcquisitionPlan["recommendations"][number]["itemRequirements"]> {
+  const result = new Map<
+    string,
+    AcquisitionPlan["recommendations"][number]["itemRequirements"]
+  >();
+  if (!nodeIds.size) return result;
+  const ids = [...nodeIds];
+  const placeholders = ids.map(() => "?").join(", ");
+  const rows = sqlite
+    .prepare(
+      `select requirement.node_id as nodeId, item.id as entityId, item.kind,
+              item.slug, item.name, requirement.quantity as requiredCount,
+              coalesce(inventory.owned_count, 0) + coalesce(inventory.built_count, 0) as ownedCount,
+              source.name as sourceName, requirement.citation_url as citationUrl
+       from node_item_requirements requirement
+       join source_runs run on run.id = requirement.source_run_id and run.status = 'active'
+       join sources source on source.id = run.source_id
+       join entities item on item.id = requirement.item_id and item.retired = 0
+       left join player_inventory inventory
+         on inventory.entity_id = item.id and inventory.user_id = ?
+       where requirement.node_id in (${placeholders})
+       order by requirement.node_id, item.name collate nocase, source.priority desc,
+                run.retrieved_at desc, source.id, requirement.source_record_key`,
+    )
+    .all(userId, ...ids) as Array<{
+    nodeId: string;
+    entityId: string;
+    kind: string;
+    slug: string;
+    name: string;
+    requiredCount: number;
+    ownedCount: number;
+    sourceName: string;
+    citationUrl: string | null;
+  }>;
+  for (const { nodeId, sourceName, citationUrl, ...requirement } of rows) {
+    const requirements = result.get(nodeId) ?? [];
+    requirements.push({
+      ...requirement,
+      state:
+        requirement.ownedCount >= requirement.requiredCount ? "met" : "blocked",
+      source: {
+        name: sourceName,
+        citationUrl: citationUrl ?? undefined,
+      },
+    });
+    result.set(nodeId, requirements);
+  }
+  return result;
 }
 
 function loadNodeMasteryRequirements(

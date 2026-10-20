@@ -28,6 +28,7 @@ export function deriveNodeAccessStatus(input: {
   playerRank?: number;
   railjackIntrinsicRequirement?: number;
   playerRailjackIntrinsicRank?: number;
+  itemRequirementStates?: Array<"met" | "blocked" | undefined>;
 }): NodeAccessStatus {
   if (
     input.requirementStates.some(
@@ -38,7 +39,8 @@ export function deriveNodeAccessStatus(input: {
       input.playerRank < input.masteryRequirement) ||
     (input.railjackIntrinsicRequirement !== undefined &&
       input.playerRailjackIntrinsicRank !== undefined &&
-      input.playerRailjackIntrinsicRank < input.railjackIntrinsicRequirement)
+      input.playerRailjackIntrinsicRank < input.railjackIntrinsicRequirement) ||
+    input.itemRequirementStates?.some((state) => state === "blocked")
   )
     return "blocked";
   if (
@@ -46,13 +48,15 @@ export function deriveNodeAccessStatus(input: {
     (input.masteryRequirement !== undefined &&
       input.playerRank === undefined) ||
     (input.railjackIntrinsicRequirement !== undefined &&
-      input.playerRailjackIntrinsicRank === undefined)
+      input.playerRailjackIntrinsicRank === undefined) ||
+    input.itemRequirementStates?.some((state) => state === undefined)
   )
     return "conditional";
   if (
     input.requirementStates.length ||
     input.masteryRequirement !== undefined ||
-    input.railjackIntrinsicRequirement !== undefined
+    input.railjackIntrinsicRequirement !== undefined ||
+    Boolean(input.itemRequirementStates?.length)
   )
     return "available";
   return "unknown";

@@ -329,6 +329,41 @@ export default async function Planner() {
                           </span>
                         </p>
                       )}
+                      {recommendation.itemRequirements.length > 0 && (
+                        <ul>
+                          {recommendation.itemRequirements.map(
+                            (requirement) => (
+                              <li key={requirement.entityId}>
+                                Requires {requirement.requiredCount} ×{" "}
+                                <Link
+                                  href={`/catalog/${requirement.kind}/${requirement.slug}`}
+                                >
+                                  {requirement.name}
+                                </Link>
+                                :{" "}
+                                {requirement.state === "met"
+                                  ? "met"
+                                  : "blocked"}
+                                {` at ${requirement.ownedCount} owned`}{" "}
+                                <span className="muted">
+                                  (
+                                  {requirement.source.citationUrl ? (
+                                    <a
+                                      href={requirement.source.citationUrl}
+                                      rel="noreferrer"
+                                    >
+                                      {requirement.source.name}
+                                    </a>
+                                  ) : (
+                                    requirement.source.name
+                                  )}
+                                  )
+                                </span>
+                              </li>
+                            ),
+                          )}
+                        </ul>
+                      )}
                       {recommendation.accessRequirements.length > 0 && (
                         <ul>
                           {recommendation.accessRequirements.map(

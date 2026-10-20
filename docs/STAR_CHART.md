@@ -29,6 +29,10 @@ gate. Complete allow-listed Railjack Intrinsics expressions populate a separate
 0–10 gate and retain every supported quest clause; Intrinsics are never coerced
 into Mastery Rank. Expressions containing unsupported conditions still fail
 closed as a whole.
+Exact item-only expressions for Animo Nav Beacons and Judgement Points become
+cited node/item/quantity facts. They reconcile to the same canonical resources
+used by inventory. Other item and mixed expressions remain absent rather than
+being reduced to a misleading subset.
 
 The public `/star-chart` view groups nodes by planet and filters by node, mission
 or faction text. Signed-in players can restrict it to nodes with at least one
@@ -45,6 +49,8 @@ They also compare a sourced Mastery gate with the player's private combined
 Mastery/Legendary Rank when one has been recorded.
 Railjack nodes similarly compare their sourced Intrinsics gate with the
 player's private highest rank in any Railjack Intrinsics category.
+Item gates compare the cited quantity with private owned plus built inventory;
+the item page links back to nodes that consume it for access.
 The chart derives the same available, conditional, blocked or unknown state for
 every node and can filter by it. It does not persist that state or infer access
 from graph connectivity. Guests therefore see private-input-dependent evidence

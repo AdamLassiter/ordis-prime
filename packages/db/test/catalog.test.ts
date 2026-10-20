@@ -112,6 +112,17 @@ test("catalog read models join active recipes, drops, provenance, and rankings",
       evidence: { ...evidence, sourceRecordKey: "caloris" },
     },
     {
+      type: "node-item-requirement",
+      nodeExternalId: external("caloris"),
+      itemExternalId: external("alloy"),
+      quantity: 100,
+      evidence: {
+        ...evidence,
+        sourceRecordKey: "caloris:alloy",
+        citationUrl: "https://example.test/caloris-access",
+      },
+    },
+    {
       type: "recipe",
       outputExternalId: external("braton"),
       ingredients: [{ externalId: external("alloy"), quantity: 200 }],
@@ -261,6 +272,24 @@ test("catalog read models join active recipes, drops, provenance, and rankings",
     ),
     true,
   );
+  const alloy = findCatalogItem(sqlite, "resource", "alloy-plate")!;
+  assert.deepEqual(alloy.requiredForNodeAccess, [
+    {
+      nodeSlug: "mercury-caloris",
+      nodeName: "Caloris",
+      quantity: 100,
+      sourceName: "Items",
+      citationUrl: "https://example.test/caloris-access",
+    },
+  ]);
+  assert.equal(
+    alloy.evidence.some(
+      (entry) =>
+        entry.fact === "node-item-requirement" &&
+        entry.recordKey === "caloris:alloy",
+    ),
+    true,
+  );
   assert.equal(
     item?.evidence.some(
       (entry) =>
@@ -314,10 +343,35 @@ test("catalog read models join active recipes, drops, provenance, and rankings",
   assert.deepEqual(node.connections, [
     { slug: "mercury-terminus", name: "Terminus", planet: undefined },
   ]);
+  assert.deepEqual(node.itemRequirements, [
+    {
+      kind: "resource",
+      slug: "alloy-plate",
+      name: "Alloy Plate",
+      requiredCount: 100,
+      sourceName: "Items",
+      citationUrl: "https://example.test/caloris-access",
+    },
+  ]);
   const userId = createLocalUser(sqlite, { username: "Player" });
   assert.equal(
     findCatalogNode(sqlite, "mercury-caloris", userId)?.completionState,
     "incomplete",
+  );
+  assert.deepEqual(
+    findCatalogNode(sqlite, "mercury-caloris", userId)?.itemRequirements,
+    [
+      {
+        kind: "resource",
+        slug: "alloy-plate",
+        name: "Alloy Plate",
+        requiredCount: 100,
+        ownedCount: 0,
+        state: "blocked",
+        sourceName: "Items",
+        citationUrl: "https://example.test/caloris-access",
+      },
+    ],
   );
   setNodeCompletion(sqlite, userId, "mercury-caloris", true);
   assert.equal(
@@ -388,6 +442,17 @@ test("catalog read models join active recipes, drops, provenance, and rankings",
   assert.deepEqual(
     findCatalogNode(sqlite, "mercury-caloris", userId)?.drops[0]?.inventory,
     { ownedCount: 1, builtCount: 0, wantedCount: 0, needed: false },
+  );
+  setInventoryEntryByReference(
+    sqlite,
+    userId,
+    { kind: "resource", slug: "alloy-plate" },
+    { ownedCount: 100, builtCount: 0, wantedCount: 0 },
+  );
+  assert.equal(
+    findCatalogNode(sqlite, "mercury-caloris", userId)?.itemRequirements[0]
+      ?.state,
+    "met",
   );
   assert.deepEqual(
     listSourceStatuses(sqlite).map(({ id, conflictCount }) => ({

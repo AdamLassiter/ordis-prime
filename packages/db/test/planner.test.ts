@@ -83,6 +83,13 @@ test("persisted goals expand through active recipes and produce named node reaso
       evidence: { ...evidence, sourceRecordKey: "mechanic" },
     },
     {
+      type: "entity",
+      kind: "resource",
+      externalIds: [external("access-token")],
+      fields: { name: "Access Token", slug: "access-token" },
+      evidence: { ...evidence, sourceRecordKey: "access-token" },
+    },
+    {
       type: "recipe",
       outputExternalId: external("frame"),
       outputQuantity: 1,
@@ -119,6 +126,17 @@ test("persisted goals expand through active recipes and produce named node reaso
       masteryRequirement: 10,
       railjackIntrinsicRequirement: 7,
       evidence: { ...evidence, sourceRecordKey: "node:details" },
+    },
+    {
+      type: "node-item-requirement",
+      nodeExternalId: external("node"),
+      itemExternalId: external("access-token"),
+      quantity: 5,
+      evidence: {
+        ...evidence,
+        sourceRecordKey: "node:access-token",
+        citationUrl: "https://example.test/access-token",
+      },
     },
     {
       type: "entity-relation",
@@ -177,6 +195,25 @@ test("persisted goals expand through active recipes and produce named node reaso
     source: { name: "Items", citationUrl: undefined },
   });
   assert.deepEqual(
+    plan.recommendations[0]?.itemRequirements.map(
+      ({ entityId: _entityId, ...requirement }) => requirement,
+    ),
+    [
+      {
+        kind: "resource",
+        slug: "access-token",
+        name: "Access Token",
+        requiredCount: 5,
+        ownedCount: 0,
+        state: "blocked",
+        source: {
+          name: "Items",
+          citationUrl: "https://example.test/access-token",
+        },
+      },
+    ],
+  );
+  assert.deepEqual(
     plan.recommendations[0]?.accessRequirements.map(
       ({ name, state, relationKinds, sources }) => ({
         name,
@@ -231,7 +268,7 @@ test("persisted goals expand through active recipes and produce named node reaso
   setNodeCompletion(sqlite, userId, "prerequisite-node", true);
   assert.equal(
     buildAcquisitionPlan(sqlite, userId).recommendations[0]?.accessStatus,
-    "conditional",
+    "blocked",
   );
   setPlayerMasteryRank(sqlite, userId, 9);
   assert.equal(
@@ -241,7 +278,7 @@ test("persisted goals expand through active recipes and produce named node reaso
   setPlayerMasteryRank(sqlite, userId, 10);
   assert.equal(
     buildAcquisitionPlan(sqlite, userId).recommendations[0]?.accessStatus,
-    "conditional",
+    "blocked",
   );
   setPlayerRailjackIntrinsicRank(sqlite, userId, 6);
   assert.equal(
@@ -249,6 +286,16 @@ test("persisted goals expand through active recipes and produce named node reaso
     "blocked",
   );
   setPlayerRailjackIntrinsicRank(sqlite, userId, 7);
+  assert.equal(
+    buildAcquisitionPlan(sqlite, userId).recommendations[0]?.accessStatus,
+    "blocked",
+  );
+  setInventoryEntryByReference(
+    sqlite,
+    userId,
+    { kind: "resource", slug: "access-token" },
+    { ownedCount: 5, builtCount: 0, wantedCount: 0 },
+  );
   assert.equal(
     buildAcquisitionPlan(sqlite, userId).recommendations[0]?.accessStatus,
     "available",

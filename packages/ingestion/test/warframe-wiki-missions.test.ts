@@ -297,6 +297,50 @@ test("wiki mission adapter imports only complete Railjack Intrinsic expressions"
   );
 });
 
+test("wiki mission adapter imports exact inventory requirements", async () => {
+  const observations = await collect(
+    new WarframeWikiMissionsAdapter(),
+    wikiSnapshot(`
+      return {
+        MissionDetails = {
+          { Name = "Nakki", Planet = "Sedna", NextNodes = { "Yam" } },
+          { Name = "Yam", Planet = "Sedna", PreviousNodes = { "Nakki" }, NextNodes = { "Vodyanoi" }, Requirements = "Must have 10 [[Judgement Points]] to access" },
+          { Name = "Vodyanoi", Planet = "Sedna", PreviousNodes = { "Yam" }, NextNodes = { "Hades" }, Requirements = "Must have 15 [[Judgement Points]] to access" },
+          { Name = "Hades", Planet = "Pluto", PreviousNodes = { "Vodyanoi" }, NextNodes = { "Grendel" }, Requirements = "Must have 5 [[Animo Nav Beacon]]s to access" },
+          { Name = "Grendel", Planet = "Europa", PreviousNodes = { "Hades" }, Requirements = "Must have [[Grendel Chassis Locator]] to access" },
+        },
+      }
+    `),
+  );
+
+  assert.deepEqual(
+    observations.flatMap((observation) =>
+      observation.type === "entity" && observation.kind === "resource"
+        ? [observation.fields.name]
+        : [],
+    ),
+    ["Judgement Points", "Animo Nav Beacon"],
+  );
+  assert.deepEqual(
+    observations.flatMap((observation) =>
+      observation.type === "node-item-requirement"
+        ? [
+            {
+              node: observation.nodeExternalId.value,
+              item: observation.itemExternalId.value,
+              quantity: observation.quantity,
+            },
+          ]
+        : [],
+    ),
+    [
+      { node: "Yam", item: "Judgement Points", quantity: 10 },
+      { node: "Vodyanoi", item: "Judgement Points", quantity: 15 },
+      { node: "Hades", item: "Animo Nav Beacon", quantity: 5 },
+    ],
+  );
+});
+
 test("wiki mission adapter rejects an out-of-range exact Mastery gate", async () => {
   await assert.rejects(
     collect(
