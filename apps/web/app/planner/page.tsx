@@ -442,6 +442,29 @@ export default async function Planner() {
                           )}
                         </ul>
                       )}
+                      {recommendation.objectives.length > 0 && (
+                        <ul>
+                          {recommendation.objectives.map((objective) => (
+                            <li key={`${objective.sourceId}:${objective.key}`}>
+                              {objective.label}: {objective.state}{" "}
+                              <span className="muted">
+                                (
+                                {objective.source.citationUrl ? (
+                                  <a
+                                    href={objective.source.citationUrl}
+                                    rel="noreferrer"
+                                  >
+                                    {objective.source.name}
+                                  </a>
+                                ) : (
+                                  objective.source.name
+                                )}
+                                )
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
                       {recommendation.accessRequirements.length > 0 && (
                         <ul>
                           {recommendation.accessRequirements.map(

@@ -954,6 +954,33 @@ export const nodeProgress = sqliteTable(
     index("player_node_progress_completed").on(table.userId, table.completedAt),
   ],
 );
+export const nodeObjectiveProgress = sqliteTable(
+  "player_node_objective_progress",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    nodeId: text("node_id")
+      .notNull()
+      .references(() => entities.id),
+    sourceId: text("source_id")
+      .notNull()
+      .references(() => sources.id),
+    objectiveKey: text("objective_key").notNull(),
+    objectiveLabel: text("objective_label").notNull(),
+    completedAt: integer("completed_at", { mode: "timestamp_ms" }).notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
+  },
+  (table) => [
+    primaryKey({
+      columns: [table.userId, table.nodeId, table.sourceId, table.objectiveKey],
+    }),
+    index("player_node_objective_progress_completed").on(
+      table.userId,
+      table.completedAt,
+    ),
+  ],
+);
 export const jobs = sqliteTable("jobs", {
   id: text().primaryKey(),
   kind: text().notNull(),

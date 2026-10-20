@@ -64,8 +64,9 @@ opportunity.
 Node access currently covers curated quest, mechanic, secret, enemy and boss
 relations; structured quest, node-completion, Railjack Intrinsics, active
 adversary and Warframe-rank Wiki requirements; sourced numeric Mastery Rank
-gates; and allow-listed exact item quantity gates. Junction rules, other
-compound conditions, market acquisition, relic refinement and
+gates; allow-listed exact item quantity gates; and current Junction objectives
+composed with private per-objective completion. Other compound conditions,
+market acquisition, relic refinement and
 rotation-specific mission duration are not yet modeled.
 Those inputs should extend the planning read model rather than becoming UI-only
 heuristics.

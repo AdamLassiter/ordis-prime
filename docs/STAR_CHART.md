@@ -81,8 +81,10 @@ explicit submitted scope means checked and unchecked visible nodes are updated
 atomically while nodes hidden by the filters remain untouched.
 
 Junction node pages list the current four sourced objectives in Wiki order with
-their hints and revision citations. Objective completion is not yet private
-player state and does not currently affect the derived node access state.
+their hints and revision citations. Signed-in players can mark each current
+objective complete. Any incomplete objective blocks Junction access, all four
+completed objectives satisfy that part of the rule, and guests see the private
+input as conditional.
 
 ## Current compromise
 
@@ -96,6 +98,7 @@ Enemy and quest identities are imported, but richer domain-specific facts and
 complete curated discovery links remain future work.
 Junction rewards remain unmodeled because their table cells mix items,
 currencies and quest unlocks; importing the task text does not imply reward
-semantics. Per-objective progress and its contribution to Junction access are
-also future work.
+semantics. A task text change intentionally creates a new objective key, so a
+previous completion is retained privately but ignored by current access until
+the new task is completed.
 There is not yet automatic account-state import.

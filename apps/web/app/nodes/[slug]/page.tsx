@@ -12,6 +12,7 @@ import { addCatalogTodo, addCatalogWatch } from "@/app/todos/actions";
 import { relationLabel } from "@/lib/relation-label";
 import { ADVERSARY_LABELS } from "@ordis-prime/domain";
 import { NodeCompletionForm } from "../completion-form";
+import { updateNodeObjectiveCompletion } from "../actions";
 
 export default async function NodePage({
   params,
@@ -290,9 +291,32 @@ export default async function NodePage({
           <h2>Junction objectives</h2>
           <ol>
             {node.objectives.map((objective) => (
-              <li key={`${objective.key}:${objective.sourceName}`}>
+              <li key={`${objective.sourceId}:${objective.key}`}>
                 <strong>{objective.label}</strong>
                 {objective.hint && <p className="muted">{objective.hint}</p>}
+                {session && objective.completionState && (
+                  <form
+                    className="inline-form discovery-progress"
+                    action={updateNodeObjectiveCompletion.bind(
+                      null,
+                      slug,
+                      objective.sourceId,
+                      objective.key,
+                    )}
+                  >
+                    <label>
+                      Your progress
+                      <select
+                        name="state"
+                        defaultValue={objective.completionState}
+                      >
+                        <option value="incomplete">Incomplete</option>
+                        <option value="completed">Completed</option>
+                      </select>
+                    </label>
+                    <button className="button">Save</button>
+                  </form>
+                )}
                 <span className="muted">
                   Source:{" "}
                   {objective.citationUrl ? (

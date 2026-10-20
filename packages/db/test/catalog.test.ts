@@ -18,6 +18,7 @@ import {
   setDiscoveryProgress,
   setInventoryEntryByReference,
   setNodeCompletion,
+  setNodeObjectiveCompletion,
 } from "../src/index.ts";
 
 test("catalog read models join active recipes, drops, provenance, and rankings", async (context) => {
@@ -128,6 +129,7 @@ test("catalog read models join active recipes, drops, provenance, and rankings",
       type: "node-objective",
       nodeExternalId: external("caloris"),
       key: "open-lockers",
+      sourceId: "items",
       label: "Open 3 lockers",
       hint: "Explore the whole mission.",
       sortOrder: 0,
@@ -374,6 +376,7 @@ test("catalog read models join active recipes, drops, provenance, and rankings",
   ]);
   assert.deepEqual(node.objectives, [
     {
+      sourceId: "items",
       key: "open-lockers",
       label: "Open 3 lockers",
       hint: "Explore the whole mission.",
@@ -382,6 +385,27 @@ test("catalog read models join active recipes, drops, provenance, and rankings",
     },
   ]);
   const userId = createLocalUser(sqlite, { username: "Player" });
+  assert.equal(
+    findCatalogNode(sqlite, "mercury-caloris", userId)?.objectives[0]
+      ?.completionState,
+    "incomplete",
+  );
+  setNodeObjectiveCompletion(
+    sqlite,
+    userId,
+    {
+      slug: "mercury-caloris",
+      sourceId: "items",
+      objectiveKey: "open-lockers",
+    },
+    true,
+  );
+  assert.equal(
+    listStarChartNodes(sqlite, userId).find(
+      ({ slug }) => slug === "mercury-caloris",
+    )?.objectives[0]?.completionState,
+    "completed",
+  );
   assert.equal(
     findCatalogNode(sqlite, "mercury-caloris", userId)?.completionState,
     "incomplete",

@@ -81,6 +81,13 @@ export interface AcquisitionPlan {
       state: "met" | "blocked";
       source: { name: string; citationUrl?: string };
     }>;
+    objectives: Array<{
+      sourceId: string;
+      key: string;
+      label: string;
+      state: "incomplete" | "completed";
+      source: { name: string; citationUrl?: string };
+    }>;
     accessRequirements: Array<{
       entityId: string;
       kind: string;
@@ -428,6 +435,11 @@ export function buildAcquisitionPlan(
     userId,
     new Set(recommendedNodes.flatMap(({ nodeId }) => (nodeId ? [nodeId] : []))),
   );
+  const objectives = loadNodeObjectives(
+    sqlite,
+    userId,
+    new Set(recommendedNodes.flatMap(({ nodeId }) => (nodeId ? [nodeId] : []))),
+  );
   const activeAdversaryRequirements = loadNodeAdversaryRequirements(
     sqlite,
     new Set(recommendedNodes.flatMap(({ nodeId }) => (nodeId ? [nodeId] : []))),
@@ -456,6 +468,9 @@ export function buildAcquisitionPlan(
       const activeAdversaryRequirement = recommendation.nodeId
         ? activeAdversaryRequirements.get(recommendation.nodeId)
         : undefined;
+      const nodeObjectives = recommendation.nodeId
+        ? (objectives.get(recommendation.nodeId) ?? [])
+        : [];
       const neededRewards = recommendation.neededRewards.map((reward) => ({
         ...entityDetails(entities, reward.entityId),
         entityId: reward.entityId,
@@ -477,6 +492,7 @@ export function buildAcquisitionPlan(
           warframeRankRequirement: warframeRankRequirement?.required,
           playerHighestWarframeRank: warframeRankRequirement?.playerRank,
           itemRequirementStates: nodeItemRequirements.map(({ state }) => state),
+          objectiveStates: nodeObjectives.map(({ state }) => state),
           activeAdversaryRequirement: activeAdversaryRequirement?.required,
           playerActiveAdversary: activeAdversaryRequirement?.playerValue,
         }),
@@ -485,6 +501,7 @@ export function buildAcquisitionPlan(
         railjackIntrinsicRequirement,
         warframeRankRequirement,
         itemRequirements: nodeItemRequirements,
+        objectives: nodeObjectives,
         activeAdversaryRequirement,
         reasons: [
           `Drops ${neededRewards.length} missing goal ${neededRewards.length === 1 ? "item" : "items"}`,
@@ -586,6 +603,59 @@ function loadNodeItemRequirements(
       },
     });
     result.set(nodeId, requirements);
+  }
+  return result;
+}
+
+function loadNodeObjectives(
+  sqlite: Database.Database,
+  userId: string,
+  nodeIds: Set<EntityId>,
+): Map<string, AcquisitionPlan["recommendations"][number]["objectives"]> {
+  const result = new Map<
+    string,
+    AcquisitionPlan["recommendations"][number]["objectives"]
+  >();
+  if (!nodeIds.size) return result;
+  const ids = [...nodeIds];
+  const placeholders = ids.map(() => "?").join(", ");
+  const rows = sqlite
+    .prepare(
+      `select objective.node_id as nodeId, run.source_id as sourceId,
+              objective.key, objective.label, source.name as sourceName,
+              objective.citation_url as citationUrl,
+              case when progress.objective_key is null
+                then 'incomplete' else 'completed' end as state
+       from node_objectives objective
+       join source_runs run on run.id = objective.source_run_id and run.status = 'active'
+       join sources source on source.id = run.source_id
+       left join player_node_objective_progress progress
+         on progress.user_id = ? and progress.node_id = objective.node_id
+        and progress.source_id = run.source_id
+        and progress.objective_key = objective.key
+       where objective.node_id in (${placeholders})
+       order by objective.node_id, source.priority desc, run.retrieved_at desc,
+                source.id, objective.sort_order, objective.source_record_key`,
+    )
+    .all(userId, ...ids) as Array<{
+    nodeId: string;
+    sourceId: string;
+    key: string;
+    label: string;
+    sourceName: string;
+    citationUrl: string | null;
+    state: "incomplete" | "completed";
+  }>;
+  for (const { nodeId, sourceName, citationUrl, ...objective } of rows) {
+    const objectives = result.get(nodeId) ?? [];
+    objectives.push({
+      ...objective,
+      source: {
+        name: sourceName,
+        citationUrl: citationUrl ?? undefined,
+      },
+    });
+    result.set(nodeId, objectives);
   }
   return result;
 }

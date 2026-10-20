@@ -197,9 +197,10 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   chart by completion and transfer that state in profiles. A bulk editor
   atomically replaces completion only for its explicitly submitted filtered
   scope. Junction pages now supply four ordered, cited public objectives per
-  Junction, but there is no automatic game-account import, objective-level
-  progress, objective-derived access or node-variant completion model yet.
-  Stable visual positions are still missing.
+  Junction. Players can record portable private completion per current task and
+  that state drives the shared access derivation, but there is no automatic
+  game-account import or node-variant completion model yet. Stable visual
+  positions are still missing.
 - A public discovery atlas searches canonical quest, ability, enemy, boss,
   mechanic and secret kinds. WFCD currently populates quests and enemies;
   structured Wiki data populates current abilities and their typed
@@ -216,9 +217,9 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   Intrinsics requirements and allow-listed item quantities to show cited
   blockers. Node pages expose the same cited requirements and
   private discovery or node-completion progress. Nodes without access evidence
-  stay unknown. Junction objective text has a typed public model, but private
-  completion and its access semantics, objective rewards, and other compound
-  equipment or item conditions still need typed models.
+  stay unknown. Junction objective text and private completion now compose into
+  access; objective rewards and other compound equipment or item conditions
+  still need typed models.
 
 ## Deliberate compromises
 

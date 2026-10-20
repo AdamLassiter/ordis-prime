@@ -9,6 +9,7 @@ interface ImportResult {
   recipePreferencesImported: number;
   discoveryProgressImported: number;
   nodeProgressImported: number;
+  objectiveProgressImported: number;
   todosImported: number;
   watchesImported: number;
   buildsImported: number;
@@ -55,7 +56,7 @@ export function ProfileTransfer() {
       return;
     }
     setMessage(
-      `Imported ${result.inventoryImported} inventory, ${result.goalsImported} goals, ${result.recipePreferencesImported} recipe preferences, ${result.discoveryProgressImported} discovery states, ${result.nodeProgressImported} completed nodes, ${result.todosImported} todos, ${result.watchesImported} watches, and ${result.buildsImported} builds.${result.unresolved.length ? ` ${result.unresolved.length} references could not be matched: ${result.unresolved.map((entry) => entry.name).join(", ")}.` : ""}`,
+      `Imported ${result.inventoryImported} inventory, ${result.goalsImported} goals, ${result.recipePreferencesImported} recipe preferences, ${result.discoveryProgressImported} discovery states, ${result.nodeProgressImported} completed nodes, ${result.objectiveProgressImported} completed node objectives, ${result.todosImported} todos, ${result.watchesImported} watches, and ${result.buildsImported} builds.${result.unresolved.length ? ` ${result.unresolved.length} references could not be matched: ${result.unresolved.map((entry) => entry.name).join(", ")}.` : ""}`,
     );
     setPending(false);
     router.refresh();

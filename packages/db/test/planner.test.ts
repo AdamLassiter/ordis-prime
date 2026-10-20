@@ -15,6 +15,7 @@ import {
   setDiscoveryProgress,
   setInventoryEntryByReference,
   setNodeCompletion,
+  setNodeObjectiveCompletion,
   setPlayerGoal,
   setPlayerActiveAdversary,
   setPlayerHighestWarframeRank,
@@ -335,6 +336,73 @@ test("persisted goals expand through active recipes and produce named node reaso
   assert.equal(
     buildAcquisitionPlan(sqlite, userId).recommendations[0]?.accessStatus,
     "available",
+  );
+  const objectiveEvidence = {
+    ...evidence,
+    sourceId: "objectives",
+    snapshotVersion: "objectives-v1",
+    sourceRecordKey: "test-node:scan",
+  };
+  promoteSource(sqlite, {
+    source: {
+      id: "objectives",
+      name: "Objectives",
+      homepage: "https://example.test/objectives",
+      priority: 10,
+    },
+    version: "objectives-v1",
+    contentHash: "objectives-hash",
+    retrievedAt: objectiveEvidence.retrievedAt,
+    observations: [
+      {
+        type: "entity",
+        kind: "node",
+        externalIds: [
+          { sourceId: "objectives", namespace: "id", value: "test-node" },
+        ],
+        fields: { name: "Test Node", slug: "test-node" },
+        evidence: { ...objectiveEvidence, sourceRecordKey: "test-node" },
+      },
+      {
+        type: "node-objective",
+        nodeExternalId: {
+          sourceId: "objectives",
+          namespace: "id",
+          value: "test-node",
+        },
+        key: "scan-targets",
+        label: "Scan three targets",
+        sortOrder: 0,
+        evidence: objectiveEvidence,
+      },
+    ],
+  });
+  let objectivePlan = buildAcquisitionPlan(sqlite, userId);
+  assert.equal(objectivePlan.recommendations[0]?.accessStatus, "blocked");
+  assert.deepEqual(objectivePlan.recommendations[0]?.objectives, [
+    {
+      sourceId: "objectives",
+      key: "scan-targets",
+      label: "Scan three targets",
+      state: "incomplete",
+      source: { name: "Objectives", citationUrl: undefined },
+    },
+  ]);
+  setNodeObjectiveCompletion(
+    sqlite,
+    userId,
+    {
+      slug: "test-node",
+      sourceId: "objectives",
+      objectiveKey: "scan-targets",
+    },
+    true,
+  );
+  objectivePlan = buildAcquisitionPlan(sqlite, userId);
+  assert.equal(objectivePlan.recommendations[0]?.accessStatus, "available");
+  assert.equal(
+    objectivePlan.recommendations[0]?.objectives[0]?.state,
+    "completed",
   );
   promoteWorldState(sqlite, {
     source: {

@@ -6,12 +6,14 @@ import test from "node:test";
 import type { Observation } from "@ordis-prime/domain";
 import {
   createLocalUser,
+  findCatalogNode,
   getNodeCompletion,
   migrateDatabase,
   openSqliteDatabase,
   promoteSource,
   setNodeCompletion,
   setNodeCompletions,
+  setNodeObjectiveCompletion,
 } from "../src/index.ts";
 
 test("node completion is private and absence means incomplete", async (context) => {
@@ -75,6 +77,159 @@ test("node completion is private and absence means incomplete", async (context) 
   assert.throws(
     () => setNodeCompletion(sqlite, firstUser, "missing", true),
     /Unknown active node/,
+  );
+});
+
+test("node objective completion is private and bound to an active content key", async (context) => {
+  const root = await fs.mkdtemp(
+    path.join(os.tmpdir(), "ordis-objective-progress-"),
+  );
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const databasePath = path.join(root, "catalog.sqlite");
+  migrateDatabase(databasePath);
+  const sqlite = openSqliteDatabase(databasePath);
+  context.after(() => sqlite.close());
+  const evidence = {
+    sourceId: "fixture",
+    sourceRecordKey: "junction",
+    snapshotVersion: "v1",
+    retrievedAt: "2026-10-20T12:00:00.000Z",
+  };
+  promoteSource(sqlite, {
+    source: {
+      id: "fixture",
+      name: "Fixture",
+      homepage: "https://example.test",
+      priority: 1,
+    },
+    version: "v1",
+    contentHash: "sha256:fixture",
+    retrievedAt: evidence.retrievedAt,
+    observations: [
+      {
+        type: "entity",
+        kind: "node",
+        externalIds: [
+          { sourceId: "fixture", namespace: "id", value: "junction" },
+        ],
+        fields: { name: "Junction", slug: "junction" },
+        evidence,
+      },
+      {
+        type: "node-objective",
+        nodeExternalId: {
+          sourceId: "fixture",
+          namespace: "id",
+          value: "junction",
+        },
+        key: "task-content-hash",
+        label: "Complete the task",
+        sortOrder: 0,
+        evidence: { ...evidence, sourceRecordKey: "junction:task" },
+      },
+    ],
+  });
+  const firstUser = createLocalUser(sqlite, { username: "First" });
+  const secondUser = createLocalUser(sqlite, { username: "Second" });
+  const reference = {
+    slug: "junction",
+    sourceId: "fixture",
+    objectiveKey: "task-content-hash",
+  };
+
+  setNodeObjectiveCompletion(sqlite, firstUser, reference, true);
+  assert.deepEqual(
+    sqlite
+      .prepare(
+        `select user_id as userId, objective_label as label
+         from player_node_objective_progress`,
+      )
+      .all(),
+    [{ userId: firstUser, label: "Complete the task" }],
+  );
+  setNodeObjectiveCompletion(sqlite, firstUser, reference, true);
+  assert.equal(
+    (
+      sqlite
+        .prepare("select count(*) as count from player_node_objective_progress")
+        .get() as { count: number }
+    ).count,
+    1,
+  );
+  setNodeObjectiveCompletion(sqlite, secondUser, reference, true);
+  setNodeObjectiveCompletion(sqlite, firstUser, reference, false);
+  assert.deepEqual(
+    sqlite
+      .prepare("select user_id as userId from player_node_objective_progress")
+      .all(),
+    [{ userId: secondUser }],
+  );
+  assert.throws(
+    () =>
+      setNodeObjectiveCompletion(
+        sqlite,
+        firstUser,
+        { ...reference, objectiveKey: "replaced-task" },
+        true,
+      ),
+    /Unknown active node objective/,
+  );
+  const replacementEvidence = {
+    ...evidence,
+    snapshotVersion: "v2",
+    sourceRecordKey: "junction",
+  };
+  promoteSource(sqlite, {
+    source: {
+      id: "fixture",
+      name: "Fixture",
+      homepage: "https://example.test",
+      priority: 1,
+    },
+    version: "v2",
+    contentHash: "sha256:fixture-v2",
+    retrievedAt: replacementEvidence.retrievedAt,
+    observations: [
+      {
+        type: "entity",
+        kind: "node",
+        externalIds: [
+          { sourceId: "fixture", namespace: "id", value: "junction" },
+        ],
+        fields: { name: "Junction", slug: "junction" },
+        evidence: replacementEvidence,
+      },
+      {
+        type: "node-objective",
+        nodeExternalId: {
+          sourceId: "fixture",
+          namespace: "id",
+          value: "junction",
+        },
+        key: "replacement-content-hash",
+        label: "Complete the replacement task",
+        sortOrder: 0,
+        evidence: {
+          ...replacementEvidence,
+          sourceRecordKey: "junction:replacement-task",
+        },
+      },
+    ],
+  });
+  assert.equal(
+    findCatalogNode(sqlite, "junction", secondUser)?.objectives[0]
+      ?.completionState,
+    "incomplete",
+  );
+  assert.equal(
+    (
+      sqlite
+        .prepare(
+          "select count(*) as count from player_node_objective_progress where user_id = ?",
+        )
+        .get(secondUser) as { count: number }
+    ).count,
+    1,
   );
 });
 

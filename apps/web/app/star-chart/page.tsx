@@ -48,6 +48,9 @@ export default async function StarChartPage({
         warframeRankRequirement: node.warframeRankRequirement,
         playerHighestWarframeRank: playerSettings?.highestWarframeRank,
         itemRequirementStates: node.itemRequirements.map(({ state }) => state),
+        objectiveStates: node.objectives.map(
+          ({ completionState }) => completionState,
+        ),
         activeAdversaryRequirement: node.activeAdversaryRequirement,
         playerActiveAdversary: playerSettings?.activeAdversary,
       }),

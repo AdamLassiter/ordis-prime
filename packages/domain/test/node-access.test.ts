@@ -94,6 +94,27 @@ test("missing private progress remains conditional rather than guessed", () => {
   assert.equal(
     deriveNodeAccessStatus({
       requirementStates: [],
+      objectiveStates: [undefined],
+    }),
+    "conditional",
+  );
+  assert.equal(
+    deriveNodeAccessStatus({
+      requirementStates: [],
+      objectiveStates: ["incomplete", "completed"],
+    }),
+    "blocked",
+  );
+  assert.equal(
+    deriveNodeAccessStatus({
+      requirementStates: [],
+      objectiveStates: ["completed", "completed"],
+    }),
+    "available",
+  );
+  assert.equal(
+    deriveNodeAccessStatus({
+      requirementStates: [],
       activeAdversaryRequirement: "kuva-lich",
     }),
     "conditional",

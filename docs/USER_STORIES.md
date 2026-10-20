@@ -21,6 +21,9 @@
   mastery history.
 - As a player, I can open a Junction and see its current four tasks, hints and
   exact Wiki revision without searching through a separate guide.
+- As a player, I can mark individual Junction tasks complete and see my private
+  checklist affect the same explained access state used by the chart
+  and planner.
 - As an administrator, I can see dataset freshness, import failures, conflicts
   and the exact upstream record behind a fact.
 
@@ -42,6 +45,4 @@
 - Live windows intersect with goal-backed node recommendations to surface
   expiring acquisition opportunities in the planner.
 - Quest and mechanic prerequisites surface systems a player has not discovered.
-- Junction tasks gain private per-objective progress and contribute to the same
-  explained node-access state once their completion semantics are modeled.
 - A visual star chart uses the same node IDs, edges, filters and planner queries.

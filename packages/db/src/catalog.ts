@@ -146,11 +146,13 @@ export interface CatalogNode {
     citationUrl?: string;
   }>;
   objectives: Array<{
+    sourceId: string;
     key: string;
     label: string;
     hint?: string;
     sourceName: string;
     citationUrl?: string;
+    completionState?: "incomplete" | "completed";
   }>;
   drops: Array<{
     kind: string;
@@ -716,7 +718,8 @@ export function findCatalogNode(
     loadNodeAccessRequirements(sqlite, [node.id], userId).get(node.id) ?? [];
   const itemRequirements =
     loadNodeItemRequirements(sqlite, [node.id], userId).get(node.id) ?? [];
-  const objectives = loadNodeObjectives(sqlite, [node.id]).get(node.id) ?? [];
+  const objectives =
+    loadNodeObjectives(sqlite, [node.id], userId).get(node.id) ?? [];
   const completionState = userId
     ? loadNodeCompletionStates(sqlite, [node.id], userId).get(node.id)
     : undefined;
@@ -816,6 +819,7 @@ export function listStarChartNodes(
   const objectives = loadNodeObjectives(
     sqlite,
     nodes.map(({ id }) => id),
+    userId,
   );
   const completionStates = userId
     ? loadNodeCompletionStates(
@@ -1039,36 +1043,56 @@ function loadNodeItemRequirements(
 function loadNodeObjectives(
   sqlite: Database.Database,
   nodeIds: string[],
+  userId?: string,
 ): Map<string, CatalogNode["objectives"]> {
   const result = new Map<string, CatalogNode["objectives"]>();
   if (!nodeIds.length) return result;
   const placeholders = nodeIds.map(() => "?").join(", ");
+  const progressJoin = userId
+    ? `left join player_node_objective_progress progress
+         on progress.user_id = ? and progress.node_id = objective.node_id
+        and progress.source_id = run.source_id
+        and progress.objective_key = objective.key`
+    : "";
+  const progressColumn = userId
+    ? ", case when progress.objective_key is null then 'incomplete' else 'completed' end as completionState"
+    : ", null as completionState";
   const rows = sqlite
     .prepare(
       `select objective.node_id as nodeId, objective.key, objective.label,
-              objective.hint, source.name as sourceName,
-              objective.citation_url as citationUrl
+              objective.hint, source.id as sourceId, source.name as sourceName,
+              objective.citation_url as citationUrl${progressColumn}
        from node_objectives objective
        join source_runs run on run.id = objective.source_run_id and run.status = 'active'
        join sources source on source.id = run.source_id
+       ${progressJoin}
        where objective.node_id in (${placeholders})
        order by objective.node_id, source.priority desc, run.retrieved_at desc,
                 source.id, objective.sort_order, objective.source_record_key`,
     )
-    .all(...nodeIds) as Array<{
+    .all(...(userId ? [userId, ...nodeIds] : nodeIds)) as Array<{
     nodeId: string;
+    sourceId: string;
     key: string;
     label: string;
     hint: string | null;
     sourceName: string;
     citationUrl: string | null;
+    completionState: "incomplete" | "completed" | null;
   }>;
-  for (const { nodeId, hint, citationUrl, ...objective } of rows) {
+  for (const {
+    nodeId,
+    hint,
+    citationUrl,
+    completionState,
+    ...objective
+  } of rows) {
     const objectives = result.get(nodeId) ?? [];
     objectives.push({
       ...objective,
       hint: hint ?? undefined,
       citationUrl: citationUrl ?? undefined,
+      ...(completionState ? { completionState } : {}),
     });
     result.set(nodeId, objectives);
   }

@@ -38,6 +38,7 @@ export function deriveNodeAccessStatus(input: {
   warframeRankRequirement?: number;
   playerHighestWarframeRank?: number;
   itemRequirementStates?: Array<"met" | "blocked" | undefined>;
+  objectiveStates?: Array<"incomplete" | "completed" | undefined>;
   activeAdversaryRequirement?: AdversaryKind;
   playerActiveAdversary?: PlayerActiveAdversary;
 }): NodeAccessStatus {
@@ -55,6 +56,7 @@ export function deriveNodeAccessStatus(input: {
       input.playerHighestWarframeRank !== undefined &&
       input.playerHighestWarframeRank < input.warframeRankRequirement) ||
     input.itemRequirementStates?.some((state) => state === "blocked") ||
+    input.objectiveStates?.some((state) => state === "incomplete") ||
     (input.activeAdversaryRequirement !== undefined &&
       input.playerActiveAdversary !== undefined &&
       input.playerActiveAdversary !== input.activeAdversaryRequirement)
@@ -69,6 +71,7 @@ export function deriveNodeAccessStatus(input: {
     (input.warframeRankRequirement !== undefined &&
       input.playerHighestWarframeRank === undefined) ||
     input.itemRequirementStates?.some((state) => state === undefined) ||
+    input.objectiveStates?.some((state) => state === undefined) ||
     (input.activeAdversaryRequirement !== undefined &&
       input.playerActiveAdversary === undefined)
   )
@@ -79,6 +82,7 @@ export function deriveNodeAccessStatus(input: {
     input.railjackIntrinsicRequirement !== undefined ||
     input.warframeRankRequirement !== undefined ||
     Boolean(input.itemRequirementStates?.length) ||
+    Boolean(input.objectiveStates?.length) ||
     input.activeAdversaryRequirement !== undefined
   )
     return "available";

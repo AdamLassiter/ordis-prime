@@ -33,6 +33,7 @@ import {
   setInventoryEntry,
   setInventoryEntryByReference,
   setNodeCompletion,
+  setNodeObjectiveCompletion,
   setPlayerGoal,
   setPlayerActiveAdversary,
   setPlayerHighestWarframeRank,
@@ -145,6 +146,12 @@ test("profiles resolve stable source IDs across installations with different can
     "completed",
   );
   setNodeCompletion(first.sqlite, firstUser, "e-prime", true);
+  setNodeObjectiveCompletion(
+    first.sqlite,
+    firstUser,
+    { slug: "e-prime", sourceId: "items", objectiveKey: "open-lockers" },
+    true,
+  );
   const todoDueAt = Date.parse("2027-01-31T00:00:00.000Z");
   const recurrence = { kind: "monthly-date", day: 31 } as const;
   const todoId = createPlayerTodo(first.sqlite, firstUser, {
@@ -217,8 +224,22 @@ test("profiles resolve stable source IDs across installations with different can
     "ability-strength",
   );
   const profile = exportPlayerProfile(first.sqlite, firstUser);
-  assert.equal(profile.schemaVersion, 19);
+  assert.equal(profile.schemaVersion, 20);
   assert.equal(profile.nodeProgress[0]?.node.slug, "e-prime");
+  assert.deepEqual(
+    {
+      slug: profile.objectiveProgress[0]?.node.slug,
+      sourceId: profile.objectiveProgress[0]?.sourceId,
+      objectiveKey: profile.objectiveProgress[0]?.objectiveKey,
+      objectiveLabel: profile.objectiveProgress[0]?.objectiveLabel,
+    },
+    {
+      slug: "e-prime",
+      sourceId: "items",
+      objectiveKey: "open-lockers",
+      objectiveLabel: "Open 3 lockers",
+    },
+  );
   const secondUser = createLocalUser(second.sqlite, { username: "Importer" });
   const result = importPlayerProfile(second.sqlite, secondUser, profile);
 
@@ -228,6 +249,7 @@ test("profiles resolve stable source IDs across installations with different can
     recipePreferencesImported: 1,
     discoveryProgressImported: 1,
     nodeProgressImported: 1,
+    objectiveProgressImported: 1,
     todosImported: 2,
     watchesImported: 1,
     buildsImported: 1,
@@ -277,6 +299,16 @@ test("profiles resolve stable source IDs across installations with different can
   assert.equal(
     getNodeCompletion(second.sqlite, secondUser, "e-prime"),
     "completed",
+  );
+  assert.equal(
+    (
+      second.sqlite
+        .prepare(
+          "select count(*) as count from player_node_objective_progress where user_id = ?",
+        )
+        .get(secondUser) as { count: number }
+    ).count,
+    1,
   );
   assert.deepEqual(
     listPlayerTodos(second.sqlite, secondUser).map(
@@ -433,7 +465,7 @@ test("profile replacement is transactional and reports missing entities", async 
     wantedCount: 0,
   });
   const missingProfile = {
-    schemaVersion: 19,
+    schemaVersion: 20,
     exportedAt: "2026-10-13T12:00:00.000Z",
     player: {},
     inventory: [
@@ -455,6 +487,7 @@ test("profile replacement is transactional and reports missing entities", async 
     recipePreferences: [],
     discoveryProgress: [],
     nodeProgress: [],
+    objectiveProgress: [],
     todos: [],
     watches: [],
     builds: [],
@@ -469,6 +502,7 @@ test("profile replacement is transactional and reports missing entities", async 
     recipePreferencesImported: 0,
     discoveryProgressImported: 0,
     nodeProgressImported: 0,
+    objectiveProgressImported: 0,
     todosImported: 0,
     watchesImported: 0,
     buildsImported: 0,
@@ -514,6 +548,7 @@ test("profile replacement is transactional and reports missing entities", async 
       recipePreferencesImported: 0,
       discoveryProgressImported: 0,
       nodeProgressImported: 0,
+      objectiveProgressImported: 0,
       todosImported: 0,
       watchesImported: 0,
       buildsImported: 0,
@@ -547,6 +582,7 @@ test("profile replacement is transactional and reports missing entities", async 
       recipePreferencesImported: 0,
       discoveryProgressImported: 0,
       nodeProgressImported: 0,
+      objectiveProgressImported: 0,
       todosImported: 1,
       watchesImported: 0,
       buildsImported: 0,
@@ -584,6 +620,7 @@ test("profile replacement is transactional and reports missing entities", async 
       recipePreferencesImported: 0,
       discoveryProgressImported: 0,
       nodeProgressImported: 0,
+      objectiveProgressImported: 0,
       todosImported: 0,
       watchesImported: 1,
       buildsImported: 0,
@@ -627,7 +664,7 @@ test("profile replacement is transactional and reports missing entities", async 
         ...missingProfile,
         schemaVersion: 10,
       }),
-    /schemaVersion 19/,
+    /schemaVersion 20/,
   );
   assert.throws(
     () =>
@@ -713,6 +750,19 @@ function createCatalog(databasePath: string): {
       externalIds: [{ sourceId: "items", namespace: "id", value: "e-prime" }],
       fields: { name: "E Prime", slug: "e-prime" },
       evidence: { ...evidence, sourceRecordKey: "e-prime" },
+    },
+    {
+      type: "node-objective",
+      nodeExternalId: {
+        sourceId: "items",
+        namespace: "id",
+        value: "e-prime",
+      },
+      key: "open-lockers",
+      label: "Open 3 lockers",
+      hint: "Search the map.",
+      sortOrder: 0,
+      evidence: { ...evidence, sourceRecordKey: "e-prime:open-lockers" },
     },
     {
       type: "entity",

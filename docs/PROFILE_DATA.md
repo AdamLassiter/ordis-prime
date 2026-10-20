@@ -5,7 +5,7 @@ canonical entity IDs inside one installation, while exported profiles use
 provider identifiers so they can be restored into another installation whose
 canonical UUIDs differ.
 
-## Version 19 export
+## Version 20 export
 
 The player section carries an optional combined Mastery Rank used to evaluate
 sourced star-chart gates and build capacity. Values 0 through 30 are ordinary
@@ -42,6 +42,14 @@ Node progress is separate from discovery progress. Each row identifies a
 canonical node through the same portable reference and records its ISO
 completion time; absent nodes are incomplete.
 
+Junction objective progress is separate from whole-node completion. Each
+completed objective carries the portable node reference, source ID,
+content-derived objective key, a human-readable label snapshot and completion
+time. Import accepts it only when that exact objective is active on the resolved
+node; changed or withdrawn tasks are reported unresolved rather than attached
+by row position. Stale local completions remain recoverable but do not satisfy
+the current access rule.
+
 Static todos, including structured calendar recurrence rules, and world-state watch
 rules are portable as user-authored intent. Their optional catalog links use
 the same portable entity reference. If a todo or watch link cannot resolve
@@ -61,7 +69,8 @@ Imports resolve external identifiers first and only fall back to the kind/slug
 pair when no identifier is present in the destination catalog. Ambiguous or
 missing entries are reported rather than guessed. Merge mode is the default;
 replace mode explicitly clears portable state, including player progression
-settings, inside the same transaction that writes resolved entries.
+settings and objective progress, inside the same transaction that writes
+resolved entries.
 
 The parser treats profile files as untrusted input and rejects invalid counts,
 flags, identifiers, and oversized notes before changing player state. Earlier
@@ -71,7 +80,8 @@ no pre-release backwards-compatibility requirement.
 Signed-in players can export from the inventory screen or import in merge or
 replace mode. The HTTP import boundary limits files to 5 MB. Replace mode clears
 all portable state—progression settings, inventory, goals, discovery progress,
-node completion, todos, watches and private build drafts—and writes all
+node completion, objective completion, todos, watches and private build
+drafts—and writes all
 resolvable entries in one transaction.
 Deleting watches also deletes their derived notifications. Merge mode upserts
 identity-keyed state and appends todos, watches and builds. Unresolved build
