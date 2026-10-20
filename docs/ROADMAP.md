@@ -72,8 +72,10 @@ with portable private player progression; the Wiki mission source also
 contributes complete allow-listed quest and node-completion requirements.
 Railjack Intrinsics gates and their complete supported quest combinations
 compose separately with a private highest-category rank.
+The three current active-adversary confrontation gates compose with a portable
+private none-or-kind setting while retaining their Intrinsics or quest clauses.
 The star chart derives and filters the same player-aware access states used by
 planning.
 Exact Animo Nav Beacon, Judgement Point, Grendel Locator and Mutalist Alad V
 Assassinate Key quantity gates now compose with private inventory. Junction
-objectives and other item, rank or active-adversary conditions remain.
+objectives and other item or rank conditions remain.

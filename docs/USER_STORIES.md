@@ -14,6 +14,8 @@
   rather than an unexplained score.
 - As a player, I can see whether my inventory meets a cited node-entry quantity
   and follow that item back to every node that requires it.
+- As a player, I can record my current adversary and see only the matching final
+  confrontation as available while unrecorded state stays conditional.
 - As an administrator, I can see dataset freshness, import failures, conflicts
   and the exact upstream record behind a fact.
 

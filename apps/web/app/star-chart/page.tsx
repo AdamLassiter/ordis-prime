@@ -46,6 +46,8 @@ export default async function StarChartPage({
         railjackIntrinsicRequirement: node.railjackIntrinsicRequirement,
         playerRailjackIntrinsicRank: playerSettings?.railjackIntrinsicRank,
         itemRequirementStates: node.itemRequirements.map(({ state }) => state),
+        activeAdversaryRequirement: node.activeAdversaryRequirement,
+        playerActiveAdversary: playerSettings?.activeAdversary,
       }),
     }),
   );

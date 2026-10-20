@@ -10,6 +10,7 @@ import {
 } from "@ordis-prime/db";
 import { addCatalogTodo, addCatalogWatch } from "@/app/todos/actions";
 import { relationLabel } from "@/lib/relation-label";
+import { ADVERSARY_LABELS } from "@ordis-prime/domain";
 import { NodeCompletionForm } from "../completion-form";
 
 export default async function NodePage({
@@ -148,6 +149,29 @@ export default async function NodePage({
                     node.railjackIntrinsicRequirement
                   ? "met"
                   : `blocked at ${settings.railjackIntrinsicRank}`}
+            </span>
+          )}
+        </dd>
+        <dt>Active adversary requirement</dt>
+        <dd>
+          {node.activeAdversaryRequirement
+            ? ADVERSARY_LABELS[node.activeAdversaryRequirement]
+            : "Not recorded"}
+          {node.activeAdversaryRequirement && settings && (
+            <span
+              className={
+                settings.activeAdversary === node.activeAdversaryRequirement
+                  ? "tag progress-completed"
+                  : "tag status-needed"
+              }
+            >
+              {settings.activeAdversary === undefined
+                ? "player adversary not recorded"
+                : settings.activeAdversary === node.activeAdversaryRequirement
+                  ? "met"
+                  : settings.activeAdversary === "none"
+                    ? "blocked with no active adversary"
+                    : `blocked with ${ADVERSARY_LABELS[settings.activeAdversary]}`}
             </span>
           )}
         </dd>

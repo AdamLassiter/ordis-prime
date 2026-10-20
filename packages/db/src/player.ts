@@ -31,7 +31,11 @@ import {
   type WorldStateWatch,
   type WorldStateWatchTrigger,
 } from "./world-state-watches.ts";
-import type { WorldStateWindowKind } from "@ordis-prime/domain";
+import {
+  isPlayerActiveAdversary,
+  type PlayerActiveAdversary,
+  type WorldStateWindowKind,
+} from "@ordis-prime/domain";
 
 export interface InventoryValues {
   ownedCount: number;
@@ -52,6 +56,7 @@ export interface PlayerInventoryEntry extends InventoryValues {
 export interface PlayerSettings {
   masteryRank?: number;
   railjackIntrinsicRank?: number;
+  activeAdversary?: PlayerActiveAdversary;
 }
 
 export const MAX_COMBINED_MASTERY_RANK = 40;
@@ -65,15 +70,21 @@ export function getPlayerSettings(
   const row = sqlite
     .prepare(
       `select mastery_rank as masteryRank,
-              railjack_intrinsic_rank as railjackIntrinsicRank
+              railjack_intrinsic_rank as railjackIntrinsicRank,
+              active_adversary as activeAdversary
        from player_profiles where user_id = ?`,
     )
     .get(userId) as
-    | { masteryRank: number | null; railjackIntrinsicRank: number | null }
+    | {
+        masteryRank: number | null;
+        railjackIntrinsicRank: number | null;
+        activeAdversary: PlayerActiveAdversary | null;
+      }
     | undefined;
   return {
     masteryRank: row?.masteryRank ?? undefined,
     railjackIntrinsicRank: row?.railjackIntrinsicRank ?? undefined,
+    activeAdversary: row?.activeAdversary ?? undefined,
   };
 }
 
@@ -101,6 +112,18 @@ export function setPlayerRailjackIntrinsicRank(
   });
 }
 
+export function setPlayerActiveAdversary(
+  sqlite: Database.Database,
+  userId: string,
+  activeAdversary?: PlayerActiveAdversary,
+): void {
+  const current = getPlayerSettings(sqlite, userId);
+  setPlayerProgression(sqlite, userId, {
+    ...current,
+    activeAdversary,
+  });
+}
+
 export function setPlayerProgression(
   sqlite: Database.Database,
   userId: string,
@@ -111,22 +134,25 @@ export function setPlayerProgression(
   sqlite
     .prepare(
       `insert into player_profiles
-         (user_id, mastery_rank, railjack_intrinsic_rank, updated_at)
-       values (?, ?, ?, ?)
+         (user_id, mastery_rank, railjack_intrinsic_rank, active_adversary, updated_at)
+       values (?, ?, ?, ?, ?)
        on conflict(user_id) do update set
          mastery_rank = excluded.mastery_rank,
          railjack_intrinsic_rank = excluded.railjack_intrinsic_rank,
+         active_adversary = excluded.active_adversary,
          updated_at = excluded.updated_at`,
     )
     .run(
       userId,
       settings.masteryRank ?? null,
       settings.railjackIntrinsicRank ?? null,
+      settings.activeAdversary ?? null,
       Date.now(),
     );
   if (
     settings.masteryRank === undefined &&
-    settings.railjackIntrinsicRank === undefined
+    settings.railjackIntrinsicRank === undefined &&
+    settings.activeAdversary === undefined
   )
     sqlite.prepare("delete from player_profiles where user_id = ?").run(userId);
 }
@@ -150,6 +176,11 @@ function validatePlayerSettings(settings: PlayerSettings): void {
     throw new Error(
       `Highest Railjack Intrinsic rank must be an integer between 0 and ${MAX_RAILJACK_INTRINSIC_RANK}`,
     );
+  if (
+    settings.activeAdversary !== undefined &&
+    !isPlayerActiveAdversary(settings.activeAdversary)
+  )
+    throw new Error("Active adversary is invalid");
 }
 
 export function findPlayerInventoryEntry(
@@ -216,7 +247,7 @@ export interface PortableEntityReference {
 }
 
 export interface ProfileExport {
-  schemaVersion: 17;
+  schemaVersion: 18;
   exportedAt: string;
   player: PlayerSettings;
   inventory: Array<InventoryValues & { entity: PortableEntityReference }>;
@@ -410,7 +441,7 @@ export function exportPlayerProfile(
              source_id, namespace, value
   `);
   return {
-    schemaVersion: 17,
+    schemaVersion: 18,
     exportedAt: new Date().toISOString(),
     player: getPlayerSettings(sqlite, userId),
     inventory: inventory.map(({ entityId, kind, slug, name, ...values }) => ({
@@ -957,7 +988,8 @@ export function importPlayerProfile(
     }
     if (
       profile.player.masteryRank !== undefined ||
-      profile.player.railjackIntrinsicRank !== undefined
+      profile.player.railjackIntrinsicRank !== undefined ||
+      profile.player.activeAdversary !== undefined
     )
       setPlayerProgression(sqlite, userId, {
         ...(options.mode === "replace"
@@ -969,6 +1001,9 @@ export function importPlayerProfile(
         ...(profile.player.railjackIntrinsicRank === undefined
           ? {}
           : { railjackIntrinsicRank: profile.player.railjackIntrinsicRank }),
+        ...(profile.player.activeAdversary === undefined
+          ? {}
+          : { activeAdversary: profile.player.activeAdversary }),
       });
     for (const entry of resolvedInventory)
       setInventoryEntry(sqlite, userId, entry.entityId, entry.values);
@@ -1110,7 +1145,7 @@ export function importPlayerProfile(
 function parseProfile(value: unknown): ProfileExport {
   if (
     !isRecord(value) ||
-    value.schemaVersion !== 17 ||
+    value.schemaVersion !== 18 ||
     !isRecord(value.player) ||
     !Array.isArray(value.inventory) ||
     !Array.isArray(value.goals) ||
@@ -1122,7 +1157,7 @@ function parseProfile(value: unknown): ProfileExport {
     !Array.isArray(value.builds)
   )
     throw new Error(
-      "Profile must use schemaVersion 17 and contain player settings plus every portable state array",
+      "Profile must use schemaVersion 18 and contain player settings plus every portable state array",
     );
   const masteryRank = value.player.masteryRank;
   if (
@@ -1144,6 +1179,12 @@ function parseProfile(value: unknown): ProfileExport {
     throw new Error(
       `Profile player railjackIntrinsicRank must be an integer between 0 and ${MAX_RAILJACK_INTRINSIC_RANK}`,
     );
+  const activeAdversary = value.player.activeAdversary;
+  if (
+    activeAdversary !== undefined &&
+    !isPlayerActiveAdversary(activeAdversary)
+  )
+    throw new Error("Profile player activeAdversary is invalid");
   const inventory = value.inventory.map((entry, index) => {
     if (!isRecord(entry))
       throw new Error(`Profile inventory entry ${index} is invalid`);
@@ -1250,11 +1291,12 @@ function parseProfile(value: unknown): ProfileExport {
     parsePortableBuild(entry, index),
   );
   return {
-    schemaVersion: 17,
+    schemaVersion: 18,
     exportedAt: typeof value.exportedAt === "string" ? value.exportedAt : "",
     player: {
       masteryRank: masteryRank as number | undefined,
       railjackIntrinsicRank: railjackIntrinsicRank as number | undefined,
+      activeAdversary: activeAdversary as PlayerActiveAdversary | undefined,
     },
     inventory,
     goals,

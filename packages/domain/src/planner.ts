@@ -1,4 +1,11 @@
-import type { DropSource, EntityId, InventoryEntry, Recipe } from "./model.ts";
+import type {
+  AdversaryKind,
+  DropSource,
+  EntityId,
+  InventoryEntry,
+  PlayerActiveAdversary,
+  Recipe,
+} from "./model.ts";
 
 export interface MissingRequirement {
   entityId: EntityId;
@@ -29,6 +36,8 @@ export function deriveNodeAccessStatus(input: {
   railjackIntrinsicRequirement?: number;
   playerRailjackIntrinsicRank?: number;
   itemRequirementStates?: Array<"met" | "blocked" | undefined>;
+  activeAdversaryRequirement?: AdversaryKind;
+  playerActiveAdversary?: PlayerActiveAdversary;
 }): NodeAccessStatus {
   if (
     input.requirementStates.some(
@@ -40,7 +49,10 @@ export function deriveNodeAccessStatus(input: {
     (input.railjackIntrinsicRequirement !== undefined &&
       input.playerRailjackIntrinsicRank !== undefined &&
       input.playerRailjackIntrinsicRank < input.railjackIntrinsicRequirement) ||
-    input.itemRequirementStates?.some((state) => state === "blocked")
+    input.itemRequirementStates?.some((state) => state === "blocked") ||
+    (input.activeAdversaryRequirement !== undefined &&
+      input.playerActiveAdversary !== undefined &&
+      input.playerActiveAdversary !== input.activeAdversaryRequirement)
   )
     return "blocked";
   if (
@@ -49,14 +61,17 @@ export function deriveNodeAccessStatus(input: {
       input.playerRank === undefined) ||
     (input.railjackIntrinsicRequirement !== undefined &&
       input.playerRailjackIntrinsicRank === undefined) ||
-    input.itemRequirementStates?.some((state) => state === undefined)
+    input.itemRequirementStates?.some((state) => state === undefined) ||
+    (input.activeAdversaryRequirement !== undefined &&
+      input.playerActiveAdversary === undefined)
   )
     return "conditional";
   if (
     input.requirementStates.length ||
     input.masteryRequirement !== undefined ||
     input.railjackIntrinsicRequirement !== undefined ||
-    Boolean(input.itemRequirementStates?.length)
+    Boolean(input.itemRequirementStates?.length) ||
+    input.activeAdversaryRequirement !== undefined
   )
     return "available";
   return "unknown";

@@ -67,8 +67,9 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   fully represented. Other mixed conditions remain absent rather than becoming
   unsafe partial rules. Exact Mastery Rank-only expressions populate the
   existing numeric gate. Supported Railjack Intrinsics-only and
-  quest-and-Intrinsics expressions populate a separate cited gate; adversary mixtures
-  still fail closed as a whole.
+  quest-and-Intrinsics expressions populate a separate cited gate. Exact Kuva
+  Lich, Sister of Parvos and Technocyte Coda confrontation expressions retain
+  every supported rank or quest clause plus a typed active-adversary gate.
   Exact item-only Animo Nav Beacon, Judgement Point, Grendel Locator and
   Mutalist Alad V Assassinate Key expressions populate cited quantity gates
   that compose with private inventory. Other items and mixed item conditions
@@ -128,14 +129,16 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   Live windows on reconciled recommended nodes surface as expiring acquisition
   opportunities. Players can inspect and persist alternative recipe choices by
   stable source record identity. Profiles also carry the player's optional
-  Mastery Rank and highest Railjack Intrinsic category rank as private
-  progression inputs. Planning composes cited discovery prerequisites
+  Mastery Rank, highest Railjack Intrinsic category rank and current
+  none-or-kind adversary state as private progression inputs. Planning composes
+  cited discovery prerequisites
   into available, conditional, blocked and unknown node access states. Sourced
   numeric Mastery and Railjack Intrinsics gates compose with separate private
   portable player ranks. Exact cited beacon, Judgement Point, Grendel Locator
-  and Mutalist Alad V key gates compose with owned plus built inventory, but
-  other conditional gates, markets, relic refinement,
-  and mission duration are not yet modeled.
+  and Mutalist Alad V key gates compose with owned plus built inventory. Exact
+  adversary confrontation gates compose with the portable private adversary
+  setting, but other conditional gates, markets, relic refinement, and mission
+  duration are not yet modeled.
 - Authenticated players can keep private static todos with optional notes and due
   dates. Source-neutral world-state watches match current window fields and
   create deduplicated private in-app alerts. Detail pages can create todos and
@@ -209,8 +212,8 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   Intrinsics requirements
   and allow-listed item quantities to show cited blockers. Node pages expose the same cited requirements and
   private discovery or node-completion progress. Nodes without access evidence
-  stay unknown. Junction objectives and other compound rank, item or active-adversary
-  conditions still need typed models.
+  stay unknown. Junction objectives and other compound rank or item conditions
+  still need typed models.
 
 ## Deliberate compromises
 

@@ -1,5 +1,28 @@
 export type EntityId = string & { readonly __entityId: unique symbol };
 
+export const ADVERSARY_KINDS = [
+  "kuva-lich",
+  "sister-of-parvos",
+  "technocyte-coda",
+] as const;
+export type AdversaryKind = (typeof ADVERSARY_KINDS)[number];
+export const PLAYER_ACTIVE_ADVERSARIES = ["none", ...ADVERSARY_KINDS] as const;
+export type PlayerActiveAdversary = (typeof PLAYER_ACTIVE_ADVERSARIES)[number];
+export const ADVERSARY_LABELS: Record<AdversaryKind, string> = {
+  "kuva-lich": "Kuva Lich",
+  "sister-of-parvos": "Sister of Parvos",
+  "technocyte-coda": "Technocyte Coda",
+};
+
+export function isPlayerActiveAdversary(
+  value: unknown,
+): value is PlayerActiveAdversary {
+  return (
+    typeof value === "string" &&
+    (PLAYER_ACTIVE_ADVERSARIES as readonly string[]).includes(value)
+  );
+}
+
 export type EntityKind =
   | "unknown"
   | "warframe"
@@ -162,6 +185,7 @@ export interface NodeDetailObservation {
   maximumEnemyLevel?: number;
   masteryRequirement?: number;
   railjackIntrinsicRequirement?: number;
+  activeAdversaryRequirement?: AdversaryKind;
   nodeType?: number;
   evidence: Evidence;
 }

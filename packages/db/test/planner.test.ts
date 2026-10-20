@@ -16,6 +16,7 @@ import {
   setInventoryEntryByReference,
   setNodeCompletion,
   setPlayerGoal,
+  setPlayerActiveAdversary,
   setPlayerMasteryRank,
   setPlayerRailjackIntrinsicRank,
   setPlayerRecipePreference,
@@ -125,6 +126,7 @@ test("persisted goals expand through active recipes and produce named node reaso
       planet: "Earth",
       masteryRequirement: 10,
       railjackIntrinsicRequirement: 7,
+      activeAdversaryRequirement: "kuva-lich",
       evidence: { ...evidence, sourceRecordKey: "node:details" },
     },
     {
@@ -191,6 +193,12 @@ test("persisted goals expand through active recipes and produce named node reaso
   assert.deepEqual(plan.recommendations[0]?.railjackIntrinsicRequirement, {
     required: 7,
     playerRank: undefined,
+    state: "unknown",
+    source: { name: "Items", citationUrl: undefined },
+  });
+  assert.deepEqual(plan.recommendations[0]?.activeAdversaryRequirement, {
+    required: "kuva-lich",
+    playerValue: undefined,
     state: "unknown",
     source: { name: "Items", citationUrl: undefined },
   });
@@ -296,6 +304,16 @@ test("persisted goals expand through active recipes and produce named node reaso
     { kind: "resource", slug: "access-token" },
     { ownedCount: 5, builtCount: 0, wantedCount: 0 },
   );
+  assert.equal(
+    buildAcquisitionPlan(sqlite, userId).recommendations[0]?.accessStatus,
+    "conditional",
+  );
+  setPlayerActiveAdversary(sqlite, userId, "sister-of-parvos");
+  assert.equal(
+    buildAcquisitionPlan(sqlite, userId).recommendations[0]?.accessStatus,
+    "blocked",
+  );
+  setPlayerActiveAdversary(sqlite, userId, "kuva-lich");
   assert.equal(
     buildAcquisitionPlan(sqlite, userId).recommendations[0]?.accessStatus,
     "available",

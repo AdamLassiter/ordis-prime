@@ -30,7 +30,8 @@ export default async function InventoryPage() {
           Your combined rank is used for documented star-chart gates and build
           capacity; enter 31 for Legendary Rank 1, 32 for Legendary Rank 2, and
           so on. Railjack access uses the highest rank you have reached in any
-          Railjack Intrinsics category.
+          Railjack Intrinsics category. Only one adversary can be active; choose
+          None to record that explicitly, or leave it unknown.
         </p>
         <form className="form-stack compact-form" action={updateProgression}>
           <label>
@@ -54,6 +55,19 @@ export default async function InventoryPage() {
               defaultValue={settings.railjackIntrinsicRank}
               placeholder="Not recorded"
             />
+          </label>
+          <label>
+            Active adversary
+            <select
+              name="activeAdversary"
+              defaultValue={settings.activeAdversary ?? ""}
+            >
+              <option value="">Not recorded</option>
+              <option value="none">None</option>
+              <option value="kuva-lich">Kuva Lich</option>
+              <option value="sister-of-parvos">Sister of Parvos</option>
+              <option value="technocyte-coda">Technocyte Coda</option>
+            </select>
           </label>
           <button className="button">Save progression</button>
         </form>

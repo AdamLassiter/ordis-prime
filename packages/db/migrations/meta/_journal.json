@@ -288,6 +288,13 @@
       "when": 1792487221966,
       "tag": "0040_hot_warstar",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "6",
+      "when": 1792522771250,
+      "tag": "0041_tense_beast",
+      "breakpoints": true
     }
   ]
 }

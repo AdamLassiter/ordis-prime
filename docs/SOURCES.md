@@ -151,6 +151,11 @@ typed Wiki item identities that reconcile with WFCD resources. Unrecognized
 items and expressions mixing an item with another condition are omitted as a
 whole.
 
+Exact Kuva Lich, Sister of Parvos and Technocyte Coda confrontation expressions
+emit a typed active-adversary requirement on the node while preserving every
+supported Intrinsics or quest clause. The catalog fact does not contain or
+infer the player's current adversary.
+
 Resolver conflicts store the exact external IDs that participated in an entity
 observation and the candidate canonical entities. An administrator can close a
 conflict as reviewed without changing identity, or bind one of those external

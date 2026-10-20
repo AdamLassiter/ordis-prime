@@ -1,4 +1,5 @@
 import type {
+  AdversaryKind,
   EntityRelationObservation,
   ExternalIdentifier,
   Observation,
@@ -21,7 +22,7 @@ import {
   wikiSlug,
 } from "./mediawiki-lua.ts";
 
-const PARSER_VERSION = "warframe-wiki-missions-v7";
+const PARSER_VERSION = "warframe-wiki-missions-v8";
 const MODULE_TITLE = "Module:Missions/data";
 const QUEST_MODULE_TITLE = "Module:Keys/data";
 
@@ -52,7 +53,14 @@ interface AccessReference {
 interface ParsedAccessRequirements {
   references: AccessReference[];
   railjackIntrinsicRequirement?: number;
+  activeAdversaryRequirement?: AdversaryKind;
 }
+
+const ADVERSARY_REQUIREMENTS = new Map<string, AdversaryKind>([
+  ["Kuva Lich", "kuva-lich"],
+  ["Sister of Parvos", "sister-of-parvos"],
+  ["Technocyte Coda", "technocyte-coda"],
+]);
 
 interface ParsedItemRequirement {
   name:
@@ -210,6 +218,8 @@ export class WarframeWikiMissionsAdapter implements SourceAdapter {
         masteryRequirement: record.masteryRequirement,
         railjackIntrinsicRequirement: accessRequirements.get(record.name)
           ?.railjackIntrinsicRequirement,
+        activeAdversaryRequirement: accessRequirements.get(record.name)
+          ?.activeAdversaryRequirement,
         evidence: evidence(page.revisionId, snapshot, record.name, record.line),
       };
     }
@@ -396,6 +406,8 @@ function parseAccessRequirements(
   const resolved = links.map((match) => {
     const label = match[1]!.trim();
     if (label === "Intrinsics") return { kind: "intrinsics" } as const;
+    const adversary = ADVERSARY_REQUIREMENTS.get(label);
+    if (adversary) return { kind: "adversary", name: adversary } as const;
     const quest = quests.get(label);
     const node = nodes.has(label) ? label : undefined;
     if (Boolean(quest) === Boolean(node)) return undefined;
@@ -431,6 +443,8 @@ function parseAccessRequirements(
       "Must have [[INTRINSICS]] Rank [[RANK]] or higher to access and [[QUEST]] completed",
       "Must have [[QUEST]] completed and [[INTRINSICS]] Rank [[RANK]] or higher to access",
       "Must have [[QUEST]] completed and [[INTRINSICS]] Rank [[RANK]] or higher to access and [[QUEST]] completed",
+      "Must have [[INTRINSICS]] Rank [[RANK]] or higher and an active [[ADVERSARY]] to access",
+      "Must complete [[QUEST]] quest to access and active [[ADVERSARY]].",
     ]).has(normalizedShape)
   )
     return { references: [] };
@@ -449,8 +463,13 @@ function parseAccessRequirements(
     );
   const references = resolved.filter(
     (reference): reference is AccessReference =>
-      reference !== undefined && reference.kind !== "intrinsics",
+      reference !== undefined &&
+      reference.kind !== "intrinsics" &&
+      reference.kind !== "adversary",
   );
+  const activeAdversaryRequirement = resolved.find(
+    (reference) => reference?.kind === "adversary",
+  )?.name;
   return {
     references: [
       ...new Map(
@@ -463,6 +482,9 @@ function parseAccessRequirements(
     ...(railjackIntrinsicRequirement === undefined
       ? {}
       : { railjackIntrinsicRequirement }),
+    ...(activeAdversaryRequirement === undefined
+      ? {}
+      : { activeAdversaryRequirement }),
   };
 }
 

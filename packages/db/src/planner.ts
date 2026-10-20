@@ -3,9 +3,11 @@ import {
   deriveNodeAccessStatus,
   expandMissingRequirements,
   recommendNodes,
+  type AdversaryKind,
   type DropSource,
   type EntityId,
   type InventoryEntry,
+  type PlayerActiveAdversary,
   type Recipe,
 } from "@ordis-prime/domain";
 import { listCurrentWorldState } from "./world-state.ts";
@@ -54,6 +56,12 @@ export interface AcquisitionPlan {
     railjackIntrinsicRequirement?: {
       required: number;
       playerRank?: number;
+      state: "met" | "blocked" | "unknown";
+      source: { name: string; citationUrl?: string };
+    };
+    activeAdversaryRequirement?: {
+      required: AdversaryKind;
+      playerValue?: PlayerActiveAdversary;
       state: "met" | "blocked" | "unknown";
       source: { name: string; citationUrl?: string };
     };
@@ -227,6 +235,7 @@ export function buildAcquisitionPlan(
   const playerSettings = getPlayerSettings(sqlite, userId);
   const playerMasteryRank = playerSettings.masteryRank;
   const playerRailjackIntrinsicRank = playerSettings.railjackIntrinsicRank;
+  const playerActiveAdversary = playerSettings.activeAdversary;
   const goals = listPlayerGoals(sqlite, userId);
   const inventoryRows = sqlite
     .prepare(
@@ -406,6 +415,11 @@ export function buildAcquisitionPlan(
     userId,
     new Set(recommendedNodes.flatMap(({ nodeId }) => (nodeId ? [nodeId] : []))),
   );
+  const activeAdversaryRequirements = loadNodeAdversaryRequirements(
+    sqlite,
+    new Set(recommendedNodes.flatMap(({ nodeId }) => (nodeId ? [nodeId] : []))),
+    playerActiveAdversary,
+  );
   const recommendations = recommendedNodes
     .map((recommendation) => {
       const node = recommendation.nodeId
@@ -423,6 +437,9 @@ export function buildAcquisitionPlan(
       const nodeItemRequirements = recommendation.nodeId
         ? (itemRequirements.get(recommendation.nodeId) ?? [])
         : [];
+      const activeAdversaryRequirement = recommendation.nodeId
+        ? activeAdversaryRequirements.get(recommendation.nodeId)
+        : undefined;
       const neededRewards = recommendation.neededRewards.map((reward) => ({
         ...entityDetails(entities, reward.entityId),
         entityId: reward.entityId,
@@ -442,11 +459,14 @@ export function buildAcquisitionPlan(
           railjackIntrinsicRequirement: railjackIntrinsicRequirement?.required,
           playerRailjackIntrinsicRank: railjackIntrinsicRequirement?.playerRank,
           itemRequirementStates: nodeItemRequirements.map(({ state }) => state),
+          activeAdversaryRequirement: activeAdversaryRequirement?.required,
+          playerActiveAdversary: activeAdversaryRequirement?.playerValue,
         }),
         accessRequirements,
         masteryRequirement,
         railjackIntrinsicRequirement,
         itemRequirements: nodeItemRequirements,
+        activeAdversaryRequirement,
         reasons: [
           `Drops ${neededRewards.length} missing goal ${neededRewards.length === 1 ? "item" : "items"}`,
           ...neededRewards.map(
@@ -564,6 +584,66 @@ function loadNodeMasteryRequirements(
     nodeIds,
     "mastery_requirement",
     playerRank,
+  );
+}
+
+function loadNodeAdversaryRequirements(
+  sqlite: Database.Database,
+  nodeIds: Set<EntityId>,
+  playerValue: PlayerActiveAdversary | undefined,
+): Map<
+  string,
+  NonNullable<
+    AcquisitionPlan["recommendations"][number]["activeAdversaryRequirement"]
+  >
+> {
+  if (nodeIds.size === 0) return new Map();
+  const ids = [...nodeIds];
+  const placeholders = ids.map(() => "?").join(", ");
+  const rows = sqlite
+    .prepare(
+      `with ranked as (
+         select detail.entity_id as nodeId,
+           detail.active_adversary_requirement as required,
+           source.name as sourceName, detail.citation_url as citationUrl,
+           row_number() over (
+             partition by detail.entity_id
+             order by source.priority desc, run.retrieved_at desc, source.id,
+                      detail.source_record_key, detail.id
+           ) as preference
+         from node_details detail
+         join source_runs run on run.id = detail.source_run_id and run.status = 'active'
+         join sources source on source.id = run.source_id
+         where detail.entity_id in (${placeholders})
+           and detail.active_adversary_requirement is not null
+       )
+       select nodeId, required, sourceName, citationUrl
+       from ranked where preference = 1`,
+    )
+    .all(...ids) as Array<{
+    nodeId: string;
+    required: AdversaryKind;
+    sourceName: string;
+    citationUrl: string | null;
+  }>;
+  return new Map(
+    rows.map((row) => [
+      row.nodeId,
+      {
+        required: row.required,
+        playerValue,
+        state:
+          playerValue === undefined
+            ? ("unknown" as const)
+            : playerValue === row.required
+              ? ("met" as const)
+              : ("blocked" as const),
+        source: {
+          name: row.sourceName,
+          citationUrl: row.citationUrl ?? undefined,
+        },
+      },
+    ]),
   );
 }
 

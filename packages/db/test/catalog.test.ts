@@ -109,6 +109,7 @@ test("catalog read models join active recipes, drops, provenance, and rankings",
       minimumEnemyLevel: 6,
       maximumEnemyLevel: 8,
       railjackIntrinsicRequirement: 3,
+      activeAdversaryRequirement: "kuva-lich",
       evidence: { ...evidence, sourceRecordKey: "caloris" },
     },
     {
@@ -331,6 +332,7 @@ test("catalog read models join active recipes, drops, provenance, and rankings",
       minimumEnemyLevel: node.minimumEnemyLevel,
       maximumEnemyLevel: node.maximumEnemyLevel,
       railjackIntrinsicRequirement: node.railjackIntrinsicRequirement,
+      activeAdversaryRequirement: node.activeAdversaryRequirement,
     },
     {
       planet: "Mercury",
@@ -338,6 +340,7 @@ test("catalog read models join active recipes, drops, provenance, and rankings",
       minimumEnemyLevel: 6,
       maximumEnemyLevel: 8,
       railjackIntrinsicRequirement: 3,
+      activeAdversaryRequirement: "kuva-lich",
     },
   );
   assert.deepEqual(node.connections, [

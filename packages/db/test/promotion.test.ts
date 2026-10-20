@@ -402,6 +402,27 @@ test("candidate-wide validation rejects contradictory and duplicate source facts
     () => promoteSource(sqlite, input("v1", incompleteRanking)),
     /refers to undeclared set missing/,
   );
+  assert.throws(
+    () =>
+      promoteSource(
+        sqlite,
+        input("v1", [
+          entity("node", "Falling Glory", "node"),
+          {
+            type: "node-detail",
+            nodeExternalId: {
+              sourceId: "fixture",
+              namespace: "id",
+              value: "node",
+            },
+            planet: "Venus",
+            activeAdversaryRequirement: "wolf" as never,
+            evidence: { ...evidence(), sourceRecordKey: "node:adversary" },
+          },
+        ]),
+      ),
+    /active adversary requirement is invalid/,
+  );
   assert.deepEqual(
     sqlite
       .prepare(

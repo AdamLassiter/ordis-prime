@@ -91,4 +91,35 @@ test("missing private progress remains conditional rather than guessed", () => {
     }),
     "available",
   );
+  assert.equal(
+    deriveNodeAccessStatus({
+      requirementStates: [],
+      activeAdversaryRequirement: "kuva-lich",
+    }),
+    "conditional",
+  );
+  assert.equal(
+    deriveNodeAccessStatus({
+      requirementStates: [],
+      activeAdversaryRequirement: "kuva-lich",
+      playerActiveAdversary: "none",
+    }),
+    "blocked",
+  );
+  assert.equal(
+    deriveNodeAccessStatus({
+      requirementStates: [],
+      activeAdversaryRequirement: "kuva-lich",
+      playerActiveAdversary: "sister-of-parvos",
+    }),
+    "blocked",
+  );
+  assert.equal(
+    deriveNodeAccessStatus({
+      requirementStates: [],
+      activeAdversaryRequirement: "kuva-lich",
+      playerActiveAdversary: "kuva-lich",
+    }),
+    "available",
+  );
 });

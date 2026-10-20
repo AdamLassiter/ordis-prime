@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import type Database from "better-sqlite3";
 import {
   ARCANE_CLASSES,
+  ADVERSARY_KINDS,
   EQUIPMENT_KINDS,
   EQUIPMENT_POLARITY_ROLES,
   MOD_POLARITIES,
@@ -458,9 +459,9 @@ function promoteInTransaction(
           `
         insert into node_details
           (id, entity_id, planet, mission_type, faction, minimum_enemy_level, maximum_enemy_level,
-           mastery_requirement, railjack_intrinsic_requirement, node_type, source_run_id,
-           source_record_key, citation_url, source_path)
-        values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+           mastery_requirement, railjack_intrinsic_requirement, active_adversary_requirement,
+           node_type, source_run_id, source_record_key, citation_url, source_path)
+        values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
         )
         .run(
@@ -473,6 +474,7 @@ function promoteInTransaction(
           observation.maximumEnemyLevel ?? null,
           observation.masteryRequirement ?? null,
           observation.railjackIntrinsicRequirement ?? null,
+          observation.activeAdversaryRequirement ?? null,
           observation.nodeType ?? null,
           sourceRunId,
           observation.evidence.sourceRecordKey,
@@ -1469,6 +1471,11 @@ function validateInput(input: PromoteSourceInput): void {
         throw new Error(
           "Node detail Railjack Intrinsic requirement cannot exceed 10",
         );
+      if (
+        observation.activeAdversaryRequirement !== undefined &&
+        !ADVERSARY_KINDS.includes(observation.activeAdversaryRequirement)
+      )
+        throw new Error("Node detail active adversary requirement is invalid");
     }
   }
   validateCandidateSet(input.observations);

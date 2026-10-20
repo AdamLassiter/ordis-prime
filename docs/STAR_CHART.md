@@ -22,13 +22,16 @@ The adapter also snapshots the structured quest-key module and accepts only
 allow-listed complete requirement expressions made from quest and node
 completion. These become cited `node requires prerequisite` relations. The
 quest-plus-node expression for Vehrvod District is fully modeled; expressions
-that also require unsupported ranks, items or an active adversary remain
-unmodeled as a whole, so the parser does not publish a misleading partial rule.
+that also require unsupported ranks or items remain unmodeled as a whole, so
+the parser does not publish a misleading partial rule.
 An exact Mastery Rank-only expression becomes the existing typed numeric node
 gate. Complete allow-listed Railjack Intrinsics expressions populate a separate
 0–10 gate and retain every supported quest clause; Intrinsics are never coerced
 into Mastery Rank. Expressions containing unsupported conditions still fail
 closed as a whole.
+Exact Kuva Lich, Sister of Parvos and Technocyte Coda confrontation expressions
+become typed adversary gates while retaining their complete Intrinsics or quest
+clauses.
 Exact item-only expressions for Animo Nav Beacons, Judgement Points, Grendel
 Locators and the Mutalist Alad V Assassinate Key become cited
 node/item/quantity facts. They reconcile to the same canonical resources used
@@ -52,6 +55,9 @@ Railjack nodes similarly compare their sourced Intrinsics gate with the
 player's private highest rank in any Railjack Intrinsics category.
 Item gates compare the cited quantity with private owned plus built inventory;
 the item page links back to nodes that consume it for access.
+Adversary gates compare the required kind with the player's private active
+adversary. Explicitly recording none or another kind blocks the node; leaving
+the setting unrecorded keeps it conditional.
 The chart derives the same available, conditional, blocked or unknown state for
 every node and can filter by it. It does not persist that state or infer access
 from graph connectivity. Guests therefore see private-input-dependent evidence

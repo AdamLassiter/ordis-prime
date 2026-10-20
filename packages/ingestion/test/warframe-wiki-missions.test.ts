@@ -247,7 +247,9 @@ test("wiki mission adapter imports only complete Railjack Intrinsic expressions"
             { Name = "Saturn Gate", Planet = "Saturn Proxima", NextNodes = { "Veil Gate" }, Requirements = "Must have [[Intrinsics]] Rank 3 or higher to access" },
             { Name = "Veil Gate", Planet = "Veil Proxima", PreviousNodes = { "Saturn Gate" }, NextNodes = { "Erato" }, Requirements = "Must have [[Intrinsics]] Rank 7 or higher to access and [[Chimera Prologue]] completed" },
             { Name = "Erato", Planet = "Veil Proxima", PreviousNodes = { "Veil Gate" }, NextNodes = { "Lich Gate" }, Requirements = "Must have [[The War Within]] completed and [[Intrinsics]] Rank 7 or higher to access and [[Chimera Prologue]] completed" },
-            { Name = "Lich Gate", Planet = "Saturn Proxima", PreviousNodes = { "Erato" }, Requirements = "Must have [[Intrinsics]] Rank 3 or higher and an active [[Kuva Lich]] to access" },
+            { Name = "Lich Gate", Planet = "Saturn Proxima", PreviousNodes = { "Erato" }, NextNodes = { "Sister Gate" }, Requirements = "Must have [[Intrinsics]] Rank 3 or higher and an active [[Kuva Lich]] to access" },
+            { Name = "Sister Gate", Planet = "Neptune Proxima", PreviousNodes = { "Lich Gate" }, NextNodes = { "Coda Gate" }, Requirements = "Must have [[Intrinsics]] Rank 3 or higher and an active [[Sister of Parvos]] to access" },
+            { Name = "Coda Gate", Planet = "Earth Proxima", PreviousNodes = { "Sister Gate" }, Requirements = "Must complete [[The Hex (Quest)|The Hex]] quest to access and active [[Technocyte Coda]]." },
           },
         }
       `,
@@ -255,6 +257,7 @@ test("wiki mission adapter imports only complete Railjack Intrinsic expressions"
         return {
           ["The War Within"] = { Name = "The War Within", Link = "The War Within", Type = "Main Quest" },
           ["Chimera Prologue"] = { Name = "Chimera Prologue", Link = "Chimera Prologue", Type = "Main Quest" },
+          ["The Hex"] = { Name = "The Hex", Link = "The Hex (Quest)", Type = "Main Quest" },
         }
       `,
     ),
@@ -267,15 +270,18 @@ test("wiki mission adapter imports only complete Railjack Intrinsic expressions"
             {
               node: observation.nodeExternalId.value,
               rank: observation.railjackIntrinsicRequirement,
+              adversary: observation.activeAdversaryRequirement,
             },
           ]
         : [],
     ),
     [
-      { node: "Saturn Gate", rank: 3 },
-      { node: "Veil Gate", rank: 7 },
-      { node: "Erato", rank: 7 },
-      { node: "Lich Gate", rank: undefined },
+      { node: "Saturn Gate", rank: 3, adversary: undefined },
+      { node: "Veil Gate", rank: 7, adversary: undefined },
+      { node: "Erato", rank: 7, adversary: undefined },
+      { node: "Lich Gate", rank: 3, adversary: "kuva-lich" },
+      { node: "Sister Gate", rank: 3, adversary: "sister-of-parvos" },
+      { node: "Coda Gate", rank: undefined, adversary: "technocyte-coda" },
     ],
   );
   assert.deepEqual(
@@ -293,6 +299,7 @@ test("wiki mission adapter imports only complete Railjack Intrinsic expressions"
       { node: "Veil Gate", quest: "Chimera Prologue" },
       { node: "Erato", quest: "The War Within" },
       { node: "Erato", quest: "Chimera Prologue" },
+      { node: "Coda Gate", quest: "The Hex" },
     ],
   );
 });

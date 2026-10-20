@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ADVERSARY_LABELS } from "@ordis-prime/domain";
 import { redirect } from "next/navigation";
 import {
   buildAcquisitionPlan,
@@ -323,6 +324,49 @@ export default async function Planner() {
                               </a>
                             ) : (
                               recommendation.railjackIntrinsicRequirement.source
+                                .name
+                            )}
+                            )
+                          </span>
+                        </p>
+                      )}
+                      {recommendation.activeAdversaryRequirement && (
+                        <p>
+                          Active{" "}
+                          {
+                            ADVERSARY_LABELS[
+                              recommendation.activeAdversaryRequirement.required
+                            ]
+                          }
+                          :{" "}
+                          {recommendation.activeAdversaryRequirement.state ===
+                          "met"
+                            ? "met"
+                            : recommendation.activeAdversaryRequirement
+                                  .state === "unknown"
+                              ? "your active adversary is not recorded"
+                              : recommendation.activeAdversaryRequirement
+                                    .playerValue === "none"
+                                ? "blocked with no active adversary"
+                                : `blocked with ${ADVERSARY_LABELS[recommendation.activeAdversaryRequirement.playerValue!]}`}{" "}
+                          <span className="muted">
+                            (
+                            {recommendation.activeAdversaryRequirement.source
+                              .citationUrl ? (
+                              <a
+                                href={
+                                  recommendation.activeAdversaryRequirement
+                                    .source.citationUrl
+                                }
+                                rel="noreferrer"
+                              >
+                                {
+                                  recommendation.activeAdversaryRequirement
+                                    .source.name
+                                }
+                              </a>
+                            ) : (
+                              recommendation.activeAdversaryRequirement.source
                                 .name
                             )}
                             )
