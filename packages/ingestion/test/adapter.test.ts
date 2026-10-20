@@ -251,6 +251,47 @@ test("WFCD shared recipe materials retain one intrinsic identity", async () => {
   );
 });
 
+test("WFCD shared equipment parts retain provider-qualified names", async () => {
+  const sharedPart = {
+    uniqueName: "/Lotus/Types/Recipes/WarframeRecipes/EmberSystemsComponent",
+    name: "Systems",
+    category: "Components",
+    itemCount: 1,
+  };
+  const sharedSnapshot = {
+    ...snapshot,
+    bytes: new TextEncoder().encode(
+      JSON.stringify([
+        {
+          uniqueName: "/ephemera",
+          name: "Blazing Step Ephemera",
+          category: "Skins",
+          components: [sharedPart],
+        },
+        {
+          uniqueName: "/ember",
+          name: "Ember",
+          category: "Warframes",
+          components: [sharedPart],
+        },
+      ]),
+    ),
+  };
+  const observations = await collect(new WfcdItemsAdapter(), sharedSnapshot);
+  assert.deepEqual(
+    observations.flatMap((entry) =>
+      entry.type === "entity" &&
+      entry.externalIds[0]?.value === sharedPart.uniqueName
+        ? [[entry.kind, entry.fields.name, entry.fields.slug]]
+        : [],
+    ),
+    [
+      ["component", "Ember Systems", "ember-systems"],
+      ["component", "Ember Systems", "ember-systems"],
+    ],
+  );
+});
+
 test("WFCD same-kind display collisions receive stable provider-derived qualifiers", async () => {
   const collisionSnapshot = {
     ...snapshot,
@@ -568,7 +609,7 @@ test("WFCD adapter defaults to the maintained aggregate endpoint", async () => {
     const adapter = new WfcdItemsAdapter();
     const fetched = await adapter.fetch({});
     assert.equal(requestedUrl, DEFAULT_WFCD_ITEMS_URL);
-    assert.equal(fetched.version, "fixture-etag|wfcd-items-v9");
+    assert.equal(fetched.version, "fixture-etag|wfcd-items-v10");
     assert.equal(adapter.minimumRetainedObservationRatio, 0.5);
   } finally {
     globalThis.fetch = originalFetch;

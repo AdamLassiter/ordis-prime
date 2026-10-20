@@ -120,9 +120,11 @@ record is present.
 
 The WFCD item adapter also performs a payload-wide identity pass. Shared recipe
 materials keep their intrinsic name instead of being repeatedly parent-qualified;
-one-off generic components remain qualified. Same-kind display-name collisions
-with different provider types receive stable type qualifiers, while store and
-internal records with the same name/type intentionally converge. Common WFCD
+one-off generic components remain qualified. Reused equipment components with
+generic labels derive one stable qualified name from their internal-name tail,
+so unrelated `Systems` records cannot collapse into one entity. Same-kind
+display-name collisions with different provider types receive stable type
+qualifiers, while store and internal records with the same name/type intentionally converge. Common WFCD
 resource-like types, including Forma's `Equipment Adapter`, map to resources.
 For mods, sane `fusionLimit`, `baseDrain` and canonical polarity values become
 cited canonical fields. The adapter omits provider placeholder sentinels such

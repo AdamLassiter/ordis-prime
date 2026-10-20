@@ -50,6 +50,11 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   are reversible and audited; their revision causes unchanged source bytes to
   promote as a new run so skipped observations can replay. Automatic sources
   are queued immediately, while manual sources require re-upload.
+  Reused WFCD equipment components with generic labels derive a stable qualified
+  name from their internal identifier rather than collapsing unrelated parts.
+  A stable external ID whose winning kind/slug would collide with a different
+  canonical entity rejects the whole candidate with record-level context; it is
+  not silently merged. Historical kind disagreements remain reviewable conflicts.
   Structured WARFRAME Wiki adapters also import cited weapon, Warframe and
   Archwing maximum ranks plus mission metadata and star-chart connections from
   versioned Lua data modules without executing provider code. A separate Wiki

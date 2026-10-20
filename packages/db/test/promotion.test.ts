@@ -258,6 +258,42 @@ test("promotion atomically replaces the active source run while preserving entit
   );
 });
 
+test("canonical slug drift fails with source record context", async (context) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-slug-drift-"));
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const databasePath = path.join(root, "catalog.sqlite");
+  migrateDatabase(databasePath);
+  const sqlite = new Database(databasePath);
+  sqlite.pragma("foreign_keys = ON");
+  context.after(() => sqlite.close());
+
+  promoteSource(
+    sqlite,
+    input("v1", [
+      entity("renamed", "Original", "component"),
+      entity("existing", "Target", "component"),
+    ]),
+  );
+  const renamed = {
+    ...entity("renamed", "Target", "component", "v2"),
+    evidence: {
+      ...evidence("v2"),
+      sourceRecordKey: "provider/renamed",
+    },
+  } satisfies Observation;
+
+  assert.throws(
+    () => promoteSource(sqlite, input("v2", [renamed])),
+    /from provider\/renamed to component:target/,
+  );
+  assert.deepEqual(
+    sqlite
+      .prepare("select version, status from source_runs order by version")
+      .all(),
+    [{ version: "v1", status: "active" }],
+  );
+});
+
 test("source-specific shrinkage policy preserves the last healthy run", async (context) => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-shrinkage-"));
   context.after(() => fs.rm(root, { recursive: true, force: true }));

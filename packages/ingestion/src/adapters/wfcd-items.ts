@@ -64,7 +64,7 @@ const categories: Record<string, EntityKind> = {
   Enemy: "enemy",
 };
 export const DEFAULT_WFCD_ITEMS_URL = "https://api.warframestat.us/items";
-const PARSER_VERSION = "wfcd-items-v9";
+const PARSER_VERSION = "wfcd-items-v10";
 const ARCHON_SHARD_PREFIX = "/Lotus/Types/Gameplay/NarmerSorties/ArchonCrystal";
 const resourceTypes = new Set([
   "Resource",
@@ -249,8 +249,10 @@ export class WfcdItemsAdapter implements SourceAdapter {
         const componentName = declared?.name
           ? (canonicalNames.get(component.uniqueName!) ??
             cleanName(declared.name))
-          : componentKind === "component" && !shared
-            ? `${item.name} ${component.name}`
+          : componentKind === "component"
+            ? shared
+              ? sharedComponentName(component)
+              : `${item.name} ${component.name}`
             : component.name!;
         yield {
           type: "entity",
@@ -359,6 +361,21 @@ function weaponClassFor(
 function cleanName(value: string): string {
   return value.replace(/^<[^>]+>\s*/, "").trim();
 }
+
+function sharedComponentName(component: WfcdComponent): string {
+  const rawName = cleanName(component.name!);
+  const tail = externalTail(component.uniqueName!)
+    .replace(/Component$/, "")
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .replace(/[_-]+/g, " ")
+    .trim();
+  return (
+    tail && normalizedAlias(tail).includes(normalizedAlias(rawName))
+      ? tail
+      : `${rawName} (${externalTail(component.uniqueName!)})`
+  ).trim();
+}
+
 function slugify(value: string) {
   return value
     .toLocaleLowerCase("en")

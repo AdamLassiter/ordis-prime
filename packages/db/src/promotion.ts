@@ -1096,11 +1096,18 @@ function updateWinningFields(
   }
   if (updates.length) {
     values.push(Date.now(), entityId);
-    sqlite
-      .prepare(
-        `update entities set ${updates.join(", ")}, updated_at = ? where id = ?`,
-      )
-      .run(...values);
+    try {
+      sqlite
+        .prepare(
+          `update entities set ${updates.join(", ")}, updated_at = ? where id = ?`,
+        )
+        .run(...values);
+    } catch (error) {
+      throw new Error(
+        `Could not update canonical entity ${entityId} from ${observation.evidence.sourceRecordKey} to ${observation.kind}:${observation.fields.slug ?? "its existing slug"}`,
+        { cause: error },
+      );
+    }
   }
 }
 
