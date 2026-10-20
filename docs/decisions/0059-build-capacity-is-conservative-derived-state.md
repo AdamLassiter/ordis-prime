@@ -45,5 +45,6 @@ Derive mod capacity when a build is read; do not persist it separately.
   are not silently normalized.
 - Published snapshots retain the calculation visible when shared. Drafts are
   recalculated after player progression, configuration or catalog changes.
-- Missing mod facts, slot configuration, rank inputs, companion maximum ranks
-  or factory polarities produce an explicit partial or unknown result.
+- Missing mod facts, positioned slot configuration, rank inputs or companion
+  maximum ranks produce an explicit partial or unknown result. Unpositioned
+  factory-polarity sets are guidance rather than capacity inputs under decision 0071.

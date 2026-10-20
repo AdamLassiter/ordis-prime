@@ -13,7 +13,7 @@ test("wiki Warframe adapter imports Warframe and Archwing maximum ranks", async 
     wikiSnapshot(`
       return {
         Archwings = {
-          Odonata = { MaxRank = 30, Name = "Odonata", Type = "Archwing" },
+          Odonata = { MaxRank = 30, Name = "Odonata", Polarities = {}, Type = "Archwing" },
         },
         Necramechs = {
           Voidrig = { MaxRank = 40, Name = "Voidrig", Type = "Necramech" },
@@ -21,8 +21,11 @@ test("wiki Warframe adapter imports Warframe and Archwing maximum ranks", async 
         Warframes = {
           ["Excalibur Umbra"] = {
             Description = "A warrior’s resolve.",
+            AuraPolarity = "Madurai",
+            ExilusPolarity = "None",
             MaxRank = 30,
             Name = "Excalibur Umbra",
+            Polarities = { "Umbra", "Umbra", "Umbra" },
             Type = "Warframe",
           },
           Stalker = {
@@ -37,15 +40,17 @@ test("wiki Warframe adapter imports Warframe and Archwing maximum ranks", async 
   );
 
   assert.deepEqual(
-    observations.map((observation) =>
+    observations.flatMap((observation) =>
       observation.type === "entity"
-        ? {
-            kind: observation.kind,
-            name: observation.fields.name,
-            maxRank: observation.fields.equipmentMaxRank,
-            citationUrl: observation.evidence.citationUrl,
-          }
-        : null,
+        ? [
+            {
+              kind: observation.kind,
+              name: observation.fields.name,
+              maxRank: observation.fields.equipmentMaxRank,
+              citationUrl: observation.evidence.citationUrl,
+            },
+          ]
+        : [],
     ),
     [
       {
@@ -64,6 +69,28 @@ test("wiki Warframe adapter imports Warframe and Archwing maximum ranks", async 
       },
     ],
   );
+  assert.deepEqual(
+    observations.flatMap((observation) =>
+      observation.type === "equipment-polarity-set"
+        ? [
+            {
+              subject: observation.subjectExternalId.value,
+              polarities: observation.polarities,
+            },
+          ]
+        : [],
+    ),
+    [
+      {
+        subject: "Warframes:Excalibur Umbra",
+        polarities: [
+          { role: "aura", polarity: "madurai", quantity: 1 },
+          { role: "normal", polarity: "umbra", quantity: 3 },
+        ],
+      },
+      { subject: "Archwings:Odonata", polarities: [] },
+    ],
+  );
 });
 
 test("wiki Warframe adapter fails when a required equipment group disappears", async () => {
@@ -73,7 +100,7 @@ test("wiki Warframe adapter fails when a required equipment group disappears", a
       wikiSnapshot(`
         return {
           Warframes = {
-            Ash = { MaxRank = 30, Name = "Ash", Type = "Warframe" },
+            Ash = { MaxRank = 30, Name = "Ash", Polarities = {}, Type = "Warframe" },
           },
         }
       `),

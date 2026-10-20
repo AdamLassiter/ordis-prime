@@ -1,5 +1,6 @@
 import type {
   ArcaneClass,
+  EquipmentPolarity,
   ModPolarity,
   WeaponClass,
 } from "@ordis-prime/domain";
@@ -41,6 +42,7 @@ export interface DiscoveryCatalogEntry extends CatalogSummary {
 }
 
 export interface CatalogItem extends CatalogSummary {
+  factoryPolaritySets: CatalogEquipmentPolaritySet[];
   components: Array<{
     kind: string;
     slug: string;
@@ -84,6 +86,13 @@ export interface CatalogItem extends CatalogSummary {
     sourcePath?: string;
     snapshotPath?: string;
   }>;
+}
+
+export interface CatalogEquipmentPolaritySet {
+  configuration?: string;
+  polarities: EquipmentPolarity[];
+  sourceName: string;
+  citationUrl?: string;
 }
 
 export interface CatalogNode {
@@ -319,6 +328,11 @@ export function findCatalogItem(
     | undefined;
   if (!item) return undefined;
 
+  const factoryPolaritySets = listEquipmentPolaritySetsByEntityId(
+    sqlite,
+    item.id,
+  );
+
   const components = sqlite
     .prepare(
       `
@@ -470,6 +484,13 @@ export function findCatalogItem(
     join sources source on source.id = run.source_id
     where option.entity_id = ?
     union all
+    select 'factory-polarity-set' as fact, source.name, run.version, polarity.source_record_key,
+           polarity.citation_url, polarity.source_path, run.snapshot_path
+    from equipment_polarity_sets polarity
+    join source_runs run on run.id = polarity.source_run_id and run.status = 'active'
+    join sources source on source.id = run.source_id
+    where polarity.entity_id = ?
+    union all
     select 'relation.' || relation.kind as fact, source.name, run.version, relation.source_record_key,
            relation.citation_url, relation.source_path, run.snapshot_path
     from entity_relations relation
@@ -480,6 +501,7 @@ export function findCatalogItem(
   `,
     )
     .all(
+      item.id,
       item.id,
       item.id,
       item.id,
@@ -514,6 +536,7 @@ export function findCatalogItem(
     ...(modMaxRank !== null ? { modMaxRank } : {}),
     ...(modBaseDrain !== null ? { modBaseDrain } : {}),
     ...(modPolarity ? { modPolarity } : {}),
+    factoryPolaritySets,
     components,
     drops,
     sources,
@@ -538,6 +561,35 @@ export function findCatalogItem(
     ),
     evidence,
   };
+}
+
+export function listEquipmentPolaritySetsByEntityId(
+  sqlite: Database.Database,
+  entityId: string,
+): CatalogEquipmentPolaritySet[] {
+  const rows = sqlite
+    .prepare(
+      `select polarity.configuration, polarity.polarities_json as polaritiesJson,
+              source.name as sourceName, polarity.citation_url as citationUrl
+       from equipment_polarity_sets polarity
+       join source_runs run on run.id = polarity.source_run_id and run.status = 'active'
+       join sources source on source.id = run.source_id
+       where polarity.entity_id = ?
+       order by source.priority desc, run.retrieved_at desc, source.id,
+                coalesce(polarity.configuration, ''), polarity.source_record_key, polarity.id`,
+    )
+    .all(entityId) as Array<{
+    configuration: string | null;
+    polaritiesJson: string;
+    sourceName: string;
+    citationUrl: string | null;
+  }>;
+  return rows.map((row) => ({
+    ...(row.configuration ? { configuration: row.configuration } : {}),
+    polarities: JSON.parse(row.polaritiesJson) as EquipmentPolarity[],
+    sourceName: row.sourceName,
+    citationUrl: row.citationUrl ?? undefined,
+  }));
 }
 
 export function findCatalogNode(

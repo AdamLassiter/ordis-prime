@@ -33,6 +33,7 @@ import {
   shareBuild,
 } from "../actions";
 import { BuildCapacitySummary } from "../capacity-summary";
+import { FactoryPolaritySummary } from "../factory-polarity-summary";
 
 export const dynamic = "force-dynamic";
 
@@ -194,6 +195,9 @@ export default async function BuildEditor({
                       <button className="nav-button">Save configuration</button>
                     </form>
                     <BuildCapacitySummary capacity={equipment.capacity} />
+                    <FactoryPolaritySummary
+                      values={equipment.factoryPolaritySets}
+                    />
                     <form
                       className="form-stack compact-form"
                       action={saveEquipmentNotes.bind(

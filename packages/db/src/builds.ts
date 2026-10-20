@@ -6,6 +6,10 @@ import {
   type WeaponClass,
 } from "@ordis-prime/domain";
 import type Database from "better-sqlite3";
+import {
+  listEquipmentPolaritySetsByEntityId,
+  type CatalogEquipmentPolaritySet,
+} from "./catalog.ts";
 
 /*
  * Slot state belongs to the equipment grid, not to an installed mod. Keeping it
@@ -102,6 +106,7 @@ export interface BuildEquipmentEntry {
   formaCount: number;
   capacityUpgrade: boolean;
   capacity?: BuildCapacity;
+  factoryPolaritySets?: CatalogEquipmentPolaritySet[];
   modSlots: BuildModSlot[];
   mods: BuildMod[];
 }
@@ -963,7 +968,7 @@ function hydrateBuild(
       equipment.rank, entity.equipment_max_rank as equipmentMaxRank,
       equipment.forma_count as formaCount,
       equipment.capacity_upgrade as capacityUpgrade,
-      entity.kind, entity.slug, entity.name
+      entity.id as entityId, entity.kind, entity.slug, entity.name
     from build_equipment equipment join entities entity on entity.id = equipment.entity_id
     where equipment.build_id = ? order by equipment.slot
   `,
@@ -977,6 +982,7 @@ function hydrateBuild(
     equipmentMaxRank: number | null;
     formaCount: number;
     capacityUpgrade: number;
+    entityId: string;
     kind: string;
     slug: string;
     name: string;
@@ -1087,6 +1093,10 @@ function hydrateBuild(
           };
         },
       );
+      const factoryPolaritySets = listEquipmentPolaritySetsByEntityId(
+        sqlite,
+        entry.entityId,
+      );
       return {
         id: entry.id,
         slot: entry.slot,
@@ -1099,6 +1109,7 @@ function hydrateBuild(
           : {}),
         formaCount: entry.formaCount,
         capacityUpgrade: Boolean(entry.capacityUpgrade),
+        ...(factoryPolaritySets.length ? { factoryPolaritySets } : {}),
         ...(entry.slot === "operator-amp"
           ? {}
           : {

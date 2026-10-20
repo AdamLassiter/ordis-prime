@@ -71,6 +71,14 @@ export const MOD_POLARITIES = [
 ] as const;
 export type ModPolarity = (typeof MOD_POLARITIES)[number];
 
+export const EQUIPMENT_POLARITY_ROLES = [
+  "normal",
+  "aura",
+  "stance",
+  "exilus",
+] as const;
+export type EquipmentPolarityRole = (typeof EQUIPMENT_POLARITY_ROLES)[number];
+
 export interface CanonicalEntity {
   id: EntityId;
   kind: EntityKind;
@@ -186,6 +194,20 @@ export interface EnhancementOptionObservation {
   evidence: Evidence;
 }
 
+export interface EquipmentPolarity {
+  role: EquipmentPolarityRole;
+  polarity: ModPolarity;
+  quantity: number;
+}
+
+export interface EquipmentPolaritySetObservation {
+  type: "equipment-polarity-set";
+  subjectExternalId: ExternalIdentifier;
+  configuration?: string;
+  polarities: EquipmentPolarity[];
+  evidence: Evidence;
+}
+
 export interface RankingSetObservation {
   type: "ranking-set";
   key: string;
@@ -217,6 +239,7 @@ export type Observation =
   | NodeDetailObservation
   | EntityRelationObservation
   | EnhancementOptionObservation
+  | EquipmentPolaritySetObservation
   | RankingSetObservation
   | RankingObservation;
 

@@ -38,7 +38,8 @@ specialized weapon arcanes enforce cited canonical classes. Player-authored mod
 slot roles and polarities are preserved independently. Calculated capacity,
 including Update 38.5 rank progression, upgrades, adjusted drain and special
 slot bonuses, is implemented with explicit partial results. Sourced factory
-slot layouts and companion maximum-rank coverage, structured
+polarity role/count sets are visible without inventing grid positions. Exact
+factory positions, companion maximum-rank coverage, structured
 modular-weapon parts, and richer
 ranking methodology remain. An
 opt-in ordinal median/range summary is implemented with its assumptions visible.

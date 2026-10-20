@@ -597,6 +597,56 @@ test("composed validation requires shard enhancement subjects across sources", a
   );
 });
 
+test("composed validation requires equipment polarity set subjects", async (context) => {
+  const root = await fs.mkdtemp(
+    path.join(os.tmpdir(), "ordis-composed-equipment-polarities-"),
+  );
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const databasePath = path.join(root, "catalog.sqlite");
+  migrateDatabase(databasePath);
+  const sqlite = new Database(databasePath);
+  sqlite.pragma("foreign_keys = ON");
+  context.after(() => sqlite.close());
+
+  promoteSource(
+    sqlite,
+    input("a-v1", [
+      entity("part", "Definitely A Component", "component", "a-v1"),
+    ]),
+  );
+  const sourceB = { ...source, id: "fixture-b", name: "Fixture B" };
+  const invalidSet: Observation = {
+    type: "equipment-polarity-set",
+    subjectExternalId: {
+      sourceId: "fixture",
+      namespace: "id",
+      value: "part",
+    },
+    polarities: [{ role: "normal", polarity: "madurai", quantity: 1 }],
+    evidence: {
+      ...evidence("b-v1", "fixture-b"),
+      sourceRecordKey: "part:factory-polarities",
+    },
+  };
+
+  assert.throws(
+    () =>
+      promoteSource(sqlite, {
+        ...input("b-v1", [invalidSet]),
+        source: sourceB,
+      }),
+    /equipment polarity set part:factory-polarities requires equipment but resolved component:definitely-a-component/,
+  );
+  assert.equal(
+    (
+      sqlite
+        .prepare("select count(*) as count from equipment_polarity_sets")
+        .get() as { count: number }
+    ).count,
+    0,
+  );
+});
+
 test("composed validation rejects recipe cycles across sources", async (context) => {
   const root = await fs.mkdtemp(
     path.join(os.tmpdir(), "ordis-composed-recipe-cycle-"),
@@ -1357,6 +1407,82 @@ test("sourced enhancement options resolve canonical entities and rotate with sou
       label: "Ability Strength",
       recordKey: "shard:ability-strength",
     },
+  );
+});
+
+test("equipment polarity sets preserve cited counts and asserted empty sets", async (context) => {
+  const root = await fs.mkdtemp(
+    path.join(os.tmpdir(), "ordis-equipment-polarities-"),
+  );
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const databasePath = path.join(root, "catalog.sqlite");
+  migrateDatabase(databasePath);
+  const sqlite = new Database(databasePath);
+  sqlite.pragma("foreign_keys = ON");
+  context.after(() => sqlite.close());
+  const subject = {
+    sourceId: "fixture",
+    namespace: "id",
+    value: "weapon",
+  };
+  const first = [
+    entity("weapon", "Braton", "weapon"),
+    {
+      type: "equipment-polarity-set",
+      subjectExternalId: subject,
+      configuration: "Primary",
+      polarities: [
+        { role: "normal", polarity: "madurai", quantity: 2 },
+        { role: "exilus", polarity: "naramon", quantity: 1 },
+      ],
+      evidence: {
+        ...evidence(),
+        sourceRecordKey: "weapon:factory-polarities",
+        citationUrl: "https://example.test/braton",
+      },
+    },
+  ] satisfies Observation[];
+  assert.equal(
+    promoteSource(sqlite, input("v1", first)).equipmentPolaritySetsCreated,
+    1,
+  );
+  assert.deepEqual(
+    sqlite
+      .prepare(
+        `select polarity.configuration, polarity.polarities_json as polaritiesJson,
+                polarity.citation_url as citationUrl
+         from equipment_polarity_sets polarity
+         join source_runs run on run.id = polarity.source_run_id
+         where run.status = 'active'`,
+      )
+      .get(),
+    {
+      configuration: "Primary",
+      polaritiesJson: JSON.stringify(first[1].polarities),
+      citationUrl: "https://example.test/braton",
+    },
+  );
+
+  const second = first.map((observation) => ({
+    ...observation,
+    ...(observation.type === "equipment-polarity-set"
+      ? { polarities: [] }
+      : {}),
+    evidence: { ...observation.evidence, snapshotVersion: "v2" },
+  })) as Observation[];
+  promoteSource(sqlite, input("v2", second));
+  assert.equal(
+    (
+      sqlite
+        .prepare(
+          `select polarity.polarities_json as polaritiesJson
+           from equipment_polarity_sets polarity
+           join source_runs run on run.id = polarity.source_run_id
+           where run.status = 'active'`,
+        )
+        .get() as { polaritiesJson: string }
+    ).polaritiesJson,
+    "[]",
   );
 });
 

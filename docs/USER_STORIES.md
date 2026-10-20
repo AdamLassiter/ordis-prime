@@ -21,6 +21,8 @@
   one private alert per matching occurrence.
 - As a player, I can save partial or complete loadouts with item-specific mods
   and notes, then share an immutable revision without exposing my draft.
+- As a player, I can compare my positioned build slots with cited factory
+  polarity roles and counts without the application inventing source positions.
 - As a player, I can turn missing equipment and mod quantities in a build into
   acquisition goals without overwriting larger plans.
 - As a guest, I can compare independently cited tier lists without hidden scale

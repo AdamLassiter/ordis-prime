@@ -10,6 +10,10 @@ rank records the player's actual configuration independently from Forma count.
 Equipment also owns an optional mod-slot grid. A configured position records a
 normal, Aura, Stance or Exilus role and an optional polarity independently from
 the mod installed at that position, so an empty Forma'd slot is not lost.
+Catalog equipment can also expose cited factory-polarity sets as role and count
+summaries, including source-defined empty sets and named hybrid configurations. The
+source does not assert positions, so these summaries guide the player's grid
+without automatically changing it.
 When a mod has sourced rank and base-drain metadata, the editor constrains its
 selected rank and shows its unpolarized ranked drain. Positive drain increases
 by one per rank; negative aura/stance drain becomes a larger capacity bonus.
@@ -81,8 +85,10 @@ recipes and recommends nodes using the same canonical IDs.
   Warframe and Archwing maximum-rank coverage; companion coverage is still
   incomplete.
   The catalog now retains sourced mod maximum rank, base drain and polarity,
-  and calculates each known mod's unpolarized ranked drain. Sourced factory slot
-  layouts and companion maximum-rank coverage are not yet modeled. Whole-build
+  and calculates each known mod's unpolarized ranked drain. Structured Wiki
+  factory polarity roles and counts are shown with citations, but exact source
+  positions are unavailable. Companion maximum-rank coverage is not yet
+  modeled. Whole-build
   capacity is derived conservatively; those missing facts can leave a result
   partial rather than estimated. Broad arcane
   and specialized weapon compatibility are enforced from cited canonical

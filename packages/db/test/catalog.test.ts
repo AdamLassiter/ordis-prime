@@ -59,6 +59,20 @@ test("catalog read models join active recipes, drops, provenance, and rankings",
       evidence: { ...evidence, sourceRecordKey: "alloy" },
     },
     {
+      type: "equipment-polarity-set",
+      subjectExternalId: external("braton"),
+      configuration: "Primary",
+      polarities: [
+        { role: "normal", polarity: "madurai", quantity: 2 },
+        { role: "exilus", polarity: "naramon", quantity: 1 },
+      ],
+      evidence: {
+        ...evidence,
+        sourceRecordKey: "braton:factory-polarities",
+        citationUrl: "https://example.test/braton",
+      },
+    },
+    {
       type: "entity",
       kind: "node",
       externalIds: [external("caloris")],
@@ -220,6 +234,17 @@ test("catalog read models join active recipes, drops, provenance, and rankings",
   assert.deepEqual(searchDiscoveryCatalog(sqlite, { query: "%" }), []);
   const item = findCatalogItem(sqlite, "weapon", "braton");
   assert.equal(item?.equipmentMaxRank, 30);
+  assert.deepEqual(item?.factoryPolaritySets, [
+    {
+      configuration: "Primary",
+      polarities: [
+        { role: "normal", polarity: "madurai", quantity: 2 },
+        { role: "exilus", polarity: "naramon", quantity: 1 },
+      ],
+      sourceName: "Items",
+      citationUrl: "https://example.test/braton",
+    },
+  ]);
   assert.equal(item?.components[0]?.quantity, 200);
   assert.equal(item?.drops[0]?.nodeSlug, "mercury-caloris");
   assert.equal(item?.sources[0]?.name, "Items");
@@ -233,6 +258,14 @@ test("catalog read models join active recipes, drops, provenance, and rankings",
   assert.equal(
     item?.evidence.some(
       (entry) => entry.fact === "recipe" && entry.recordKey === "braton",
+    ),
+    true,
+  );
+  assert.equal(
+    item?.evidence.some(
+      (entry) =>
+        entry.fact === "factory-polarity-set" &&
+        entry.recordKey === "braton:factory-polarities",
     ),
     true,
   );

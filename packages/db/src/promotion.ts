@@ -3,6 +3,7 @@ import type Database from "better-sqlite3";
 import {
   ARCANE_CLASSES,
   EQUIPMENT_KINDS,
+  EQUIPMENT_POLARITY_ROLES,
   MOD_POLARITIES,
   WEAPON_CLASSES,
   externalKey,
@@ -44,6 +45,7 @@ export interface PromotionResult {
   nodeDetailsCreated: number;
   relationsCreated: number;
   enhancementOptionsCreated: number;
+  equipmentPolaritySetsCreated: number;
   rankingSetsCreated: number;
   rankingsCreated: number;
   conflictsCreated: number;
@@ -112,6 +114,7 @@ function promoteInTransaction(
         nodeDetailsCreated: 0,
         relationsCreated: 0,
         enhancementOptionsCreated: 0,
+        equipmentPolaritySetsCreated: 0,
         rankingSetsCreated: 0,
         rankingsCreated: 0,
         conflictsCreated: 0,
@@ -191,6 +194,7 @@ function promoteInTransaction(
     nodeDetailsCreated: 0,
     relationsCreated: 0,
     enhancementOptionsCreated: 0,
+    equipmentPolaritySetsCreated: 0,
     rankingSetsCreated: 0,
     rankingsCreated: 0,
     conflictsCreated: 0,
@@ -284,6 +288,41 @@ function promoteInTransaction(
   }
 
   for (const observation of input.observations) {
+    if (observation.type === "equipment-polarity-set") {
+      const entityId = state.externalIds.get(
+        externalKey(observation.subjectExternalId),
+      );
+      if (!entityId) {
+        writeConflict(
+          sqlite,
+          sourceRunId,
+          observation.evidence.sourceRecordKey,
+          "Equipment polarity set refers to an unresolved entity",
+          [],
+          counts,
+        );
+        continue;
+      }
+      sqlite
+        .prepare(
+          `
+        insert into equipment_polarity_sets
+          (id, entity_id, configuration, polarities_json, source_run_id, source_record_key, citation_url, source_path)
+        values (?, ?, ?, ?, ?, ?, ?, ?)
+      `,
+        )
+        .run(
+          randomUUID(),
+          entityId,
+          observation.configuration ?? null,
+          JSON.stringify(observation.polarities),
+          sourceRunId,
+          observation.evidence.sourceRecordKey,
+          observation.evidence.citationUrl ?? null,
+          observation.evidence.path ?? null,
+        );
+      counts.equipmentPolaritySetsCreated += 1;
+    }
     if (observation.type === "enhancement-option") {
       const entityId = state.externalIds.get(
         externalKey(observation.subjectExternalId),
@@ -500,6 +539,31 @@ function promoteInTransaction(
     ) {
       throw new Error("Enhancement option key or label is invalid");
     }
+    if (
+      observation.type === "equipment-polarity-set" &&
+      ((observation.configuration !== undefined &&
+        (!observation.configuration.trim() ||
+          observation.configuration.length > 120)) ||
+        observation.polarities.length > 20 ||
+        new Set(
+          observation.polarities.map(
+            ({ role, polarity }) => `${role}:${polarity}`,
+          ),
+        ).size !== observation.polarities.length ||
+        observation.polarities.some(
+          ({ role, polarity, quantity }) =>
+            !(EQUIPMENT_POLARITY_ROLES as readonly string[]).includes(role) ||
+            !(MOD_POLARITIES as readonly string[]).includes(polarity) ||
+            !Number.isSafeInteger(quantity) ||
+            quantity < 1 ||
+            quantity > 20,
+        ) ||
+        observation.polarities.reduce(
+          (total, polarity) => total + polarity.quantity,
+          0,
+        ) > 20)
+    )
+      throw new Error("Equipment polarity set is invalid");
   }
 
   const now = Date.now();
@@ -574,6 +638,9 @@ function validateComposedCatalog(sqlite: Database.Database): void {
         select 'enhancement option', option.source_record_key, option.entity_id
           from entity_enhancement_options option join source_runs run on run.id = option.source_run_id and run.status = 'active'
         union all
+        select 'equipment polarity set', polarity.source_record_key, polarity.entity_id
+          from equipment_polarity_sets polarity join source_runs run on run.id = polarity.source_run_id and run.status = 'active'
+        union all
         select 'ranking member', ranking.source_record_key, ranking.entity_id
           from editorial_rankings ranking join ranking_sets ranking_set on ranking_set.id = ranking.set_id
           join source_runs run on run.id = ranking_set.source_run_id and run.status = 'active'
@@ -632,6 +699,20 @@ function validateComposedCatalog(sqlite: Database.Database): void {
   if (invalidEnhancementSubject)
     throw new Error(
       `Composed catalog enhancement option ${invalidEnhancementSubject.recordKey} requires a shard but resolved ${invalidEnhancementSubject.kind}:${invalidEnhancementSubject.slug}`,
+    );
+
+  const invalidEquipmentPolaritySubject = sqlite
+    .prepare(
+      `select polarity.source_record_key as recordKey, entity.kind, entity.slug
+       from equipment_polarity_sets polarity
+       join source_runs run on run.id = polarity.source_run_id and run.status = 'active'
+       join entities entity on entity.id = polarity.entity_id
+       where entity.kind not in ('warframe', 'weapon', 'companion', 'archwing') limit 1`,
+    )
+    .get() as { recordKey: string; kind: string; slug: string } | undefined;
+  if (invalidEquipmentPolaritySubject)
+    throw new Error(
+      `Composed catalog equipment polarity set ${invalidEquipmentPolaritySubject.recordKey} requires equipment but resolved ${invalidEquipmentPolaritySubject.kind}:${invalidEquipmentPolaritySubject.slug}`,
     );
 
   validateAcyclicRecipes(sqlite);
@@ -1367,6 +1448,8 @@ function validateCandidateSet(observations: Observation[]): void {
       factKey = `node-detail:${externalKey(observation.nodeExternalId)}`;
     if (observation.type === "enhancement-option")
       factKey = `enhancement-option:${externalKey(observation.subjectExternalId)}:${observation.key}`;
+    if (observation.type === "equipment-polarity-set")
+      factKey = `equipment-polarity-set:${externalKey(observation.subjectExternalId)}`;
     if (factKey) {
       const prior = uniqueFacts.get(factKey);
       if (prior)

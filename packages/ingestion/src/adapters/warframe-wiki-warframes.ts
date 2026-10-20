@@ -15,8 +15,9 @@ import {
   wikiRevisionUrl,
   wikiSlug,
 } from "./mediawiki-lua.ts";
+import { parseEquipmentPolarities } from "./wiki-equipment-polarities.ts";
 
-const PARSER_VERSION = "warframe-wiki-warframes-v1";
+const PARSER_VERSION = "warframe-wiki-warframes-v4";
 const MODULE_TITLE = "Module:Warframes/data";
 const GROUPS = [
   { field: "Warframes", kind: "warframe", expectedType: "Warframe" },
@@ -86,33 +87,50 @@ export class WarframeWikiWarframesAdapter implements SourceAdapter {
             `WARFRAME Wiki ${group.field} record ${key} has invalid Type`,
           );
         const name = luaStringValue(nameField)?.trim() || key;
+        const externalId = {
+          sourceId: this.source.id,
+          namespace: "module-record",
+          value: `${group.field}:${key}`,
+        };
+        const recordKey = `${group.field}:${key}`;
+        const recordEvidence = {
+          sourceId: this.source.id,
+          sourceRecordKey: recordKey,
+          snapshotVersion: snapshot.version,
+          retrievedAt: snapshot.retrievedAt,
+          citationUrl: wikiRevisionUrl(page.title, page.revisionId),
+          license: this.source.license,
+          path: field.loc?.start.line
+            ? `${page.title}:${field.loc.start.line}`
+            : page.title,
+        };
         count += 1;
         yield {
           type: "entity",
           kind: group.kind,
-          externalIds: [
-            {
-              sourceId: this.source.id,
-              namespace: "module-record",
-              value: `${group.field}:${key}`,
-            },
-          ],
+          externalIds: [externalId],
           aliases: key === name ? undefined : [key],
           fields: {
             name,
             slug: wikiSlug(name),
             equipmentMaxRank: maxRank.value,
           },
+          evidence: recordEvidence,
+        };
+        yield {
+          type: "equipment-polarity-set",
+          subjectExternalId: externalId,
+          polarities: parseEquipmentPolarities(
+            field.value,
+            `WARFRAME Wiki ${group.kind} ${name}`,
+            [
+              { field: "AuraPolarity", role: "aura" },
+              { field: "ExilusPolarity", role: "exilus" },
+            ],
+          ),
           evidence: {
-            sourceId: this.source.id,
-            sourceRecordKey: `${group.field}:${key}`,
-            snapshotVersion: snapshot.version,
-            retrievedAt: snapshot.retrievedAt,
-            citationUrl: wikiRevisionUrl(page.title, page.revisionId),
-            license: this.source.license,
-            path: field.loc?.start.line
-              ? `${page.title}:${field.loc.start.line}`
-              : page.title,
+            ...recordEvidence,
+            sourceRecordKey: `${recordKey}:factory-polarities`,
           },
         };
       }

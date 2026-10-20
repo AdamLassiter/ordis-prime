@@ -95,6 +95,37 @@ export default async function ItemPage({
             <dd>{item.modPolarity}</dd>
           </>
         )}
+        {item.factoryPolaritySets.length > 0 && (
+          <>
+            <dt>Factory polarities</dt>
+            <dd>
+              {item.factoryPolaritySets.map((set, index) => (
+                <div
+                  key={`${set.sourceName}:${set.configuration ?? "default"}:${index}`}
+                >
+                  {set.configuration ? `${set.configuration}: ` : ""}
+                  {set.polarities.length
+                    ? set.polarities
+                        .map(
+                          ({ role, polarity, quantity }) =>
+                            `${quantity} × ${polarity} ${role}`,
+                        )
+                        .join(" · ")
+                    : "No innate polarities"}{" "}
+                  <span className="muted">
+                    (
+                    {set.citationUrl ? (
+                      <a href={set.citationUrl}>{set.sourceName}</a>
+                    ) : (
+                      set.sourceName
+                    )}
+                    )
+                  </span>
+                </div>
+              ))}
+            </dd>
+          </>
+        )}
         <dt>Components</dt>
         <dd>
           {item.components.length

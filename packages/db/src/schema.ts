@@ -358,6 +358,30 @@ export const enhancementOptions = sqliteTable(
     index("enhancement_option_entity").on(table.entityId),
   ],
 );
+export const equipmentPolaritySets = sqliteTable(
+  "equipment_polarity_sets",
+  {
+    id: text().primaryKey(),
+    entityId: text("entity_id")
+      .notNull()
+      .references(() => entities.id),
+    configuration: text(),
+    polaritiesJson: text("polarities_json").notNull(),
+    sourceRunId: text("source_run_id")
+      .notNull()
+      .references(() => sourceRuns.id),
+    sourceRecordKey: text("source_record_key").notNull(),
+    citationUrl: text("citation_url"),
+    sourcePath: text("source_path"),
+  },
+  (table) => [
+    uniqueIndex("equipment_polarity_set_run_record").on(
+      table.sourceRunId,
+      table.sourceRecordKey,
+    ),
+    index("equipment_polarity_set_entity").on(table.entityId),
+  ],
+);
 export const conflicts = sqliteTable("ingestion_conflicts", {
   id: text().primaryKey(),
   sourceRunId: text("source_run_id")

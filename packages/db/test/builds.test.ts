@@ -223,6 +223,9 @@ test("build drafts are private and share snapshots remain immutable", async (con
     "ability-strength",
     "Ability Strength",
   );
+  seedEquipmentPolaritySet(database, "weapon", [
+    { role: "normal", polarity: "madurai", quantity: 2 },
+  ]);
   assert.deepEqual(searchBuildCandidates(database, "primary", "Par"), [
     {
       kind: "weapon",
@@ -426,6 +429,13 @@ test("build drafts are private and share snapshots remain immutable", async (con
       maxRank: 30,
       formaCount: 3,
       capacityUpgrade: true,
+      factoryPolaritySets: [
+        {
+          polarities: [{ role: "normal", polarity: "madurai", quantity: 2 }],
+          sourceName: "Equipment facts",
+          citationUrl: "https://example.test/equipment",
+        },
+      ],
       capacity: {
         base: 56,
         bonus: 0,
@@ -822,4 +832,26 @@ function seedEnhancementOption(
       "insert into entity_enhancement_options (id, entity_id, key, label, source_run_id, source_record_key, citation_url) values ('option', ?, ?, ?, 'shard-run', 'record', 'https://example.test/shards')",
     )
     .run(entityId, key, label);
+}
+
+function seedEquipmentPolaritySet(
+  database: ReturnType<typeof openSqliteDatabase>,
+  entityId: string,
+  polarities: unknown[],
+) {
+  database
+    .prepare(
+      "insert into sources (id, name, homepage, priority, enabled) values ('equipment-facts', 'Equipment facts', 'https://example.test/equipment', 100, 1)",
+    )
+    .run();
+  database
+    .prepare(
+      "insert into source_runs (id, source_id, version, content_hash, retrieved_at, status) values ('equipment-run', 'equipment-facts', 'v1', 'hash', ?, 'active')",
+    )
+    .run(Date.now());
+  database
+    .prepare(
+      "insert into equipment_polarity_sets (id, entity_id, polarities_json, source_run_id, source_record_key, citation_url) values ('polarity-set', ?, ?, 'equipment-run', 'record', 'https://example.test/equipment')",
+    )
+    .run(entityId, JSON.stringify(polarities));
 }

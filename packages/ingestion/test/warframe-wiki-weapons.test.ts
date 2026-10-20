@@ -22,11 +22,14 @@ test("wiki weapon adapter parses literal maximum ranks without executing Lua", a
   const snapshot = wikiSnapshot(`
     return {
       ["Kuva Bramma (Atmosphere)"] = {
+        ExilusPolarity = "",
         Link = "Kuva Bramma",
         MaxRank = 40,
         Name = "Kuva Bramma (Atmosphere)",
+        Polarities = { "Madurai", "Madurai", "Naramon" },
       },
       ["Kuva Bramma Prime"] = {
+        ExilusPolarity = "Universal",
         Link = "Kuva Bramma",
         MaxRank = 40,
         Name = "Kuva Bramma Prime",
@@ -43,7 +46,7 @@ test("wiki weapon adapter parses literal maximum ranks without executing Lua", a
     snapshot,
   );
 
-  assert.equal(observations.length, 2);
+  assert.equal(observations.length, 4);
   assert.deepEqual(observations[0], {
     type: "entity",
     kind: "weapon",
@@ -71,15 +74,76 @@ test("wiki weapon adapter parses literal maximum ranks without executing Lua", a
       path: "Module:Weapons/data/primary:3",
     },
   });
+  assert.deepEqual(observations[1], {
+    type: "equipment-polarity-set",
+    subjectExternalId: {
+      sourceId: "warframe-wiki-weapons",
+      namespace: "module-record",
+      value: "Module:Weapons/data/primary:Kuva Bramma (Atmosphere)",
+    },
+    configuration: "Atmosphere",
+    polarities: [
+      { role: "normal", polarity: "madurai", quantity: 2 },
+      { role: "normal", polarity: "naramon", quantity: 1 },
+    ],
+    evidence: {
+      sourceId: "warframe-wiki-weapons",
+      sourceRecordKey:
+        "Module:Weapons/data/primary:Kuva Bramma (Atmosphere):factory-polarities",
+      snapshotVersion: "fixture-1",
+      retrievedAt: "2026-01-01T00:00:00.000Z",
+      citationUrl:
+        "https://wiki.warframe.com/w/Module:Weapons/data/primary?oldid=10",
+      license: "CC BY-NC-SA 3.0",
+      path: "Module:Weapons/data/primary:3",
+    },
+  });
   assert.equal(
-    observations[1]?.type === "entity"
-      ? observations[1].fields.name
+    observations[2]?.type === "entity"
+      ? observations[2].fields.name
       : undefined,
     "Kuva Bramma Prime",
   );
   assert.equal(
-    observations[1]?.type === "entity" ? observations[1].aliases : undefined,
+    observations[2]?.type === "entity" ? observations[2].aliases : undefined,
     undefined,
+  );
+  assert.deepEqual(
+    observations[3]?.type === "equipment-polarity-set"
+      ? observations[3].polarities
+      : undefined,
+    [{ role: "exilus", polarity: "aura", quantity: 1 }],
+  );
+});
+
+test("wiki weapon adapter rejects non-literal or unknown factory polarities", async () => {
+  await assert.rejects(
+    collect(
+      new WarframeWikiWeaponsAdapter(),
+      wikiSnapshot(`
+        return {
+          Braton = {
+            MaxRank = 30,
+            Polarities = "Madurai",
+          },
+        }
+      `),
+    ),
+    /Braton has non-literal Polarities/,
+  );
+  await assert.rejects(
+    collect(
+      new WarframeWikiWeaponsAdapter(),
+      wikiSnapshot(`
+        return {
+          Braton = {
+            MaxRank = 30,
+            Polarities = { "Future" },
+          },
+        }
+      `),
+    ),
+    /Braton has invalid polarity Future/,
   );
 });
 
@@ -103,7 +167,7 @@ test("wiki weapon adapter fetches every partition and versions their revisions",
 
   assert.equal(snapshot.sourceId, "warframe-wiki-weapons");
   assert.match(snapshot.version, /Module:Weapons\/data\/primary@100/);
-  assert.match(snapshot.version, /warframe-wiki-weapons-v1$/);
+  assert.match(snapshot.version, /warframe-wiki-weapons-v4$/);
   assert.deepEqual(
     JSON.parse(new TextDecoder().decode(snapshot.bytes)),
     payload,

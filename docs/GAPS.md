@@ -66,8 +66,10 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   still fail closed as a whole.
   The Wiki companion
   module does not expose a maximum-rank field, so companion coverage remains
-  absent rather than defaulted. The adapters do not cover factory polarities or
-  arbitrary article content. The leased worker schedules WFCD item, drop, Wiki
+  absent rather than defaulted. Weapon, Warframe and Archwing records do expose
+  complete factory-polarity sets by role and count; these retain empty and
+  configuration-specific assertions, but not invented grid positions. The
+  adapters do not cover arbitrary article content. The leased worker schedules WFCD item, drop, Wiki
   weapon, Wiki Warframe, Wiki mission and Wiki ability refreshes daily, and an
   administrator can bring supported source jobs forward from the source UI. A provider-neutral world-state
   pipeline snapshots and transactionally promotes WFCD cycles, events, alerts,
@@ -144,8 +146,9 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   Update 38.5 rank progression, private combined Mastery/Legendary Rank,
   capacity upgrades and fully known adjusted mod values. Incomplete inputs
   produce a partial or unknown result rather than an estimate, and Operator
-  Amps are excluded from this mod-capacity model. Sourced factory slot layouts
-  and comprehensive companion maximum ranks remain. Builds can assign
+  Amps are excluded from this mod-capacity model. Cited factory-polarity role
+  and count sets guide build setup, while exact factory positions and
+  comprehensive companion maximum ranks remain unavailable. Builds can assign
   ranked arcanes and positioned Archon Shards with sourced effect selections.
   Arcane candidates and assignments enforce sourced broad and specialized weapon classes against
   equipped items in either assignment order. Equipment slots also enforce

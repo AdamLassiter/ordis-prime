@@ -15,10 +15,14 @@ import {
   wikiRevisionUrl,
   wikiSlug,
 } from "./mediawiki-lua.ts";
+import {
+  parseEquipmentPolarities,
+  type ParsedEquipmentPolarity,
+} from "./wiki-equipment-polarities.ts";
 
 export { DEFAULT_WARFRAME_WIKI_API_URL } from "./mediawiki-lua.ts";
 
-const PARSER_VERSION = "warframe-wiki-weapons-v1";
+const PARSER_VERSION = "warframe-wiki-weapons-v4";
 const MODULE_TITLES = [
   "Module:Weapons/data/primary",
   "Module:Weapons/data/secondary",
@@ -34,6 +38,8 @@ interface WikiWeaponRecord {
   name: string;
   link?: string;
   maxRank: number;
+  configuration?: string;
+  factoryPolarities: ParsedEquipmentPolarity[];
   line?: number;
 }
 
@@ -71,46 +77,58 @@ export class WarframeWikiWeaponsAdapter implements SourceAdapter {
         const identity = wikiNormalizedName(record.name);
         const prior = seen.get(identity);
         if (prior) {
-          if (prior.maxRank !== record.maxRank)
+          if (
+            prior.maxRank !== record.maxRank ||
+            JSON.stringify(prior.factoryPolarities) !==
+              JSON.stringify(record.factoryPolarities)
+          )
             throw new Error(
-              `WARFRAME Wiki weapon ${record.name} has conflicting maximum ranks`,
+              `WARFRAME Wiki weapon ${record.name} has conflicting equipment facts`,
             );
           continue;
         }
         seen.set(identity, record);
-        const modeLink =
-          /\((?:Atmosphere|Primary|Secondary|Melee|Dual Swords|Heavy Blade)\)$/.test(
-            record.name,
-          )
-            ? record.link
-            : undefined;
+        const modeLink = record.configuration ? record.link : undefined;
         const aliases = [...new Set([record.key, modeLink])].filter(
           (value): value is string => Boolean(value && value !== record.name),
         );
+        const externalId = {
+          sourceId: this.source.id,
+          namespace: "module-record",
+          value: `${page.title}:${record.key}`,
+        };
+        const recordKey = `${page.title}:${record.key}`;
+        const recordEvidence = {
+          sourceId: this.source.id,
+          sourceRecordKey: recordKey,
+          snapshotVersion: snapshot.version,
+          retrievedAt: snapshot.retrievedAt,
+          citationUrl: wikiRevisionUrl(page.title, page.revisionId),
+          license: this.source.license,
+          path: record.line ? `${page.title}:${record.line}` : page.title,
+        };
         yield {
           type: "entity" as const,
           kind: "weapon" as const,
-          externalIds: [
-            {
-              sourceId: this.source.id,
-              namespace: "module-record",
-              value: `${page.title}:${record.key}`,
-            },
-          ],
+          externalIds: [externalId],
           aliases: aliases.length ? aliases : undefined,
           fields: {
             name: record.name,
             slug: wikiSlug(record.name),
             equipmentMaxRank: record.maxRank,
           },
+          evidence: recordEvidence,
+        };
+        yield {
+          type: "equipment-polarity-set" as const,
+          subjectExternalId: externalId,
+          ...(record.configuration
+            ? { configuration: record.configuration }
+            : {}),
+          polarities: record.factoryPolarities,
           evidence: {
-            sourceId: this.source.id,
-            sourceRecordKey: `${page.title}:${record.key}`,
-            snapshotVersion: snapshot.version,
-            retrievedAt: snapshot.retrievedAt,
-            citationUrl: wikiRevisionUrl(page.title, page.revisionId),
-            license: this.source.license,
-            path: record.line ? `${page.title}:${record.line}` : page.title,
+            ...recordEvidence,
+            sourceRecordKey: `${recordKey}:factory-polarities`,
           },
         };
       }
@@ -141,11 +159,23 @@ function parseWeaponModule(source: string, title: string): WikiWeaponRecord[] {
     const parsedName = luaStringValue(nameField)?.trim();
     const parsedLink = luaStringValue(linkField)?.trim();
     const name = parsedName || key;
+    const configuration = name.match(
+      /\((Atmosphere|Primary|Secondary|Melee|Dual Swords|Heavy Blade)\)$/,
+    )?.[1];
     records.push({
       key,
       name,
       link: parsedLink || undefined,
       maxRank: maxRank.value,
+      configuration,
+      factoryPolarities: parseEquipmentPolarities(
+        field.value,
+        `WARFRAME Wiki weapon ${name}`,
+        [
+          { field: "StancePolarity", role: "stance" },
+          { field: "ExilusPolarity", role: "exilus" },
+        ],
+      ),
       line: field.loc?.start.line,
     });
   }

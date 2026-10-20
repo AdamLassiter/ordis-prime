@@ -61,6 +61,9 @@ export function pruneInactiveCatalogHistory(
       sqlite.prepare(
         "delete from entity_enhancement_options where source_run_id = ?",
       ),
+      sqlite.prepare(
+        "delete from equipment_polarity_sets where source_run_id = ?",
+      ),
       sqlite.prepare("delete from fact_provenance where source_run_id = ?"),
     ];
     const detachRefresh = sqlite.prepare(

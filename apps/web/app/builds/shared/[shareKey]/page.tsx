@@ -5,6 +5,7 @@ import { getDatabase } from "@/lib/database";
 import { getCurrentSession } from "@/lib/session";
 import { cloneSharedBuildToDraft } from "../../actions";
 import { BuildCapacitySummary } from "../../capacity-summary";
+import { FactoryPolaritySummary } from "../../factory-polarity-summary";
 
 export const dynamic = "force-dynamic";
 
@@ -58,6 +59,7 @@ export default async function SharedBuildPage({
                 {equipment.capacityUpgrade ? " · capacity upgraded" : ""}
               </p>
               <BuildCapacitySummary capacity={equipment.capacity} />
+              <FactoryPolaritySummary values={equipment.factoryPolaritySets} />
               {equipment.notes && (
                 <p className="muted build-notes">{equipment.notes}</p>
               )}
