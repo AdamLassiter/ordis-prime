@@ -33,17 +33,19 @@ export default async function TodosPage() {
   const completed = todos.filter(({ status }) => status === "completed");
   return (
     <>
-      <p className="eyebrow">Private workspace</p>
-      <h1><u>Todo</u> list</h1>
+      <p className="eyebrow">Operator directives // private</p>
+      <h1>
+        Keep every loose end <u>in orbit.</u>
+      </h1>
       <p className="lede">
-        Keep the loose ends from your tabs, farming plans and weekly routine
-        together.
+        Gather farming notes, recurring routines and time-sensitive targets into
+        one flight plan.
       </p>
       {notifications.length > 0 && (
         <NotificationSection notifications={notifications} />
       )}
       <section className="planner-section">
-        <h2>World-state watches</h2>
+        <h2>Signal watches</h2>
         <form className="card form-stack todo-create" action={addWatch}>
           <p className="muted">
             Filters are case-insensitive. Leave text filters blank to watch

@@ -17,13 +17,13 @@ export default async function InventoryPage() {
   const settings = getPlayerSettings(database, session.user.id);
   return (
     <>
-      <p className="eyebrow">Private collection</p>
+      <p className="eyebrow">Orbiter manifest // private</p>
       <h1>
-        Your <u>inventory</u>
+        Know what is already <u>aboard.</u>
       </h1>
       <p className="lede">
-        Recorded ownership, build, and wishlist state. Open an item to edit its
-        details.
+        Record owned and built equipment so every farm, route and build can
+        account for the collection you already have.
       </p>
       <section className="card">
         <h2>Progression</h2>

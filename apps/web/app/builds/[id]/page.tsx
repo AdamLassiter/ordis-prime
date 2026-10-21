@@ -117,7 +117,7 @@ export default async function BuildEditor({
       : [];
   return (
     <>
-      <p className="eyebrow">Build draft · revision {build.revision}</p>
+      <p className="eyebrow">Arsenal workshop // draft {build.revision}</p>
       <h1>{build.title}</h1>
       <p>
         <Link className="muted" href="/builds">

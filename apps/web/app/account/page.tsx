@@ -9,8 +9,10 @@ export default async function AccountPage() {
   if (!session) redirect("/sign-in");
   return (
     <>
-      <p className="eyebrow">Private workspace</p>
-      <h1>My <u>account</u></h1>
+      <p className="eyebrow">Operator profile // private</p>
+      <h1>
+        Your place aboard the <u>Orbiter.</u>
+      </h1>
       <section className="card build-details">
         <h2>{session.user.name}</h2>
         <p>{session.user.email}</p>

@@ -24,9 +24,9 @@ export default async function Planner() {
   } catch (error) {
     return (
       <>
-        <p className="eyebrow">Private workspace</p>
+        <p className="eyebrow">Foundry plan // private</p>
         <h1>
-          Acquisition <u>planner</u>
+          Turn the wishlist into a <u>route.</u>
         </h1>
         <p className="error">
           The plan could not be expanded:{" "}
@@ -37,14 +37,13 @@ export default async function Planner() {
   }
   return (
     <>
-      <p className="eyebrow">Private workspace</p>
+      <p className="eyebrow">Foundry plan // private</p>
       <h1>
-        Acquisition <u>planner</u>
+        Turn the wishlist into a <u>route.</u>
       </h1>
       <p className="lede">
-        Set desired final quantities. Your inventory is subtracted before
-        recipes are expanded, and every candidate node explains which missing
-        requirements it covers.
+        Name the destination. The console accounts for what is already aboard,
+        unfolds each recipe, and marks the missions that move the plan forward.
       </p>
 
       {opportunities.length > 0 && (

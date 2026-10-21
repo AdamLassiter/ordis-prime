@@ -33,14 +33,14 @@ export default async function DiscoveryPage({
   });
   return (
     <>
-      <p className="eyebrow">Systems and lore index</p>
+      <p className="eyebrow">Orbiter archives // linked intelligence</p>
       <h1>
-        <u>Discovery</u> atlas
+        Chart the <u>unknown.</u>
       </h1>
       <p className="lede">
-        Explore quests, abilities, enemies, bosses, mechanics and secrets in one
-        canonical catalog. Sparse sections are visible on purpose: they show
-        where attributed data still needs to be added.
+        Quests, abilities, adversaries, systems and secrets—connected so one
+        discovery leads naturally to the next. Quiet regions mark intelligence
+        Ordis has not verified yet.
       </p>
       <form className="inline-form">
         <label>
@@ -107,7 +107,7 @@ export default async function DiscoveryPage({
               {entry.description ? (
                 <p className="muted">{entry.description}</p>
               ) : (
-                <p className="muted">No description is recorded yet.</p>
+                <p className="muted">No briefing is available yet.</p>
               )}
               <p className="muted">
                 {entry.relationCount} cited{" "}
@@ -167,8 +167,8 @@ export default async function DiscoveryPage({
         </section>
       ) : (
         <p className="notice">
-          No discovery entries match these filters. This can also mean the
-          selected kind has no active attributed source yet.
+          No archive entries match those filters. The selected region may also
+          be waiting for a verified transmission.
         </p>
       )}
     </>

@@ -85,15 +85,13 @@ export default async function StarChartPage({
   }
   return (
     <>
-      <p className="eyebrow">Spatial acquisition index</p>
+      <p className="eyebrow">Navigation // Origin System</p>
       <h1>
-        <u>Star chart</u>
+        Choose the next <u>waypoint.</u>
       </h1>
       <p className="lede">
-        Browse canonical mission nodes by planet and see where your collection
-        still has gaps. The connection explorer follows the current cited Wiki
-        graph; its topology is useful even though it does not claim the game's
-        visual coordinates.
+        See every mapped mission, the rewards still missing from your
+        collection, and the known requirements between you and launch.
       </p>
       <form className="inline-form">
         <label>
@@ -144,7 +142,7 @@ export default async function StarChartPage({
       )}
       {focusedNode && (
         <section className="card connection-explorer">
-          <p className="eyebrow">Connection explorer</p>
+          <p className="eyebrow">Navigation link // cited topology</p>
           <h2>{focusedNode.name}</h2>
           <p className="muted">
             {[focusedNode.planet, focusedNode.missionType, focusedNode.faction]
@@ -157,7 +155,7 @@ export default async function StarChartPage({
           </p>
           <div className="filters">
             <Link className="button" href={`/nodes/${focusedNode.slug}`}>
-              Open node and rewards
+              Inspect node and rewards
             </Link>
             <Link className="nav-button" href={starChartHref(viewState)}>
               Clear focus

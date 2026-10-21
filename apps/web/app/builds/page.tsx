@@ -13,12 +13,14 @@ export default async function BuildsPage() {
   const builds = listPlayerBuilds(getDatabase(), session.user.id);
   return (
     <>
-      <p className="eyebrow">Private workshop</p>
-      <h1><u>Builds</u></h1>
+      <p className="eyebrow">Arsenal workshop // private</p>
+      <h1>
+        Build the whole <u>loadout.</u>
+      </h1>
       <p className="lede">
-        Compose a partial or complete loadout from the shared catalog, keep your
-        reasoning beside it, and publish immutable snapshots when it is ready to
-        share.
+        Assemble equipment, modular parts, mods and enhancements in one place.
+        Keep the reasoning beside the build, then share a frozen copy when it is
+        ready.
       </p>
       <form className="card form-stack build-create" action={addBuild}>
         <h2>New build</h2>

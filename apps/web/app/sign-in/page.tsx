@@ -9,11 +9,13 @@ export default function SignInPage() {
     .get() as { count: number };
   return (
     <>
-      <p className="eyebrow">Player account</p>
-      <h1>Resume your inventory.</h1>
+      <p className="eyebrow">Transference link // secure</p>
+      <h1>
+        Welcome back, <u>Operator.</u>
+      </h1>
       <p className="lede">
-        Your collection and plans belong to this installation and can be
-        exported for portability.
+        Reconnect to your private manifest, directives, builds and Foundry plan.
+        Your profile remains exportable and under your control.
       </p>
       {result.count === 0 ? (
         <p className="notice">

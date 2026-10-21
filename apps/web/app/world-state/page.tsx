@@ -20,11 +20,13 @@ export default function WorldStatePage() {
   );
   return (
     <>
-      <p className="eyebrow">Live system intelligence</p>
-      <h1>World-state <u>timers</u></h1>
+      <p className="eyebrow">System pulse // live telemetry</p>
+      <h1>
+        Move before the <u>window closes.</u>
+      </h1>
       <p className="lede">
-        Comprehensive view of active and upcoming cycles, events, alerts, fissures and
-        traders.
+        Watch cycles, events, alerts, fissures and traders from one live
+        console.
       </p>
       {sources.length > 0 && (
         <div
@@ -56,12 +58,11 @@ export default function WorldStatePage() {
         <div className="notice empty-state">
           <p>
             {sources.length
-              ? "The active snapshot has no unexpired windows."
-              : "No current world-state snapshot is available."}
+              ? "The current transmission contains no open windows."
+              : "No live transmission has reached the Orbiter yet."}
           </p>
           <p className="muted">
-            Run <code>pnpm data:refresh wfcd-worldstate</code> to import one, or
-            inspect Sources if the automatic worker is failing.
+            Check Provenance for source freshness and refresh status.
           </p>
         </div>
       )}

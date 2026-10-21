@@ -87,11 +87,13 @@ export default async function Sources({
       : undefined;
   return (
     <>
-      <p className="eyebrow">Trust and provenance</p>
-      <h1>Data sources</h1>
+      <p className="eyebrow">Provenance console // verified intelligence</p>
+      <h1>
+        Know why the Codex <u>says so.</u>
+      </h1>
       <p className="lede">
-        Providers contribute evidence. They do not silently become application
-        truth.
+        Every provider contributes evidence, never unquestioned truth. Inspect
+        what is active, when it arrived, and where conflicts still need review.
       </p>
       {release && (
         <section className="card source-controls">
@@ -312,7 +314,7 @@ export default async function Sources({
           ))}
         </section>
       ) : (
-        <p className="lede">No sources have been imported yet.</p>
+        <p className="lede">No intelligence sources are active yet.</p>
       )}
     </>
   );

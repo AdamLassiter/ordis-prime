@@ -21,10 +21,13 @@ export default async function RankingsPage({
   const comparison = compareEditorialRankings(database, { query: q, setIds });
   return (
     <>
-      <p className="eyebrow">Cited opinions</p>
-      <h1>Tier-list <u>rankings</u></h1>
+      <p className="eyebrow">Consensus chamber // cited opinions</p>
+      <h1>
+        See where the experts <u>disagree.</u>
+      </h1>
       <p className="lede">
-        Compare what each source actually said.
+        Compare tier lists side by side without flattening away their different
+        scales, scopes or source notes.
       </p>
       <form className="card form-stack ranking-filters">
         <label>

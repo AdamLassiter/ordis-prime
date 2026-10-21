@@ -45,8 +45,8 @@ context that a first-time visitor does not need to understand the metaphor.
 
 ## Current compromise
 
-The shared shell and landing console establish this system. Major player-facing
-screens should use the same layered voice, but detail-heavy evidence views and
-administration screens intentionally remain more technical. Visual refinements
-are still largely CSS-native: there is no bespoke illustration or motion system,
-which keeps the first pass fast and accessible but limits its cinematic quality.
+The shared shell, landing console and primary player consoles establish this
+system. Detail-heavy evidence views and administration screens intentionally
+remain more technical. Visual refinements are still largely CSS-native: there is
+no bespoke illustration or motion system, which keeps the first pass fast and
+accessible but limits its cinematic quality.

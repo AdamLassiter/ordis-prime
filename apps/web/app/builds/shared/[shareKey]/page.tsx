@@ -20,7 +20,9 @@ export default async function SharedBuildPage({
   const session = await getCurrentSession();
   return (
     <>
-      <p className="eyebrow">Shared build · revision {build.revision}</p>
+      <p className="eyebrow">
+        Arsenal transmission // revision {build.revision}
+      </p>
       <h1>{build.title}</h1>
       {build.category && <span className="tag">{build.category}</span>}
       {build.notes && <p className="lede build-notes">{build.notes}</p>}
