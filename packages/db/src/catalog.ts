@@ -173,6 +173,12 @@ export interface CatalogNode {
     sourceName: string;
     citationUrl?: string;
     entity?: CatalogSummary;
+    inventory?: {
+      ownedCount: number;
+      builtCount: number;
+      wantedCount: number;
+      needed: boolean;
+    };
   }>;
   drops: Array<{
     kind: string;
@@ -191,8 +197,10 @@ export interface CatalogNode {
 
 export interface StarChartNode extends Omit<CatalogNode, "drops" | "id"> {
   rewardCount: number;
+  oneTimeRewardCount: number;
   connectionCount: number;
   neededRewardCount?: number;
+  neededOneTimeRewardCount?: number;
 }
 
 export interface SourceStatus {
@@ -779,7 +787,8 @@ export function findCatalogNode(
     loadNodeItemRequirements(sqlite, [node.id], userId).get(node.id) ?? [];
   const objectives =
     loadNodeObjectives(sqlite, [node.id], userId).get(node.id) ?? [];
-  const oneTimeRewards = loadNodeRewards(sqlite, [node.id]).get(node.id) ?? [];
+  const oneTimeRewards =
+    loadNodeRewards(sqlite, [node.id], userId).get(node.id) ?? [];
   const completionState = userId
     ? loadNodeCompletionStates(sqlite, [node.id], userId).get(node.id)
     : undefined;
@@ -890,6 +899,7 @@ export function listStarChartNodes(
   const oneTimeRewards = loadNodeRewards(
     sqlite,
     nodes.map(({ id }) => id),
+    userId,
   );
   const completionStates = userId
     ? loadNodeCompletionStates(
@@ -951,8 +961,14 @@ export function listStarChartNodes(
       : {}),
     connectionCount: connections.get(id)?.length ?? 0,
     rewardCount: counts.get(id)?.rewardCount ?? 0,
+    oneTimeRewardCount: oneTimeRewards.get(id)?.length ?? 0,
     ...(userId
-      ? { neededRewardCount: counts.get(id)?.neededRewardCount ?? 0 }
+      ? {
+          neededRewardCount: counts.get(id)?.neededRewardCount ?? 0,
+          neededOneTimeRewardCount:
+            oneTimeRewards.get(id)?.filter(({ inventory }) => inventory?.needed)
+              .length ?? 0,
+        }
       : {}),
   }));
 }
@@ -1173,10 +1189,16 @@ function loadNodeObjectives(
 function loadNodeRewards(
   sqlite: Database.Database,
   nodeIds: string[],
+  userId?: string,
 ): Map<string, CatalogNode["oneTimeRewards"]> {
   const result = new Map<string, CatalogNode["oneTimeRewards"]>();
   if (!nodeIds.length) return result;
   const placeholders = nodeIds.map(() => "?").join(", ");
+  const inventoryColumns = userId
+    ? `coalesce(inventory.owned_count, 0) as ownedCount,
+       coalesce(inventory.built_count, 0) as builtCount,
+       coalesce(inventory.wanted_count, 0) as wantedCount`
+    : "0 as ownedCount, 0 as builtCount, 0 as wantedCount";
   const rows = sqlite
     .prepare(
       `select reward.node_id as nodeId, reward.key, reward.label,
@@ -1186,17 +1208,23 @@ function loadNodeRewards(
               reward.citation_url as citationUrl,
               entity.kind as entityKind, entity.slug as entitySlug,
               entity.name as entityName, entity.description as entityDescription
+              , ${inventoryColumns}
        from node_rewards reward
        join source_runs run on run.id = reward.source_run_id and run.status = 'active'
        join sources source on source.id = run.source_id
        left join entities entity
          on entity.id = reward.reward_entity_id and entity.retired = 0
+       ${
+         userId
+           ? "left join player_inventory inventory on inventory.entity_id = reward.reward_entity_id and inventory.user_id = ?"
+           : ""
+       }
        where reward.node_id in (${placeholders})
        order by reward.node_id, reward.sort_order,
                 source.priority desc, run.retrieved_at desc, source.id,
                 reward.source_record_key`,
     )
-    .all(...nodeIds) as Array<{
+    .all(...(userId ? [userId, ...nodeIds] : nodeIds)) as Array<{
     nodeId: string;
     key: string;
     label: string;
@@ -1210,6 +1238,9 @@ function loadNodeRewards(
     entitySlug: string | null;
     entityName: string | null;
     entityDescription: string | null;
+    ownedCount: number;
+    builtCount: number;
+    wantedCount: number;
   }>;
   for (const {
     nodeId,
@@ -1220,6 +1251,9 @@ function loadNodeRewards(
     entitySlug,
     entityName,
     entityDescription,
+    ownedCount,
+    builtCount,
+    wantedCount,
     ...reward
   } of rows) {
     const rewards = result.get(nodeId) ?? [];
@@ -1237,6 +1271,16 @@ function loadNodeRewards(
               description: entityDescription ?? undefined,
             }
           : undefined,
+      ...(userId && entityKind
+        ? {
+            inventory: {
+              ownedCount,
+              builtCount,
+              wantedCount,
+              needed: ownedCount + builtCount === 0 || wantedCount > 0,
+            },
+          }
+        : {}),
     });
     result.set(nodeId, rewards);
   }

@@ -309,6 +309,7 @@ export default async function NodePage({
                       .map((reward) => (
                         <li key={reward.key}>
                           Reward: {renderJunctionReward(reward)}{" "}
+                          <RewardInventory reward={reward} />{" "}
                           <RewardSource reward={reward} />
                         </li>
                       ))}
@@ -359,6 +360,7 @@ export default async function NodePage({
                   .map((reward) => (
                     <li key={reward.key}>
                       {renderJunctionReward(reward)}{" "}
+                      <RewardInventory reward={reward} />{" "}
                       <RewardSource reward={reward} />
                     </li>
                   ))}
@@ -482,6 +484,14 @@ function RewardSource({ reward }: { reward: JunctionReward }) {
       )
     </span>
   );
+}
+
+function RewardInventory({ reward }: { reward: JunctionReward }) {
+  return reward.inventory ? (
+    <span className={reward.inventory.needed ? "status-needed" : "muted"}>
+      {inventoryLabel(reward.inventory)}
+    </span>
+  ) : null;
 }
 
 function inventoryLabel(inventory: {

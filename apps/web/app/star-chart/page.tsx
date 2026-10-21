@@ -64,7 +64,9 @@ export default async function StarChartPage({
         [node.name, node.planet, node.missionType, node.faction].some((value) =>
           value?.toLocaleLowerCase().includes(normalized),
         )) &&
-      (!neededOnly || (node.neededRewardCount ?? 0) > 0) &&
+      (!neededOnly ||
+        (node.neededRewardCount ?? 0) > 0 ||
+        (node.neededOneTimeRewardCount ?? 0) > 0) &&
       (!selectedAccess || node.accessStatus === selectedAccess) &&
       (!selectedCompletion || node.completionState === selectedCompletion),
   );
@@ -176,7 +178,8 @@ export default async function StarChartPage({
                     </span>
                     {neighbor && (
                       <span>
-                        {neighbor.rewardCount} recorded rewards ·{" "}
+                        {neighbor.rewardCount} repeatable rewards ·{" "}
+                        {neighbor.oneTimeRewardCount} one-time grants ·{" "}
                         {neighbor.connectionCount} connections
                       </span>
                     )}
@@ -240,11 +243,19 @@ export default async function StarChartPage({
                     </span>
                   )}
                   <span>
-                    {node.rewardCount} recorded rewards
+                    {node.rewardCount} repeatable rewards
                     {node.neededRewardCount === undefined
                       ? ""
                       : ` · ${node.neededRewardCount} needed`}
                   </span>
+                  {node.oneTimeRewardCount > 0 && (
+                    <span>
+                      {node.oneTimeRewardCount} one-time grants
+                      {node.neededOneTimeRewardCount === undefined
+                        ? ""
+                        : ` · ${node.neededOneTimeRewardCount} needed`}
+                    </span>
+                  )}
                   <span>
                     {node.connectionCount} cited{" "}
                     {node.connectionCount === 1 ? "connection" : "connections"}

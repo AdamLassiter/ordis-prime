@@ -26,6 +26,9 @@
   and planner.
 - As a player, I can see each one-time reward beside the Junction task that
   grants it, with final completion rewards kept distinct from repeatable drops.
+- As a player, I can see which linked one-time grants are absent from my
+  inventory and include them in the star chart's unowned-reward filter without
+  counting them as mission drops.
 - As a player, I can open a reward item and follow its cited one-time acquisition
   back to the granting Junction.
 - As an administrator, I can see dataset freshness, import failures, conflicts

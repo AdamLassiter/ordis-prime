@@ -203,7 +203,8 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   and completion rewards are modeled as cited one-time grants. Safely resolved
   identities link to catalog entities; Chroma Neuroptics intentionally remains
   label-only because the current WFCD component identities are conflated.
-  Completing a task does not automatically mutate inventory or quest state.
+  Linked grants compose with private inventory and the chart's unowned filter,
+  but completing a task does not automatically mutate inventory or quest state.
   Stable visual positions are still missing.
 - A public discovery atlas searches canonical quest, ability, enemy, boss,
   mechanic and secret kinds. WFCD currently populates quests and enemies;

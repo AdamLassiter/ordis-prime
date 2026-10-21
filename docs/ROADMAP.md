@@ -84,4 +84,6 @@ objective descriptions and hints are now imported as ordered, cited public
 facts. Portable private objective completion now composes into Junction access
 for the star chart and planner. Typed one-time objective and Junction-completion
 rewards are linked in both node and item views without entering repeatable drop
-recommendations. Other item or equipment conditions remain.
+recommendations. Their separately labeled inventory overlay also participates
+in the chart's unowned-reward filter without conflating grant and drop counts.
+Other item or equipment conditions remain.

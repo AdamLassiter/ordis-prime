@@ -494,6 +494,23 @@ test("catalog read models join active recipes, drops, provenance, and rankings",
       },
     ],
   );
+  assert.deepEqual(
+    findCatalogNode(sqlite, "mercury-caloris", userId)?.oneTimeRewards.map(
+      ({ label, inventory }) => ({ label, inventory }),
+    ),
+    [
+      {
+        label: "100 Alloy Plate",
+        inventory: {
+          ownedCount: 0,
+          builtCount: 0,
+          wantedCount: 0,
+          needed: true,
+        },
+      },
+      { label: "Unlock the next planet", inventory: undefined },
+    ],
+  );
   setNodeCompletion(sqlite, userId, "mercury-caloris", true);
   assert.equal(
     findCatalogNode(sqlite, "mercury-caloris", userId)?.completionState,
@@ -501,35 +518,58 @@ test("catalog read models join active recipes, drops, provenance, and rankings",
   );
   assert.deepEqual(
     listStarChartNodes(sqlite).map(
-      ({ name, rewardCount, connectionCount, neededRewardCount }) => ({
+      ({
         name,
         rewardCount,
+        oneTimeRewardCount,
         connectionCount,
         neededRewardCount,
+        neededOneTimeRewardCount,
+      }) => ({
+        name,
+        rewardCount,
+        oneTimeRewardCount,
+        connectionCount,
+        neededRewardCount,
+        neededOneTimeRewardCount,
       }),
     ),
     [
       {
         name: "Caloris",
         rewardCount: 1,
+        oneTimeRewardCount: 2,
         connectionCount: 1,
         neededRewardCount: undefined,
+        neededOneTimeRewardCount: undefined,
       },
       {
         name: "Terminus",
         rewardCount: 0,
+        oneTimeRewardCount: 0,
         connectionCount: 1,
         neededRewardCount: undefined,
+        neededOneTimeRewardCount: undefined,
       },
     ],
   );
   assert.deepEqual(
     listStarChartNodes(sqlite, userId).map(
-      ({ name, planet, rewardCount, neededRewardCount, completionState }) => ({
+      ({
         name,
         planet,
         rewardCount,
+        oneTimeRewardCount,
         neededRewardCount,
+        neededOneTimeRewardCount,
+        completionState,
+      }) => ({
+        name,
+        planet,
+        rewardCount,
+        oneTimeRewardCount,
+        neededRewardCount,
+        neededOneTimeRewardCount,
         completionState,
       }),
     ),
@@ -538,14 +578,18 @@ test("catalog read models join active recipes, drops, provenance, and rankings",
         name: "Caloris",
         planet: "Mercury",
         rewardCount: 1,
+        oneTimeRewardCount: 2,
         neededRewardCount: 1,
+        neededOneTimeRewardCount: 1,
         completionState: "completed",
       },
       {
         name: "Terminus",
         planet: undefined,
         rewardCount: 0,
+        oneTimeRewardCount: 0,
         neededRewardCount: 0,
+        neededOneTimeRewardCount: 0,
         completionState: "incomplete",
       },
     ],
@@ -574,6 +618,11 @@ test("catalog read models join active recipes, drops, provenance, and rankings",
     findCatalogNode(sqlite, "mercury-caloris", userId)?.itemRequirements[0]
       ?.state,
     "met",
+  );
+  assert.deepEqual(
+    findCatalogNode(sqlite, "mercury-caloris", userId)?.oneTimeRewards[0]
+      ?.inventory,
+    { ownedCount: 100, builtCount: 0, wantedCount: 0, needed: false },
   );
   assert.deepEqual(
     listSourceStatuses(sqlite).map(({ id, conflictCount }) => ({

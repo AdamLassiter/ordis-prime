@@ -89,7 +89,10 @@ objective complete. Any incomplete objective blocks Junction access, all four
 completed objectives satisfy that part of the rule, and guests see the private
 input as conditional. Each task lists its one-time grants directly beneath it,
 and a separate completion group lists the final Junction grants. Canonically
-linked reward pages point back to every granting Junction.
+linked reward pages point back to every granting Junction. Signed-in reads join
+those links to the same private inventory state as repeatable drops, but expose
+separate one-time and repeatable counts. The unowned-reward chart filter matches
+either category without pretending a grant has a drop chance.
 
 ## Current compromise
 
@@ -102,7 +105,9 @@ before a visual graph is honest.
 Enemy and quest identities are imported, but richer domain-specific facts and
 complete curated discovery links remain future work.
 Junction reward facts do not currently update inventory, quest progress or
-unlock state automatically. A task text change intentionally creates a new
-objective key, so a previous completion is retained privately but ignored by
-current access until the new task is completed.
+unlock state automatically. Objective and node completion also do not prove a
+grant was claimed: inventory remains independently player-authored. A task text
+change intentionally creates a new objective key, so a previous completion is
+retained privately but ignored by current access until the new task is
+completed.
 There is not yet automatic account-state import.
