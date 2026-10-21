@@ -6,6 +6,7 @@ import {
 } from "@ordis-prime/domain";
 import { getDatabase } from "@/lib/database";
 import { getCurrentSession } from "@/lib/session";
+import { buildStarChartNeighborhood } from "@/lib/star-chart-topology";
 import { updateVisibleNodeCompletions } from "./actions";
 import { matchesStarChartQuery } from "@/lib/star-chart-search";
 
@@ -58,6 +59,9 @@ export default async function StarChartPage({
   );
   const nodesBySlug = new Map(allNodes.map((node) => [node.slug, node]));
   const focusedNode = focus ? nodesBySlug.get(focus) : undefined;
+  const neighborhood = focusedNode
+    ? buildStarChartNeighborhood(allNodes, focusedNode.slug)
+    : undefined;
   const nodes = allNodes.filter(
     (node) =>
       matchesStarChartQuery(node, q) &&
@@ -152,6 +156,64 @@ export default async function StarChartPage({
               Clear focus
             </Link>
           </div>
+          {neighborhood && neighborhood.nodes.length > 1 && (
+            <svg
+              aria-label={`Direct connections around ${focusedNode.name}`}
+              className="topology-map"
+              role="img"
+              viewBox={`0 0 ${neighborhood.width} ${neighborhood.height}`}
+            >
+              <title>Direct connections around {focusedNode.name}</title>
+              {neighborhood.edges.map((edge) => {
+                const from = neighborhood.nodes.find(
+                  ({ slug }) => slug === edge.fromSlug,
+                )!;
+                const to = neighborhood.nodes.find(
+                  ({ slug }) => slug === edge.toSlug,
+                )!;
+                return (
+                  <line
+                    className="topology-edge"
+                    key={`${edge.fromSlug}:${edge.toSlug}`}
+                    x1={from.x}
+                    x2={to.x}
+                    y1={from.y}
+                    y2={to.y}
+                  />
+                );
+              })}
+              {neighborhood.nodes.map((node) => (
+                <a
+                  aria-label={
+                    node.focused
+                      ? `${node.name}, current node`
+                      : `Focus ${node.name}`
+                  }
+                  href={focusHref(node.slug)}
+                  key={node.slug}
+                >
+                  <circle
+                    className={
+                      node.focused
+                        ? "topology-node topology-node-focused"
+                        : "topology-node"
+                    }
+                    cx={node.x}
+                    cy={node.y}
+                    r={node.focused ? 31 : 24}
+                  />
+                  <text
+                    className="topology-label"
+                    textAnchor="middle"
+                    x={node.x}
+                    y={node.y + (node.focused ? 49 : 41)}
+                  >
+                    {shortNodeLabel(node.name)}
+                  </text>
+                </a>
+              ))}
+            </svg>
+          )}
           <h3>Directly connected nodes</h3>
           {focusedNode.connections.length ? (
             <div className="connection-grid">
@@ -297,6 +359,10 @@ export default async function StarChartPage({
 
 function focusHref(slug: string): string {
   return `/star-chart?${new URLSearchParams({ focus: slug })}`;
+}
+
+function shortNodeLabel(name: string): string {
+  return name.length > 22 ? `${name.slice(0, 21)}…` : name;
 }
 
 function isAccessStatus(value: string | undefined): value is NodeAccessStatus {

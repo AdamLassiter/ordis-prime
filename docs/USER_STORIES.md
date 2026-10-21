@@ -57,5 +57,7 @@
   and mission pages without leaving the application.
 - As a guest, I can search the star chart by a linked boss or discovery name to
   find the relevant node directly.
+- As a guest, I can scan a focused node and its direct cited neighbors as a
+  linked topology map without mistaking derived positions for game coordinates.
 - Quest and mechanic prerequisites surface systems a player has not discovered.
 - A visual star chart uses the same node IDs, edges, filters and planner queries.

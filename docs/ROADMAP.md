@@ -64,8 +64,9 @@ canonical nodes; same-name WFCD enemies are refined without duplicating their
 identity.
 Wiki mission data supplies the attributed current node and connection set, and
 those cited star-chart edges compose into node reads symmetrically. A shareable
-focus view supports direct traversal without manufacturing map coordinates.
-Stable coordinates and richer quest-step progress remain.
+focus view supports direct traversal and a deterministic one-hop SVG topology
+without manufacturing domain coordinates. Stable global coordinates and richer
+quest-step progress remain.
 Private node completion tracking, chart filtering and portable profile transfer
 are implemented independently of sourced access evidence. A filtered-scope bulk
 editor supports initial and ongoing completion entry without changing hidden

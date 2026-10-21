@@ -190,10 +190,11 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
 - WFCD item and drop observations compose planet, mission and level metadata in
   a public planet-grouped star-chart explorer with a player-needed overlay. The
   imported WFCD sources do not provide connection edges or coordinates, so it is
-  not yet an interactive visual graph. The structured Wiki mission adapter now
-  supplies the current attributed node and connection set; `connects-to`
-  observations are shown symmetrically and a focused topology explorer supports
-  direct traversal. It derives and filters available, conditional, blocked and
+  not yet a source-faithful global visual graph. The structured Wiki mission
+  adapter now supplies the current attributed node and connection set;
+  `connects-to` observations are shown symmetrically and a focused topology
+  explorer supports direct traversal plus a derived one-hop SVG map. It derives
+  and filters available, conditional, blocked and
   unknown access states from the same quest-progress and Mastery evidence as the
   planner. Connectivity remains navigation evidence rather than proof of player
   completion. Signed-in players can record private node completion, filter the
@@ -208,7 +209,8 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   label-only because the current WFCD component identities are conflated.
   Linked grants compose with private inventory and the chart's unowned filter,
   but completing a task does not automatically mutate inventory or quest state.
-  Stable visual positions are still missing.
+  Stable global visual positions are still missing; local ring positions are
+  transient presentation state.
 - A public discovery atlas searches canonical quest, ability, enemy, boss,
   mechanic and secret kinds. WFCD currently populates quests and enemies;
   structured Wiki data populates current abilities and their typed

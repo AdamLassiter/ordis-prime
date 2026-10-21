@@ -54,7 +54,10 @@ the same metadata beside their full reward lists. Active cited `connects-to`
 relations are treated as undirected navigation edges: either endpoint lists the
 other, even though a source only needs to state the edge once. A shareable
 `focus=` view lets a player traverse those direct connections and move between
-topology and a node's rewards without inventing spatial positions.
+topology and a node's rewards without inventing domain positions. The focused
+node and its direct neighbors also render as a deterministic linked SVG map.
+That local ring is derived presentation state, not a claim about the in-game
+layout.
 Incoming cited `occurs-at` and `involves` relations are also listed on the node,
 so its structured boss and curated discovery topics are reachable in-app rather
 than only from the discovery side of the graph.
@@ -101,10 +104,10 @@ either category without pretending a grant has a drop chance.
 ## Current compromise
 
 No imported source supplies stable visual coordinates. The current chart can
-answer node-adjacency questions from the attributed Wiki graph, but remains a
-planet-grouped index plus a topological connection explorer rather than a
-reproduction of the in-game map. Positions still need another attributed source
-before a visual graph is honest.
+answer node-adjacency questions from the attributed Wiki graph and visualize a
+focused one-hop neighborhood, but remains a planet-grouped index plus a local
+topological connection explorer rather than a reproduction of the in-game map.
+A global source-faithful layout still needs another attributed source.
 
 Enemy and quest identities are imported, but richer domain-specific facts and
 complete curated discovery links remain future work.

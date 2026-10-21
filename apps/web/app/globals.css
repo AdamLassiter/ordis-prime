@@ -606,6 +606,49 @@ textarea {
 .connection-explorer {
   margin-top: 1.5rem;
 }
+.topology-map {
+  display: block;
+  width: 100%;
+  max-height: 32rem;
+  margin: 1.5rem 0;
+  overflow: visible;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background:
+    radial-gradient(circle at center, rgb(45 212 191 / 8%), transparent 42%),
+    #090f18;
+}
+.topology-edge {
+  stroke: #426074;
+  stroke-width: 2;
+}
+.topology-node {
+  fill: #162434;
+  stroke: var(--cyan);
+  stroke-width: 2;
+  transition:
+    fill 120ms ease,
+    stroke-width 120ms ease;
+}
+.topology-node-focused {
+  fill: #3b2f17;
+  stroke: var(--gold);
+  stroke-width: 3;
+}
+.topology-map a:hover .topology-node,
+.topology-map a:focus .topology-node {
+  fill: #234257;
+  stroke-width: 4;
+}
+.topology-map a:focus {
+  outline: none;
+}
+.topology-label {
+  fill: var(--text);
+  font-size: 14px;
+  font-weight: 700;
+  pointer-events: none;
+}
 .connection-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
