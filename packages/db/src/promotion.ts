@@ -46,6 +46,7 @@ export interface PromotionResult {
   nodeDetailsCreated: number;
   nodeItemRequirementsCreated: number;
   nodeObjectivesCreated: number;
+  nodeRewardsCreated: number;
   relationsCreated: number;
   enhancementOptionsCreated: number;
   equipmentPolaritySetsCreated: number;
@@ -117,6 +118,7 @@ function promoteInTransaction(
         nodeDetailsCreated: 0,
         nodeItemRequirementsCreated: 0,
         nodeObjectivesCreated: 0,
+        nodeRewardsCreated: 0,
         relationsCreated: 0,
         enhancementOptionsCreated: 0,
         equipmentPolaritySetsCreated: 0,
@@ -199,6 +201,7 @@ function promoteInTransaction(
     nodeDetailsCreated: 0,
     nodeItemRequirementsCreated: 0,
     nodeObjectivesCreated: 0,
+    nodeRewardsCreated: 0,
     relationsCreated: 0,
     enhancementOptionsCreated: 0,
     equipmentPolaritySetsCreated: 0,
@@ -295,6 +298,49 @@ function promoteInTransaction(
   }
 
   for (const observation of input.observations) {
+    if (observation.type === "node-reward") {
+      const nodeId = state.externalIds.get(
+        externalKey(observation.nodeExternalId),
+      );
+      const rewardEntityId = observation.rewardExternalId
+        ? state.externalIds.get(externalKey(observation.rewardExternalId))
+        : undefined;
+      if (!nodeId || (observation.rewardExternalId && !rewardEntityId)) {
+        writeConflict(
+          sqlite,
+          sourceRunId,
+          observation.evidence.sourceRecordKey,
+          "Node reward refers to an unresolved entity",
+          [nodeId, rewardEntityId].filter((id): id is EntityId => Boolean(id)),
+          counts,
+        );
+        continue;
+      }
+      sqlite
+        .prepare(
+          `insert into node_rewards
+            (id, node_id, reward_entity_id, key, label, quantity, trigger,
+             objective_key, sort_order, source_run_id, source_record_key,
+             citation_url, source_path)
+           values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        )
+        .run(
+          randomUUID(),
+          nodeId,
+          rewardEntityId ?? null,
+          observation.key,
+          observation.label,
+          observation.quantity ?? null,
+          observation.trigger,
+          observation.objectiveKey ?? null,
+          observation.sortOrder,
+          sourceRunId,
+          observation.evidence.sourceRecordKey,
+          observation.evidence.citationUrl ?? null,
+          observation.evidence.path ?? null,
+        );
+      counts.nodeRewardsCreated += 1;
+    }
     if (observation.type === "node-objective") {
       const nodeId = state.externalIds.get(
         externalKey(observation.nodeExternalId),
@@ -542,6 +588,35 @@ function promoteInTransaction(
           "Node objective sort order must be a non-negative integer",
         );
     }
+    if (observation.type === "node-reward") {
+      if (!observation.key || !observation.label)
+        throw new Error("Node reward key and label are required");
+      if (
+        observation.trigger !== "objective" &&
+        observation.trigger !== "junction-completion"
+      )
+        throw new Error("Node reward trigger is invalid");
+      if (
+        !Number.isSafeInteger(observation.sortOrder) ||
+        observation.sortOrder < 0
+      )
+        throw new Error(
+          "Node reward sort order must be a non-negative integer",
+        );
+      if (
+        observation.quantity !== undefined &&
+        (!Number.isSafeInteger(observation.quantity) ||
+          observation.quantity <= 0)
+      )
+        throw new Error("Node reward quantity must be a positive safe integer");
+      if (
+        (observation.trigger === "objective") !==
+        Boolean(observation.objectiveKey)
+      )
+        throw new Error(
+          "Objective node rewards require exactly one objective key",
+        );
+    }
     if (observation.type === "drop") {
       const rewardId = state.externalIds.get(
         externalKey(observation.rewardExternalId),
@@ -738,6 +813,13 @@ function validateComposedCatalog(sqlite: Database.Database): void {
         select 'node objective', objective.source_record_key, objective.node_id
           from node_objectives objective join source_runs run on run.id = objective.source_run_id and run.status = 'active'
         union all
+        select 'node reward node', reward.source_record_key, reward.node_id
+          from node_rewards reward join source_runs run on run.id = reward.source_run_id and run.status = 'active'
+        union all
+        select 'node reward entity', reward.source_record_key, reward.reward_entity_id
+          from node_rewards reward join source_runs run on run.id = reward.source_run_id and run.status = 'active'
+          where reward.reward_entity_id is not null
+        union all
         select 'relation origin', relation.source_record_key, relation.from_entity_id
           from entity_relations relation join source_runs run on run.id = relation.source_run_id and run.status = 'active'
         union all
@@ -785,6 +867,10 @@ function validateComposedCatalog(sqlite: Database.Database): void {
           from node_objectives objective join source_runs run on run.id = objective.source_run_id and run.status = 'active'
           join entities entity on entity.id = objective.node_id where entity.kind != 'node'
         union all
+        select 'node reward', reward.source_record_key, entity.kind, entity.slug
+          from node_rewards reward join source_runs run on run.id = reward.source_run_id and run.status = 'active'
+          join entities entity on entity.id = reward.node_id where entity.kind != 'node'
+        union all
         select 'connection origin', relation.source_record_key, entity.kind, entity.slug
           from entity_relations relation join source_runs run on run.id = relation.source_run_id and run.status = 'active'
           join entities entity on entity.id = relation.from_entity_id
@@ -802,6 +888,24 @@ function validateComposedCatalog(sqlite: Database.Database): void {
   if (invalidNodeReference)
     throw new Error(
       `Composed catalog ${invalidNodeReference.factType} ${invalidNodeReference.recordKey ?? "without record key"} requires a node but resolved ${invalidNodeReference.kind}:${invalidNodeReference.slug}`,
+    );
+
+  const missingRewardObjective = sqlite
+    .prepare(
+      `select reward.source_record_key as recordKey
+       from node_rewards reward
+       join source_runs run
+         on run.id = reward.source_run_id and run.status = 'active'
+       left join node_objectives objective
+         on objective.source_run_id = reward.source_run_id
+        and objective.node_id = reward.node_id
+        and objective.key = reward.objective_key
+       where reward.trigger = 'objective' and objective.id is null limit 1`,
+    )
+    .get() as { recordKey: string } | undefined;
+  if (missingRewardObjective)
+    throw new Error(
+      `Composed catalog node reward ${missingRewardObjective.recordKey} refers to a missing objective`,
     );
 
   const invalidNodeItemRequirement = sqlite
@@ -1601,6 +1705,8 @@ function validateCandidateSet(observations: Observation[]): void {
       factKey = `node-item-requirement:${externalKey(observation.nodeExternalId)}:${externalKey(observation.itemExternalId)}`;
     if (observation.type === "node-objective")
       factKey = `node-objective:${externalKey(observation.nodeExternalId)}:${observation.key}`;
+    if (observation.type === "node-reward")
+      factKey = `node-reward:${externalKey(observation.nodeExternalId)}:${observation.key}`;
     if (observation.type === "enhancement-option")
       factKey = `enhancement-option:${externalKey(observation.subjectExternalId)}:${observation.key}`;
     if (observation.type === "equipment-polarity-set")

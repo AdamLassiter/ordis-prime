@@ -29,12 +29,17 @@ test("wiki Junction adapter imports four cited objectives per Junction", async (
     wikiSnapshot(junctionTasks()),
   );
 
-  const nodes = observations.filter(({ type }) => type === "entity");
+  const nodes = observations.filter(
+    (observation) =>
+      observation.type === "entity" && observation.kind === "node",
+  );
   const objectives = observations.filter(
     ({ type }) => type === "node-objective",
   );
   assert.equal(nodes.length, 13);
   assert.equal(objectives.length, 52);
+  const rewards = observations.filter(({ type }) => type === "node-reward");
+  assert.equal(rewards.length, 117);
   assert.deepEqual(nodes[0], {
     type: "entity",
     kind: "node",
@@ -126,6 +131,84 @@ test("wiki Junction adapter imports four cited objectives per Junction", async (
     ),
     false,
   );
+  assert.deepEqual(
+    rewards.slice(0, 9).map((reward) =>
+      reward.type === "node-reward"
+        ? {
+            label: reward.label,
+            quantity: reward.quantity,
+            trigger: reward.trigger,
+            objectiveKey: reward.objectiveKey,
+            target: reward.rewardExternalId?.value,
+          }
+        : undefined,
+    ),
+    [
+      {
+        label: "Dreamer's Bond (unranked)",
+        quantity: 1,
+        trigger: "objective",
+        objectiveKey: "bdfae91a0ec464a5",
+        target: "Dreamer's Bond",
+      },
+      {
+        label: "25 Codex Scanners",
+        quantity: 25,
+        trigger: "objective",
+        objectiveKey: "a4896ed4523654d0",
+        target: "Codex Scanner",
+      },
+      {
+        label: "Unlock Arbitrations",
+        quantity: 1,
+        trigger: "objective",
+        objectiveKey: "bfa748cc183db1a9",
+        target: "Arbitrations",
+      },
+      {
+        label: "Void Relic Segment",
+        quantity: 1,
+        trigger: "objective",
+        objectiveKey: "bfa748cc183db1a9",
+        target: "Void Relic Segment",
+      },
+      {
+        label: "Chroma Chassis Blueprint",
+        quantity: 1,
+        trigger: "objective",
+        objectiveKey: "831a371c3274f989",
+        target: "Chroma Chassis",
+      },
+      {
+        label: "Chroma Neuroptics Blueprint",
+        quantity: 1,
+        trigger: "objective",
+        objectiveKey: "831a371c3274f989",
+        target: undefined,
+      },
+      {
+        label: "15,000 Credits",
+        quantity: 15000,
+        trigger: "junction-completion",
+        objectiveKey: undefined,
+        target: "Credits",
+      },
+      {
+        label: "Quest: The Archwing",
+        quantity: 1,
+        trigger: "junction-completion",
+        objectiveKey: undefined,
+        target: "The Archwing",
+      },
+      {
+        label: "Quest: Once Awake",
+        quantity: 1,
+        trigger: "junction-completion",
+        objectiveKey: undefined,
+        target: "Once Awake",
+      },
+    ],
+  );
 });
 
 test("wiki Junction adapter rejects a changed task-table shape", async () => {
@@ -152,22 +235,30 @@ function junctionTasks(): string {
 |Complete Quest: [[The Teacher]]
 |Activate new quests using the [[Codex]] in your [[Orbiter]].
 |
+*{{M|Dreamer's Bond}} (unranked)
 |-
 |Equip {{M|Dreamer's Bond}} in your Warframe's Aura Slot
 |Dreamer's Bond is a Warframe [[Aura]] Mod.
 |
+*25 {{Resource|Codex Scanner|Codex Scanners}}
 |-
 |Upgrade {{M|Dreamer's Bond}} Mod
 |[[Mod]]s can be upgraded from the Mod Interface.
 |
+* Unlock [[Arbitrations]]
+* [[Void Relic Segment]]
 |-
 |Start building a {{Companion|Taxon}} Sentinel in the [[Foundry]]
 |View all available blueprints in the Foundry.
 |
+* {{WF|Chroma}} Chassis Blueprint
+* {{WF|Chroma}} Neuroptics Blueprint
 |-
 |Complete the Junction
 |
 |
+*{{Cc|15,000}}
+*Quests: [[The Archwing]] and [[Once Awake]]
 |-
 |}
 

@@ -209,6 +209,19 @@ export interface NodeObjectiveObservation {
   evidence: Evidence;
 }
 
+export interface NodeRewardObservation {
+  type: "node-reward";
+  nodeExternalId: ExternalIdentifier;
+  rewardExternalId?: ExternalIdentifier;
+  key: string;
+  label: string;
+  quantity?: number;
+  trigger: "objective" | "junction-completion";
+  objectiveKey?: string;
+  sortOrder: number;
+  evidence: Evidence;
+}
+
 export const RELATION_KINDS = [
   "requires",
   "unlocks",
@@ -282,6 +295,7 @@ export type Observation =
   | NodeDetailObservation
   | NodeItemRequirementObservation
   | NodeObjectiveObservation
+  | NodeRewardObservation
   | EntityRelationObservation
   | EnhancementOptionObservation
   | EquipmentPolaritySetObservation

@@ -24,6 +24,10 @@
 - As a player, I can mark individual Junction tasks complete and see my private
   checklist affect the same explained access state used by the chart
   and planner.
+- As a player, I can see each one-time reward beside the Junction task that
+  grants it, with final completion rewards kept distinct from repeatable drops.
+- As a player, I can open a reward item and follow its cited one-time acquisition
+  back to the granting Junction.
 - As an administrator, I can see dataset freshness, import failures, conflicts
   and the exact upstream record behind a fact.
 

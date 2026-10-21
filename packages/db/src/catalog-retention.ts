@@ -61,6 +61,7 @@ export function pruneInactiveCatalogHistory(
         "delete from node_item_requirements where source_run_id = ?",
       ),
       sqlite.prepare("delete from node_objectives where source_run_id = ?"),
+      sqlite.prepare("delete from node_rewards where source_run_id = ?"),
       sqlite.prepare("delete from entity_relations where source_run_id = ?"),
       sqlite.prepare(
         "delete from entity_enhancement_options where source_run_id = ?",

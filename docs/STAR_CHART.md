@@ -35,8 +35,11 @@ clauses.
 The exact Elite Sanctuary Onslaught expression retains its quest relation and
 adds a numeric level-30 Warframe gate.
 The 13 Junction pages independently contribute their four ordered objective
-descriptions and hints. These are cited public facts displayed on the matching
-canonical node; they are not inferred from mission requirement prose.
+descriptions and hints plus their typed one-time rewards. Task rewards attach to
+the corresponding content-derived objective key; final-row rewards attach to
+Junction completion. These are cited public facts displayed on the matching
+canonical node; they are not inferred from mission requirement prose or treated
+as repeatable mission drops.
 Exact item-only expressions for Animo Nav Beacons, Judgement Points, Grendel
 Locators and the Mutalist Alad V Assassinate Key become cited
 node/item/quantity facts. They reconcile to the same canonical resources used
@@ -84,7 +87,9 @@ Junction node pages list the current four sourced objectives in Wiki order with
 their hints and revision citations. Signed-in players can mark each current
 objective complete. Any incomplete objective blocks Junction access, all four
 completed objectives satisfy that part of the rule, and guests see the private
-input as conditional.
+input as conditional. Each task lists its one-time grants directly beneath it,
+and a separate completion group lists the final Junction grants. Canonically
+linked reward pages point back to every granting Junction.
 
 ## Current compromise
 
@@ -96,9 +101,8 @@ before a visual graph is honest.
 
 Enemy and quest identities are imported, but richer domain-specific facts and
 complete curated discovery links remain future work.
-Junction rewards remain unmodeled because their table cells mix items,
-currencies and quest unlocks; importing the task text does not imply reward
-semantics. A task text change intentionally creates a new objective key, so a
-previous completion is retained privately but ignored by current access until
-the new task is completed.
+Junction reward facts do not currently update inventory, quest progress or
+unlock state automatically. A task text change intentionally creates a new
+objective key, so a previous completion is retained privately but ignored by
+current access until the new task is completed.
 There is not yet automatic account-state import.

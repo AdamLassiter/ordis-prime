@@ -140,6 +140,35 @@ test("catalog read models join active recipes, drops, provenance, and rankings",
       },
     },
     {
+      type: "node-reward",
+      nodeExternalId: external("caloris"),
+      rewardExternalId: external("alloy"),
+      key: "alloy-reward",
+      label: "100 Alloy Plate",
+      quantity: 100,
+      trigger: "objective",
+      objectiveKey: "open-lockers",
+      sortOrder: 0,
+      evidence: {
+        ...evidence,
+        sourceRecordKey: "caloris:reward:alloy",
+        citationUrl: "https://example.test/caloris-objectives",
+      },
+    },
+    {
+      type: "node-reward",
+      nodeExternalId: external("caloris"),
+      key: "unlock-reward",
+      label: "Unlock the next planet",
+      trigger: "junction-completion",
+      sortOrder: 1,
+      evidence: {
+        ...evidence,
+        sourceRecordKey: "caloris:reward:unlock",
+        citationUrl: "https://example.test/caloris-objectives",
+      },
+    },
+    {
       type: "recipe",
       outputExternalId: external("braton"),
       ingredients: [{ externalId: external("alloy"), quantity: 200 }],
@@ -299,6 +328,17 @@ test("catalog read models join active recipes, drops, provenance, and rankings",
       citationUrl: "https://example.test/caloris-access",
     },
   ]);
+  assert.deepEqual(alloy.junctionRewards, [
+    {
+      nodeSlug: "mercury-caloris",
+      nodeName: "Caloris",
+      label: "100 Alloy Plate",
+      quantity: 100,
+      trigger: "objective",
+      sourceName: "Items",
+      citationUrl: "https://example.test/caloris-objectives",
+    },
+  ]);
   assert.equal(
     alloy.evidence.some(
       (entry) =>
@@ -382,6 +422,35 @@ test("catalog read models join active recipes, drops, provenance, and rankings",
       hint: "Explore the whole mission.",
       sourceName: "Items",
       citationUrl: "https://example.test/caloris-objectives",
+    },
+  ]);
+  assert.deepEqual(node.oneTimeRewards, [
+    {
+      key: "alloy-reward",
+      label: "100 Alloy Plate",
+      quantity: 100,
+      trigger: "objective",
+      objectiveKey: "open-lockers",
+      sortOrder: 0,
+      sourceName: "Items",
+      citationUrl: "https://example.test/caloris-objectives",
+      entity: {
+        kind: "resource",
+        slug: "alloy-plate",
+        name: "Alloy Plate",
+        description: undefined,
+      },
+    },
+    {
+      key: "unlock-reward",
+      label: "Unlock the next planet",
+      quantity: undefined,
+      trigger: "junction-completion",
+      objectiveKey: undefined,
+      sortOrder: 1,
+      sourceName: "Items",
+      citationUrl: "https://example.test/caloris-objectives",
+      entity: undefined,
     },
   ]);
   const userId = createLocalUser(sqlite, { username: "Player" });

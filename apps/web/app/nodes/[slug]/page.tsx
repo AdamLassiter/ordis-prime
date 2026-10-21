@@ -294,6 +294,26 @@ export default async function NodePage({
               <li key={`${objective.sourceId}:${objective.key}`}>
                 <strong>{objective.label}</strong>
                 {objective.hint && <p className="muted">{objective.hint}</p>}
+                {node.oneTimeRewards.some(
+                  (reward) =>
+                    reward.trigger === "objective" &&
+                    reward.objectiveKey === objective.key,
+                ) && (
+                  <ul>
+                    {node.oneTimeRewards
+                      .filter(
+                        (reward) =>
+                          reward.trigger === "objective" &&
+                          reward.objectiveKey === objective.key,
+                      )
+                      .map((reward) => (
+                        <li key={reward.key}>
+                          Reward: {renderJunctionReward(reward)}{" "}
+                          <RewardSource reward={reward} />
+                        </li>
+                      ))}
+                  </ul>
+                )}
                 {session && objective.completionState && (
                   <form
                     className="inline-form discovery-progress"
@@ -328,6 +348,23 @@ export default async function NodePage({
               </li>
             ))}
           </ol>
+          {node.oneTimeRewards.some(
+            (reward) => reward.trigger === "junction-completion",
+          ) && (
+            <>
+              <h3>On Junction completion</h3>
+              <ul>
+                {node.oneTimeRewards
+                  .filter((reward) => reward.trigger === "junction-completion")
+                  .map((reward) => (
+                    <li key={reward.key}>
+                      {renderJunctionReward(reward)}{" "}
+                      <RewardSource reward={reward} />
+                    </li>
+                  ))}
+              </ul>
+            </>
+          )}
         </section>
       )}
       <section>
@@ -416,6 +453,34 @@ export default async function NodePage({
         </p>
       )}
     </>
+  );
+}
+
+type JunctionReward = NonNullable<
+  Awaited<ReturnType<typeof findNode>>
+>["oneTimeRewards"][number];
+
+function renderJunctionReward(reward: JunctionReward) {
+  return reward.entity ? (
+    <Link href={`/catalog/${reward.entity.kind}/${reward.entity.slug}`}>
+      {reward.label}
+    </Link>
+  ) : (
+    reward.label
+  );
+}
+
+function RewardSource({ reward }: { reward: JunctionReward }) {
+  return (
+    <span className="muted">
+      (
+      {reward.citationUrl ? (
+        <a href={reward.citationUrl}>{reward.sourceName}</a>
+      ) : (
+        reward.sourceName
+      )}
+      )
+    </span>
   );
 }
 

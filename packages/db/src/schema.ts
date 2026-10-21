@@ -361,6 +361,41 @@ export const nodeObjectives = sqliteTable(
     index("node_objective_node").on(table.nodeId),
   ],
 );
+export const nodeRewards = sqliteTable(
+  "node_rewards",
+  {
+    id: text().primaryKey(),
+    nodeId: text("node_id")
+      .notNull()
+      .references(() => entities.id),
+    rewardEntityId: text("reward_entity_id").references(() => entities.id),
+    key: text().notNull(),
+    label: text().notNull(),
+    quantity: integer(),
+    trigger: text({ enum: ["objective", "junction-completion"] }).notNull(),
+    objectiveKey: text("objective_key"),
+    sortOrder: integer("sort_order").notNull(),
+    sourceRunId: text("source_run_id")
+      .notNull()
+      .references(() => sourceRuns.id),
+    sourceRecordKey: text("source_record_key").notNull(),
+    citationUrl: text("citation_url"),
+    sourcePath: text("source_path"),
+  },
+  (table) => [
+    uniqueIndex("node_reward_run_record").on(
+      table.sourceRunId,
+      table.sourceRecordKey,
+    ),
+    uniqueIndex("node_reward_run_node_key").on(
+      table.sourceRunId,
+      table.nodeId,
+      table.key,
+    ),
+    index("node_reward_node").on(table.nodeId),
+    index("node_reward_entity").on(table.rewardEntityId),
+  ],
+);
 export const entityRelations = sqliteTable(
   "entity_relations",
   {

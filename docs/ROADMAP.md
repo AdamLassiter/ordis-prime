@@ -82,5 +82,6 @@ Exact Animo Nav Beacon, Judgement Point, Grendel Locator and Mutalist Alad V
 Assassinate Key quantity gates now compose with private inventory. Junction
 objective descriptions and hints are now imported as ordered, cited public
 facts. Portable private objective completion now composes into Junction access
-for the star chart and planner. Junction rewards and other item or equipment
-conditions remain.
+for the star chart and planner. Typed one-time objective and Junction-completion
+rewards are linked in both node and item views without entering repeatable drop
+recommendations. Other item or equipment conditions remain.

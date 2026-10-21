@@ -158,6 +158,35 @@ export default async function ItemPage({
               ))
             : "No node drop recorded"}
         </dd>
+        {item.junctionRewards.length > 0 && (
+          <>
+            <dt>One-time Junction rewards</dt>
+            <dd>
+              {item.junctionRewards.map((reward, index) => (
+                <div
+                  key={`${reward.nodeSlug}:${reward.trigger}:${reward.label}:${index}`}
+                >
+                  <Link href={`/nodes/${reward.nodeSlug}`}>
+                    {reward.nodeName}
+                  </Link>
+                  {` — ${reward.label}`}
+                  {reward.trigger === "junction-completion"
+                    ? " (on completion)"
+                    : " (objective reward)"}{" "}
+                  <span className="muted">
+                    (
+                    {reward.citationUrl ? (
+                      <a href={reward.citationUrl}>{reward.sourceName}</a>
+                    ) : (
+                      reward.sourceName
+                    )}
+                    )
+                  </span>
+                </div>
+              ))}
+            </dd>
+          </>
+        )}
         <dt>Editorial rankings</dt>
         <dd>
           {item.rankings.length

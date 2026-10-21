@@ -809,9 +809,37 @@ test("node objectives preserve stable keys and ordered cited text", async (conte
   });
   const promoted = promoteSource(
     sqlite,
-    input("v1", [entity("node", "Node", "node"), objective(2)]),
+    input("v1", [
+      entity("node", "Node", "node"),
+      entity("token", "Token", "resource"),
+      objective(2),
+      {
+        type: "node-reward",
+        nodeExternalId: {
+          sourceId: "fixture",
+          namespace: "id",
+          value: "node",
+        },
+        rewardExternalId: {
+          sourceId: "fixture",
+          namespace: "id",
+          value: "token",
+        },
+        key: "token-reward",
+        label: "5 Token",
+        quantity: 5,
+        trigger: "objective",
+        objectiveKey: "scan-targets",
+        sortOrder: 0,
+        evidence: {
+          ...evidence("v1"),
+          sourceRecordKey: "node:reward:token",
+        },
+      },
+    ]),
   );
   assert.equal(promoted.nodeObjectivesCreated, 1);
+  assert.equal(promoted.nodeRewardsCreated, 1);
   assert.deepEqual(
     sqlite
       .prepare(
@@ -829,6 +857,32 @@ test("node objectives preserve stable keys and ordered cited text", async (conte
   assert.throws(
     () => promoteSource(sqlite, input("bad", [objective(-1, "bad")])),
     /sort order must be a non-negative integer/,
+  );
+  assert.throws(
+    () =>
+      promoteSource(sqlite, {
+        ...input("missing-objective", [
+          {
+            type: "node-reward",
+            nodeExternalId: {
+              sourceId: "fixture",
+              namespace: "id",
+              value: "node",
+            },
+            key: "orphan-reward",
+            label: "Orphan reward",
+            trigger: "objective",
+            objectiveKey: "missing",
+            sortOrder: 0,
+            evidence: {
+              ...evidence("missing-objective", "fixture-b"),
+              sourceRecordKey: "node:reward:orphan",
+            },
+          },
+        ]),
+        source: { ...source, id: "fixture-b" },
+      }),
+    /refers to a missing objective/,
   );
 });
 

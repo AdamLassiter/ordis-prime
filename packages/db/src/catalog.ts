@@ -63,6 +63,15 @@ export interface CatalogItem extends CatalogSummary {
     sourceName: string;
     citationUrl?: string;
   }>;
+  junctionRewards: Array<{
+    nodeSlug: string;
+    nodeName: string;
+    label: string;
+    quantity?: number;
+    trigger: "objective" | "junction-completion";
+    sourceName: string;
+    citationUrl?: string;
+  }>;
   sources: Array<{ name: string; homepage: string }>;
   rankings: Array<{
     title: string;
@@ -153,6 +162,17 @@ export interface CatalogNode {
     sourceName: string;
     citationUrl?: string;
     completionState?: "incomplete" | "completed";
+  }>;
+  oneTimeRewards: Array<{
+    key: string;
+    label: string;
+    quantity?: number;
+    trigger: "objective" | "junction-completion";
+    objectiveKey?: string;
+    sortOrder: number;
+    sourceName: string;
+    citationUrl?: string;
+    entity?: CatalogSummary;
   }>;
   drops: Array<{
     kind: string;
@@ -414,6 +434,36 @@ export function findCatalogItem(
         citationUrl: requirement.citationUrl ?? undefined,
       };
     });
+  const junctionRewards = sqlite
+    .prepare(
+      `select node.slug as nodeSlug, node.name as nodeName, reward.label,
+              reward.quantity, reward.trigger, source.name as sourceName,
+              reward.citation_url as citationUrl
+       from node_rewards reward
+       join source_runs run on run.id = reward.source_run_id and run.status = 'active'
+       join sources source on source.id = run.source_id
+       join entities node on node.id = reward.node_id and node.retired = 0
+       where reward.reward_entity_id = ?
+       order by node.name collate nocase, reward.sort_order,
+                reward.source_record_key`,
+    )
+    .all(item.id)
+    .map((row) => {
+      const reward = row as {
+        nodeSlug: string;
+        nodeName: string;
+        label: string;
+        quantity: number | null;
+        trigger: "objective" | "junction-completion";
+        sourceName: string;
+        citationUrl: string | null;
+      };
+      return {
+        ...reward,
+        quantity: reward.quantity ?? undefined,
+        citationUrl: reward.citationUrl ?? undefined,
+      };
+    });
   const sources = sqlite
     .prepare(
       `
@@ -554,6 +604,13 @@ export function findCatalogItem(
     join sources source on source.id = run.source_id
     where requirement.item_id = ?
     union all
+    select 'node-reward' as fact, source.name, run.version, reward.source_record_key,
+           reward.citation_url, reward.source_path, run.snapshot_path
+    from node_rewards reward
+    join source_runs run on run.id = reward.source_run_id and run.status = 'active'
+    join sources source on source.id = run.source_id
+    where reward.reward_entity_id = ?
+    union all
     select 'relation.' || relation.kind as fact, source.name, run.version, relation.source_record_key,
            relation.citation_url, relation.source_path, run.snapshot_path
     from entity_relations relation
@@ -564,6 +621,7 @@ export function findCatalogItem(
   `,
     )
     .all(
+      item.id,
       item.id,
       item.id,
       item.id,
@@ -604,6 +662,7 @@ export function findCatalogItem(
     components,
     drops,
     requiredForNodeAccess,
+    junctionRewards,
     sources,
     rankings,
     enhancementOptions,
@@ -720,6 +779,7 @@ export function findCatalogNode(
     loadNodeItemRequirements(sqlite, [node.id], userId).get(node.id) ?? [];
   const objectives =
     loadNodeObjectives(sqlite, [node.id], userId).get(node.id) ?? [];
+  const oneTimeRewards = loadNodeRewards(sqlite, [node.id]).get(node.id) ?? [];
   const completionState = userId
     ? loadNodeCompletionStates(sqlite, [node.id], userId).get(node.id)
     : undefined;
@@ -732,6 +792,7 @@ export function findCatalogNode(
     accessRequirements,
     itemRequirements,
     objectives,
+    oneTimeRewards,
     ...(completionState ? { completionState } : {}),
     drops,
   };
@@ -772,6 +833,10 @@ export function listCatalogNodes(
     sqlite,
     nodes.map(({ id }) => id),
   );
+  const oneTimeRewards = loadNodeRewards(
+    sqlite,
+    nodes.map(({ id }) => id),
+  );
   return nodes.map(({ id, ...node }) => ({
     ...node,
     ...details.get(id),
@@ -780,6 +845,7 @@ export function listCatalogNodes(
     accessRequirements: accessRequirements.get(id) ?? [],
     itemRequirements: itemRequirements.get(id) ?? [],
     objectives: objectives.get(id) ?? [],
+    oneTimeRewards: oneTimeRewards.get(id) ?? [],
     drops: [],
   }));
 }
@@ -820,6 +886,10 @@ export function listStarChartNodes(
     sqlite,
     nodes.map(({ id }) => id),
     userId,
+  );
+  const oneTimeRewards = loadNodeRewards(
+    sqlite,
+    nodes.map(({ id }) => id),
   );
   const completionStates = userId
     ? loadNodeCompletionStates(
@@ -875,6 +945,7 @@ export function listStarChartNodes(
     accessRequirements: accessRequirements.get(id) ?? [],
     itemRequirements: itemRequirements.get(id) ?? [],
     objectives: objectives.get(id) ?? [],
+    oneTimeRewards: oneTimeRewards.get(id) ?? [],
     ...(completionStates
       ? { completionState: completionStates.get(id) ?? "incomplete" }
       : {}),
@@ -1095,6 +1166,79 @@ function loadNodeObjectives(
       ...(completionState ? { completionState } : {}),
     });
     result.set(nodeId, objectives);
+  }
+  return result;
+}
+
+function loadNodeRewards(
+  sqlite: Database.Database,
+  nodeIds: string[],
+): Map<string, CatalogNode["oneTimeRewards"]> {
+  const result = new Map<string, CatalogNode["oneTimeRewards"]>();
+  if (!nodeIds.length) return result;
+  const placeholders = nodeIds.map(() => "?").join(", ");
+  const rows = sqlite
+    .prepare(
+      `select reward.node_id as nodeId, reward.key, reward.label,
+              reward.quantity, reward.trigger,
+              reward.objective_key as objectiveKey,
+              reward.sort_order as sortOrder, source.name as sourceName,
+              reward.citation_url as citationUrl,
+              entity.kind as entityKind, entity.slug as entitySlug,
+              entity.name as entityName, entity.description as entityDescription
+       from node_rewards reward
+       join source_runs run on run.id = reward.source_run_id and run.status = 'active'
+       join sources source on source.id = run.source_id
+       left join entities entity
+         on entity.id = reward.reward_entity_id and entity.retired = 0
+       where reward.node_id in (${placeholders})
+       order by reward.node_id, reward.sort_order,
+                source.priority desc, run.retrieved_at desc, source.id,
+                reward.source_record_key`,
+    )
+    .all(...nodeIds) as Array<{
+    nodeId: string;
+    key: string;
+    label: string;
+    quantity: number | null;
+    trigger: "objective" | "junction-completion";
+    objectiveKey: string | null;
+    sortOrder: number;
+    sourceName: string;
+    citationUrl: string | null;
+    entityKind: string | null;
+    entitySlug: string | null;
+    entityName: string | null;
+    entityDescription: string | null;
+  }>;
+  for (const {
+    nodeId,
+    quantity,
+    objectiveKey,
+    citationUrl,
+    entityKind,
+    entitySlug,
+    entityName,
+    entityDescription,
+    ...reward
+  } of rows) {
+    const rewards = result.get(nodeId) ?? [];
+    rewards.push({
+      ...reward,
+      quantity: quantity ?? undefined,
+      objectiveKey: objectiveKey ?? undefined,
+      citationUrl: citationUrl ?? undefined,
+      entity:
+        entityKind && entitySlug && entityName
+          ? {
+              kind: entityKind,
+              slug: entitySlug,
+              name: entityName,
+              description: entityDescription ?? undefined,
+            }
+          : undefined,
+    });
+    result.set(nodeId, rewards);
   }
   return result;
 }

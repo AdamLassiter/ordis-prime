@@ -199,8 +199,12 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   scope. Junction pages now supply four ordered, cited public objectives per
   Junction. Players can record portable private completion per current task and
   that state drives the shared access derivation, but there is no automatic
-  game-account import or node-variant completion model yet. Stable visual
-  positions are still missing.
+  game-account import or node-variant completion model yet. Their current task
+  and completion rewards are modeled as cited one-time grants. Safely resolved
+  identities link to catalog entities; Chroma Neuroptics intentionally remains
+  label-only because the current WFCD component identities are conflated.
+  Completing a task does not automatically mutate inventory or quest state.
+  Stable visual positions are still missing.
 - A public discovery atlas searches canonical quest, ability, enemy, boss,
   mechanic and secret kinds. WFCD currently populates quests and enemies;
   structured Wiki data populates current abilities and their typed
@@ -218,7 +222,8 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   blockers. Node pages expose the same cited requirements and
   private discovery or node-completion progress. Nodes without access evidence
   stay unknown. Junction objective text and private completion now compose into
-  access; objective rewards and other compound equipment or item conditions
+  access, while typed rewards remain display facts rather than repeatable drops
+  or automatic inventory changes. Other compound equipment or item conditions
   still need typed models.
 
 ## Deliberate compromises
