@@ -231,12 +231,13 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   Warframe/Archwing links, current quests and their sequence, plus explicitly
   declared mission bosses and node links. A separately scheduled structured
   enemy adapter accepts only explicit Wiki `Boss` classifications across all
-  declared faction partitions, but has not yet produced its first live run
-  because the upstream API is in maintenance. Cited discovery
-  YAML can add curated entities and typed links to nodes, rewards, or other
-  topics. Players can privately mark topics unseen, discovered, or completed
-  and filter the atlas by that state. Boss region/location normalization,
-  quest-step progress, broader quest requirements, unsupported
+  declared faction partitions, including Anarchs. Its live import currently
+  promotes 62 cited boss observations and preserves distinct source-qualified
+  variants when the Wiki repeats a display name. Cited discovery YAML can add
+  curated entities and typed links to nodes, rewards, or other topics. Players
+  can privately mark topics unseen, discovered, or completed and filter the
+  atlas by that state. Boss region/location normalization, quest-step progress,
+  broader quest requirements, unsupported
   Necramech/Helminth ability-owner kinds and conditional
   relations remain. Atlas cards preview up to three
   cited neighbors; a spatial graph view remains.

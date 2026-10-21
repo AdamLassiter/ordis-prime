@@ -20,7 +20,9 @@ be refined through the existing boss-specific identity rule.
 The adapter also reads the index's `COOP_FACTIONS` declaration as a schema
 sentinel. A new, removed or renamed partition rejects the refresh until the
 adapter is reviewed, rather than silently publishing incomplete boss coverage.
-An empty boss result and duplicate boss display names also fail closed.
+An empty boss result fails closed. Duplicate display names use the Wiki's own
+record keys as qualified names when those keys distinguish the records; a
+remaining duplicate still fails closed.
 
 Planet and mission strings are not promoted as relations. Those arrays can mix
 regions, mission types and quest contexts, and therefore do not prove a link to

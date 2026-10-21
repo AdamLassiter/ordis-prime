@@ -16,7 +16,7 @@ import {
   wikiSlug,
 } from "./mediawiki-lua.ts";
 
-const PARSER_VERSION = "warframe-wiki-enemies-v1";
+const PARSER_VERSION = "warframe-wiki-enemies-v3";
 const INDEX_MODULE = "Module:Enemies/data";
 const PARTITIONS = [
   "grineer",
@@ -29,6 +29,7 @@ const PARTITIONS = [
   "themurmur",
   "scaldra",
   "techrot",
+  "anarchs",
   "unaffiliated",
 ] as const;
 const PARTITION_MODULES = PARTITIONS.map(
@@ -80,25 +81,31 @@ export class WarframeWikiEnemiesAdapter implements SourceAdapter {
       );
     if (!bosses.length)
       throw new Error(`WARFRAME Wiki ${INDEX_MODULE} has no bosses`);
-    const names = new Set<string>();
+    const nameCounts = new Map<string, number>();
     for (const boss of bosses) {
-      if (names.has(boss.name))
+      nameCounts.set(boss.name, (nameCounts.get(boss.name) ?? 0) + 1);
+    }
+    const resolvedNames = new Set<string>();
+    for (const boss of bosses) {
+      const name = resolvedBossName(boss, nameCounts);
+      if (resolvedNames.has(name))
         throw new Error(
-          `WARFRAME Wiki enemy boss name ${boss.name} is duplicated`,
+          `WARFRAME Wiki enemy boss name ${name} cannot be disambiguated`,
         );
-      names.add(boss.name);
+      resolvedNames.add(name);
     }
 
     for (const boss of bosses) {
       const page = pages[PARTITIONS.indexOf(boss.partition) + 1]!;
+      const name = resolvedBossName(boss, nameCounts);
       yield {
         type: "entity",
         kind: "boss",
         externalIds: [bossExternalId(boss.partition, boss.key)],
-        aliases: boss.key === boss.name ? undefined : [boss.key],
+        aliases: boss.key === name ? undefined : [boss.key],
         fields: {
-          name: boss.name,
-          slug: wikiSlug(boss.name),
+          name,
+          slug: wikiSlug(name),
           description: boss.description,
         },
         evidence: {
@@ -113,6 +120,13 @@ export class WarframeWikiEnemiesAdapter implements SourceAdapter {
       };
     }
   }
+}
+
+function resolvedBossName(
+  boss: BossRecord,
+  nameCounts: ReadonlyMap<string, number>,
+): string {
+  return (nameCounts.get(boss.name) ?? 0) > 1 ? boss.key : boss.name;
 }
 
 function assertSupportedPartitions(source: string): void {

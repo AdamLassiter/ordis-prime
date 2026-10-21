@@ -18,6 +18,7 @@ const PARTITIONS = [
   "themurmur",
   "scaldra",
   "techrot",
+  "anarchs",
   "unaffiliated",
 ] as const;
 
@@ -47,6 +48,19 @@ test("wiki enemy adapter imports only explicitly classified bosses", async () =>
         return {
           ["Archon Amar"] = {
             General = { Type = "Boss" },
+          },
+        }
+      `,
+      anarchs: `
+        return {
+          ["Commandeered Ash Prime"] = {
+            General = {
+              Name = "Commandeered Ash Prime",
+              Type = "Boss",
+            },
+          },
+          ["Anarch Arcus"] = {
+            General = { Name = "Anarch Arcus", Type = "Ranged" },
           },
         }
       `,
@@ -87,6 +101,16 @@ test("wiki enemy adapter imports only explicitly classified bosses", async () =>
         citationUrl:
           "https://wiki.warframe.com/w/Module:Enemies/data/narmer?oldid=107",
       },
+      {
+        kind: "boss",
+        name: "Commandeered Ash Prime",
+        description: undefined,
+        aliases: undefined,
+        externalId: "anarchs:Commandeered Ash Prime",
+        recordKey: "anarchs:Commandeered Ash Prime",
+        citationUrl:
+          "https://wiki.warframe.com/w/Module:Enemies/data/anarchs?oldid=111",
+      },
     ],
   );
 });
@@ -95,9 +119,54 @@ test("wiki enemy adapter fails closed when the upstream partition set changes", 
   await assert.rejects(
     collect(
       new WarframeWikiEnemiesAdapter(),
-      wikiSnapshot({}, [...PARTITIONS, "anarchs"]),
+      wikiSnapshot({}, [...PARTITIONS, "newfaction"]),
     ),
-    /partitions changed \(unsupported: anarchs; missing: none\)/,
+    /partitions changed \(unsupported: newfaction; missing: none\)/,
+  );
+});
+
+test("wiki enemy adapter uses source keys to disambiguate duplicate boss names", async () => {
+  const observations = await collect(
+    new WarframeWikiEnemiesAdapter(),
+    wikiSnapshot({
+      scaldra: `
+        return {
+          ["H-09 Efervon Tank"] = {
+            General = { Name = "H-09 Efervon Tank", Type = "Boss" },
+          },
+        }
+      `,
+      techrot: `
+        return {
+          ["H-09 Efervon Tank (Techrot)"] = {
+            General = { Name = "H-09 Efervon Tank", Type = "Boss" },
+          },
+        }
+      `,
+    }),
+  );
+
+  assert.deepEqual(
+    observations.map((observation) => {
+      assert.equal(observation.type, "entity");
+      return {
+        name: observation.fields.name,
+        slug: observation.fields.slug,
+        externalId: observation.externalIds[0]?.value,
+      };
+    }),
+    [
+      {
+        name: "H-09 Efervon Tank",
+        slug: "h-09-efervon-tank",
+        externalId: "scaldra:H-09 Efervon Tank",
+      },
+      {
+        name: "H-09 Efervon Tank (Techrot)",
+        slug: "h-09-efervon-tank-techrot",
+        externalId: "techrot:H-09 Efervon Tank (Techrot)",
+      },
+    ],
   );
 });
 

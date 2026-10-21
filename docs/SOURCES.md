@@ -171,6 +171,12 @@ partitions fail the refresh until reviewed. Enemy `Missions` and `Planets`
 strings are not converted into node relations because they can denote regions,
 mission types or quest contexts rather than canonical nodes.
 
+When two partitions publish the same boss display name, their source record
+keys disambiguate the catalog names if those keys are distinct. This preserves
+the Wiki's own variant qualifiers, such as `(Techrot)`, instead of merging
+different enemy records or inventing a local suffix. A collision that remains
+after using the record keys still rejects the refresh.
+
 Exact Kuva Lich, Sister of Parvos and Technocyte Coda confrontation expressions
 emit a typed active-adversary requirement on the node while preserving every
 supported Intrinsics or quest clause. The catalog fact does not contain or
