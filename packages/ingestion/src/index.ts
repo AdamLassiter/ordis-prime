@@ -10,6 +10,7 @@ export * from "./adapters/warframe-wiki-missions.ts";
 export * from "./adapters/warframe-wiki-junctions.ts";
 export * from "./adapters/warframe-wiki-abilities.ts";
 export * from "./adapters/warframe-wiki-quests.ts";
+export * from "./adapters/warframe-wiki-enemies.ts";
 export * from "./adapters/manual-ranking.ts";
 export * from "./adapters/manual-discovery.ts";
 export * from "./adapters/manual-facts.ts";

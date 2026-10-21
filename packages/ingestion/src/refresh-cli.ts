@@ -13,6 +13,7 @@ import { WarframeWikiMissionsAdapter } from "./adapters/warframe-wiki-missions.t
 import { WarframeWikiJunctionsAdapter } from "./adapters/warframe-wiki-junctions.ts";
 import { WarframeWikiAbilitiesAdapter } from "./adapters/warframe-wiki-abilities.ts";
 import { WarframeWikiQuestsAdapter } from "./adapters/warframe-wiki-quests.ts";
+import { WarframeWikiEnemiesAdapter } from "./adapters/warframe-wiki-enemies.ts";
 import { refreshWorldState, WfcdWorldStateAdapter } from "./world-state.ts";
 import type { SourceAdapter } from "./adapter.ts";
 import type { AutomaticCatalogSourceId } from "./automatic-sources.ts";
@@ -26,6 +27,7 @@ const adapters = {
   "warframe-wiki-junctions": () => new WarframeWikiJunctionsAdapter(),
   "warframe-wiki-abilities": () => new WarframeWikiAbilitiesAdapter(),
   "warframe-wiki-quests": () => new WarframeWikiQuestsAdapter(),
+  "warframe-wiki-enemies": () => new WarframeWikiEnemiesAdapter(),
 } as const satisfies Record<AutomaticCatalogSourceId, () => SourceAdapter>;
 
 async function main(): Promise<void> {

@@ -55,6 +55,9 @@
   expiring acquisition opportunities in the planner.
 - As a guest, I can open a node to see its cited boss and move between the boss
   and mission pages without leaving the application.
+- As a guest, I can discover bosses from open-world, quest and special-mode
+  contexts when the Wiki explicitly classifies them, without inferred node
+  locations.
 - As a guest, I can search the star chart by a linked boss or discovery name to
   find the relevant node directly.
 - As a guest, I can scan a focused node and its direct cited neighbors as a

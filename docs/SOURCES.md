@@ -159,6 +159,14 @@ same-name enemy already imported by WFCD. This compatibility is deliberately
 one-way in specificity: later enemy observations retain the boss kind, while
 unrelated entity kinds remain resolver conflicts.
 
+The independent structured enemy adapter reads every faction partition listed
+by `Module:Enemies/data` and emits only records whose documented `General.Type`
+is exactly `Boss`. It retains the partition revision and record line, and uses
+the index faction list as a schema sentinel: added, removed or renamed
+partitions fail the refresh until reviewed. Enemy `Missions` and `Planets`
+strings are not converted into node relations because they can denote regions,
+mission types or quest contexts rather than canonical nodes.
+
 Exact Kuva Lich, Sister of Parvos and Technocyte Coda confrontation expressions
 emit a typed active-adversary requirement on the node while preserving every
 supported Intrinsics or quest clause. The catalog fact does not contain or
@@ -196,7 +204,7 @@ origin conflict, and changes the replay revision.
 The leased worker schedules `wfcd-items`, `wfcd-drops`,
 `warframe-wiki-weapons`, `warframe-wiki-warframes`,
 `warframe-wiki-missions`, `warframe-wiki-junctions`, `warframe-wiki-abilities`, and
-`warframe-wiki-quests` independently once per
+`warframe-wiki-quests` and `warframe-wiki-enemies` independently once per
 day by default, while world state runs every five minutes. An administrator can
 bring any of those queued jobs forward from `/data-sources`; this does not run
 network work in the web request or create a duplicate queued job. Manual files

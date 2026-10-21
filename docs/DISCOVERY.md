@@ -26,6 +26,11 @@ WFCD enemy identity is refined in place rather than duplicated; boss is the more
 specific classification and a later broad enemy observation cannot downgrade
 it. Node pages list these incoming discoveries, while boss pages link back to
 the node using the in-app node route.
+The structured enemy adapter broadens classification to every record explicitly
+typed as a boss across the Wiki's faction partitions. It intentionally does not
+turn the modules' mixed planet and mission labels into node links, so bosses
+outside ordinary Assassination nodes can be discoverable without acquiring a
+false location.
 
 Signed-in players can independently mark a topic unseen, discovered or
 completed. The absence of a row means unseen, keeping default state compact.
@@ -39,9 +44,12 @@ relationship and its evidence.
 
 - Progress is one state per topic; quest steps and repeat completion are not
   modeled.
-- Only bosses explicitly named by the structured mission module are promoted;
-  open-world, quest-only or otherwise omitted bosses still need another
-  attributed source.
+- The broader enemy adapter is implemented and scheduled, but its first live
+  promotion still depends on the Wiki API returning from its current
+  maintenance outage. Mission-derived bosses remain the active baseline until
+  that succeeds.
+- Boss planet and mission labels are not yet normalized into typed regions,
+  modes and canonical nodes.
 - Conditional requirements, ordered quest steps, and relation confidence are
   not modeled.
 - Atlas cards do not spatially visualize their graph neighbors.
