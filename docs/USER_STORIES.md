@@ -55,5 +55,7 @@
   expiring acquisition opportunities in the planner.
 - As a guest, I can open a node to see its cited boss and move between the boss
   and mission pages without leaving the application.
+- As a guest, I can search the star chart by a linked boss or discovery name to
+  find the relevant node directly.
 - Quest and mechanic prerequisites surface systems a player has not discovered.
 - A visual star chart uses the same node IDs, edges, filters and planner queries.

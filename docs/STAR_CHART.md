@@ -46,8 +46,9 @@ node/item/quantity facts. They reconcile to the same canonical resources used
 by inventory. Other item and mixed expressions remain absent rather than being
 reduced to a misleading subset.
 
-The public `/star-chart` view groups nodes by planet and filters by node, mission
-or faction text. Signed-in players can restrict it to nodes with at least one
+The public `/star-chart` view groups nodes by planet and filters by node, mission,
+faction or linked discovery text, including cited boss names. Signed-in players
+can restrict it to nodes with at least one
 reward their inventory marks as unowned or still wanted. Node detail pages show
 the same metadata beside their full reward lists. Active cited `connects-to`
 relations are treated as undirected navigation edges: either endpoint lists the

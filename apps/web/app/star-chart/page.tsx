@@ -7,6 +7,7 @@ import {
 import { getDatabase } from "@/lib/database";
 import { getCurrentSession } from "@/lib/session";
 import { updateVisibleNodeCompletions } from "./actions";
+import { matchesStarChartQuery } from "@/lib/star-chart-search";
 
 export const dynamic = "force-dynamic";
 
@@ -23,7 +24,6 @@ export default async function StarChartPage({
 }) {
   const session = await getCurrentSession();
   const { q = "", needed, focus, access, completion } = await searchParams;
-  const normalized = q.trim().toLocaleLowerCase();
   const neededOnly = Boolean(session && needed === "1");
   const selectedAccess = isAccessStatus(access) ? access : undefined;
   const selectedCompletion =
@@ -60,10 +60,7 @@ export default async function StarChartPage({
   const focusedNode = focus ? nodesBySlug.get(focus) : undefined;
   const nodes = allNodes.filter(
     (node) =>
-      (!normalized ||
-        [node.name, node.planet, node.missionType, node.faction].some((value) =>
-          value?.toLocaleLowerCase().includes(normalized),
-        )) &&
+      matchesStarChartQuery(node, q) &&
       (!neededOnly ||
         (node.neededRewardCount ?? 0) > 0 ||
         (node.neededOneTimeRewardCount ?? 0) > 0) &&
@@ -93,7 +90,7 @@ export default async function StarChartPage({
           <input
             name="q"
             defaultValue={q}
-            placeholder="Planet, node, mission, faction…"
+            placeholder="Planet, node, mission, faction, boss…"
           />
         </label>
         {session && (
