@@ -239,8 +239,10 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   atlas by that state. Boss region/location normalization, quest-step progress,
   broader quest requirements, unsupported
   Necramech/Helminth ability-owner kinds and conditional
-  relations remain. Atlas cards preview up to three
-  cited neighbors; a spatial graph view remains.
+  relations remain. Atlas cards preview up to three cited neighbors, and a
+  shareable focused graph renders every unique direct neighbor from the active
+  cited relations. The graph uses transient deterministic ring positions; a
+  global or multi-hop spatial layout remains.
 - Acquisition recommendations compose active `requires` and `unlocks` relations
   with private discovery completion and sourced node Mastery Rank or Railjack
   Intrinsics requirements and allow-listed item quantities to show cited

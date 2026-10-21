@@ -43,6 +43,14 @@ relationships and previews up to three neighbors with the relationship, source,
 and in-app destination. The canonical entry remains the place to inspect every
 relationship and its evidence.
 
+Entries with active relations also open a focused one-hop graph. The center is
+the selected topic and every unique directly related canonical entity is placed
+on a derived ring. Selecting another discovery topic refocuses the graph while
+preserving search, kind and private progress filters; nodes and equipment open
+their established detail route. The accompanying direct-link list keeps the
+relation direction and source visible. These positions are presentation only:
+they do not assert distance, hierarchy or an in-game coordinate.
+
 ## Current gaps
 
 - Progress is one state per topic; quest steps and repeat completion are not
@@ -51,4 +59,5 @@ relationship and its evidence.
   modes and canonical nodes.
 - Conditional requirements, ordered quest steps, and relation confidence are
   not modeled.
-- Atlas cards do not spatially visualize their graph neighbors.
+- The focused graph is one hop at a time; a stable global or multi-hop spatial
+  layout is not yet modeled.

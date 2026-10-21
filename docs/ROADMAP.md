@@ -58,6 +58,9 @@ a searchable canonical discovery atlas, and cited typed discovery relations are
 implemented. Private discovery progress and filtering are also implemented.
 Current Wiki abilities are searchable discovery topics linked to their
 Warframes or Archwings.
+Atlas entries with cited relations open a shareable, filter-preserving one-hop
+graph. Its deterministic ring layout is presentation state over canonical
+entities and typed relations, not a second coordinate model.
 Structured Wiki quest records contribute cited descriptions and explicit
 sequence links without treating sequence as an access requirement.
 Structured mission records classify their explicit bosses and link them to
@@ -71,8 +74,8 @@ labels remain deliberately unlinked.
 Wiki mission data supplies the attributed current node and connection set, and
 those cited star-chart edges compose into node reads symmetrically. A shareable
 focus view supports direct traversal and a deterministic one-hop SVG topology
-without manufacturing domain coordinates. Stable global coordinates and richer
-quest-step progress remain.
+without manufacturing domain coordinates. Stable global or multi-hop
+coordinates and richer quest-step progress remain.
 Private node completion tracking, chart filtering and portable profile transfer
 are implemented independently of sourced access evidence. A filtered-scope bulk
 editor supports initial and ongoing completion entry without changing hidden
