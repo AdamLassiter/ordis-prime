@@ -176,9 +176,10 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   equipped items in either assignment order. Equipment slots also enforce
   sourced weapon classes. Kitgun chambers and Zaw strikes act as the current
   modular weapon representatives. WFCD now supplies cited canonical roles for
-  chambers, strikes, grips, loaders and links, but build drafts do not yet
-  compose those parts into one weapon or derive combination statistics. Private
-  drafts are
+  chambers, strikes, grips, loaders and links. Build drafts compose each
+  representative with one compatible part per remaining role and carry those
+  parts through shares, clones, profiles and acquisition goals, but do not yet
+  derive combination statistics. Private drafts are
   portable and can be cloned; their snapshot history can be viewed or revoked.
   Authenticated recipients can clone a public snapshot into a private draft.
   Draft equipment and mods can seed missing-item acquisition goals, but the

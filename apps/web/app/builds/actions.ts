@@ -13,18 +13,20 @@ import {
   removeBuildEnhancement,
   removeBuildEquipment,
   removeBuildMod,
+  removeBuildModularPart,
   removeBuildModSlot,
   revokeBuildShare,
   setBuildEnhancement,
   setBuildEquipment,
   setBuildMod,
+  setBuildModularPart,
   setBuildModSlot,
   updatePlayerBuild,
   type BuildEnhancementSlot,
   type BuildModSlotRole,
   type BuildSlot,
 } from "@ordis-prime/db";
-import type { ModPolarity } from "@ordis-prime/domain";
+import type { ModularPartRole, ModPolarity } from "@ordis-prime/domain";
 import { getDatabase } from "@/lib/database";
 import { requireCurrentSession } from "@/lib/session";
 
@@ -106,6 +108,31 @@ export async function saveEquipmentConfiguration(
 export async function clearEquipment(buildId: string, slot: BuildSlot) {
   const session = await requireCurrentSession();
   removeBuildEquipment(getDatabase(), session.user.id, buildId, slot);
+  revalidatePath(`/builds/${buildId}`);
+}
+
+export async function assignModularPart(
+  buildId: string,
+  slot: BuildSlot,
+  role: ModularPartRole,
+  kind: string,
+  slug: string,
+) {
+  const session = await requireCurrentSession();
+  setBuildModularPart(getDatabase(), session.user.id, buildId, slot, role, {
+    kind,
+    slug,
+  });
+  revalidatePath(`/builds/${buildId}`);
+}
+
+export async function clearModularPart(
+  buildId: string,
+  slot: BuildSlot,
+  role: ModularPartRole,
+) {
+  const session = await requireCurrentSession();
+  removeBuildModularPart(getDatabase(), session.user.id, buildId, slot, role);
   revalidatePath(`/builds/${buildId}`);
 }
 

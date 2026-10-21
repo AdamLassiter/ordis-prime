@@ -224,7 +224,7 @@ test("profiles resolve stable source IDs across installations with different can
     "ability-strength",
   );
   const profile = exportPlayerProfile(first.sqlite, firstUser);
-  assert.equal(profile.schemaVersion, 20);
+  assert.equal(profile.schemaVersion, 21);
   assert.equal(profile.nodeProgress[0]?.node.slug, "e-prime");
   assert.deepEqual(
     {
@@ -384,6 +384,8 @@ test("profiles resolve stable source IDs across installations with different can
     rank: 24,
     formaCount: 2,
     capacityUpgrade: true,
+    modularPartRoles: [],
+    modularParts: [],
     capacity: {},
     modSlots: [{ position: 0, role: "normal", polarity: "madurai" }],
     mods: [
@@ -465,7 +467,7 @@ test("profile replacement is transactional and reports missing entities", async 
     wantedCount: 0,
   });
   const missingProfile = {
-    schemaVersion: 20,
+    schemaVersion: 21,
     exportedAt: "2026-10-13T12:00:00.000Z",
     player: {},
     inventory: [
@@ -532,6 +534,7 @@ test("profile replacement is transactional and reports missing entities", async 
             entity: missingProfile.inventory[0]!.entity,
             formaCount: 0,
             capacityUpgrade: false,
+            modularParts: [],
             modSlots: [],
             mods: [],
           },
@@ -664,7 +667,7 @@ test("profile replacement is transactional and reports missing entities", async 
         ...missingProfile,
         schemaVersion: 10,
       }),
-    /schemaVersion 20/,
+    /schemaVersion 21/,
   );
   assert.throws(
     () =>

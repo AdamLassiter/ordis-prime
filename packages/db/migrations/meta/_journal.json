@@ -330,6 +330,13 @@
       "when": 1792574588876,
       "tag": "0046_thankful_supernaut",
       "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "6",
+      "when": 1792575667093,
+      "tag": "0047_unusual_lady_ursula",
+      "breakpoints": true
     }
   ]
 }

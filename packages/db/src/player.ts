@@ -12,6 +12,7 @@ import {
   setBuildEnhancement,
   setBuildEquipment,
   setBuildMod,
+  setBuildModularPart,
   setBuildModSlot,
   type BuildEnhancementSlot,
   type BuildModSlot,
@@ -34,6 +35,8 @@ import {
 import {
   isPlayerActiveAdversary,
   type PlayerActiveAdversary,
+  MODULAR_PART_ROLES,
+  type ModularPartRole,
   type WorldStateWindowKind,
 } from "@ordis-prime/domain";
 
@@ -277,7 +280,7 @@ export interface PortableEntityReference {
 }
 
 export interface ProfileExport {
-  schemaVersion: 20;
+  schemaVersion: 21;
   exportedAt: string;
   player: PlayerSettings;
   inventory: Array<InventoryValues & { entity: PortableEntityReference }>;
@@ -328,6 +331,10 @@ export interface PortableBuild {
     rank?: number;
     formaCount: number;
     capacityUpgrade: boolean;
+    modularParts: Array<{
+      role: ModularPartRole;
+      entity: PortableEntityReference;
+    }>;
     modSlots: BuildModSlot[];
     mods: Array<{
       position: number;
@@ -480,7 +487,7 @@ export function exportPlayerProfile(
              source_id, namespace, value
   `);
   return {
-    schemaVersion: 20,
+    schemaVersion: 21,
     exportedAt: new Date().toISOString(),
     player: getPlayerSettings(sqlite, userId),
     inventory: inventory.map(({ entityId, kind, slug, name, ...values }) => ({
@@ -701,6 +708,7 @@ export function exportPlayerProfile(
             rank,
             formaCount,
             capacityUpgrade,
+            modularParts,
             modSlots,
             mods,
           }) => ({
@@ -715,6 +723,14 @@ export function exportPlayerProfile(
             rank,
             formaCount,
             capacityUpgrade,
+            modularParts: modularParts.map(({ role, entity: part }) => ({
+              role,
+              entity: portableReferenceForCatalogEntity(
+                sqlite,
+                identifiers,
+                part,
+              ),
+            })),
             modSlots,
             mods: mods.map(({ position, rank, entity: mod }) => ({
               position,
@@ -795,6 +811,10 @@ export function importPlayerProfile(
       rank?: number;
       formaCount: number;
       capacityUpgrade: boolean;
+      modularParts: Array<{
+        role: ModularPartRole;
+        reference: { kind: string; slug: string };
+      }>;
       modSlots: BuildModSlot[];
       mods: Array<{
         position: number;
@@ -1037,6 +1057,24 @@ export function importPlayerProfile(
             : { kind: mod.entity.kind, slug: mod.entity.slug },
         };
       });
+      const modularParts = entry.modularParts.map((part) => {
+        const partResolution = resolvePortableEntity(sqlite, part.entity);
+        if (partResolution.reason) {
+          unresolved.push({
+            section: "builds",
+            index,
+            name: `${build.title}: ${part.entity.name}`,
+            reason: partResolution.reason,
+          });
+          complete = false;
+        }
+        return {
+          role: part.role,
+          reference: partResolution.entityId
+            ? catalogReferenceById(sqlite, partResolution.entityId)
+            : { kind: part.entity.kind, slug: part.entity.slug },
+        };
+      });
       return {
         slot: entry.slot,
         reference: equipmentResolution.entityId
@@ -1048,6 +1086,7 @@ export function importPlayerProfile(
         formaCount: entry.formaCount,
         capacityUpgrade: entry.capacityUpgrade,
         modSlots: entry.modSlots,
+        modularParts,
         mods,
       };
     });
@@ -1256,6 +1295,15 @@ export function importPlayerProfile(
           entry.notes,
         );
         configureBuildEquipment(sqlite, userId, buildId, entry.slot, entry);
+        for (const part of entry.modularParts)
+          setBuildModularPart(
+            sqlite,
+            userId,
+            buildId,
+            entry.slot,
+            part.role,
+            part.reference,
+          );
         for (const modSlot of entry.modSlots)
           setBuildModSlot(
             sqlite,
@@ -1306,7 +1354,7 @@ export function importPlayerProfile(
 function parseProfile(value: unknown): ProfileExport {
   if (
     !isRecord(value) ||
-    value.schemaVersion !== 20 ||
+    value.schemaVersion !== 21 ||
     !isRecord(value.player) ||
     !Array.isArray(value.inventory) ||
     !Array.isArray(value.goals) ||
@@ -1319,7 +1367,7 @@ function parseProfile(value: unknown): ProfileExport {
     !Array.isArray(value.builds)
   )
     throw new Error(
-      "Profile must use schemaVersion 20 and contain player settings plus every portable state array",
+      "Profile must use schemaVersion 21 and contain player settings plus every portable state array",
     );
   const masteryRank = value.player.masteryRank;
   if (
@@ -1498,7 +1546,7 @@ function parseProfile(value: unknown): ProfileExport {
     parsePortableBuild(entry, index),
   );
   return {
-    schemaVersion: 20,
+    schemaVersion: 21,
     exportedAt: typeof value.exportedAt === "string" ? value.exportedAt : "",
     player: {
       masteryRank: masteryRank as number | undefined,
@@ -1634,6 +1682,7 @@ function parsePortableBuild(value: unknown, index: number): PortableBuild {
       typeof entry.slot !== "string" ||
       !(BUILD_SLOTS as readonly string[]).includes(entry.slot) ||
       !Array.isArray(entry.modSlots) ||
+      !Array.isArray(entry.modularParts) ||
       !Array.isArray(entry.mods) ||
       (entry.rank !== undefined &&
         (!Number.isSafeInteger(entry.rank) ||
@@ -1692,6 +1741,26 @@ function parsePortableBuild(value: unknown, index: number): PortableBuild {
       };
     });
     const positions = new Set<number>();
+    const modularRoles = new Set<string>();
+    const modularParts = entry.modularParts.map((part, partIndex) => {
+      if (
+        !isRecord(part) ||
+        typeof part.role !== "string" ||
+        !(MODULAR_PART_ROLES as readonly string[]).includes(part.role) ||
+        modularRoles.has(part.role)
+      )
+        throw new Error(
+          `Profile ${label} modular part ${partIndex} is invalid`,
+        );
+      modularRoles.add(part.role);
+      return {
+        role: part.role as ModularPartRole,
+        entity: parsePortableEntity(
+          part.entity,
+          `${label} modular part ${partIndex}`,
+        ),
+      };
+    });
     const mods = entry.mods.map((mod, modIndex) => {
       if (
         !isRecord(mod) ||
@@ -1728,6 +1797,7 @@ function parsePortableBuild(value: unknown, index: number): PortableBuild {
       formaCount: entry.formaCount as number,
       capacityUpgrade: entry.capacityUpgrade,
       modSlots,
+      modularParts,
       mods,
     };
   });

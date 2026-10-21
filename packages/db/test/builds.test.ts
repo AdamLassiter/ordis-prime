@@ -15,18 +15,23 @@ import {
   createBuildShare,
   createLocalUser,
   createPlayerBuild,
+  exportPlayerProfile,
   findSharedBuild,
   getPlayerBuild,
+  importPlayerProfile,
   listBuildShares,
   listPlayerGoals,
+  listPlayerBuilds,
   migrateDatabase,
   openSqliteDatabase,
   revokeBuildShare,
   searchBuildCandidates,
   searchBuildEnhancementCandidates,
+  searchBuildModularPartCandidates,
   setBuildEnhancement,
   setBuildEquipment,
   setBuildMod,
+  setBuildModularPart,
   setBuildModSlot,
   setInventoryEntry,
   setPlayerGoal,
@@ -429,6 +434,8 @@ test("build drafts are private and share snapshots remain immutable", async (con
       maxRank: 30,
       formaCount: 3,
       capacityUpgrade: true,
+      modularPartRoles: [],
+      modularParts: [],
       factoryPolaritySets: [
         {
           polarities: [{ role: "normal", polarity: "madurai", quantity: 2 }],
@@ -785,6 +792,112 @@ test("cloned build titles stay within the draft title limit", async (context) =>
   )!;
   assert.equal(clone.title.length, 160);
   assert.match(clone.title, / \(copy\)$/);
+});
+
+test("modular builds validate, share, clone, and plan their component roles", async (context) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-modular-build-"));
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const databasePath = path.join(root, "builds.sqlite");
+  migrateDatabase(databasePath);
+  const database = openSqliteDatabase(databasePath);
+  context.after(() => database.close());
+  const owner = createLocalUser(database, { username: "ModularBuilder" });
+  const other = createLocalUser(database, { username: "ModularClone" });
+  seedEntity(
+    database,
+    "chamber",
+    "weapon",
+    "Catchmoon",
+    "catchmoon",
+    undefined,
+    "kitgun",
+  );
+  seedEntity(database, "grip", "component", "Haymaker", "haymaker");
+  seedEntity(database, "loader", "component", "Splat", "splat");
+  seedEntity(database, "wrong", "component", "Peye", "peye");
+  database
+    .prepare(
+      `update entities set modular_part_role = case id
+        when 'chamber' then 'kitgun-chamber'
+        when 'grip' then 'kitgun-grip'
+        when 'loader' then 'kitgun-loader'
+        else 'zaw-grip' end`,
+    )
+    .run();
+  const buildId = createPlayerBuild(database, owner, { title: "Kitgun" });
+  setBuildEquipment(database, owner, buildId, "secondary", {
+    kind: "weapon",
+    slug: "catchmoon",
+  });
+  assert.deepEqual(
+    searchBuildModularPartCandidates(
+      database,
+      buildId,
+      "secondary",
+      "kitgun-grip",
+      "Hay",
+    ),
+    [{ kind: "component", slug: "haymaker", name: "Haymaker" }],
+  );
+  assert.throws(
+    () =>
+      setBuildModularPart(
+        database,
+        owner,
+        buildId,
+        "secondary",
+        "kitgun-grip",
+        { kind: "component", slug: "peye" },
+      ),
+    /is not a kitgun-grip/,
+  );
+  setBuildModularPart(database, owner, buildId, "secondary", "kitgun-grip", {
+    kind: "component",
+    slug: "haymaker",
+  });
+  setBuildModularPart(database, owner, buildId, "secondary", "kitgun-loader", {
+    kind: "component",
+    slug: "splat",
+  });
+  const equipment = getPlayerBuild(database, owner, buildId)!.equipment[0]!;
+  assert.deepEqual(equipment.modularPartRoles, [
+    "kitgun-grip",
+    "kitgun-loader",
+  ]);
+  assert.deepEqual(equipment.modularParts, [
+    {
+      role: "kitgun-grip",
+      entity: { kind: "component", slug: "haymaker", name: "Haymaker" },
+    },
+    {
+      role: "kitgun-loader",
+      entity: { kind: "component", slug: "splat", name: "Splat" },
+    },
+  ]);
+  assert.equal(addBuildAcquisitionGoals(database, owner, buildId), 3);
+  const shareKey = createBuildShare(database, owner, buildId);
+  assert.equal(
+    findSharedBuild(database, shareKey)?.equipment[0]?.modularParts.length,
+    2,
+  );
+  const cloneId = cloneSharedBuild(database, other, shareKey);
+  assert.deepEqual(
+    getPlayerBuild(database, other, cloneId)?.equipment[0]?.modularParts,
+    equipment.modularParts,
+  );
+  const importedUser = createLocalUser(database, {
+    username: "ModularProfile",
+  });
+  const imported = importPlayerProfile(
+    database,
+    importedUser,
+    exportPlayerProfile(database, owner),
+  );
+  assert.equal(imported.buildsImported, 1);
+  assert.deepEqual(
+    listPlayerBuilds(database, importedUser)[0]?.equipment[0]?.modularParts,
+    equipment.modularParts,
+  );
 });
 
 function seedEntity(

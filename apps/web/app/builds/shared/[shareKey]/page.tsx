@@ -63,6 +63,20 @@ export default async function SharedBuildPage({
               {equipment.notes && (
                 <p className="muted build-notes">{equipment.notes}</p>
               )}
+              {equipment.modularParts.length > 0 && (
+                <ul className="mod-list">
+                  {equipment.modularParts.map((part) => (
+                    <li key={part.role}>
+                      {part.role}:{" "}
+                      <Link
+                        href={`/catalog/${part.entity.kind}/${part.entity.slug}`}
+                      >
+                        {part.entity.name}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
               {equipment.modSlots.length > 0 && (
                 <p className="muted">
                   Slots:{" "}

@@ -39,9 +39,10 @@ slot roles and polarities are preserved independently. Calculated capacity,
 including Update 38.5 rank progression, upgrades, adjusted drain and special
 slot bonuses, is implemented with explicit partial results. Sourced factory
 polarity role/count sets are visible without inventing grid positions. Modular
-Kitgun and Zaw parts now retain cited canonical roles. Exact factory positions,
-companion maximum-rank coverage, build-level modular-weapon composition, and richer
-ranking methodology remain. An
+Kitgun and Zaw parts now retain cited canonical roles and compose into builds,
+shares, profile transfer and acquisition goals. Exact factory positions,
+companion maximum-rank coverage, derived modular statistics, and richer ranking
+methodology remain. An
 opt-in ordinal median/range summary is implemented with its assumptions visible.
 
 ## 4. Discovery and spatial navigation

@@ -9,18 +9,22 @@ import {
   listBuildShares,
   searchBuildCandidates,
   searchBuildEnhancementCandidates,
+  searchBuildModularPartCandidates,
   type BuildEnhancementSlot,
   type BuildSlot,
 } from "@ordis-prime/db";
+import type { ModularPartRole } from "@ordis-prime/domain";
 import { getDatabase } from "@/lib/database";
 import { getCurrentSession } from "@/lib/session";
 import {
   assignEnhancement,
   assignEquipment,
   assignMod,
+  assignModularPart,
   clearEnhancement,
   clearEquipment,
   clearMod,
+  clearModularPart,
   clearModSlot,
   cloneBuild,
   planBuildAcquisition,
@@ -50,6 +54,9 @@ export default async function BuildEditor({
     position?: string;
     enhancementq?: string;
     enhancementslot?: string;
+    modularq?: string;
+    modularslot?: string;
+    modularrole?: string;
   }>;
 }) {
   const session = await getCurrentSession();
@@ -85,6 +92,29 @@ export default async function BuildEditor({
         id,
       )
     : [];
+  const modularEquipment = build.equipment.filter(
+    ({ modularPartRoles }) => modularPartRoles.length > 0,
+  );
+  const modularSlot = isBuildSlot(query.modularslot)
+    ? query.modularslot
+    : modularEquipment[0]?.slot;
+  const selectedModularEquipment = modularEquipment.find(
+    ({ slot }) => slot === modularSlot,
+  );
+  const modularRole =
+    selectedModularEquipment?.modularPartRoles.find(
+      (role) => role === query.modularrole,
+    ) ?? selectedModularEquipment?.modularPartRoles[0];
+  const modularCandidates =
+    query.modularq && modularSlot && modularRole
+      ? searchBuildModularPartCandidates(
+          database,
+          id,
+          modularSlot,
+          modularRole,
+          query.modularq,
+        )
+      : [];
   return (
     <>
       <p className="eyebrow">Build draft · revision {build.revision}</p>
@@ -198,6 +228,46 @@ export default async function BuildEditor({
                     <FactoryPolaritySummary
                       values={equipment.factoryPolaritySets}
                     />
+                    {equipment.modularPartRoles.length > 0 && (
+                      <div>
+                        <h4>Modular parts</h4>
+                        <ul className="mod-list">
+                          {equipment.modularPartRoles.map((role) => {
+                            const part = equipment.modularParts.find(
+                              (entry) => entry.role === role,
+                            );
+                            return (
+                              <li key={role}>
+                                {formatModularPartRole(role)}:{" "}
+                                {part ? (
+                                  <>
+                                    <Link
+                                      href={`/catalog/${part.entity.kind}/${part.entity.slug}`}
+                                    >
+                                      {part.entity.name}
+                                    </Link>{" "}
+                                    <form
+                                      action={clearModularPart.bind(
+                                        null,
+                                        id,
+                                        slot,
+                                        role,
+                                      )}
+                                    >
+                                      <button className="nav-button danger-text">
+                                        Remove
+                                      </button>
+                                    </form>
+                                  </>
+                                ) : (
+                                  <span className="muted">Not selected</span>
+                                )}
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </div>
+                    )}
                     <form
                       className="form-stack compact-form"
                       action={saveEquipmentNotes.bind(
@@ -324,6 +394,64 @@ export default async function BuildEditor({
             );
           })}
         </div>
+      </section>
+      <section className="planner-section">
+        <h2>Find modular parts</h2>
+        {modularEquipment.length && modularSlot && modularRole ? (
+          <>
+            <form className="inline-form">
+              <label>
+                Equipment
+                <select name="modularslot" defaultValue={modularSlot}>
+                  {modularEquipment.map(({ slot, entity }) => (
+                    <option value={slot} key={slot}>
+                      {slot}: {entity.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Part role
+                <select name="modularrole" defaultValue={modularRole}>
+                  {selectedModularEquipment?.modularPartRoles.map((role) => (
+                    <option value={role} key={role}>
+                      {formatModularPartRole(role)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Search
+                <input name="modularq" defaultValue={query.modularq} required />
+              </label>
+              <button className="button">Search</button>
+            </form>
+            {modularCandidates.length > 0 && (
+              <div className="candidate-list">
+                {modularCandidates.map((item) => (
+                  <form
+                    action={assignModularPart.bind(
+                      null,
+                      id,
+                      modularSlot,
+                      modularRole,
+                      item.kind,
+                      item.slug,
+                    )}
+                    key={`${item.kind}:${item.slug}`}
+                  >
+                    <span>{item.name}</span>
+                    <button className="button">Assign</button>
+                  </form>
+                ))}
+              </div>
+            )}
+          </>
+        ) : (
+          <p className="notice">
+            Assign a Kitgun chamber or Zaw strike before selecting its parts.
+          </p>
+        )}
       </section>
       <section className="planner-section">
         <h2>Find equipment</h2>
@@ -597,6 +725,13 @@ function isBuildEnhancementSlot(
   value: string | undefined,
 ): value is BuildEnhancementSlot {
   return (BUILD_ENHANCEMENT_SLOTS as readonly string[]).includes(value ?? "");
+}
+
+function formatModularPartRole(role: ModularPartRole): string {
+  return role
+    .split("-")
+    .map((word) => word[0]!.toUpperCase() + word.slice(1))
+    .join(" ");
 }
 function formatInstant(timestamp: number): string {
   return `${new Date(timestamp).toISOString().slice(0, 16).replace("T", " ")} UTC`;

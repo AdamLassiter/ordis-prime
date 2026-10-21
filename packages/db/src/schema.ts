@@ -902,6 +902,19 @@ export const buildMods = sqliteTable(
     uniqueIndex("build_mod_position").on(table.equipmentId, table.position),
   ],
 );
+export const buildModularParts = sqliteTable(
+  "build_modular_parts",
+  {
+    equipmentId: text("equipment_id")
+      .notNull()
+      .references(() => buildEquipment.id, { onDelete: "cascade" }),
+    role: text().notNull(),
+    entityId: text("entity_id")
+      .notNull()
+      .references(() => entities.id),
+  },
+  (table) => [primaryKey({ columns: [table.equipmentId, table.role] })],
+);
 export const buildModSlots = sqliteTable(
   "build_mod_slots",
   {

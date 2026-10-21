@@ -2,6 +2,7 @@ import { randomBytes, randomUUID } from "node:crypto";
 import {
   MOD_POLARITIES,
   type ArcaneClass,
+  type ModularPartRole,
   type ModPolarity,
   type WeaponClass,
 } from "@ordis-prime/domain";
@@ -107,8 +108,14 @@ export interface BuildEquipmentEntry {
   capacityUpgrade: boolean;
   capacity?: BuildCapacity;
   factoryPolaritySets?: CatalogEquipmentPolaritySet[];
+  modularPartRoles: ModularPartRole[];
+  modularParts: BuildModularPart[];
   modSlots: BuildModSlot[];
   mods: BuildMod[];
+}
+export interface BuildModularPart {
+  role: ModularPartRole;
+  entity: BuildEntityReference;
 }
 export interface BuildEnhancementOption {
   key: string;
@@ -154,6 +161,14 @@ export type BuildCandidate = BuildEntityReference & {
   modPolarity?: ModPolarity;
   enhancementOptions?: BuildEnhancementOption[];
 };
+
+export function modularPartRolesForWeaponClass(
+  weaponClass: WeaponClass | undefined,
+): ModularPartRole[] {
+  if (weaponClass === "kitgun") return ["kitgun-grip", "kitgun-loader"];
+  if (weaponClass === "zaw") return ["zaw-grip", "zaw-link"];
+  return [];
+}
 
 export function createPlayerBuild(
   sqlite: Database.Database,
@@ -305,6 +320,15 @@ function cloneBuildSnapshot(
         formaCount: equipment.formaCount,
         capacityUpgrade: equipment.capacityUpgrade,
       });
+      for (const part of equipment.modularParts)
+        setBuildModularPart(
+          sqlite,
+          userId,
+          cloneId,
+          equipment.slot,
+          part.role,
+          { kind: part.entity.kind, slug: part.entity.slug },
+        );
       for (const modSlot of equipment.modSlots)
         setBuildModSlot(
           sqlite,
@@ -403,6 +427,33 @@ export function searchBuildCandidates(
       ...(modPolarity ? { modPolarity } : {}),
     }),
   );
+}
+
+export function searchBuildModularPartCandidates(
+  sqlite: Database.Database,
+  buildId: string,
+  slot: BuildSlot,
+  role: ModularPartRole,
+  query: string,
+  limit = 20,
+): BuildCandidate[] {
+  const allowed = modularRolesForEquippedSlot(sqlite, buildId, slot);
+  if (!allowed.includes(role))
+    throw new Error(`${role} is not compatible with ${slot}`);
+  const normalizedLimit = Math.max(1, Math.min(100, Math.trunc(limit)));
+  return sqlite
+    .prepare(
+      `select kind, slug, name from entities
+       where retired = 0 and modular_part_role = ? and name like ? escape '\\'
+       order by case when lower(name) = lower(?) then 0 else 1 end, name collate nocase
+       limit ?`,
+    )
+    .all(
+      role,
+      `%${escapeLike(query.trim())}%`,
+      query.trim(),
+      normalizedLimit,
+    ) as BuildCandidate[];
 }
 
 export function searchBuildEnhancementCandidates(
@@ -591,6 +642,9 @@ export function setBuildEquipment(
           .prepare("delete from build_mod_slots where equipment_id = ?")
           .run(existing.id);
         sqlite
+          .prepare("delete from build_modular_parts where equipment_id = ?")
+          .run(existing.id);
+        sqlite
           .prepare(
             "update build_equipment set entity_id = ?, notes = ?, configuration = null, rank = null, forma_count = 0, capacity_upgrade = 0 where id = ?",
           )
@@ -623,6 +677,58 @@ export function removeBuildEquipment(
       .prepare("delete from build_equipment where build_id = ? and slot = ?")
       .run(buildId, slot);
     if (result.changes !== 1) throw new Error("Build equipment not found");
+    touchBuild(sqlite, buildId);
+  })();
+}
+
+export function setBuildModularPart(
+  sqlite: Database.Database,
+  userId: string,
+  buildId: string,
+  slot: BuildSlot,
+  role: ModularPartRole,
+  reference: { kind: string; slug: string },
+): void {
+  sqlite.transaction(() => {
+    assertBuildOwner(sqlite, userId, buildId);
+    const allowed = modularRolesForEquippedSlot(sqlite, buildId, slot);
+    if (!allowed.includes(role))
+      throw new Error(`${role} is not compatible with ${slot}`);
+    const entity = findEntity(sqlite, reference);
+    if (entity.modularPartRole !== role)
+      throw new Error(`${entity.name} is not a ${role}`);
+    const equipment = sqlite
+      .prepare("select id from build_equipment where build_id = ? and slot = ?")
+      .get(buildId, slot) as { id: string };
+    sqlite
+      .prepare(
+        `insert into build_modular_parts (equipment_id, role, entity_id) values (?, ?, ?)
+         on conflict(equipment_id, role) do update set entity_id = excluded.entity_id`,
+      )
+      .run(equipment.id, role, entity.id);
+    touchBuild(sqlite, buildId);
+  })();
+}
+
+export function removeBuildModularPart(
+  sqlite: Database.Database,
+  userId: string,
+  buildId: string,
+  slot: BuildSlot,
+  role: ModularPartRole,
+): void {
+  sqlite.transaction(() => {
+    assertBuildOwner(sqlite, userId, buildId);
+    const equipment = sqlite
+      .prepare("select id from build_equipment where build_id = ? and slot = ?")
+      .get(buildId, slot) as { id: string } | undefined;
+    if (!equipment) throw new Error("Build equipment not found");
+    const result = sqlite
+      .prepare(
+        "delete from build_modular_parts where equipment_id = ? and role = ?",
+      )
+      .run(equipment.id, role);
+    if (result.changes !== 1) throw new Error("Build modular part not found");
     touchBuild(sqlite, buildId);
   })();
 }
@@ -903,13 +1009,15 @@ export function addBuildAcquisitionGoals(
     select entity_id as entityId, count(*) as quantity from (
       select entity_id from build_equipment where build_id = ?
       union all
+      select part.entity_id from build_modular_parts part join build_equipment equipment on equipment.id = part.equipment_id where equipment.build_id = ?
+      union all
       select mod.entity_id from build_mods mod join build_equipment equipment on equipment.id = mod.equipment_id where equipment.build_id = ?
       union all
       select entity_id from build_enhancements where build_id = ?
     ) group by entity_id
   `,
     )
-    .all(buildId, buildId, buildId) as Array<{
+    .all(buildId, buildId, buildId, buildId) as Array<{
     entityId: string;
     quantity: number;
   }>;
@@ -968,7 +1076,8 @@ function hydrateBuild(
       equipment.rank, entity.equipment_max_rank as equipmentMaxRank,
       equipment.forma_count as formaCount,
       equipment.capacity_upgrade as capacityUpgrade,
-      entity.id as entityId, entity.kind, entity.slug, entity.name
+      entity.id as entityId, entity.kind, entity.slug, entity.name,
+      entity.weapon_class as weaponClass
     from build_equipment equipment join entities entity on entity.id = equipment.entity_id
     where equipment.build_id = ? order by equipment.slot
   `,
@@ -986,6 +1095,7 @@ function hydrateBuild(
     kind: string;
     slug: string;
     name: string;
+    weaponClass: WeaponClass | null;
   }>;
   const modsQuery = sqlite.prepare(`
     select mod.position, mod.rank, entity.kind, entity.slug, entity.name,
@@ -1000,6 +1110,11 @@ function hydrateBuild(
   const modSlotsQuery = sqlite.prepare(`
     select position, role, polarity from build_mod_slots
     where equipment_id = ? order by position
+  `);
+  const modularPartsQuery = sqlite.prepare(`
+    select part.role, entity.kind, entity.slug, entity.name
+    from build_modular_parts part join entities entity on entity.id = part.entity_id
+    where part.equipment_id = ? order by part.role
   `);
   const enhancements = sqlite
     .prepare(
@@ -1097,6 +1212,17 @@ function hydrateBuild(
         sqlite,
         entry.entityId,
       );
+      const modularParts = (
+        modularPartsQuery.all(entry.id) as Array<{
+          role: ModularPartRole;
+          kind: string;
+          slug: string;
+          name: string;
+        }>
+      ).map(({ role, kind, slug, name }) => ({
+        role,
+        entity: { kind, slug, name },
+      }));
       return {
         id: entry.id,
         slot: entry.slot,
@@ -1109,6 +1235,10 @@ function hydrateBuild(
           : {}),
         formaCount: entry.formaCount,
         capacityUpgrade: Boolean(entry.capacityUpgrade),
+        modularPartRoles: modularPartRolesForWeaponClass(
+          entry.weaponClass ?? undefined,
+        ),
+        modularParts,
         ...(factoryPolaritySets.length ? { factoryPolaritySets } : {}),
         ...(entry.slot === "operator-amp"
           ? {}
@@ -1200,10 +1330,11 @@ function findEntity(
   arcaneClass?: ArcaneClass;
   weaponClass?: WeaponClass;
   modMaxRank: number | null;
+  modularPartRole?: ModularPartRole;
 } {
   const entity = sqlite
     .prepare(
-      "select id, kind, name, arcane_class as arcaneClass, weapon_class as weaponClass, mod_max_rank as modMaxRank from entities where kind = ? and slug = ? and retired = 0",
+      "select id, kind, name, arcane_class as arcaneClass, weapon_class as weaponClass, modular_part_role as modularPartRole, mod_max_rank as modMaxRank from entities where kind = ? and slug = ? and retired = 0",
     )
     .get(reference.kind, reference.slug) as
     | {
@@ -1213,6 +1344,7 @@ function findEntity(
         arcaneClass?: ArcaneClass;
         weaponClass?: WeaponClass;
         modMaxRank: number | null;
+        modularPartRole?: ModularPartRole;
       }
     | undefined;
   if (!entity)
@@ -1220,6 +1352,23 @@ function findEntity(
       `Unknown active entity ${reference.kind}:${reference.slug}`,
     );
   return entity;
+}
+function modularRolesForEquippedSlot(
+  sqlite: Database.Database,
+  buildId: string,
+  slot: BuildSlot,
+): ModularPartRole[] {
+  if (!(BUILD_SLOTS as readonly string[]).includes(slot))
+    throw new Error("Build slot is invalid");
+  const row = sqlite
+    .prepare(
+      `select entity.weapon_class as weaponClass
+       from build_equipment equipment join entities entity on entity.id = equipment.entity_id
+       where equipment.build_id = ? and equipment.slot = ?`,
+    )
+    .get(buildId, slot) as { weaponClass: WeaponClass | null } | undefined;
+  if (!row) throw new Error("Build equipment not found");
+  return modularPartRolesForWeaponClass(row.weaponClass ?? undefined);
 }
 export function calculateRankedModDrain(
   baseDrain: number | undefined,
