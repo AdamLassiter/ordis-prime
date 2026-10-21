@@ -57,7 +57,9 @@ other, even though a source only needs to state the edge once. A shareable
 topology and a node's rewards without inventing domain positions. The focused
 node and its direct neighbors also render as a deterministic linked SVG map.
 That local ring is derived presentation state, not a claim about the in-game
-layout.
+layout. Traversing or clearing focus preserves the active search, ownership,
+access and completion filters so the graph remains in the player's current
+planning context.
 Incoming cited `occurs-at` and `involves` relations are also listed on the node,
 so its structured boss and curated discovery topics are reachable in-app rather
 than only from the discovery side of the graph.

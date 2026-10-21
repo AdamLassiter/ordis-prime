@@ -7,6 +7,7 @@ import {
 import { getDatabase } from "@/lib/database";
 import { getCurrentSession } from "@/lib/session";
 import { buildStarChartNeighborhood } from "@/lib/star-chart-topology";
+import { starChartHref } from "@/lib/star-chart-url";
 import { updateVisibleNodeCompletions } from "./actions";
 import { matchesStarChartQuery } from "@/lib/star-chart-search";
 
@@ -31,6 +32,12 @@ export default async function StarChartPage({
     session && (completion === "completed" || completion === "incomplete")
       ? completion
       : undefined;
+  const viewState = {
+    q: q || undefined,
+    needed: neededOnly,
+    access: selectedAccess,
+    completion: selectedCompletion,
+  };
   const database = getDatabase();
   const playerSettings = session
     ? getPlayerSettings(database, session.user.id)
@@ -152,7 +159,7 @@ export default async function StarChartPage({
             <Link className="button" href={`/nodes/${focusedNode.slug}`}>
               Open node and rewards
             </Link>
-            <Link className="nav-button" href="/star-chart">
+            <Link className="nav-button" href={starChartHref(viewState)}>
               Clear focus
             </Link>
           </div>
@@ -189,7 +196,7 @@ export default async function StarChartPage({
                       ? `${node.name}, current node`
                       : `Focus ${node.name}`
                   }
-                  href={focusHref(node.slug)}
+                  href={starChartHref(viewState, node.slug)}
                   key={node.slug}
                 >
                   <circle
@@ -222,7 +229,7 @@ export default async function StarChartPage({
                 return (
                   <Link
                     className="connection-node"
-                    href={focusHref(connection.slug)}
+                    href={starChartHref(viewState, connection.slug)}
                     key={connection.slug}
                   >
                     <strong>{connection.name}</strong>
@@ -342,7 +349,7 @@ export default async function StarChartPage({
                   {node.connectionCount > 0 && (
                     <Link
                       className="star-node-explore"
-                      href={focusHref(node.slug)}
+                      href={starChartHref(viewState, node.slug)}
                     >
                       Explore connections →
                     </Link>
@@ -355,10 +362,6 @@ export default async function StarChartPage({
       {!nodes.length && <p className="notice">No nodes match these filters.</p>}
     </>
   );
-}
-
-function focusHref(slug: string): string {
-  return `/star-chart?${new URLSearchParams({ focus: slug })}`;
 }
 
 function shortNodeLabel(name: string): string {
