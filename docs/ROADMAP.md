@@ -64,9 +64,10 @@ Structured mission records classify their explicit bosses and link them to
 canonical nodes; same-name WFCD enemies are refined without duplicating their
 identity.
 An independently scheduled structured enemy adapter classifies every explicit
-Wiki `Boss` record without guessing from internal names. Its first live
-promotion remains pending while the upstream API is in maintenance; mixed
-region and mission labels remain deliberately unlinked.
+Wiki `Boss` record without guessing from internal names. A live promotion now
+covers every declared partition, including Anarchs, and preserves distinct
+source-qualified variants when display names repeat. Mixed region and mission
+labels remain deliberately unlinked.
 Wiki mission data supplies the attributed current node and connection set, and
 those cited star-chart edges compose into node reads symmetrically. A shareable
 focus view supports direct traversal and a deterministic one-hop SVG topology

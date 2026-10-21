@@ -30,7 +30,10 @@ The structured enemy adapter broadens classification to every record explicitly
 typed as a boss across the Wiki's faction partitions. It intentionally does not
 turn the modules' mixed planet and mission labels into node links, so bosses
 outside ordinary Assassination nodes can be discoverable without acquiring a
-false location.
+false location. Its current live release contains 62 cited boss observations
+across every declared partition, including Anarchs. Distinct records that share
+a display name retain the Wiki's own qualified record key rather than being
+merged or given an invented suffix.
 
 Signed-in players can independently mark a topic unseen, discovered or
 completed. The absence of a row means unseen, keeping default state compact.
@@ -44,10 +47,6 @@ relationship and its evidence.
 
 - Progress is one state per topic; quest steps and repeat completion are not
   modeled.
-- The broader enemy adapter is implemented and scheduled, but its first live
-  promotion still depends on the Wiki API returning from its current
-  maintenance outage. Mission-derived bosses remain the active baseline until
-  that succeeds.
 - Boss planet and mission labels are not yet normalized into typed regions,
   modes and canonical nodes.
 - Conditional requirements, ordered quest steps, and relation confidence are
