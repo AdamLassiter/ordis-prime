@@ -218,6 +218,59 @@ export default async function Planner() {
 
       {plan.missing.length > 0 && (
         <section className="planner-section">
+          <h2>One-time acquisition options</h2>
+          <p className="muted">
+            Cited Junction grants that satisfy a missing requirement. These are
+            not repeatable drops and do not affect candidate-node scoring.
+          </p>
+          {plan.oneTimeGrants.length ? (
+            <div className="grid">
+              {plan.oneTimeGrants.map((grant) => (
+                <article
+                  className="card"
+                  key={`${grant.nodeSlug}:${grant.rewardEntityId}:${grant.label}`}
+                >
+                  <span className="tag">one-time grant</span>
+                  <h3>
+                    <Link href={`/nodes/${grant.nodeSlug}`}>
+                      {grant.nodeName}
+                    </Link>
+                  </h3>
+                  <p>
+                    <Link href={`/catalog/${grant.kind}/${grant.slug}`}>
+                      {grant.label}
+                    </Link>
+                  </p>
+                  <p>
+                    Need {grant.neededQuantity}
+                    {grant.grantQuantity === undefined
+                      ? ""
+                      : ` · grants ${grant.grantQuantity}`}
+                    {grant.trigger === "junction-completion"
+                      ? " · on Junction completion"
+                      : " · from a Junction objective"}
+                  </p>
+                  <p className="muted">
+                    Source:{" "}
+                    {grant.source.citationUrl ? (
+                      <a href={grant.source.citationUrl}>{grant.source.name}</a>
+                    ) : (
+                      grant.source.name
+                    )}
+                  </p>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <p className="notice">
+              No linked one-time grant covers a remaining requirement.
+            </p>
+          )}
+        </section>
+      )}
+
+      {plan.missing.length > 0 && (
+        <section className="planner-section">
           <h2>Candidate nodes</h2>
           <p className="muted">
             Documented accessible nodes come first, followed by conditional,

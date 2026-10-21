@@ -86,4 +86,6 @@ for the star chart and planner. Typed one-time objective and Junction-completion
 rewards are linked in both node and item views without entering repeatable drop
 recommendations. Their separately labeled inventory overlay also participates
 in the chart's unowned-reward filter without conflating grant and drop counts.
+Missing planner requirements surface these grants as separately cited one-time
+options rather than scored candidate drops.
 Other item or equipment conditions remain.

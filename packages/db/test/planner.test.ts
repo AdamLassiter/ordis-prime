@@ -109,6 +109,21 @@ test("persisted goals expand through active recipes and produce named node reaso
       evidence,
     },
     {
+      type: "node-reward",
+      nodeExternalId: external("node"),
+      rewardExternalId: external("chassis"),
+      key: "chassis-grant",
+      label: "Test Chassis",
+      quantity: 1,
+      trigger: "junction-completion",
+      sortOrder: 0,
+      evidence: {
+        ...evidence,
+        sourceRecordKey: "node:reward:chassis",
+        citationUrl: "https://example.test/chassis-grant",
+      },
+    },
+    {
       type: "entity-relation",
       fromExternalId: external("node"),
       toExternalId: external("quest"),
@@ -181,6 +196,24 @@ test("persisted goals expand through active recipes and produce named node reaso
     plan.missing.map(({ name, quantity }) => ({ name, quantity })),
     [{ name: "Test Chassis", quantity: 3 }],
   );
+  assert.deepEqual(plan.oneTimeGrants, [
+    {
+      rewardEntityId: plan.missing[0]!.entityId,
+      kind: "component",
+      slug: "test-chassis",
+      name: "Test Chassis",
+      neededQuantity: 3,
+      grantQuantity: 1,
+      label: "Test Chassis",
+      trigger: "junction-completion",
+      nodeSlug: "test-node",
+      nodeName: "Test Node",
+      source: {
+        name: "Items",
+        citationUrl: "https://example.test/chassis-grant",
+      },
+    },
+  ]);
   assert.equal(plan.recommendations[0]?.nodeSlug, "test-node");
   assert.deepEqual(plan.recommendations[0]?.reasons, [
     "Drops 1 missing goal item",

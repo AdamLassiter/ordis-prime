@@ -21,6 +21,12 @@ Recommendations show coverage, remaining quantity, documented chance, and
 rotation. They deliberately do not estimate farming time because the catalog
 does not yet carry reliable mission-duration or expected-run evidence.
 
+Missing requirements also expose canonically linked one-time Junction grants in
+a separate acquisition section. Each option retains its source, granting node,
+trigger and known grant quantity. It does not enter repeatable node scoring,
+chance summaries or live-window intersections, because a one-time grant is not
+a farmable drop.
+
 For a canonical node, the planner also composes active cited access relations.
 Both `node requires prerequisite` and `prerequisite unlocks node` express a
 requirement. A player has satisfied that requirement only when the related

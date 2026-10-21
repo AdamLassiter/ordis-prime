@@ -31,6 +31,8 @@
   counting them as mission drops.
 - As a player, I can open a reward item and follow its cited one-time acquisition
   back to the granting Junction.
+- As a player, I can see a cited one-time Junction grant alongside a missing
+  planner requirement without it being ranked as a repeatable farm.
 - As an administrator, I can see dataset freshness, import failures, conflicts
   and the exact upstream record behind a fact.
 

@@ -32,6 +32,19 @@ export interface AcquisitionPlan {
     name: string;
     quantity: number;
   }>;
+  oneTimeGrants: Array<{
+    rewardEntityId: string;
+    kind: string;
+    slug: string;
+    name: string;
+    neededQuantity: number;
+    grantQuantity?: number;
+    label: string;
+    trigger: "objective" | "junction-completion";
+    nodeSlug: string;
+    nodeName: string;
+    source: { name: string; citationUrl?: string };
+  }>;
   recommendations: Array<{
     nodeId?: string;
     nodeSlug?: string;
@@ -407,6 +420,52 @@ export function buildAcquisitionPlan(
     entityId: entry.entityId,
     quantity: entry.quantity,
   }));
+  const missingById = new Map<string, number>(
+    missingRequirements.map(({ entityId, quantity }) => [entityId, quantity]),
+  );
+  const missingPlaceholders = [...missingById].map(() => "?").join(", ");
+  const oneTimeGrants = missingById.size
+    ? (
+        sqlite
+          .prepare(
+            `select reward.reward_entity_id as rewardEntityId,
+                    entity.kind, entity.slug, entity.name,
+                    reward.quantity as grantQuantity, reward.label,
+                    reward.trigger, node.slug as nodeSlug, node.name as nodeName,
+                    source.name as sourceName,
+                    reward.citation_url as citationUrl
+             from node_rewards reward
+             join source_runs run
+               on run.id = reward.source_run_id and run.status = 'active'
+             join sources source on source.id = run.source_id
+             join entities entity
+               on entity.id = reward.reward_entity_id and entity.retired = 0
+             join entities node
+               on node.id = reward.node_id and node.retired = 0
+             where reward.reward_entity_id in (${missingPlaceholders})
+             order by node.name collate nocase, reward.sort_order,
+                      reward.source_record_key`,
+          )
+          .all(...missingById.keys()) as Array<{
+          rewardEntityId: string;
+          kind: string;
+          slug: string;
+          name: string;
+          grantQuantity: number | null;
+          label: string;
+          trigger: "objective" | "junction-completion";
+          nodeSlug: string;
+          nodeName: string;
+          sourceName: string;
+          citationUrl: string | null;
+        }>
+      ).map(({ sourceName, citationUrl, grantQuantity, ...grant }) => ({
+        ...grant,
+        neededQuantity: missingById.get(grant.rewardEntityId)!,
+        grantQuantity: grantQuantity ?? undefined,
+        source: { name: sourceName, citationUrl: citationUrl ?? undefined },
+      }))
+    : [];
   const recommendedNodes = recommendNodes(missingRequirements, drops);
   const nodeAccess = loadNodeAccess(
     sqlite,
@@ -547,6 +606,7 @@ export function buildAcquisitionPlan(
     playerRailjackIntrinsicRank,
     goals,
     missing,
+    oneTimeGrants,
     recommendations,
     recipeChoices,
   };

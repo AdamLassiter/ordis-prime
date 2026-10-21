@@ -224,8 +224,9 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   private discovery or node-completion progress. Nodes without access evidence
   stay unknown. Junction objective text and private completion now compose into
   access, while typed rewards remain display facts rather than repeatable drops
-  or automatic inventory changes. Other compound equipment or item conditions
-  still need typed models.
+  or automatic inventory changes. Linked grants appear as distinct one-time
+  options for missing planner requirements, without chance or efficiency
+  scoring. Other compound equipment or item conditions still need typed models.
 
 ## Deliberate compromises
 
