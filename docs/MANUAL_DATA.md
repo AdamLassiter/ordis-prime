@@ -86,7 +86,7 @@ provider snapshot. Version 1 YAML declares an independently cited source and
 targets every entry by an explicit `{ sourceId, namespace, value }` identifier.
 Display names are never used to guess the correction target. An entry can
 provide a name, slug, description, canonical `arcaneClass` or `weaponClass`,
-canonical equipment `equipmentMaxRank`, canonical mod `modMaxRank`,
+canonical `modularPartRole`, equipment `equipmentMaxRank`, canonical mod `modMaxRank`,
 `modBaseDrain` or `modPolarity` facts, aliases,
 sourced `enhancementOptions`, or the explicit tombstone
 `retired: true`; `retired: false` is rejected because restoration needs a
@@ -102,6 +102,7 @@ pnpm data:refresh manual-facts:data/manual/facts.example.yaml
 Source priority determines the active value for name, slug, description, arcane
 class, weapon class, and mod capacity fields.
 Equipment maximum rank follows the same field-level selection rules.
+Modular part role follows them as well.
 The default manual priority is 300, above the bundled providers, while each
 field retains the overlay's source record, YAML path, snapshot, and citation.
 Later provider refreshes therefore cannot silently erase an accepted
@@ -117,6 +118,11 @@ without teaching build consumers about provider-specific type labels.
 `kitgun`, `zaw`, `archgun`, `archmelee`, `companion`, or `amp`, and is valid
 only on a `weapon` entry. The normalized class drives equipment-slot and
 specialized-arcane validation.
+
+`modularPartRole` accepts `kitgun-chamber`, `kitgun-grip`, `kitgun-loader`,
+`zaw-strike`, `zaw-grip`, or `zaw-link`, and is valid only on a `weapon` or
+`component` entry. It identifies a part's structural role without claiming
+finished-weapon statistics or compatibility beyond its family.
 
 `equipmentMaxRank` accepts an integer from 30 through 40 on Warframes,
 weapons, companions and Archwings. It is deliberately separate from a player's

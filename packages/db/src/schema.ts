@@ -142,6 +142,7 @@ export const entities = sqliteTable(
     description: text(),
     arcaneClass: text("arcane_class"),
     weaponClass: text("weapon_class"),
+    modularPartRole: text("modular_part_role"),
     equipmentMaxRank: integer("equipment_max_rank"),
     modMaxRank: integer("mod_max_rank"),
     modBaseDrain: integer("mod_base_drain"),

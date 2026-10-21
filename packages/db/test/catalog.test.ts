@@ -48,6 +48,7 @@ test("catalog read models join active recipes, drops, provenance, and rankings",
         name: "Braton",
         slug: "braton",
         description: "A balanced rifle.",
+        modularPartRole: "kitgun-chamber",
         equipmentMaxRank: 30,
       },
       evidence,
@@ -291,6 +292,7 @@ test("catalog read models join active recipes, drops, provenance, and rankings",
   assert.deepEqual(searchDiscoveryCatalog(sqlite, { query: "%" }), []);
   const item = findCatalogItem(sqlite, "weapon", "braton");
   assert.equal(item?.equipmentMaxRank, 30);
+  assert.equal(item?.modularPartRole, "kitgun-chamber");
   assert.deepEqual(item?.factoryPolaritySets, [
     {
       configuration: "Primary",

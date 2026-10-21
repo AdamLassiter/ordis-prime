@@ -151,6 +151,7 @@ entries:
       description: undefined,
       arcaneClass: undefined,
       weaponClass: undefined,
+      modularPartRole: undefined,
       equipmentMaxRank: undefined,
       modMaxRank: 10,
       modBaseDrain: 4,
@@ -170,6 +171,39 @@ entries:
 `),
       ),
     /modMaxRank is invalid/,
+  );
+});
+
+test("manual facts validate modular weapon part roles", async () => {
+  const valid = ManualFactsAdapter.fromBytes(
+    new TextEncoder().encode(`
+schemaVersion: 1
+source: { id: manual, title: Manual, url: https://example.test, licenseNote: cited }
+entries:
+  - target: { sourceId: items, namespace: id, value: splat }
+    kind: component
+    modularPartRole: kitgun-loader
+`),
+  );
+  const observations = await collect(valid, await valid.fetch({}));
+  assert.equal(
+    observations[0]?.type === "entity" &&
+      observations[0].fields.modularPartRole,
+    "kitgun-loader",
+  );
+  assert.throws(
+    () =>
+      ManualFactsAdapter.fromBytes(
+        new TextEncoder().encode(`
+schemaVersion: 1
+source: { id: manual, title: Manual, url: https://example.test, licenseNote: cited }
+entries:
+  - target: { sourceId: items, namespace: id, value: splat }
+    kind: resource
+    modularPartRole: kitgun-loader
+`),
+      ),
+    /modularPartRole is invalid/,
   );
 });
 

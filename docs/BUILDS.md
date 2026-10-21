@@ -94,9 +94,10 @@ recipes and recommends nodes using the same canonical IDs.
   partial rather than estimated. Broad arcane
   and specialized weapon compatibility are enforced from cited canonical
   facts. A Kitgun chamber or Zaw strike is currently the representative
-  canonical weapon; the other modular parts and their stat composition are not
-  structured in a build. Abilities, schools and structured weapon configuration
-  variants are also absent.
+  canonical weapon. Chambers, strikes, grips, loaders and links now have cited
+  canonical roles, but those parts and their stat composition are not yet
+  structured in a build. Abilities, schools and structured weapon
+  configuration variants are also absent.
 - Private build drafts are included in portable profile export/import. Published
   share snapshots are deliberately installation-local capability URLs.
 - Share keys are unlisted capabilities, not access-controlled invitations.

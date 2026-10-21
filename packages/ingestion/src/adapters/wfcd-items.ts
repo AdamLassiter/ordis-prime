@@ -1,5 +1,6 @@
 import {
   MOD_POLARITIES,
+  type ModularPartRole,
   normalizedAlias,
   type ArcaneClass,
   type EntityKind,
@@ -64,7 +65,7 @@ const categories: Record<string, EntityKind> = {
   Enemy: "enemy",
 };
 export const DEFAULT_WFCD_ITEMS_URL = "https://api.warframestat.us/items";
-const PARSER_VERSION = "wfcd-items-v10";
+const PARSER_VERSION = "wfcd-items-v12";
 const ARCHON_SHARD_PREFIX = "/Lotus/Types/Gameplay/NarmerSorties/ArchonCrystal";
 const resourceTypes = new Set([
   "Resource",
@@ -180,6 +181,7 @@ export class WfcdItemsAdapter implements SourceAdapter {
           arcaneClass:
             kind === "arcane" ? arcaneClasses[item.type ?? ""] : undefined,
           weaponClass: kind === "weapon" ? weaponClassFor(item) : undefined,
+          modularPartRole: modularPartRoleFor(item),
           modMaxRank:
             kind === "mod" &&
             Number.isSafeInteger(item.fusionLimit) &&
@@ -357,6 +359,26 @@ function weaponClassFor(
   if (item.category === "Primary" && item.type === "Shotgun") return "shotgun";
   if (item.category === "Primary") return "primary";
   return undefined;
+}
+
+function modularPartRoleFor(
+  item: Pick<WfcdItem, "uniqueName" | "type">,
+): ModularPartRole | undefined {
+  if (item.type !== "Kitgun Component" && item.type !== "Zaw Component")
+    return undefined;
+  const path = item.uniqueName ?? "";
+  if (item.type === "Kitgun Component") {
+    if (/\/Barrel\//.test(path)) return "kitgun-chamber";
+    if (/\/Handles?\//.test(path)) return "kitgun-grip";
+    if (/\/Clip\//.test(path)) return "kitgun-loader";
+  } else {
+    if (/\/Tips?\//.test(path)) return "zaw-strike";
+    if (/\/Handles?\//.test(path)) return "zaw-grip";
+    if (/\/Balance\//.test(path)) return "zaw-link";
+  }
+  throw new Error(
+    `WFCD ${item.type} ${item.uniqueName ?? "without an ID"} has an unknown part role`,
+  );
 }
 function cleanName(value: string): string {
   return value.replace(/^<[^>]+>\s*/, "").trim();

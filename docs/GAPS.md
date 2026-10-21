@@ -175,7 +175,9 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   Arcane candidates and assignments enforce sourced broad and specialized weapon classes against
   equipped items in either assignment order. Equipment slots also enforce
   sourced weapon classes. Kitgun chambers and Zaw strikes act as the current
-  modular weapon representatives; full part composition is not modeled. Private
+  modular weapon representatives. WFCD now supplies cited canonical roles for
+  chambers, strikes, grips, loaders and links, but build drafts do not yet
+  compose those parts into one weapon or derive combination statistics. Private
   drafts are
   portable and can be cloned; their snapshot history can be viewed or revoked.
   Authenticated recipients can clone a public snapshot into a private draft.

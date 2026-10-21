@@ -81,6 +81,16 @@ export const WEAPON_CLASSES = [
 ] as const;
 export type WeaponClass = (typeof WEAPON_CLASSES)[number];
 
+export const MODULAR_PART_ROLES = [
+  "kitgun-chamber",
+  "kitgun-grip",
+  "kitgun-loader",
+  "zaw-strike",
+  "zaw-grip",
+  "zaw-link",
+] as const;
+export type ModularPartRole = (typeof MODULAR_PART_ROLES)[number];
+
 export const MOD_POLARITIES = [
   "aura",
   "madurai",
@@ -110,6 +120,7 @@ export interface CanonicalEntity {
   description?: string;
   arcaneClass?: ArcaneClass;
   weaponClass?: WeaponClass;
+  modularPartRole?: ModularPartRole;
   equipmentMaxRank?: number;
   modMaxRank?: number;
   modBaseDrain?: number;
@@ -145,6 +156,7 @@ export interface EntityObservation {
       | "description"
       | "arcaneClass"
       | "weaponClass"
+      | "modularPartRole"
       | "equipmentMaxRank"
       | "modMaxRank"
       | "modBaseDrain"

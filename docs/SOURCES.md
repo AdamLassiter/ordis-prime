@@ -128,6 +128,10 @@ so unrelated `Systems` records cannot collapse into one entity. Same-kind
 display-name collisions with different provider types receive stable type
 qualifiers, while store and internal records with the same name/type intentionally converge. Common WFCD
 resource-like types, including Forma's `Equipment Adapter`, map to resources.
+WFCD's typed Kitgun and Zaw component paths also populate canonical chamber,
+grip, loader, strike and link roles. A declared modular component with an
+unknown path fails closed so new provider structure cannot silently enter as an
+unclassified part.
 For mods, sane `fusionLimit`, `baseDrain` and canonical polarity values become
 cited canonical fields. The adapter omits provider placeholder sentinels such
 as rank 592 and extreme negative drain rather than turning corrupt metadata into

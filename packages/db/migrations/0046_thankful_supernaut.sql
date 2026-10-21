@@ -1,0 +1,1 @@
+ALTER TABLE `entities` ADD `modular_part_role` text;

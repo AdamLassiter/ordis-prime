@@ -44,6 +44,8 @@
   and notes, then share an immutable revision without exposing my draft.
 - As a player, I can compare my positioned build slots with cited factory
   polarity roles and counts without the application inventing source positions.
+- As a player, I can distinguish Kitgun and Zaw chambers, strikes, grips,
+  loaders and links by a cited canonical role before composing them in builds.
 - As a player, I can turn missing equipment and mod quantities in a build into
   acquisition goals without overwriting larger plans.
 - As a guest, I can compare independently cited tier lists without hidden scale

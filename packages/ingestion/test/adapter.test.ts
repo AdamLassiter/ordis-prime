@@ -495,6 +495,12 @@ test("WFCD adapter maps equipment classes and modular weapon representatives", a
           type: "Kitgun Component",
         },
         {
+          uniqueName: "/Lotus/Weapons/SolarisUnited/Secondary/Set/Clip/Splat",
+          name: "Splat",
+          category: "Misc",
+          type: "Kitgun Component",
+        },
+        {
           uniqueName: "/Lotus/Weapons/Ostron/Melee/Set/Tips/Balla",
           name: "Balla",
           category: "Melee",
@@ -503,6 +509,12 @@ test("WFCD adapter maps equipment classes and modular weapon representatives", a
         {
           uniqueName: "/Lotus/Weapons/Ostron/Melee/Set/Handle/Peye",
           name: "Peye",
+          category: "Melee",
+          type: "Zaw Component",
+        },
+        {
+          uniqueName: "/Lotus/Weapons/Ostron/Melee/Set/Balance/Jai",
+          name: "Jai",
           category: "Melee",
           type: "Zaw Component",
         },
@@ -523,19 +535,39 @@ test("WFCD adapter maps equipment classes and modular weapon representatives", a
         entry.fields.name,
         entry.kind,
         entry.fields.weaponClass,
+        entry.fields.modularPartRole,
       ]),
     [
-      ["Braton", "weapon", "primary"],
-      ["Dread", "weapon", "bow"],
-      ["Boar", "weapon", "shotgun"],
-      ["Lex", "weapon", "secondary"],
-      ["Sirocco", "weapon", "amp"],
-      ["Catchmoon", "weapon", "kitgun"],
-      ["Haymaker", "component", undefined],
-      ["Balla", "weapon", "zaw"],
-      ["Peye", "component", undefined],
-      ["Odonata", "archwing", undefined],
+      ["Braton", "weapon", "primary", undefined],
+      ["Dread", "weapon", "bow", undefined],
+      ["Boar", "weapon", "shotgun", undefined],
+      ["Lex", "weapon", "secondary", undefined],
+      ["Sirocco", "weapon", "amp", undefined],
+      ["Catchmoon", "weapon", "kitgun", "kitgun-chamber"],
+      ["Haymaker", "component", undefined, "kitgun-grip"],
+      ["Splat", "component", undefined, "kitgun-loader"],
+      ["Balla", "weapon", "zaw", "zaw-strike"],
+      ["Peye", "component", undefined, "zaw-grip"],
+      ["Jai", "component", undefined, "zaw-link"],
+      ["Odonata", "archwing", undefined, undefined],
     ],
+  );
+
+  await assert.rejects(
+    collect(new WfcdItemsAdapter(), {
+      ...snapshot,
+      bytes: new TextEncoder().encode(
+        JSON.stringify([
+          {
+            uniqueName: "/future/part",
+            name: "Future Part",
+            category: "Misc",
+            type: "Kitgun Component",
+          },
+        ]),
+      ),
+    }),
+    /has an unknown part role/,
   );
 });
 
@@ -609,7 +641,7 @@ test("WFCD adapter defaults to the maintained aggregate endpoint", async () => {
     const adapter = new WfcdItemsAdapter();
     const fetched = await adapter.fetch({});
     assert.equal(requestedUrl, DEFAULT_WFCD_ITEMS_URL);
-    assert.equal(fetched.version, "fixture-etag|wfcd-items-v10");
+    assert.equal(fetched.version, "fixture-etag|wfcd-items-v12");
     assert.equal(adapter.minimumRetainedObservationRatio, 0.5);
   } finally {
     globalThis.fetch = originalFetch;

@@ -71,6 +71,12 @@ export default async function ItemPage({
             <dd>{item.weaponClass}</dd>
           </>
         )}
+        {item.modularPartRole && (
+          <>
+            <dt>Modular part role</dt>
+            <dd>{formatModularPartRole(item.modularPartRole)}</dd>
+          </>
+        )}
         {item.modMaxRank !== undefined && (
           <>
             <dt>Maximum rank</dt>
@@ -384,6 +390,13 @@ export default async function ItemPage({
       )}
     </>
   );
+}
+
+function formatModularPartRole(role: string): string {
+  return role
+    .split("-")
+    .map((word) => word[0]!.toUpperCase() + word.slice(1))
+    .join(" ");
 }
 
 function formatTimestamp(seconds: number): string {

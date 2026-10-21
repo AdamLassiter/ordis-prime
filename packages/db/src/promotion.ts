@@ -6,6 +6,7 @@ import {
   EQUIPMENT_KINDS,
   EQUIPMENT_POLARITY_ROLES,
   MOD_POLARITIES,
+  MODULAR_PART_ROLES,
   WEAPON_CLASSES,
   externalKey,
   entityKindsCompatible,
@@ -1016,6 +1017,7 @@ function recomputeActiveEntityFields(sqlite: Database.Database): void {
     description: "description",
     arcaneClass: "arcane_class",
     weaponClass: "weapon_class",
+    modularPartRole: "modular_part_role",
     equipmentMaxRank: "equipment_max_rank",
     modMaxRank: "mod_max_rank",
     modBaseDrain: "mod_base_drain",
@@ -1077,6 +1079,7 @@ function recomputeActiveEntityFields(sqlite: Database.Database): void {
     ["description", "description"],
     ["arcaneClass", "arcane_class"],
     ["weaponClass", "weapon_class"],
+    ["modularPartRole", "modular_part_role"],
     ["equipmentMaxRank", "equipment_max_rank"],
     ["modMaxRank", "mod_max_rank"],
     ["modBaseDrain", "mod_base_drain"],
@@ -1158,8 +1161,8 @@ function resolveAndWriteEntity(
     sqlite
       .prepare(
         `
-      insert into entities (id, kind, name, slug, description, arcane_class, weapon_class, equipment_max_rank, mod_max_rank, mod_base_drain, mod_polarity, retired, updated_at)
-      values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      insert into entities (id, kind, name, slug, description, arcane_class, weapon_class, modular_part_role, equipment_max_rank, mod_max_rank, mod_base_drain, mod_polarity, retired, updated_at)
+      values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `,
       )
       .run(
@@ -1170,6 +1173,7 @@ function resolveAndWriteEntity(
         observation.fields.description ?? null,
         observation.fields.arcaneClass ?? null,
         observation.fields.weaponClass ?? null,
+        observation.fields.modularPartRole ?? null,
         observation.fields.equipmentMaxRank ?? null,
         observation.fields.modMaxRank ?? null,
         observation.fields.modBaseDrain ?? null,
@@ -1185,6 +1189,7 @@ function resolveAndWriteEntity(
       description: observation.fields.description,
       arcaneClass: observation.fields.arcaneClass,
       weaponClass: observation.fields.weaponClass,
+      modularPartRole: observation.fields.modularPartRole,
       equipmentMaxRank: observation.fields.equipmentMaxRank,
       modMaxRank: observation.fields.modMaxRank,
       modBaseDrain: observation.fields.modBaseDrain,
@@ -1195,9 +1200,17 @@ function resolveAndWriteEntity(
   } else {
     entityId = resolution.entityId;
     const entity = state.entities.get(entityId)!;
+    const modularComponentReclassification =
+      entity.kind === "weapon" &&
+      observation.kind === "component" &&
+      observation.fields.modularPartRole !== undefined &&
+      ["kitgun-grip", "kitgun-loader", "zaw-grip", "zaw-link"].includes(
+        observation.fields.modularPartRole,
+      );
     if (
       observation.kind !== "unknown" &&
-      !entityKindsCompatible(entity.kind, observation.kind)
+      !entityKindsCompatible(entity.kind, observation.kind) &&
+      !modularComponentReclassification
     ) {
       writeConflict(
         sqlite,
@@ -1212,7 +1225,8 @@ function resolveAndWriteEntity(
     }
     if (
       (entity.kind === "unknown" && observation.kind !== "unknown") ||
-      (entity.kind === "enemy" && observation.kind === "boss")
+      (entity.kind === "enemy" && observation.kind === "boss") ||
+      modularComponentReclassification
     ) {
       sqlite
         .prepare("update entities set kind = ?, updated_at = ? where id = ?")
@@ -1264,6 +1278,7 @@ function resolveAndWriteEntity(
     "description",
     "arcaneClass",
     "weaponClass",
+    "modularPartRole",
     "equipmentMaxRank",
     "modMaxRank",
     "modBaseDrain",
@@ -1298,6 +1313,7 @@ function updateWinningFields(
     description: "description",
     arcaneClass: "arcane_class",
     weaponClass: "weapon_class",
+    modularPartRole: "modular_part_role",
     equipmentMaxRank: "equipment_max_rank",
     modMaxRank: "mod_max_rank",
     modBaseDrain: "mod_base_drain",
@@ -1309,6 +1325,7 @@ function updateWinningFields(
     "description",
     "arcaneClass",
     "weaponClass",
+    "modularPartRole",
     "equipmentMaxRank",
     "modMaxRank",
     "modBaseDrain",
@@ -1352,7 +1369,7 @@ function updateWinningFields(
 function loadResolutionState(sqlite: Database.Database): ResolutionState {
   const entityRows = sqlite
     .prepare(
-      "select id, kind, name, slug, description, arcane_class as arcaneClass, weapon_class as weaponClass, equipment_max_rank as equipmentMaxRank, mod_max_rank as modMaxRank, mod_base_drain as modBaseDrain, mod_polarity as modPolarity, retired from entities",
+      "select id, kind, name, slug, description, arcane_class as arcaneClass, weapon_class as weaponClass, modular_part_role as modularPartRole, equipment_max_rank as equipmentMaxRank, mod_max_rank as modMaxRank, mod_base_drain as modBaseDrain, mod_polarity as modPolarity, retired from entities",
     )
     .all() as Array<Omit<CanonicalEntity, "retired"> & { retired: number }>;
   const entities = new Map<EntityId, CanonicalEntity>();
@@ -1514,6 +1531,20 @@ function validateInput(input: PromoteSourceInput): void {
         ))
     ) {
       throw new Error("Entity weapon class is invalid");
+    }
+    if (
+      observation.type === "entity" &&
+      observation.fields.modularPartRole !== undefined &&
+      (!(MODULAR_PART_ROLES as readonly string[]).includes(
+        observation.fields.modularPartRole,
+      ) ||
+        ((["kitgun-chamber", "zaw-strike"] as readonly string[]).includes(
+          observation.fields.modularPartRole,
+        )
+          ? observation.kind !== "weapon"
+          : observation.kind !== "component"))
+    ) {
+      throw new Error("Entity modular part role is invalid");
     }
     if (observation.type === "entity") {
       const { equipmentMaxRank, modMaxRank, modBaseDrain, modPolarity } =
@@ -1760,6 +1791,7 @@ function incompatibleEntityDeclarations(
     "slug",
     "arcaneClass",
     "weaponClass",
+    "modularPartRole",
     "equipmentMaxRank",
     "modMaxRank",
     "modBaseDrain",

@@ -2,6 +2,7 @@ import type {
   AdversaryKind,
   ArcaneClass,
   EquipmentPolarity,
+  ModularPartRole,
   ModPolarity,
   WeaponClass,
 } from "@ordis-prime/domain";
@@ -14,6 +15,7 @@ export interface CatalogSummary {
   description?: string;
   arcaneClass?: ArcaneClass;
   weaponClass?: WeaponClass;
+  modularPartRole?: ModularPartRole;
   equipmentMaxRank?: number;
   modMaxRank?: number;
   modBaseDrain?: number;
@@ -378,13 +380,14 @@ export function findCatalogItem(
 ): CatalogItem | undefined {
   const item = sqlite
     .prepare(
-      "select id, kind, slug, name, description, arcane_class as arcaneClass, weapon_class as weaponClass, equipment_max_rank as equipmentMaxRank, mod_max_rank as modMaxRank, mod_base_drain as modBaseDrain, mod_polarity as modPolarity from entities where kind = ? and slug = ? and retired = 0",
+      "select id, kind, slug, name, description, arcane_class as arcaneClass, weapon_class as weaponClass, modular_part_role as modularPartRole, equipment_max_rank as equipmentMaxRank, mod_max_rank as modMaxRank, mod_base_drain as modBaseDrain, mod_polarity as modPolarity from entities where kind = ? and slug = ? and retired = 0",
     )
     .get(kind, slug) as
     | (CatalogSummary & {
         id: string;
         arcaneClass: ArcaneClass | null;
         weaponClass: WeaponClass | null;
+        modularPartRole: ModularPartRole | null;
         equipmentMaxRank: number | null;
         modMaxRank: number | null;
         modBaseDrain: number | null;
@@ -660,6 +663,7 @@ export function findCatalogItem(
     id: _id,
     arcaneClass,
     weaponClass,
+    modularPartRole,
     equipmentMaxRank,
     modMaxRank,
     modBaseDrain,
@@ -670,6 +674,7 @@ export function findCatalogItem(
     ...summary,
     ...(arcaneClass ? { arcaneClass } : {}),
     ...(weaponClass ? { weaponClass } : {}),
+    ...(modularPartRole ? { modularPartRole } : {}),
     ...(equipmentMaxRank !== null ? { equipmentMaxRank } : {}),
     ...(modMaxRank !== null ? { modMaxRank } : {}),
     ...(modBaseDrain !== null ? { modBaseDrain } : {}),

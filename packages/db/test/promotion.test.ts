@@ -1370,6 +1370,23 @@ test("equipment and mod fields are promoted as cited canonical fields", async (c
       ),
     /Equipment maximum rank requires equipment/,
   );
+  assert.throws(
+    () =>
+      promoteSource(
+        sqlite,
+        input("v0-role", [
+          {
+            ...entity("invalid-role", "Invalid Role", "resource", "v0-role"),
+            fields: {
+              name: "Invalid Role",
+              slug: "invalid-role",
+              modularPartRole: "zaw-link",
+            },
+          },
+        ]),
+      ),
+    /modular part role is invalid/,
+  );
   const arcane = {
     ...entity("barrier", "Arcane Barrier", "arcane"),
     fields: {
@@ -1383,7 +1400,8 @@ test("equipment and mod fields are promoted as cited canonical fields", async (c
     fields: {
       name: "Dread",
       slug: "dread",
-      weaponClass: "bow" as const,
+      weaponClass: "zaw" as const,
+      modularPartRole: "zaw-strike" as const,
       equipmentMaxRank: 30,
     },
   };
@@ -1419,10 +1437,14 @@ test("equipment and mod fields are promoted as cited canonical fields", async (c
   assert.deepEqual(
     sqlite
       .prepare(
-        "select weapon_class as weaponClass, equipment_max_rank as equipmentMaxRank from entities where slug = 'dread'",
+        "select weapon_class as weaponClass, modular_part_role as modularPartRole, equipment_max_rank as equipmentMaxRank from entities where slug = 'dread'",
       )
       .get(),
-    { weaponClass: "bow", equipmentMaxRank: 30 },
+    {
+      weaponClass: "zaw",
+      modularPartRole: "zaw-strike",
+      equipmentMaxRank: 30,
+    },
   );
   assert.deepEqual(
     sqlite
@@ -1431,6 +1453,14 @@ test("equipment and mod fields are promoted as cited canonical fields", async (c
       )
       .get(),
     { field: "weaponClass", recordKey: "record" },
+  );
+  assert.deepEqual(
+    sqlite
+      .prepare(
+        "select field, value_json as valueJson from fact_provenance where entity_id = (select id from entities where slug = 'dread') and field = 'modularPartRole'",
+      )
+      .get(),
+    { field: "modularPartRole", valueJson: '"zaw-strike"' },
   );
   assert.deepEqual(
     sqlite
@@ -1459,6 +1489,63 @@ test("equipment and mod fields are promoted as cited canonical fields", async (c
       { field: "modMaxRank", valueJson: "10" },
       { field: "modPolarity", valueJson: '"madurai"' },
     ],
+  );
+});
+
+test("typed modular roles repair legacy non-representative weapons in place", async (context) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-modular-kind-"));
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const databasePath = path.join(root, "catalog.sqlite");
+  migrateDatabase(databasePath);
+  const sqlite = new Database(databasePath);
+  sqlite.pragma("foreign_keys = ON");
+  context.after(() => sqlite.close());
+
+  promoteSource(
+    sqlite,
+    input("v1", [
+      {
+        ...entity("peye", "Peye", "weapon", "v1"),
+        fields: {
+          name: "Peye",
+          slug: "peye",
+          weaponClass: "zaw",
+        },
+      },
+    ]),
+  );
+  const originalId = (
+    sqlite.prepare("select id from entities where slug = 'peye'").get() as {
+      id: string;
+    }
+  ).id;
+
+  promoteSource(
+    sqlite,
+    input("v2", [
+      {
+        ...entity("peye", "Peye", "component", "v2"),
+        fields: {
+          name: "Peye",
+          slug: "peye",
+          modularPartRole: "zaw-grip",
+        },
+      },
+    ]),
+  );
+
+  assert.deepEqual(
+    sqlite
+      .prepare(
+        "select id, kind, weapon_class as weaponClass, modular_part_role as modularPartRole from entities where slug = 'peye'",
+      )
+      .get(),
+    {
+      id: originalId,
+      kind: "component",
+      weaponClass: null,
+      modularPartRole: "zaw-grip",
+    },
   );
 });
 

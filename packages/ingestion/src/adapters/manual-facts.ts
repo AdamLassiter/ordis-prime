@@ -4,11 +4,13 @@ import {
   ARCANE_CLASSES,
   EQUIPMENT_KINDS,
   MOD_POLARITIES,
+  MODULAR_PART_ROLES,
   WEAPON_CLASSES,
   type ArcaneClass,
   type EntityKind,
   type ExternalIdentifier,
   type ModPolarity,
+  type ModularPartRole,
   type Observation,
   type WeaponClass,
 } from "@ordis-prime/domain";
@@ -60,6 +62,7 @@ interface ManualFactsDocument {
     description?: string;
     arcaneClass?: ArcaneClass;
     weaponClass?: WeaponClass;
+    modularPartRole?: ModularPartRole;
     equipmentMaxRank?: number;
     modMaxRank?: number;
     modBaseDrain?: number;
@@ -136,6 +139,7 @@ export class ManualFactsAdapter implements SourceAdapter {
           description: entry.description,
           arcaneClass: entry.arcaneClass,
           weaponClass: entry.weaponClass,
+          modularPartRole: entry.modularPartRole,
           equipmentMaxRank: entry.equipmentMaxRank,
           modMaxRank: entry.modMaxRank,
           modBaseDrain: entry.modBaseDrain,
@@ -222,6 +226,19 @@ function parseDocument(bytes: Uint8Array): ManualFactsDocument {
     )
       throw new Error(`Manual facts entry ${index}.weaponClass is invalid`);
     if (
+      entry.modularPartRole !== undefined &&
+      (typeof entry.modularPartRole !== "string" ||
+        !(MODULAR_PART_ROLES as readonly string[]).includes(
+          entry.modularPartRole,
+        ) ||
+        ((["kitgun-chamber", "zaw-strike"] as readonly string[]).includes(
+          entry.modularPartRole,
+        )
+          ? entry.kind !== "weapon"
+          : entry.kind !== "component"))
+    )
+      throw new Error(`Manual facts entry ${index}.modularPartRole is invalid`);
+    if (
       entry.equipmentMaxRank !== undefined &&
       (!(EQUIPMENT_KINDS as readonly string[]).includes(entry.kind) ||
         !Number.isSafeInteger(entry.equipmentMaxRank) ||
@@ -300,6 +317,7 @@ function parseDocument(bytes: Uint8Array): ManualFactsDocument {
         entry.description,
         entry.arcaneClass,
         entry.weaponClass,
+        entry.modularPartRole,
         entry.equipmentMaxRank,
         entry.modMaxRank,
         entry.modBaseDrain,
