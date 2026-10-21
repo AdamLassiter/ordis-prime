@@ -14,6 +14,7 @@ the compromises between that target and the current implementation.
 - [Builds and sharing](BUILDS.md) defines editable drafts and immutable public snapshots.
 - [Star chart](STAR_CHART.md) defines composed node metadata and spatial compromises.
 - [Discovery atlas](DISCOVERY.md) defines discoverability goals and typed relations.
+- [Voice and interface](VOICE_AND_INTERFACE.md) defines the visual language and the boundary between diegetic copy and precise evidence.
 - [Authentication](AUTHENTICATION.md) defines local account setup and registration policy.
 - [Roadmap](ROADMAP.md) orders capabilities around end-to-end value.
 - [Known gaps](GAPS.md) is the authoritative implementation delta.

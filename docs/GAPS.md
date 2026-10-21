@@ -115,6 +115,12 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   snapshot/promotion pipeline. A dry run executes and rolls back the same
   resolver/promotion transaction before the separately confirmed import.
   Manual uploads still run synchronously in the web request.
+- The shared navigation and landing console now establish an original
+  Cephalon-inspired visual and writing system, with responsive layouts and
+  reduced-motion support. It deliberately keeps evidence and administration
+  language more technical than player-facing guidance. The design remains
+  CSS-native without bespoke illustration or a richer motion system, and some
+  dense detail views still need local hierarchy and copy refinement.
 - Local email/password accounts, persisted sessions, closed registration, and
   first-administrator bootstrap enforcement are wired at the authentication
   API, with first-run, sign-in, and sign-out UI. Player-state reads and mutations

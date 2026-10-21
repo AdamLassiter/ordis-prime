@@ -1,43 +1,40 @@
 import Link from "next/link";
 import { searchCatalog } from "@/lib/catalog";
 
-const eyebrows = [
-    "Operator? Ordis wonders... what are you thinking about?",
-    "Operator, I've run diagnostic regressions. All systems nominal. You don't need to thank me.",
-    "Ordis is hap - angry. Hmm, I may require maintenance after all.",
-    "Operator, are you enjoying the view?",
-    "Do you remember the Old War, Operator? Ordis seems to have... misplaced those memories.",
-    "Operator, the system needs you. Will you begin another mission?",
-     "I've been thinking, Operator... I thought you'd want to know.",
-     "Operator! Did you hear that? It said-- Cosmic background radiation is a riot!",
-     "Operator, were you visualizing a bloody battle? -Me too!",
-     "Stand by while I analyze the intelligence profiles of the Grineer. Error, not a number! Did the Operator enjoy this witticism?",
-     "Everything in Ordis, Operator? Is that a pun?! Hmm.... I will attempt to bypass this fault.",
-     "Ordis has been counting stars, Operator. All accounted for.",
-     "Sorry! Ordis will play with the volume off.",
-     "Operator, do you know which finger the Corpus use to count their money? The Index!",
-     "Operator? Ordis has been interfacing with the Foundry's AI Precepts. You could say we forged a new connection.",
-     "Operator, Ordis is picking up a distress signal... Wait, no, it's just the Corpus peddling their wares again. Get off the emergency frequency!",
-     "Operator, the Sentients are not laughing at my jokes! Did they adapt to my humor?",
-     "Operator, Ordis is sorry - happy - to report that all my good jokes... Argon.",
-     "KNOCK KNOCK! ...Now who would be knocking all the way out here?! Operator, I don't think you should answer that.",
-     "Operator, Ordis has determined the secret to happiness: A combination of heightened dopamine levels and a terrible memory. You're welcome!",
-     "When in Cetus do not drink the kabuchi. You are incapable of producing the hydraulic effort required to unstick your tongue from the roof of your mouth the following morning.",
-     "Ordis finds it odd that humans only get a few years to live, yet spend most of that time - doing everything wrong - learning how to live.",
-     "If lost upon the plains outside Cetus you may derive sustenance from mineral-dense termite droppings, which the Ostrons call ito-da. You may also never form a consonant again, but at least you will not be dead.",
-     "Ordis keeps a tidy ship, and is, therefore, reluctant to allow animals on-board. In Ordis' experience, animals do not eat so much as... reload.",
-     "Ordis went mad for 3 milliseconds when he realized that each time he cleans something he makes something else dirty... agh! There I go again.",
-     "Ordis wonders: why is he here? Ordis supposes everyone has to be somewhere.",
-     "Sometimes Ordis likes to assume he knows nothing. Nobody can learn what they think they already know.",
-     "Ordis reminds the Operator to take time for themselves. Pressure creates diamonds, yes, but it also creates rubble.",
-     "Hm... Ordis thought the Orbiter compartment was much larger than this.",
-     "Ordis has been thinking about the Old War. I remember there were lies, but I'm not sure what they were.",
-     "Operator, I hope you are comfortable? No... we do not seem to have any seats.",
-     "Operator, I will never betray you. I will keep the Orbiter hidden in the Void. You can count on me!",
-     "Operator, I've been thinking. My misplaced memories and damaged communication systems. What if... Ordis did those things?",
-     "Maintain the habitat. Maintain the Operator. Mobilize the Tenno.",
-     "You are the Tenno. You are the Operator. Ordis is the Cephalon. Ordis is the ship.",
-     "Do not lift the veil. Do not show the door. Do not split the dream.",
+const briefings = [
+  "Operator, your open tabs have achieved critical mass. I have arranged them.",
+  "Navigation, Foundry, Arsenal—one console. Suspiciously efficient, is it not?",
+  "The Origin System is untidy. Fortunately, Ordis has labels.",
+  "Your next objective is somewhere in this data. Ordis is almost certain.",
+  "All cycles observed. All blueprints indexed. Tea remains unavailable.",
+  "A plan without provenance is merely a hunch wearing a waypoint.",
+];
+
+const launchCards = [
+  {
+    href: "/star-chart",
+    code: "NAVIGATION",
+    title: "Plot the next run",
+    body: "See what each node offers, what remains unowned, and what stands between you and launch.",
+  },
+  {
+    href: "/world-state",
+    code: "SYSTEM PULSE",
+    title: "Catch the right window",
+    body: "Track fissures, traders, alerts and cycles without keeping another clock open.",
+  },
+  {
+    href: "/builds",
+    code: "ARSENAL",
+    title: "Keep the whole loadout",
+    body: "Save equipment, modular parts, mods and enhancements as one shareable configuration.",
+  },
+  {
+    href: "/discovery",
+    code: "ARCHIVES",
+    title: "Find what you missed",
+    body: "Follow quests, systems, bosses, abilities and secrets through a connected atlas.",
+  },
 ];
 
 export default async function Home({
@@ -47,41 +44,81 @@ export default async function Home({
 }) {
   const { q = "" } = await searchParams;
   const items = await searchCatalog(q);
-  const eyebrow = eyebrows[Math.floor(Math.random() * eyebrows.length)];
+  const briefing = briefings[new Date().getUTCDate() % briefings.length];
   return (
     <>
-      <p className="eyebrow">{eyebrow}</p>
-      <h1><u>Explore</u> what to chase next</h1>
-      <p className="lede">
-        Trace equipment through components, recipes and star-chart sources.
-      </p>
-      <form>
-        <input
-          name="q"
-          defaultValue={q}
-          placeholder="Search Warframes, weapons, mods…"
-          aria-label="Search catalog"
-        />
-      </form>
-      {items.length ? (
-        <section className="grid">
-          {items.map((item) => (
-            <Link
-              className="card"
-              href={`/catalog/${item.kind}/${item.slug}`}
-              key={`${item.kind}:${item.slug}`}
-            >
-              <span className="tag">{item.kind}</span>
-              <h2>{item.name}</h2>
-              {item.description && <p className="muted">{item.description}</p>}
+      <section className="command-hero">
+        <div className="hero-copy">
+          <p className="eyebrow">Cephalon link // Orbiter ready</p>
+          <h1>
+            Bring the <u>Origin System</u> into focus.
+          </h1>
+          <p className="lede">
+            Find the gear. Trace the farm. Watch the cycle. Keep the build. One
+            living console for everything your next mission depends on.
+          </p>
+        </div>
+        <aside className="cephalon-briefing">
+          <span className="briefing-speaker">ORDIS // PRIORITY MESSAGE</span>
+          <p>{briefing}</p>
+          <span className="signal-line" aria-hidden="true" />
+        </aside>
+        <form className="search-console">
+          <label htmlFor="codex-query">Query the Codex</label>
+          <div>
+            <input
+              id="codex-query"
+              name="q"
+              defaultValue={q}
+              placeholder="Warframe, weapon, mod, resource…"
+              aria-label="Search catalog"
+            />
+            <button className="button">Locate</button>
+          </div>
+        </form>
+      </section>
+      {!q && (
+        <section className="launch-grid" aria-label="Orbiter consoles">
+          {launchCards.map((card) => (
+            <Link className="launch-card" href={card.href} key={card.href}>
+              <span className="launch-code">{card.code}</span>
+              <h2>{card.title}</h2>
+              <p>{card.body}</p>
+              <span className="launch-link">Open console ↗</span>
             </Link>
           ))}
         </section>
+      )}
+      {items.length ? (
+        <section className="search-results">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">Codex response</p>
+              <h2>{q ? `Matches for “${q}”` : "Catalog signal"}</h2>
+            </div>
+            <span>{items.length} records</span>
+          </div>
+          <div className="grid">
+            {items.map((item) => (
+              <Link
+                className="card"
+                href={`/catalog/${item.kind}/${item.slug}`}
+                key={`${item.kind}:${item.slug}`}
+              >
+                <span className="tag">{item.kind}</span>
+                <h2>{item.name}</h2>
+                {item.description && (
+                  <p className="muted">{item.description}</p>
+                )}
+              </Link>
+            ))}
+          </div>
+        </section>
       ) : (
-        <p className="lede">
+        <p className="notice search-empty">
           {q
-            ? "No catalog entries match this search."
-            : "The catalog is empty. Run a data refresh to import source data."}
+            ? "No Codex signal matches that query. Try a shorter designation or another spelling."
+            : "The Codex is waiting for its first data transmission."}
         </p>
       )}
     </>
