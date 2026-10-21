@@ -166,3 +166,35 @@ test("an exact kind alias outranks an unknown placeholder", () => {
     { status: "matched", entityId: warframe, by: "alias" },
   );
 });
+
+test("boss observations refine enemies while enemy observations retain bosses", () => {
+  const enemy = "enemy:jackal" as EntityId;
+  const entities = new Map<EntityId, CanonicalEntity>([
+    [
+      enemy,
+      {
+        id: enemy,
+        kind: "enemy",
+        name: "Jackal",
+        slug: "jackal",
+        retired: false,
+      },
+    ],
+  ]);
+  const aliases = new Map([[normalizedAlias("Jackal"), [enemy]]]);
+  assert.deepEqual(
+    resolveEntity(
+      { ...base, kind: "boss", fields: { name: "Jackal" } },
+      { entities, aliases, externalIds: new Map() },
+    ),
+    { status: "matched", entityId: enemy, by: "alias" },
+  );
+  entities.set(enemy, { ...entities.get(enemy)!, kind: "boss" });
+  assert.deepEqual(
+    resolveEntity(
+      { ...base, kind: "enemy", fields: { name: "Jackal" } },
+      { entities, aliases, externalIds: new Map() },
+    ),
+    { status: "matched", entityId: enemy, by: "alias" },
+  );
+});

@@ -59,6 +59,9 @@ Current Wiki abilities are searchable discovery topics linked to their
 Warframes or Archwings.
 Structured Wiki quest records contribute cited descriptions and explicit
 sequence links without treating sequence as an access requirement.
+Structured mission records classify their explicit bosses and link them to
+canonical nodes; same-name WFCD enemies are refined without duplicating their
+identity.
 Wiki mission data supplies the attributed current node and connection set, and
 those cited star-chart edges compose into node reads symmetrically. A shareable
 focus view supports direct traversal without manufacturing map coordinates.

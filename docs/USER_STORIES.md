@@ -53,5 +53,7 @@
 
 - Live windows intersect with goal-backed node recommendations to surface
   expiring acquisition opportunities in the planner.
+- As a guest, I can open a node to see its cited boss and move between the boss
+  and mission pages without leaving the application.
 - Quest and mechanic prerequisites surface systems a player has not discovered.
 - A visual star chart uses the same node IDs, edges, filters and planner queries.

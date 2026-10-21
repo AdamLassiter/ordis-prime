@@ -397,6 +397,34 @@ export default async function NodePage({
           </p>
         )}
       </section>
+      {node.discoveries.length > 0 && (
+        <section>
+          <h2>At this node</h2>
+          <ul>
+            {node.discoveries.map((discovery, index) => (
+              <li
+                key={`${discovery.relationKind}:${discovery.kind}:${discovery.slug}:${index}`}
+              >
+                <span className="tag">
+                  {relationLabel(discovery.relationKind, "incoming")}
+                </span>{" "}
+                <Link href={`/catalog/${discovery.kind}/${discovery.slug}`}>
+                  {discovery.name}
+                </Link>{" "}
+                <span className="muted">
+                  (
+                  {discovery.citationUrl ? (
+                    <a href={discovery.citationUrl}>{discovery.sourceName}</a>
+                  ) : (
+                    discovery.sourceName
+                  )}
+                  )
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
       <p>
         Rewards documented for this node, joined to your private inventory when
         signed in.

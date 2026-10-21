@@ -1131,6 +1131,41 @@ test("a typed source refines an untyped drop reward without changing its identit
   assert.deepEqual(after, { id: before.id, kind: "mod" });
 });
 
+test("a cited boss classification refines an enemy without later downgrade", async (context) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-boss-"));
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const databasePath = path.join(root, "catalog.sqlite");
+  migrateDatabase(databasePath);
+  const sqlite = new Database(databasePath);
+  sqlite.pragma("foreign_keys = ON");
+  context.after(() => sqlite.close());
+
+  promoteSource(sqlite, input("v1", [entity("jackal", "Jackal", "enemy")]));
+  const boss = {
+    ...entity("jackal-boss", "Jackal", "boss", "v1", "wiki"),
+    externalIds: [{ sourceId: "wiki", namespace: "name", value: "Jackal" }],
+    evidence: evidence("v1", "wiki"),
+  } satisfies Observation;
+  const promoted = promoteSource(sqlite, {
+    ...input("v1", [boss]),
+    source: { ...source, id: "wiki", priority: 20 },
+  });
+  assert.equal(promoted.conflictsCreated, 0);
+  assert.deepEqual(sqlite.prepare("select kind, slug from entities").get(), {
+    kind: "boss",
+    slug: "jackal",
+  });
+
+  promoteSource(
+    sqlite,
+    input("v2", [entity("jackal", "Jackal", "enemy", "v2")]),
+  );
+  assert.deepEqual(sqlite.prepare("select kind, slug from entities").get(), {
+    kind: "boss",
+    slug: "jackal",
+  });
+});
+
 test("higher-priority cited facts remain field winners across provider refreshes", async (context) => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-priority-"));
   context.after(() => fs.rm(root, { recursive: true, force: true }));

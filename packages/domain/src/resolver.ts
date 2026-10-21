@@ -27,6 +27,17 @@ export function normalizedAlias(value: string): string {
     .replace(/[^a-z0-9]+/g, "");
 }
 
+export function entityKindsCompatible(
+  existing: CanonicalEntity["kind"],
+  observed: EntityObservation["kind"],
+): boolean {
+  if (existing === observed || existing === "unknown") return true;
+  return (
+    (existing === "enemy" && observed === "boss") ||
+    (existing === "boss" && observed === "enemy")
+  );
+}
+
 export function resolveEntity(
   observation: EntityObservation,
   state: ResolutionState,
@@ -52,9 +63,7 @@ export function resolveEntity(
         const candidate = state.entities.get(entityId);
         if (!candidate) return false;
         if (observation.kind === "unknown") return candidate.kind === "unknown";
-        return (
-          candidate.kind === "unknown" || candidate.kind === observation.kind
-        );
+        return entityKindsCompatible(candidate.kind, observation.kind);
       }),
   );
   if (observation.kind !== "unknown") {

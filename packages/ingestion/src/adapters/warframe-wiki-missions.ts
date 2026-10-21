@@ -22,7 +22,7 @@ import {
   wikiSlug,
 } from "./mediawiki-lua.ts";
 
-const PARSER_VERSION = "warframe-wiki-missions-v9";
+const PARSER_VERSION = "warframe-wiki-missions-v10";
 const MODULE_TITLE = "Module:Missions/data";
 const QUEST_MODULE_TITLE = "Module:Keys/data";
 
@@ -38,6 +38,7 @@ interface MissionRecord {
   previous: string[];
   requirements?: string;
   masteryRequirement?: number;
+  boss?: string;
 }
 
 interface QuestReference {
@@ -174,6 +175,16 @@ export class WarframeWikiMissionsAdapter implements SourceAdapter {
         evidence: evidence(page.revisionId, snapshot, record.name, record.line),
       };
     }
+    const bosses = new Set(records.flatMap(({ boss }) => (boss ? [boss] : [])));
+    for (const boss of bosses) {
+      yield {
+        type: "entity",
+        kind: "boss",
+        externalIds: [missionBossExternalId(boss)],
+        fields: { name: boss, slug: wikiSlug(boss) },
+        evidence: evidence(page.revisionId, snapshot, `boss:${boss}`),
+      };
+    }
     for (const quest of referencedQuests.values()) {
       yield {
         type: "entity",
@@ -224,6 +235,21 @@ export class WarframeWikiMissionsAdapter implements SourceAdapter {
         activeAdversaryRequirement: accessRequirements.get(record.name)
           ?.activeAdversaryRequirement,
         evidence: evidence(page.revisionId, snapshot, record.name, record.line),
+      };
+    }
+    for (const record of records) {
+      if (!record.boss) continue;
+      yield {
+        type: "entity-relation",
+        kind: "occurs-at",
+        fromExternalId: missionBossExternalId(record.boss),
+        toExternalId: missionExternalId(record.name),
+        evidence: evidence(
+          page.revisionId,
+          snapshot,
+          `${record.name}:Boss:${record.boss}`,
+          record.line,
+        ),
       };
     }
 
@@ -352,6 +378,7 @@ function parseMissionRecords(
         masteryRequirement: parseMasteryRequirement(
           optionalString(field.value, "Requirements"),
         ),
+        boss: optionalString(field.value, "Boss"),
       },
     ];
   });
@@ -558,6 +585,14 @@ function missionRequirementItemExternalId(
   return {
     sourceId: "warframe-wiki-missions",
     namespace: "requirement-item",
+    value: name,
+  };
+}
+
+function missionBossExternalId(name: string): ExternalIdentifier {
+  return {
+    sourceId: "warframe-wiki-missions",
+    namespace: "boss-name",
     value: name,
   };
 }

@@ -54,6 +54,9 @@ relations are treated as undirected navigation edges: either endpoint lists the
 other, even though a source only needs to state the edge once. A shareable
 `focus=` view lets a player traverse those direct connections and move between
 topology and a node's rewards without inventing spatial positions.
+Incoming cited `occurs-at` and `involves` relations are also listed on the node,
+so its structured boss and curated discovery topics are reachable in-app rather
+than only from the discovery side of the graph.
 Node pages list complete structured access requirements with their source and,
 when signed in, the player's private discovery or node-completion state for each
 prerequisite.

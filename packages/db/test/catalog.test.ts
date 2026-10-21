@@ -404,6 +404,16 @@ test("catalog read models join active recipes, drops, provenance, and rankings",
   assert.deepEqual(node.connections, [
     { slug: "mercury-terminus", name: "Terminus", planet: undefined },
   ]);
+  assert.deepEqual(node.discoveries, [
+    {
+      kind: "quest",
+      slug: "awakening",
+      name: "Awakening",
+      relationKind: "occurs-at",
+      sourceName: "Items",
+      citationUrl: "https://example.test/quest",
+    },
+  ]);
   assert.deepEqual(node.itemRequirements, [
     {
       kind: "resource",

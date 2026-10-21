@@ -145,6 +145,52 @@ test("wiki mission adapter rejects dangling connections", async () => {
   );
 });
 
+test("wiki mission adapter imports bosses and their mission links", async () => {
+  const observations = await collect(
+    new WarframeWikiMissionsAdapter(),
+    wikiSnapshot(`
+      return {
+        MissionDetails = {
+          { Name = "Fossa", Planet = "Venus", Boss = "Jackal", NextNodes = { "Kiliken" } },
+          { Name = "Kiliken", Planet = "Venus", PreviousNodes = { "Fossa" } },
+        },
+      }
+    `),
+  );
+  const boss = observations.find(
+    (observation) =>
+      observation.type === "entity" && observation.kind === "boss",
+  );
+  assert.deepEqual(
+    boss?.type === "entity"
+      ? {
+          name: boss.fields.name,
+          slug: boss.fields.slug,
+          externalId: boss.externalIds[0],
+        }
+      : undefined,
+    {
+      name: "Jackal",
+      slug: "jackal",
+      externalId: {
+        sourceId: "warframe-wiki-missions",
+        namespace: "boss-name",
+        value: "Jackal",
+      },
+    },
+  );
+  assert.equal(
+    observations.some(
+      (observation) =>
+        observation.type === "entity-relation" &&
+        observation.kind === "occurs-at" &&
+        observation.fromExternalId.value === "Jackal" &&
+        observation.toExternalId.value === "Fossa",
+    ),
+    true,
+  );
+});
+
 test("wiki mission adapter imports only complete quest and node requirements", async () => {
   const observations = await collect(
     new WarframeWikiMissionsAdapter(),

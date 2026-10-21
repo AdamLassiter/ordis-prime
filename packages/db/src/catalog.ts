@@ -135,6 +135,14 @@ export interface CatalogNode {
     citationUrl?: string;
   }>;
   connections: Array<{ slug: string; name: string; planet?: string }>;
+  discoveries: Array<{
+    kind: string;
+    slug: string;
+    name: string;
+    relationKind: "occurs-at" | "involves";
+    sourceName: string;
+    citationUrl?: string;
+  }>;
   accessRequirements: Array<{
     kind: string;
     slug: string;
@@ -781,6 +789,7 @@ export function findCatalogNode(
   );
   const details = loadNodeDetails(sqlite, [node.id]).get(node.id);
   const connections = loadNodeConnections(sqlite, [node.id]).get(node.id) ?? [];
+  const discoveries = loadNodeDiscoveries(sqlite, [node.id]).get(node.id) ?? [];
   const accessRequirements =
     loadNodeAccessRequirements(sqlite, [node.id], userId).get(node.id) ?? [];
   const itemRequirements =
@@ -798,6 +807,7 @@ export function findCatalogNode(
     ...details,
     detailEvidence: details?.detailEvidence ?? [],
     connections,
+    discoveries,
     accessRequirements,
     itemRequirements,
     objectives,
@@ -830,6 +840,10 @@ export function listCatalogNodes(
     sqlite,
     nodes.map(({ id }) => id),
   );
+  const discoveries = loadNodeDiscoveries(
+    sqlite,
+    nodes.map(({ id }) => id),
+  );
   const accessRequirements = loadNodeAccessRequirements(
     sqlite,
     nodes.map(({ id }) => id),
@@ -851,6 +865,7 @@ export function listCatalogNodes(
     ...details.get(id),
     detailEvidence: details.get(id)?.detailEvidence ?? [],
     connections: connections.get(id) ?? [],
+    discoveries: discoveries.get(id) ?? [],
     accessRequirements: accessRequirements.get(id) ?? [],
     itemRequirements: itemRequirements.get(id) ?? [],
     objectives: objectives.get(id) ?? [],
@@ -878,6 +893,10 @@ export function listStarChartNodes(
     nodes.map(({ id }) => id),
   );
   const connections = loadNodeConnections(
+    sqlite,
+    nodes.map(({ id }) => id),
+  );
+  const discoveries = loadNodeDiscoveries(
     sqlite,
     nodes.map(({ id }) => id),
   );
@@ -952,6 +971,7 @@ export function listStarChartNodes(
     ...details.get(id),
     detailEvidence: details.get(id)?.detailEvidence ?? [],
     connections: connections.get(id) ?? [],
+    discoveries: discoveries.get(id) ?? [],
     accessRequirements: accessRequirements.get(id) ?? [],
     itemRequirements: itemRequirements.get(id) ?? [],
     objectives: objectives.get(id) ?? [],
@@ -1440,5 +1460,47 @@ function loadNodeConnections(
       },
     ]);
   }
+  return result;
+}
+
+function loadNodeDiscoveries(
+  sqlite: Database.Database,
+  nodeIds: string[],
+): Map<string, CatalogNode["discoveries"]> {
+  const result = new Map<string, CatalogNode["discoveries"]>();
+  if (!nodeIds.length) return result;
+  const placeholders = nodeIds.map(() => "?").join(", ");
+  const rows = sqlite
+    .prepare(
+      `select relation.to_entity_id as nodeId, origin.kind, origin.slug,
+              origin.name, relation.kind as relationKind,
+              source.name as sourceName,
+              relation.citation_url as citationUrl
+       from entity_relations relation
+       join source_runs run
+         on run.id = relation.source_run_id and run.status = 'active'
+       join sources source on source.id = run.source_id
+       join entities origin
+         on origin.id = relation.from_entity_id and origin.retired = 0
+       where relation.to_entity_id in (${placeholders})
+         and relation.kind in ('occurs-at', 'involves')
+       order by relation.to_entity_id, origin.name collate nocase,
+                relation.kind, source.priority desc, run.retrieved_at desc,
+                source.id, relation.source_record_key`,
+    )
+    .all(...nodeIds) as Array<{
+    nodeId: string;
+    kind: string;
+    slug: string;
+    name: string;
+    relationKind: "occurs-at" | "involves";
+    sourceName: string;
+    citationUrl: string | null;
+  }>;
+  for (const { nodeId, citationUrl, ...discovery } of rows)
+    result.set(nodeId, [
+      ...(result.get(nodeId) ?? []),
+      { ...discovery, citationUrl: citationUrl ?? undefined },
+    ]);
   return result;
 }

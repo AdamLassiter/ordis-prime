@@ -20,6 +20,12 @@ remain searchable but deliberately unlinked rather than inventing a kind.
 The Wiki quest adapter adds current main and optional quests with their in-game
 descriptions. Its `PreviousQuest` field becomes a sequence-only `follows` link;
 it does not masquerade as an access prerequisite.
+The structured mission adapter promotes its explicit `Boss` field into a boss
+identity and a cited `occurs-at` link to the canonical mission node. A matching
+WFCD enemy identity is refined in place rather than duplicated; boss is the more
+specific classification and a later broad enemy observation cannot downgrade
+it. Node pages list these incoming discoveries, while boss pages link back to
+the node using the in-app node route.
 
 Signed-in players can independently mark a topic unseen, discovered or
 completed. The absence of a row means unseen, keeping default state compact.
@@ -33,8 +39,9 @@ relationship and its evidence.
 
 - Progress is one state per topic; quest steps and repeat completion are not
   modeled.
-- WFCD classifies its broad enemy collection as enemies; a separate attributed
-  fact is needed before promoting particular entries to boss.
+- Only bosses explicitly named by the structured mission module are promoted;
+  open-world, quest-only or otherwise omitted bosses still need another
+  attributed source.
 - Conditional requirements, ordered quest steps, and relation confidence are
   not modeled.
 - Atlas cards do not spatially visualize their graph neighbors.

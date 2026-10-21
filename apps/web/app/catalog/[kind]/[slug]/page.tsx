@@ -259,7 +259,11 @@ export default async function ItemPage({
                     {relationLabel(relation.kind, relation.direction)}
                   </span>{" "}
                   <Link
-                    href={`/catalog/${relation.subject.kind}/${relation.subject.slug}`}
+                    href={
+                      relation.subject.kind === "node"
+                        ? `/nodes/${relation.subject.slug}`
+                        : `/catalog/${relation.subject.kind}/${relation.subject.slug}`
+                    }
                   >
                     {relation.subject.name}
                   </Link>

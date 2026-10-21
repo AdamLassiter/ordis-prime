@@ -8,6 +8,7 @@ import {
   MOD_POLARITIES,
   WEAPON_CLASSES,
   externalKey,
+  entityKindsCompatible,
   normalizedAlias,
   resolveEntity,
   type CanonicalEntity,
@@ -1195,9 +1196,8 @@ function resolveAndWriteEntity(
     entityId = resolution.entityId;
     const entity = state.entities.get(entityId)!;
     if (
-      entity.kind !== observation.kind &&
       observation.kind !== "unknown" &&
-      entity.kind !== "unknown"
+      !entityKindsCompatible(entity.kind, observation.kind)
     ) {
       writeConflict(
         sqlite,
@@ -1210,7 +1210,10 @@ function resolveAndWriteEntity(
       );
       return undefined;
     }
-    if (entity.kind === "unknown" && observation.kind !== "unknown") {
+    if (
+      (entity.kind === "unknown" && observation.kind !== "unknown") ||
+      (entity.kind === "enemy" && observation.kind === "boss")
+    ) {
       sqlite
         .prepare("update entities set kind = ?, updated_at = ? where id = ?")
         .run(observation.kind, Date.now(), entityId);
