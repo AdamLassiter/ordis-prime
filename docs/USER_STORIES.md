@@ -7,6 +7,9 @@
 - As a guest, I can open a node and see every linked reward, chance and rotation.
 - As a player, I can record quantities, built and wanted copies, and optional
   mastered or subsumed state.
+- As a player, I can merge a raw inventory snapshot from my own game session
+  by stable item identity without storing its account or session fields or
+  erasing larger manual counts.
 - As a player, I can filter a node to rewards I still need.
 - As a player, I can record completion for a filtered group of star-chart nodes
   without changing nodes hidden by those filters.

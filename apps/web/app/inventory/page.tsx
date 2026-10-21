@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getPlayerSettings, listPlayerInventory } from "@ordis-prime/db";
 import { getDatabase } from "@/lib/database";
 import { getCurrentSession } from "@/lib/session";
+import { GameInventoryImport } from "./game-inventory-import";
 import { ProfileTransfer } from "./profile-transfer";
 import { updateProgression } from "./actions";
 
@@ -85,6 +86,7 @@ export default async function InventoryPage() {
           <button className="button">Save progression</button>
         </form>
       </section>
+      <GameInventoryImport />
       {entries.length ? (
         <section className="grid">
           {entries.map((entry) => (

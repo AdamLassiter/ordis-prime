@@ -126,9 +126,14 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   phrase. Password recovery is not implemented yet.
 - Validated inventory persistence, authenticated catalog editing, an inventory
   summary, node reward ownership filtering, and portable profile import/export
-  with transfer UI exist. Authenticated goals feed a planner that subtracts
-  inventory, expands active recipes, lists missing requirements, and links to
-  candidate nodes with visible reasons. Profiles include inventory, goals,
+  with transfer UI exist. Players can also upload a bounded raw Warframe
+  inventory response: allow-listed `ItemType` paths resolve exactly through
+  WFCD identifiers, raw bytes and account fields are not retained, and counts
+  plus Helminth subsumes merge monotonically. The app does not acquire session
+  credentials, poll a player account, lower stale counts, infer mastery, or
+  retain a synchronization audit. Authenticated goals feed a planner that
+  subtracts inventory, expands active recipes, lists missing requirements, and
+  links to candidate nodes with visible reasons. Profiles include inventory, goals,
   discovery progress, static todos, watch rules and private build drafts.
   Generated alerts and published share snapshots are deliberately excluded.
   Live windows on reconciled recommended nodes surface as expiring acquisition

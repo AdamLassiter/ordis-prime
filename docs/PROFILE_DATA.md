@@ -5,7 +5,7 @@ canonical entity IDs inside one installation, while exported profiles use
 provider identifiers so they can be restored into another installation whose
 canonical UUIDs differ.
 
-## Version 20 export
+## Version 21 export
 
 The player section carries an optional combined Mastery Rank used to evaluate
 sourced star-chart gates and build capacity. Values 0 through 30 are ordinary
@@ -59,7 +59,8 @@ use array-index predecessor references so completed history and an existing next
 occurrence cannot generate duplicates after restoration. Generated notifications are
 not portable. Private build drafts include their details,
 equipment, configurations, current equipment ranks, positioned mods, mod-slot
-roles and polarities independently of installed mods, plus typed arcane/shard
+roles and polarities independently of installed mods, selected modular Kitgun
+or Zaw components, plus typed arcane/shard
 enhancement slots. Shards also carry their selected stable effect
 key; import requires that effect to be active for the resolved shard, otherwise the whole build is
 reported unresolved. Every catalog member uses the same portable reference. Published share snapshots are intentionally
@@ -86,3 +87,20 @@ resolvable entries in one transaction.
 Deleting watches also deletes their derived notifications. Merge mode upserts
 identity-keyed state and appends todos, watches and builds. Unresolved build
 members skip that whole build; unresolved entries are reported and never guessed.
+
+## Raw game-inventory merge
+
+The inventory screen also accepts a raw JSON inventory response obtained by the
+player from their own Warframe session. This is not the portable profile
+format. The upload is limited to 10 MB, parsed in memory and never retained.
+Only allow-listed owned-item arrays and Helminth `ConsumedSuits` are read;
+account identifiers, session credentials and unrelated response fields are
+ignored.
+
+`ItemType` values resolve only through exact active WFCD `uniqueName`
+identifiers. Confirmed quantities monotonically raise existing owned counts and
+confirmed consumed suits set the subsumed flag. The merge never lowers a
+manual count or infers mastery, so an old snapshot cannot erase player-authored
+state. Unresolved paths are counted rather than matched by display name.
+Consequently this is a convenient evidence merge, not yet an authoritative
+two-way account synchronization mechanism.

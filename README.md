@@ -12,6 +12,7 @@ from.
 - SQLite/Drizzle persistence for catalog, sources, accounts and player progress
 - local account bootstrap and database-backed sessions
 - public linked item/node explorer with authenticated inventory overlays
+- privacy-bounded raw game-inventory JSON merge by stable WFCD identifiers
 - persisted acquisition goals and explainable node recommendations
 - live world-state timers with database-leased automatic polling
 - private todos, dynamic watches, and deduplicated in-app alerts
