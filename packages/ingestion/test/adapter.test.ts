@@ -251,6 +251,52 @@ test("WFCD shared recipe materials retain one intrinsic identity", async () => {
   );
 });
 
+test("WFCD declared resources do not become parent-qualified components", async () => {
+  const orokinCellId = "/Lotus/Types/Items/MiscItems/OrokinCell";
+  const resourceSnapshot = {
+    ...snapshot,
+    bytes: new TextEncoder().encode(
+      JSON.stringify([
+        {
+          uniqueName: "/zylok-prime",
+          name: "Zylok Prime",
+          category: "Secondary",
+          components: [
+            {
+              uniqueName: orokinCellId,
+              name: "Orokin Cell",
+              category: "Misc",
+              itemCount: 5,
+            },
+          ],
+        },
+        {
+          uniqueName: orokinCellId,
+          name: "Orokin Cell",
+          category: "Misc",
+          type: "Resource",
+        },
+      ]),
+    ),
+  };
+
+  const observations = await collect(new WfcdItemsAdapter(), resourceSnapshot);
+  const cellEntities = observations.filter(
+    (entry) =>
+      entry.type === "entity" && entry.externalIds[0]?.value === orokinCellId,
+  );
+  assert.ok(cellEntities.length >= 2);
+  assert.ok(
+    cellEntities.every(
+      (entry) =>
+        entry.type === "entity" &&
+        entry.kind === "resource" &&
+        entry.fields.name === "Orokin Cell" &&
+        entry.fields.slug === "orokin-cell",
+    ),
+  );
+});
+
 test("WFCD shared equipment parts retain provider-qualified names", async () => {
   const sharedPart = {
     uniqueName: "/Lotus/Types/Recipes/WarframeRecipes/EmberSystemsComponent",
@@ -330,16 +376,8 @@ test("WFCD same-kind display collisions receive stable provider-derived qualifie
       .filter((entry) => entry.type === "entity")
       .map((entry) => [entry.kind, entry.fields.name, entry.fields.slug]),
     [
-      [
-        "unknown",
-        "The Steel Path - 1999 (Ship Decoration)",
-        "the-steel-path-1999-ship-decoration",
-      ],
-      [
-        "unknown",
-        "The Steel Path: 1999 (Emotes)",
-        "the-steel-path-1999-emotes",
-      ],
+      ["decoration", "The Steel Path - 1999", "the-steel-path-1999"],
+      ["cosmetic", "The Steel Path: 1999", "the-steel-path-1999"],
       ["resource", "Forma", "forma"],
       ["resource", "Forma", "forma"],
     ],
@@ -385,6 +423,65 @@ test("WFCD adapter distinguishes arcanes and provider-miscategorised Archon Shar
     observations[0]?.type === "entity" && observations[0].fields.arcaneClass,
     "warframe",
   );
+});
+
+test("WFCD adapter classifies provider taxonomy and retains embedded item drops", async () => {
+  const typedSnapshot = {
+    ...snapshot,
+    bytes: new TextEncoder().encode(
+      JSON.stringify([
+        {
+          uniqueName: "/glyph",
+          name: "Operator Glyph",
+          category: "Glyphs",
+          type: "Glyph",
+        },
+        {
+          uniqueName: "/challenge",
+          name: "Complete three missions",
+          category: "Misc",
+          type: "Nightwave Challenge",
+        },
+        {
+          uniqueName: "/nokko",
+          name: "Nokko",
+          category: "Warframes",
+          components: [
+            {
+              uniqueName: "/nokko-neuroptics",
+              name: "Neuroptics",
+              category: "Components",
+              drops: [
+                {
+                  location: "Nokko: Weed The Gardens Rewards, Rotation C",
+                  chance: 10,
+                },
+              ],
+            },
+          ],
+        },
+      ]),
+    ),
+  };
+
+  const observations = await collect(new WfcdItemsAdapter(), typedSnapshot);
+  const entities = observations.filter((entry) => entry.type === "entity");
+  assert.equal(
+    entities.find((entry) => entry.fields.name === "Operator Glyph")?.kind,
+    "cosmetic",
+  );
+  assert.equal(
+    entities.find((entry) => entry.fields.name === "Complete three missions")
+      ?.kind,
+    "challenge",
+  );
+  const drop = observations.find((entry) => entry.type === "drop");
+  assert.equal(
+    drop?.locationLabel,
+    "Nokko: Weed The Gardens Rewards, Rotation C",
+  );
+  assert.equal(drop?.chance, 0.1);
+  assert.equal(drop?.rewardExternalId.value, "/nokko-neuroptics");
 });
 
 test("WFCD adapter maps arcane classes into source-neutral compatibility facts", async () => {
@@ -641,7 +738,7 @@ test("WFCD adapter defaults to the maintained aggregate endpoint", async () => {
     const adapter = new WfcdItemsAdapter();
     const fetched = await adapter.fetch({});
     assert.equal(requestedUrl, DEFAULT_WFCD_ITEMS_URL);
-    assert.equal(fetched.version, "fixture-etag|wfcd-items-v12");
+    assert.equal(fetched.version, "fixture-etag|wfcd-items-v14");
     assert.equal(adapter.minimumRetainedObservationRatio, 0.5);
   } finally {
     globalThis.fetch = originalFetch;
@@ -677,7 +774,7 @@ test("drop adapter joins node and reward through stable provider IDs", async () 
   );
   const drop = observations.find((entry) => entry.type === "drop");
   const reward = observations.find(
-    (entry) => entry.type === "entity" && entry.kind === "unknown",
+    (entry) => entry.type === "entity" && entry.kind === "relic",
   );
   const nodeDetail = observations.find((entry) => entry.type === "node-detail");
   assert.equal(reward?.type, "entity");
@@ -713,4 +810,40 @@ test("drop adapter supports missions without named rotations", async () => {
   const drop = observations.find((entry) => entry.type === "drop");
   assert.equal(drop?.rotation, undefined);
   assert.equal(drop?.chance, 0.1084);
+});
+
+test("drop adapter uses its archived mod index and typed reward fallbacks", async () => {
+  const observations = await collect(new WfcdDropsAdapter(), {
+    ...snapshot,
+    sourceId: "wfcd-drops",
+    bytes: new TextEncoder().encode(
+      JSON.stringify({
+        modNames: ["Ammo Drum"],
+        missionRewards: {
+          Mercury: {
+            Lares: {
+              rewards: [
+                { itemName: "Ammo Drum" },
+                { itemName: "Nokko Neuroptics Blueprint" },
+                { itemName: "100 Endo" },
+                { itemName: "Unclassified Reward" },
+              ],
+            },
+          },
+        },
+      }),
+    ),
+  });
+  assert.deepEqual(
+    observations
+      .filter((entry) => entry.type === "entity")
+      .filter((entry) => entry.kind !== "node")
+      .map((entry) => [entry.fields.name, entry.kind]),
+    [
+      ["Ammo Drum", "mod"],
+      ["Nokko Neuroptics Blueprint", "blueprint"],
+      ["100 Endo", "resource"],
+      ["Unclassified Reward", "misc"],
+    ],
+  );
 });

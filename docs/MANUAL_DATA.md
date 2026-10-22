@@ -32,11 +32,54 @@ The original YAML is stored as an immutable snapshot. Ranking sets and their
 entries are versioned by source run, so different authors and dates remain
 independently queryable rather than being collapsed into a consensus score.
 
+### Overframe starter sets
+
+Six checked-in ranking files cover Warframes, primary weapons, secondary
+weapons, melee weapons, Archwing equipment, and companions. Import all of them
+after `wfcd-items`:
+
+```sh
+pnpm data:rankings:overframe
+```
+
+These are manually curated snapshots, not an Overframe integration. Each file
+cites an immutable archived response, keeps only entries that had at least 40
+votes (the public list's ranked threshold at capture time), records the vote
+count in the entry note, and assigns the tier with the largest vote count.
+Equal vote counts resolve in displayed scale order, from S through D. Subjects
+are exact WFCD `uniqueName` identifiers.
+
+Snapshot dates differ because the latest preserved response differed by list.
+The application does not fetch, schedule, or refresh Overframe data. A future
+update requires a human to review a newly cited snapshot and replace the
+relevant YAML deliberately.
+
 The public `/rankings` view shows each active source's declared scale, scope,
 game version and citation beside a matrix of its entries. Values remain verbatim
 and blank cells remain blank. The table can be filtered by canonical item name
-and source subset, reports source coverage per item, and currently shows at most
-200 matching items.
+and source subset, reports source coverage per item, and shows up to 1,000
+matching items. Results can be ordered alphabetically or by normalized position
+within each source's declared scale. Selecting one source exposes a dedicated
+tier-grouped view, including lists such as Overframe melee that exceed 200 items.
+
+### Creator transcript sets
+
+Seven checked-in ranking files transcribe the unique creator videos represented
+under `data/unstructured`: Brozime's 2026 Warframe roster review and Salt Prime's
+Coda, Kuva, Tenet, primary Prime, secondary Prime and melee Prime lists. Import
+them after `wfcd-items`:
+
+```sh
+pnpm data:rankings:creators
+```
+
+`data/manual/transcript-conversion-index.yaml` records every input transcript,
+its hash and its output. The file labelled `knightmareframe-warframes.txt` has
+the same video URL and a byte-identical body to the Brozime transcript after the
+first line, so it is recorded as a duplicate and does not create a false second
+ranking source. Names are reviewed against WFCD identities; qualifications such
+as Incarnon form, firing mode, platform, speculative placement and conditional
+S tier remain in entry notes.
 
 An opt-in derived ordinal column maps each source's ordered scale from 0% at its
 best tier to 100% at its worst, spaces intermediate tiers evenly, then displays
@@ -49,7 +92,9 @@ than mistaken for source truth.
 
 ## Editorial compromise
 
-The editorial v1 format handles tier sets only. Its derived view is an ordinal
+The editorial v1 format handles tier sets only. The bundled Overframe sets are
+dated community popularity evidence, not objective power rankings, and become
+stale as votes and game balance change. Its derived view is an ordinal
 comparison, not a claim that unlike verbal tiers have shared cardinal meaning.
 It does not weight source expertise, recency, patch relevance, scope, or
 coverage. Before stable release, `schemaVersion: 1` may be replaced rather than

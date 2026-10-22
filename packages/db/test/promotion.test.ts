@@ -1549,6 +1549,246 @@ test("typed modular roles repair legacy non-representative weapons in place", as
   );
 });
 
+test("WFCD refresh repairs a legacy parent-qualified component in place", async (context) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-wfcd-kind-"));
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const databasePath = path.join(root, "catalog.sqlite");
+  migrateDatabase(databasePath);
+  const sqlite = new Database(databasePath);
+  sqlite.pragma("foreign_keys = ON");
+  context.after(() => sqlite.close());
+
+  promoteSource(
+    sqlite,
+    wfcdInput("v1", [
+      wfcdEntity(
+        "/Lotus/Types/Items/MiscItems/OrokinCell",
+        "Zylok Prime Orokin Cell",
+        "component",
+        "v1",
+      ),
+    ]),
+  );
+  const originalId = (
+    sqlite
+      .prepare(
+        "select entity_id as id from external_ids where source_id = 'wfcd-items' and value = ?",
+      )
+      .get("/Lotus/Types/Items/MiscItems/OrokinCell") as { id: string }
+  ).id;
+
+  const result = promoteSource(
+    sqlite,
+    wfcdInput("v2", [
+      wfcdEntity(
+        "/Lotus/Types/Items/MiscItems/OrokinCell",
+        "Orokin Cell",
+        "resource",
+        "v2",
+      ),
+    ]),
+  );
+
+  assert.equal(result.conflictsCreated, 0);
+  assert.deepEqual(
+    sqlite
+      .prepare("select id, kind, name, slug from entities where id = ?")
+      .get(originalId),
+    {
+      id: originalId,
+      kind: "resource",
+      name: "Orokin Cell",
+      slug: "orokin-cell",
+    },
+  );
+});
+
+test("WFCD identity repair merges a legacy component with an existing resource", async (context) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-wfcd-merge-"));
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const databasePath = path.join(root, "catalog.sqlite");
+  migrateDatabase(databasePath);
+  const sqlite = new Database(databasePath);
+  sqlite.pragma("foreign_keys = ON");
+  context.after(() => sqlite.close());
+
+  promoteSource(
+    sqlite,
+    input("resource-v1", [
+      entity("drop-orokin-cell", "Orokin Cell", "resource", "resource-v1"),
+    ]),
+  );
+  promoteSource(
+    sqlite,
+    wfcdInput("v1", [
+      wfcdEntity(
+        "/Lotus/Types/Items/MiscItems/OrokinCell",
+        "Zylok Prime Orokin Cell",
+        "component",
+        "v1",
+      ),
+    ]),
+  );
+  const targetId = (
+    sqlite
+      .prepare("select id from entities where kind = 'resource' and slug = ?")
+      .get("orokin-cell") as { id: string }
+  ).id;
+  const legacyId = (
+    sqlite
+      .prepare("select id from entities where kind = 'component' and slug = ?")
+      .get("zylok-prime-orokin-cell") as { id: string }
+  ).id;
+  sqlite
+    .prepare(
+      "insert into users (id, username, email, email_verified, role, created_at, updated_at) values ('player', 'Player', 'player@example.test', 1, 'player', 1, 1)",
+    )
+    .run();
+  sqlite
+    .prepare(
+      "insert into player_inventory (user_id, entity_id, owned_count, built_count, wanted_count, updated_at) values ('player', ?, 2, 0, 0, 1), ('player', ?, 5, 0, 0, 2)",
+    )
+    .run(targetId, legacyId);
+  sqlite
+    .prepare(
+      "insert into player_goals (user_id, entity_id, target_quantity, created_at, updated_at) values ('player', ?, 1, 1, 1), ('player', ?, 3, 2, 2)",
+    )
+    .run(targetId, legacyId);
+
+  const result = promoteSource(
+    sqlite,
+    wfcdInput("v2", [
+      wfcdEntity(
+        "/Lotus/Types/Items/MiscItems/OrokinCell",
+        "Orokin Cell",
+        "resource",
+        "v2",
+      ),
+    ]),
+  );
+
+  assert.equal(result.conflictsCreated, 0);
+  assert.deepEqual(
+    sqlite
+      .prepare(
+        "select entity_id as entityId from external_ids where source_id = 'wfcd-items' and value = ?",
+      )
+      .get("/Lotus/Types/Items/MiscItems/OrokinCell"),
+    { entityId: targetId },
+  );
+  assert.deepEqual(
+    sqlite
+      .prepare(
+        "select entity_id as entityId, owned_count as ownedCount from player_inventory where user_id = 'player'",
+      )
+      .all(),
+    [{ entityId: targetId, ownedCount: 5 }],
+  );
+  assert.deepEqual(
+    sqlite
+      .prepare(
+        "select entity_id as entityId, target_quantity as targetQuantity from player_goals where user_id = 'player'",
+      )
+      .all(),
+    [{ entityId: targetId, targetQuantity: 3 }],
+  );
+  assert.deepEqual(
+    sqlite.prepare("select retired from entities where id = ?").get(legacyId),
+    { retired: 1 },
+  );
+});
+
+test("WFCD identity repair splits incompatible provider IDs merged by a legacy alias", async (context) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-wfcd-split-"));
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const databasePath = path.join(root, "catalog.sqlite");
+  migrateDatabase(databasePath);
+  const sqlite = new Database(databasePath);
+  sqlite.pragma("foreign_keys = ON");
+  context.after(() => sqlite.close());
+
+  promoteSource(
+    sqlite,
+    wfcdInput("v1", [
+      wfcdEntity("/enemy/kuva", "Kuva", "enemy", "v1"),
+      wfcdEntity("/store/kuva", "Kuva", "enemy", "v1"),
+    ]),
+  );
+  assert.equal(
+    (
+      sqlite
+        .prepare(
+          "select count(distinct entity_id) as count from external_ids where source_id = 'wfcd-items'",
+        )
+        .get() as { count: number }
+    ).count,
+    1,
+  );
+
+  const result = promoteSource(
+    sqlite,
+    wfcdInput("v2", [
+      wfcdEntity("/enemy/kuva", "Kuva", "enemy", "v2"),
+      wfcdEntity("/store/kuva", "Kuva", "resource", "v2"),
+    ]),
+  );
+
+  assert.equal(result.conflictsCreated, 0);
+  assert.deepEqual(
+    sqlite
+      .prepare(
+        `select x.value, e.kind from external_ids x join entities e on e.id = x.entity_id
+         where x.source_id = 'wfcd-items' order by x.value`,
+      )
+      .all(),
+    [
+      { value: "/enemy/kuva", kind: "enemy" },
+      { value: "/store/kuva", kind: "resource" },
+    ],
+  );
+});
+
+test("WFCD identity repair does not reclassify a cross-source same-name entity", async (context) => {
+  const root = await fs.mkdtemp(
+    path.join(os.tmpdir(), "ordis-wfcd-cross-source-split-"),
+  );
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const databasePath = path.join(root, "catalog.sqlite");
+  migrateDatabase(databasePath);
+  const sqlite = new Database(databasePath);
+  sqlite.pragma("foreign_keys = ON");
+  context.after(() => sqlite.close());
+
+  promoteSource(
+    sqlite,
+    input("fixture-v1", [entity("lizzie", "Lizzie", "weapon", "fixture-v1")]),
+  );
+  promoteSource(
+    sqlite,
+    wfcdInput("v1", [wfcdEntity("/skin/lizzie", "Lizzie", "unknown", "v1")]),
+  );
+
+  const result = promoteSource(
+    sqlite,
+    wfcdInput("v2", [wfcdEntity("/skin/lizzie", "Lizzie", "cosmetic", "v2")]),
+  );
+
+  assert.equal(result.conflictsCreated, 0);
+  assert.deepEqual(
+    sqlite
+      .prepare(
+        `select x.source_id as sourceId, e.kind from external_ids x
+         join entities e on e.id = x.entity_id
+         where x.value in ('lizzie', '/skin/lizzie') order by x.source_id`,
+      )
+      .all(),
+    [
+      { sourceId: "fixture", kind: "weapon" },
+      { sourceId: "wfcd-items", kind: "cosmetic" },
+    ],
+  );
+});
+
 test("an overlay targeting an unimported provider becomes a reviewable conflict", async (context) => {
   const root = await fs.mkdtemp(
     path.join(os.tmpdir(), "ordis-missing-source-"),
@@ -1857,6 +2097,42 @@ function input(version: string, observations: Observation[]) {
   };
 }
 
+function wfcdInput(version: string, observations: Observation[]) {
+  return {
+    source: {
+      id: "wfcd-items",
+      name: "WFCD items fixture",
+      homepage: "https://example.test/wfcd",
+      license: "MIT",
+      priority: 100,
+    },
+    version,
+    contentHash: `sha256:${`wfcd-${version}`.padEnd(64, "0")}`,
+    retrievedAt: "2026-10-13T12:00:00.000Z",
+    observations,
+  };
+}
+
+function wfcdEntity(
+  id: string,
+  name: string,
+  kind: "component" | "cosmetic" | "enemy" | "resource" | "unknown",
+  version: string,
+): Observation {
+  return {
+    type: "entity",
+    kind,
+    externalIds: [
+      { sourceId: "wfcd-items", namespace: "uniqueName", value: id },
+    ],
+    fields: { name, slug: name.toLowerCase().replaceAll(" ", "-") },
+    evidence: {
+      ...evidence(version, "wfcd-items"),
+      sourceRecordKey: id,
+    },
+  };
+}
+
 function evidence(version = "v1", sourceId = "fixture") {
   return {
     sourceId,
@@ -1869,7 +2145,17 @@ function evidence(version = "v1", sourceId = "fixture") {
 function entity(
   id: string,
   name: string,
-  kind: "unknown" | "component" | "mod" | "node" | "weapon" | "quest" | "shard",
+  kind:
+    | "unknown"
+    | "component"
+    | "cosmetic"
+    | "enemy"
+    | "mod"
+    | "node"
+    | "resource"
+    | "weapon"
+    | "quest"
+    | "shard",
   version = "v1",
   sourceId = "fixture",
 ): Observation {

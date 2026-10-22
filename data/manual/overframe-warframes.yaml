@@ -1,0 +1,222 @@
+schemaVersion: 1
+source:
+  id: overframe-warframes
+  title: "Overframe community Warframes (2026-07-15)"
+  author: Overframe community
+  url: https://web.archive.org/web/20260715192837id_/https://overframe.gg/api/v1/tierlists/0/
+  publishedAt: 2026-07-15
+  gameVersion: "Archived 2026-07-15 snapshot"
+  scope: "Warframes with at least 40 community votes"
+  licenseNote: "Factual plurality tiers manually transcribed from the cited public snapshot; no page text or build data copied."
+scale: [S, A, B, C, D]
+entries:
+  - externalId: /Lotus/Powersuits/Wisp/Wisp
+    rank: S
+    notes: "21661 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Saryn/Saryn
+    rank: S
+    notes: "22096 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Pagemaster/Pagemaster
+    rank: S
+    notes: "7620 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/DemonFrame/DemonFrame
+    rank: S
+    notes: "2698 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Bard/Bard
+    rank: S
+    notes: "17860 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Cowgirl/Cowgirl
+    rank: S
+    notes: "20518 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Nokko/Nokko
+    rank: S
+    notes: "2053 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/BrokenFrame/XakuPrime
+    rank: S
+    notes: "1162 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Oraxia/Oraxia
+    rank: S
+    notes: "3070 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Revenant/Revenant
+    rank: S
+    notes: "12432 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Khora/Khora
+    rank: S
+    notes: "11932 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/PaxDuviricus/PaxDuviricus
+    rank: S
+    notes: "5217 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/EntratiMech/NechroTech
+    rank: S
+    notes: "9325 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/SiriusOrion/SiriusSuit
+    rank: S
+    notes: "413 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Runner/Runner
+    rank: S
+    notes: "10835 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Volt/Volt
+    rank: A
+    notes: "12303 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Odalisk/Odalisk
+    rank: A
+    notes: "8002 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Harlequin/Harlequin
+    rank: A
+    notes: "9561 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/AntiMatter/Anti
+    rank: A
+    notes: "9433 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Werewolf/VorunaPrime
+    rank: S
+    notes: "155 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/BrokenFrame/BrokenFrame
+    rank: A
+    notes: "7421 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Geode/Geode
+    rank: A
+    notes: "4373 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/MonkeyKing/MonkeyKing
+    rank: A
+    notes: "11511 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Choir/Choir
+    rank: A
+    notes: "2808 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Inkblot/Inkblot
+    rank: S
+    notes: "483 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Fairy/Fairy
+    rank: A
+    notes: "8565 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Frumentarius/Frumentarius
+    rank: A
+    notes: "2013 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Infestation/Infestation
+    rank: A
+    notes: "9179 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Pacifist/Pacifist
+    rank: A
+    notes: "6845 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Rhino/Rhino
+    rank: A
+    notes: "9442 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Glass/Glass
+    rank: A
+    notes: "7349 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Priest/Priest
+    rank: A
+    notes: "7381 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Nezha/Nezha
+    rank: A
+    notes: "7829 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Werewolf/Werewolf
+    rank: A
+    notes: "4614 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Necro/Necro
+    rank: A
+    notes: "8826 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Wraith/Wraith
+    rank: A
+    notes: "6784 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Dagath/Dagath
+    rank: A
+    notes: "3537 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Hoplite/Hoplite
+    rank: A
+    notes: "4723 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Gyre/Gyre
+    rank: A
+    notes: "4293 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Mag/Mag
+    rank: A
+    notes: "7608 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Temple/Temple
+    rank: A
+    notes: "1296 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/IronFrame/IronFrame
+    rank: A
+    notes: "6811 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Garuda/Garuda
+    rank: A
+    notes: "6835 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Trinity/Trinity
+    rank: A
+    notes: "7380 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Alchemist/Alchemist
+    rank: A
+    notes: "5876 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Excalibur/ExcaliburUmbra
+    rank: A
+    notes: "302 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Ember/Ember
+    rank: A
+    notes: "7768 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Trapper/Trapper
+    rank: A
+    notes: "7406 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Ninja/Ninja
+    rank: A
+    notes: "6936 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/YinYang/YinYang
+    rank: A
+    notes: "7274 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Ranger/Ranger
+    rank: B
+    notes: "7673 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Excalibur/Excalibur
+    rank: B
+    notes: "9191 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Berserker/Berserker
+    rank: B
+    notes: "7500 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Koumei/Koumei
+    rank: A
+    notes: "2022 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Tengu/Tengu
+    rank: A
+    notes: "8381 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Frost/Frost
+    rank: A
+    notes: "7501 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Dragon/Dragon
+    rank: A
+    notes: "7537 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/ConcreteFrame/ConcreteFrame
+    rank: B
+    notes: "2674 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Paladin/Paladin
+    rank: B
+    notes: "6691 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Sentient/Sentient
+    rank: A
+    notes: "5273 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Pirate/Pirate
+    rank: A
+    notes: "8617 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Sandman/Sandman
+    rank: B
+    notes: "7846 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Devourer/Devourer
+    rank: A
+    notes: "7447 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Magician/Magician
+    rank: B
+    notes: "7777 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Brawler/Brawler
+    rank: B
+    notes: "6209 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Banshee/Banshee
+    rank: B
+    notes: "6126 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Yareli/Yareli
+    rank: D
+    notes: "8197 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Loki/Loki
+    rank: B
+    notes: "7344 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Jade/Jade
+    rank: D
+    notes: "8386 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/EntratiMech/ThanoTech
+    rank: D
+    notes: "4226 archived community votes; plurality tier."

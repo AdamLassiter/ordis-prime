@@ -526,6 +526,39 @@ function promoteInTransaction(
         );
       counts.relationsCreated += 1;
     }
+    if (observation.type === "entity-attribute") {
+      const entityId = state.externalIds.get(
+        externalKey(observation.subjectExternalId),
+      );
+      if (!entityId) {
+        writeConflict(
+          sqlite,
+          sourceRunId,
+          observation.evidence.sourceRecordKey,
+          "Entity attribute refers to an unresolved entity",
+          [],
+          counts,
+        );
+        continue;
+      }
+      sqlite
+        .prepare(
+          `insert into entity_attributes
+            (id, entity_id, key, label, value, source_run_id, source_record_key, citation_url, source_path)
+           values (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        )
+        .run(
+          randomUUID(),
+          entityId,
+          observation.key,
+          observation.label,
+          observation.value,
+          sourceRunId,
+          observation.evidence.sourceRecordKey,
+          observation.evidence.citationUrl ?? null,
+          observation.evidence.path ?? null,
+        );
+    }
     if (observation.type === "node-detail") {
       const nodeId = state.externalIds.get(
         externalKey(observation.nodeExternalId),
@@ -1109,7 +1142,14 @@ function resolveAndWriteEntity(
   sourceRunId: string,
   counts: Omit<PromotionResult, "sourceRunId" | "releaseId">,
 ): EntityId | undefined {
-  const resolution = resolveEntity(observation, state);
+  let resolution = resolveEntity(observation, state);
+  if (resolution.status === "matched" && resolution.by === "external-id")
+    resolution = repairExactProviderIdentity(
+      sqlite,
+      state,
+      observation,
+      resolution.entityId,
+    );
   if (resolution.status === "conflict") {
     writeConflict(
       sqlite,
@@ -1297,6 +1337,182 @@ function resolveAndWriteEntity(
     }
   }
   return entityId;
+}
+
+function repairExactProviderIdentity(
+  sqlite: Database.Database,
+  state: ResolutionState,
+  observation: EntityObservation,
+  matchedEntityId: EntityId,
+): ReturnType<typeof resolveEntity> {
+  const entity = state.entities.get(matchedEntityId)!;
+  if (
+    observation.kind === "unknown" ||
+    (entity.kind !== "unknown" &&
+      entityKindsCompatible(entity.kind, observation.kind))
+  )
+    return {
+      status: "matched",
+      entityId: matchedEntityId,
+      by: "external-id",
+    };
+
+  const matchedExternalIds = observation.externalIds.filter(
+    (externalId) =>
+      externalId.sourceId === observation.evidence.sourceId &&
+      state.externalIds.get(externalKey(externalId)) === matchedEntityId,
+  );
+  if (!matchedExternalIds.length)
+    return {
+      status: "matched",
+      entityId: matchedEntityId,
+      by: "external-id",
+    };
+
+  const identifierCount = (
+    sqlite
+      .prepare("select count(*) as count from external_ids where entity_id = ?")
+      .get(matchedEntityId) as { count: number }
+  ).count;
+  if (identifierCount > matchedExternalIds.length) {
+    for (const externalId of matchedExternalIds) {
+      state.externalIds.delete(externalKey(externalId));
+    }
+    const splitResolution = resolveEntity(observation, state);
+    if (splitResolution.status === "conflict") {
+      for (const externalId of matchedExternalIds)
+        state.externalIds.set(externalKey(externalId), matchedEntityId);
+      return splitResolution;
+    }
+    for (const externalId of matchedExternalIds)
+      sqlite
+        .prepare(
+          "delete from external_ids where source_id = ? and namespace = ? and value = ? and entity_id = ?",
+        )
+        .run(
+          externalId.sourceId,
+          externalId.namespace,
+          externalId.value,
+          matchedEntityId,
+        );
+    return splitResolution;
+  }
+
+  const targetIds = new Set(
+    [observation.fields.name, ...(observation.aliases ?? [])].flatMap((name) =>
+      name
+        ? (state.aliases.get(normalizedAlias(name)) ?? []).filter(
+            (entityId) =>
+              entityId !== matchedEntityId &&
+              state.entities.get(entityId)?.kind === observation.kind,
+          )
+        : [],
+    ),
+  );
+  if (targetIds.size === 1) {
+    const targetId = [...targetIds][0]!;
+    for (const externalId of matchedExternalIds) {
+      sqlite
+        .prepare(
+          "update external_ids set entity_id = ? where source_id = ? and namespace = ? and value = ? and entity_id = ?",
+        )
+        .run(
+          targetId,
+          externalId.sourceId,
+          externalId.namespace,
+          externalId.value,
+          matchedEntityId,
+        );
+      state.externalIds.set(externalKey(externalId), targetId);
+    }
+    migratePrivateEntityReferences(sqlite, matchedEntityId, targetId);
+    sqlite
+      .prepare(
+        "update entities set retired = 1, updated_at = ? where id = ? and not exists (select 1 from external_ids where entity_id = ?)",
+      )
+      .run(Date.now(), matchedEntityId, matchedEntityId);
+    return { status: "matched", entityId: targetId, by: "alias" };
+  }
+  if (targetIds.size > 1)
+    return {
+      status: "conflict",
+      candidateIds: [...targetIds],
+    };
+
+  sqlite
+    .prepare("update entities set kind = ?, updated_at = ? where id = ?")
+    .run(observation.kind, Date.now(), matchedEntityId);
+  state.entities.set(matchedEntityId, {
+    ...entity,
+    kind: observation.kind,
+  });
+  return {
+    status: "matched",
+    entityId: matchedEntityId,
+    by: "external-id",
+  };
+}
+
+function migratePrivateEntityReferences(
+  sqlite: Database.Database,
+  sourceId: EntityId,
+  targetId: EntityId,
+): void {
+  sqlite
+    .prepare(
+      `
+      insert into player_inventory (
+        user_id, entity_id, owned_count, built_count, wanted_count,
+        mastered, subsumed, note, updated_at
+      )
+      select user_id, ?, owned_count, built_count, wanted_count,
+        mastered, subsumed, note, updated_at
+      from player_inventory where entity_id = ?
+      on conflict(user_id, entity_id) do update set
+        owned_count = max(player_inventory.owned_count, excluded.owned_count),
+        built_count = max(player_inventory.built_count, excluded.built_count),
+        wanted_count = max(player_inventory.wanted_count, excluded.wanted_count),
+        mastered = case
+          when player_inventory.mastered = 1 or excluded.mastered = 1 then 1
+          when player_inventory.mastered = 0 or excluded.mastered = 0 then 0
+          else null
+        end,
+        subsumed = case
+          when player_inventory.subsumed = 1 or excluded.subsumed = 1 then 1
+          when player_inventory.subsumed = 0 or excluded.subsumed = 0 then 0
+          else null
+        end,
+        note = coalesce(player_inventory.note, excluded.note),
+        updated_at = max(player_inventory.updated_at, excluded.updated_at)
+    `,
+    )
+    .run(targetId, sourceId);
+  sqlite
+    .prepare("delete from player_inventory where entity_id = ?")
+    .run(sourceId);
+
+  sqlite
+    .prepare(
+      `
+      insert into player_goals (
+        user_id, entity_id, target_quantity, created_at, updated_at
+      )
+      select user_id, ?, target_quantity, created_at, updated_at
+      from player_goals where entity_id = ?
+      on conflict(user_id, entity_id) do update set
+        target_quantity = max(player_goals.target_quantity, excluded.target_quantity),
+        created_at = min(player_goals.created_at, excluded.created_at),
+        updated_at = max(player_goals.updated_at, excluded.updated_at)
+    `,
+    )
+    .run(targetId, sourceId);
+  sqlite.prepare("delete from player_goals where entity_id = ?").run(sourceId);
+  sqlite
+    .prepare("update player_todos set entity_id = ? where entity_id = ?")
+    .run(targetId, sourceId);
+  sqlite
+    .prepare("update world_state_watches set entity_id = ? where entity_id = ?")
+    .run(targetId, sourceId);
 }
 
 function updateWinningFields(
@@ -1743,6 +1959,8 @@ function validateCandidateSet(observations: Observation[]): void {
       factKey = `node-reward:${externalKey(observation.nodeExternalId)}:${observation.key}`;
     if (observation.type === "enhancement-option")
       factKey = `enhancement-option:${externalKey(observation.subjectExternalId)}:${observation.key}`;
+    if (observation.type === "entity-attribute")
+      factKey = `entity-attribute:${externalKey(observation.subjectExternalId)}:${observation.key}`;
     if (observation.type === "equipment-polarity-set")
       factKey = `equipment-polarity-set:${externalKey(observation.subjectExternalId)}`;
     if (factKey) {

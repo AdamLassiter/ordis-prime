@@ -17,7 +17,7 @@ import {
   wikiSlug,
 } from "./mediawiki-lua.ts";
 
-const PARSER_VERSION = "warframe-wiki-junctions-v3";
+const PARSER_VERSION = "warframe-wiki-junctions-v4";
 const JUNCTION_TITLES = [
   "Venus Junction",
   "Mercury Junction",
@@ -294,7 +294,7 @@ function parseRewardLine(
     } else {
       target = /\bBlueprint\b/i.test(suffix)
         ? { kind: "component", name: `${linkName} Blueprint` }
-        : { kind: "unknown", name: linkName };
+        : { kind: "gear", name: linkName };
     }
     return [
       {
@@ -327,7 +327,9 @@ function parseRewardLine(
                 ? "relic"
                 : blueprint
                   ? "component"
-                  : "unknown",
+                  : pack
+                    ? "gear"
+                    : "misc",
           name: segment
             ? display
             : relic

@@ -1,0 +1,101 @@
+schemaVersion: 1
+source:
+  id: creator-salt-prime-melee-primes-2026
+  title: Salt Prime melee Prime weapon tier list (2026)
+  author: Salt_Prime
+  url: https://www.youtube.com/watch?v=kc5uuIDI7lM
+  publishedAt: 2026-05-06
+  gameVersion: Published 2026-05-06
+  scope: All 39 melee Prime weapons reviewed in the cited video
+  licenseNote:
+    Manual factual transcription of creator rankings from the cited public video; no
+    transcript prose reproduced.
+scale:
+  - S+
+  - S
+  - A
+  - B
+  - B-
+entries:
+  - externalId: /Lotus/Weapons/Tenno/Melee/Staff/TipedoPrime/TipedoPrimeWeapon
+    rank: A
+  - externalId: /Lotus/Weapons/Tenno/Melee/PrimeKogake/KogakePrimeKnuckles
+    rank: B-
+  - externalId: /Lotus/Weapons/Tenno/Melee/Swords/PrimeOkina/PrimeOkina
+    rank: S+
+    notes: Incarnon placement.
+  - externalId: /Lotus/Weapons/Tenno/Melee/PrimeDualKamas/PrimeDualKamas
+    rank: B
+  - externalId: /Lotus/Weapons/Tenno/Melee/Axe/PrimeZoren/PrimeZorenAxeWeapon
+    rank: S
+  - externalId: /Lotus/Weapons/Tenno/Melee/CronusSword/PrimeCronusLongSword
+    rank: A
+  - externalId: /Lotus/Weapons/Tenno/Melee/Swords/PRapier/DestrezaPrime
+    rank: S
+  - externalId: /Lotus/Weapons/Tenno/Melee/Swords/PrimeGalatine/PrimeGalatine
+    rank: A
+  - externalId: /Lotus/Weapons/Tenno/Melee/Polearms/PrimeGuandao/PrimeGuandaoWeapon
+    rank: S
+  - externalId: /Lotus/Weapons/Tenno/Melee/Swords/PrimeMasseter/PrimeMasseter
+    rank: A
+  - externalId: /Lotus/Weapons/Tenno/Melee/Swords/PrimeKatana/PrimeNikana
+    rank: S
+  - externalId: /Lotus/Weapons/Tenno/Melee/Polearms/PrimePolearmWeapon
+    rank: A
+  - externalId: /Lotus/Weapons/Tenno/Melee/Swords/PrimeTatsu/PrimeTatsuWeapon
+    rank: S
+  - externalId: /Lotus/Weapons/Tenno/Melee/Swords/PrimeDualKeres/PrimeDualKeresWeapon
+    rank: A
+  - externalId: /Lotus/Weapons/Tenno/Melee/DualDagger/FangPrimeDagger
+    rank: B
+  - externalId: /Lotus/Weapons/Grineer/Melee/Scythe/GrnDrillScythe/GrnDrillScythe
+    rank: S
+  - externalId: /Lotus/Weapons/Tenno/Melee/Swords/PrimeGram/PrimeGram
+    rank: A
+  - externalId: /Lotus/Weapons/Tenno/Melee/Swords/PrimeKaryst/PrimeKrisDagger
+    rank: B
+  - externalId: /Lotus/Weapons/Tenno/Melee/Glaives/PrimeKestrel/PrimeKestrel
+    rank: B-
+    notes: Explicit placeholder placement because the reviewer lacked experience with it.
+  - externalId: /Lotus/Weapons/Tenno/Melee/Staff/PrimeBo/PrimeBoWeapon
+    rank: S+
+    notes: Incarnon placement.
+  - externalId: /Lotus/Weapons/Tenno/Melee/SwordsAndBoards/PrimeCobraAndCrane/PrimeCobraAndCraneWeapon
+    rank: B-
+  - externalId: /Lotus/Weapons/Tenno/Melee/Tonfa/TonfaContestWinnerPrime/TonfaContestWinnerPrimeWeapon
+    rank: A
+  - externalId: /Lotus/Weapons/Tenno/Melee/Swords/PrimeNamiSkyla/PrimeNamiSkyla
+    rank: B
+  - externalId: /Lotus/Weapons/Tenno/Melee/PrimeNinkondi/PrimeNikondi
+    rank: A
+  - externalId: /Lotus/Weapons/Tenno/Melee/Swords/PrimePangolinSword/PrimePangolinSword
+    rank: A
+  - externalId: /Lotus/Weapons/Tenno/Melee/Gauntlet/PrimeAnkyros/PrimeAnkyros
+    rank: B-
+  - externalId: /Lotus/Weapons/Tenno/Melee/Warfan/PrimeQuassus/PrimeQuassusWeapon
+    rank: A
+    notes: Low-A placement for the regular melee build; reviewer had limited heavy-spam experience.
+  - externalId: /Lotus/Weapons/Tenno/Melee/Scythe/ReaperWeapon
+    rank: S
+  - externalId: /Lotus/Weapons/Tenno/Melee/Axe/PrimeVorunaAxeWeapon
+    rank: S+
+  - externalId: /Lotus/Weapons/Tenno/Melee/Axe/PrimeScindo/PrimeScindoWeapon
+    rank: A
+  - externalId: /Lotus/Weapons/Tenno/Melee/Scythe/PrimeVento/PrimeVentoScythe
+    rank: S
+  - externalId: /Lotus/Weapons/Tenno/Melee/PrimeVolnus/VolnusPrimeWeapon
+    rank: B-
+  - externalId: /Lotus/Weapons/Tenno/Melee/PrimeFragor/PrimeFragor
+    rank: A
+  - externalId: /Lotus/Weapons/Tenno/Melee/Glaives/PrimeGlaive/PrimeGlaiveWeapon
+    rank: S
+  - externalId: /Lotus/Weapons/Tenno/Melee/Gunblade/RedeemerPrime/RedeemerPrimeWep
+    rank: A
+  - externalId: /Lotus/Weapons/Tenno/Melee/PrimeVenKa/PrimeVenkaClaws
+    rank: A
+  - externalId: /Lotus/Weapons/Tenno/Melee/Warfan/PrimeGunsen/PrimeGunsenWeapon
+    rank: B-
+  - externalId: /Lotus/Weapons/Tenno/Melee/PrimeSilvaAegis/PrimeSilvaAegis
+    rank: A
+  - externalId: /Lotus/Weapons/Tenno/Melee/PrimeTekko/PrimeTekko
+    rank: B

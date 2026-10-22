@@ -1,0 +1,723 @@
+schemaVersion: 1
+source:
+  id: overframe-melee-weapons
+  title: "Overframe community melee weapons (2026-07-31)"
+  author: Overframe community
+  url: https://web.archive.org/web/20260731174255id_/https://overframe.gg/api/v1/tierlists/3/
+  publishedAt: 2026-07-31
+  gameVersion: "Archived 2026-07-31 snapshot"
+  scope: "Melee weapons with at least 40 community votes"
+  licenseNote: "Factual plurality tiers manually transcribed from the cited public snapshot; no page text or build data copied."
+scale: [S, A, B, C, D]
+entries:
+  - externalId: /Lotus/Weapons/Tenno/Melee/Swords/PrimeOkina/PrimeOkina
+    rank: S
+    notes: "727 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Zariman/Melee/Tonfas/ZarimanTonfaWeapon
+    rank: S
+    notes: "1516 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Swords/PrimeKatana/PrimeNikana
+    rank: S
+    notes: "5575 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Tonfa/TonfaContestWinnerPrime/TonfaContestWinnerPrimeWeapon
+    rank: S
+    notes: "3978 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Glaives/PrimeGlaive/PrimeGlaiveWeapon
+    rank: S
+    notes: "3246 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Scythe/TnChoirScythe/TnChoirScythe
+    rank: S
+    notes: "881 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Polearms/PrimeGuandao/PrimeGuandaoWeapon
+    rank: S
+    notes: "2903 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Infested/InfestedLich/Melee/CodaPathocyst/CodaPathocyst
+    rank: S
+    notes: "377 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Swords/DaxDuviriKatana/DaxDuviriKatanaWeapon
+    rank: S
+    notes: "1287 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Swords/PrimeDualKeres/PrimeDualKeresWeapon
+    rank: S
+    notes: "1084 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Corpus/Melee/Gunblade/CrpGunBlade/CrpGunbladeWeapon
+    rank: S
+    notes: "2434 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Scythe/ReaperWeapon
+    rank: S
+    notes: "2210 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Zariman/Melee/HeavyScythe/ZarimanHeavyScythe/ZarimanHeavyScytheWeapon
+    rank: S
+    notes: "305 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Ostron/Melee/ModularMelee02/Tip/TipNine
+    rank: S
+    notes: "2275 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/PrimeVenKa/PrimeVenkaClaws
+    rank: S
+    notes: "1489 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Gunblade/RedeemerPrime/RedeemerPrimeWep
+    rank: S
+    notes: "3128 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Zariman/Melee/Dagger/ZarimanDaggerWeapon
+    rank: S
+    notes: "1037 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Lasria/LasGooSickle/LasGooSicklePlayerWeapon
+    rank: S
+    notes: "277 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Swords/PrimeGram/PrimeGram
+    rank: S
+    notes: "2270 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Swords/DaxDuviriTwoHandedKatana/DaxDuviriTwoHandedKatanaWeapon
+    rank: S
+    notes: "805 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Ostron/Melee/ModularMeleeInfested/Tips/InfestedTipOne
+    rank: S
+    notes: "1694 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Polearms/PrimePolearmWeapon
+    rank: S
+    notes: "2702 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Warfan/PrimeQuassus/PrimeQuassusWeapon
+    rank: S
+    notes: "312 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Axe/DualInfestedAxesWeapon
+    rank: S
+    notes: "769 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Scythe/PrimeVento/PrimeVentoScythe
+    rank: S
+    notes: "122 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Infested/Melee/TipedoStaff/InfTipedoStaff
+    rank: S
+    notes: "1881 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Swords/PrimeWar/PrimeWarWeapon
+    rank: S
+    notes: "123 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Swords/PrimeNamiSkyla/PrimeNamiSkyla
+    rank: S
+    notes: "972 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Orokin/BallasSword/BallasSwordWeapon
+    rank: S
+    notes: "2069 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/HeavyScythe/TnOrionSiriusScythe/TnOrionScytheWeapon
+    rank: S
+    notes: "63 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Scythe/StalkerScytheWeapon
+    rank: S
+    notes: "1225 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Warfan/PrimeGunsen/PrimeGunsenWeapon
+    rank: S
+    notes: "500 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Infested/InfestedLich/Melee/InfestedHammer/InfLichHammerWeapon
+    rank: S
+    notes: "195 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Polearms/DaxDuviriPolearm/DaxDuviriPolearmWeapon
+    rank: S
+    notes: "419 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Ostron/Melee/ModularMelee02/Tip/TipEleven
+    rank: S
+    notes: "846 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Corpus/Melee/CrpBriefcaseScythe/CrpBriefcaseScythe
+    rank: S
+    notes: "544 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Whips/SpiderWhip/SpiderWhipWeapon
+    rank: S
+    notes: "117 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Infested/InfestedLich/Melee/CodaCaustacyst/CodaCaustacyst
+    rank: S
+    notes: "134 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Infested/InfestedLich/Melee/CodaHirudo
+    rank: S
+    notes: "147 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Swords/PrimeTatsu/PrimeTatsuWeapon
+    rank: S
+    notes: "617 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Infested/InfestedLich/Melee/CodaMire
+    rank: S
+    notes: "152 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Axe/PrimeVorunaAxeWeapon
+    rank: A
+    notes: "48 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Corpus/Melee/CrpBriefcase2HKatana/CrpBriefcase2HKatana
+    rank: S
+    notes: "461 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Archwing/Melee/ExaltedArchScythe/ExaltedAWScytheWeapon
+    rank: S
+    notes: "381 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Swords/StalkerTwo/StalkerTwoSmallSword
+    rank: A
+    notes: "1979 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Swords/PrimePangolinSword/PrimePangolinSword
+    rank: S
+    notes: "724 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Corpus/Melee/CrpTonfa/CrpPrismaTonfa
+    rank: S
+    notes: "253 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Archon/Melee/DualDaggers/ArchonDualDaggersPlayerWep
+    rank: S
+    notes: "443 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Swords/TnRailjackGreatKatana/TnRailJackGreatKatanaWeapon
+    rank: S
+    notes: "748 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Swords/NWIIIOrokinSword/NWOrokinSword
+    rank: S
+    notes: "858 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Ostron/Melee/ModularMelee01/Tip/TipOne
+    rank: S
+    notes: "632 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Hammer/DaxDuviriHammer/DaxDuviriHammerWeapon
+    rank: S
+    notes: "211 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Swords/TnDagathBladeWhip/TnDagathBladeWhip
+    rank: S
+    notes: "307 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Grineer/Melee/GrnKuvaLichScythe/GrnKuvaLichScytheWeapon
+    rank: S
+    notes: "798 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Swords/PrimeGalatine/PrimeGalatine
+    rank: A
+    notes: "801 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/PrimeSilvaAegis/PrimeSilvaAegis
+    rank: S
+    notes: "717 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/HeavyScythe/TnOrionSiriusScythe/TnSiriusScytheWeapon
+    rank: S
+    notes: "49 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Ostron/Melee/ModularMeleeInfested/Tips/InfestedTipTwo
+    rank: S
+    notes: "443 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/HeavyScythe/DuviriScythe/DuviriHeavyScytheWeapon
+    rank: S
+    notes: "424 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Swords/UmbraKatana/UmbraKatana
+    rank: A
+    notes: "1323 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Swords/PrimeKaryst/PrimeKrisDagger
+    rank: A
+    notes: "588 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Corpus/Melee/Glaive/CrpGhostCatcherGlaive/CrpGhostCatcherGlaive
+    rank: S
+    notes: "2312 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Grineer/Melee/GunBlade/GrnGunBlade/GrnGunblade
+    rank: S
+    notes: "515 archived community votes; plurality tier."
+  - externalId: /Lotus/Types/Friendly/PlayerControllable/Weapons/DuviriDualSwordsWeapon
+    rank: A
+    notes: "483 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Axe/PrimeZoren/PrimeZorenAxeWeapon
+    rank: A
+    notes: "97 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Swords/CrpBigSlash/CrpBigSlash
+    rank: A
+    notes: "269 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Warfan/TnBrokenFrameWarfan/TnBrokenFrameWarfanWeapon
+    rank: S
+    notes: "365 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Swords/KatanaAndWakizashi/Dex2023Nikana/Dex2023Nikana
+    rank: A
+    notes: "298 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Corpus/Melee/ShieldAndSword/CrpHammerShield/CrpHammerShield
+    rank: A
+    notes: "246 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Polearms/Naginata/ShrineMaidenNaginataWeapon
+    rank: A
+    notes: "160 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Ostron/Melee/ModularMelee01/Tip/TipFour
+    rank: A
+    notes: "370 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Swords/StalkerMios/OperationsLacera
+    rank: A
+    notes: "467 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Grineer/Melee/Scythe/GrnDrillScythe/GrnDrillScythe
+    rank: A
+    notes: "61 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/PrimeDualKamas/PrimeDualKamas
+    rank: A
+    notes: "395 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/SwordsAndBoards/DaxDuviriMaceShieldWeapon
+    rank: A
+    notes: "131 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Syndicates/RedVeil/Melee/RVDarkDagger
+    rank: A
+    notes: "471 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/CronusSword/PrimeCronusLongSword
+    rank: A
+    notes: "362 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Syndicates/NewLoka/Melee/NLMagistar
+    rank: S
+    notes: "309 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Grineer/Melee/GrnKusarigama/GrnKusarigamaWeapon
+    rank: A
+    notes: "409 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/PrimeNinkondi/PrimeNikondi
+    rank: A
+    notes: "381 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Infested/Melee/Glaives/PunctureGlaive/PunctureGlaiveWeapon
+    rank: S
+    notes: "440 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Swords/PRapier/DestrezaPrime
+    rank: A
+    notes: "421 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/PrimeFragor/PrimeFragor
+    rank: A
+    notes: "449 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Archon/Melee/Whip/ArchonWhipPlayerWep
+    rank: A
+    notes: "218 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/VoidTrader/PrismaSkana
+    rank: S
+    notes: "325 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Glaives/PrimeKestrel/PrimeKestrel
+    rank: S
+    notes: "63 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Syndicates/ArbitersOfHexis/Melee/AHBoltace
+    rank: A
+    notes: "447 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Corpus/Melee/Hammer/CorpusHammerWeapon
+    rank: A
+    notes: "486 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Swords/KatanaAndWakizashi/LowKatana
+    rank: A
+    notes: "632 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/PrimeVolnus/VolnusPrimeWeapon
+    rank: A
+    notes: "264 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Swords/StalkerTwo/StalkerTwoGreatSword
+    rank: A
+    notes: "888 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Grineer/Melee/Tonfa/GrnChainSawTonfa/GrnChainSawTonfaWeapon
+    rank: A
+    notes: "93 archived community votes; plurality tier."
+  - externalId: /Lotus/Types/Enemies/Orokin/Entrati/EntratiTech/NechroTech/AbilitySword/NechroTechSwordWeapon
+    rank: A
+    notes: "102 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Infested/Melee/InfWFAccompanyingSparring/InfestedKogake
+    rank: A
+    notes: "519 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Thanotech/EntFistIncarnon/EntFistIncarnon
+    rank: A
+    notes: "141 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Grineer/Melee/GrineerMachetteAndCleaver/PrismaDualCleavers
+    rank: A
+    notes: "360 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Hammer/ThrowingHammer
+    rank: A
+    notes: "319 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Infested/Melee/InfTransformClaw/InfTransformClawsWeapon
+    rank: A
+    notes: "275 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Swords/TnTwoHandedKatana/TnTwoHandedKatana
+    rank: A
+    notes: "493 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/SwordsAndBoards/MortiforShieldAndSword/MortiforShieldAndSword
+    rank: A
+    notes: "85 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Staff/TipedoPrime/TipedoPrimeWeapon
+    rank: A
+    notes: "275 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/SwordsAndBoards/SundialSwordBoard/SundialBoardSword
+    rank: A
+    notes: "333 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Grineer/Melee/GrnEgyptSwd/DualGrnEgyptSwdWeapon
+    rank: A
+    notes: "349 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/PrimeTekko/PrimeTekko
+    rank: A
+    notes: "284 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Grineer/KuvaLich/Melee/Ghoulsaw/KuvaGhoulSaw
+    rank: A
+    notes: "51 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Swords/QuillSword/QuillDualSwords
+    rank: A
+    notes: "328 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Dagger/CeramicDagger
+    rank: S
+    notes: "602 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Corpus/Melee/CrpTonfa/CrpTonfa
+    rank: A
+    notes: "395 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Grineer/Melee/GrnSharbola/GrnSharbolaWeapon
+    rank: A
+    notes: "169 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Staff/PrimeBo/PrimeBoWeapon
+    rank: A
+    notes: "251 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Axe/PrimeScindo/PrimeScindoWeapon
+    rank: A
+    notes: "362 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Archon/Melee/Trident/ArchonTridentPlayerWep
+    rank: A
+    notes: "189 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Swords/PrimeMasseter/PrimeMasseter
+    rank: A
+    notes: "146 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Ostron/Melee/ModularMelee01/Tip/TipSix
+    rank: S
+    notes: "252 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Corpus/Melee/Glaive/CrpGlaive/CrpGlaive
+    rank: S
+    notes: "378 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/SwordsAndBoards/PrimeCobraAndCrane/PrimeCobraAndCraneWeapon
+    rank: B
+    notes: "153 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Sentients/SentJointedScythe/SentJointedScytheWeapon
+    rank: B
+    notes: "155 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/LongSword/SkanaPrime
+    rank: S
+    notes: "207 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Infested/Melee/InfBoomerang/InfBoomerangWeapon
+    rank: A
+    notes: "259 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Axe/WolfFrameAxeWeapon
+    rank: A
+    notes: "179 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Ostron/Melee/ModularMelee01/Tip/TipTwo
+    rank: B
+    notes: "187 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Infested/Melee/InfEmbolistScythe/InfestedScythe
+    rank: B
+    notes: "220 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Thanotech/EntSphereHammer/EntSphereHammer
+    rank: A
+    notes: "109 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Infested/Melee/InfWarfan/InfWarfanWeapon
+    rank: B
+    notes: "145 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Grineer/Melee/GrnBoomerang/HalikarWraithWeapon
+    rank: B
+    notes: "196 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Grineer/Melee/GrineerMachetteAndCleaver/WraithMacheteWeapon
+    rank: B
+    notes: "238 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/DualDagger/FangPrimeDagger
+    rank: B
+    notes: "452 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/SunDialAxe/SundialAxeWeapon
+    rank: B
+    notes: "334 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Infested/Melee/Nunchaku/InfNunchuck/InfNunchuck
+    rank: B
+    notes: "138 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/PrimeKogake/KogakePrimeKnuckles
+    rank: B
+    notes: "202 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Infested/Melee/Swords/Mios/Mios
+    rank: B
+    notes: "198 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Polearms/TnGuandaoPolearm/TnGuandaoPolearmWeapon
+    rank: B
+    notes: "334 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Swords/DexTheSecond/DexTheSecond
+    rank: B
+    notes: "278 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Grineer/Melee/GrineerWhip/GrineerWhip
+    rank: B
+    notes: "333 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Ostron/Melee/ModularMelee01/Tip/TipThree
+    rank: B
+    notes: "179 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Fist/FuraxWraith
+    rank: C
+    notes: "275 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Ostron/Melee/ModularMelee02/Tip/TipTen
+    rank: B
+    notes: "162 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Warfan/TnMoonWarfan/MoonWarfanWeapon
+    rank: A
+    notes: "134 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Grineer/Melee/GrnDualFireAxe/GrnDualFireAxe
+    rank: B
+    notes: "199 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Swords/DarkSword/DarkSwordDaggerHybridWeapon
+    rank: B
+    notes: "196 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Syndicates/CephalonSuda/Melee/CSHeliocor
+    rank: B
+    notes: "178 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Grineer/Melee/GrineerJetPoweredPolearm/GrineerJetPolearm
+    rank: B
+    notes: "205 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Infested/Melee/Swords/Mire/MireSword
+    rank: B
+    notes: "350 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Ostron/Melee/ModularMelee01/Tip/TipFive
+    rank: B
+    notes: "142 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Polearms/TnHalberdPolearm/TnHalberdPolearmWeapon
+    rank: B
+    notes: "199 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Garuda/GarudaClaws
+    rank: B
+    notes: "42 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Swords/GreatSword/TennoGreatSword
+    rank: B
+    notes: "333 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/DualShortSword/DualEtherSword
+    rank: B
+    notes: "297 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Corpus/Melee/KickAndPunch/PrismaObex
+    rank: B
+    notes: "171 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Operator/Melee/DrifterTazer/DrifterTazerPlayerWep
+    rank: B
+    notes: "267 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Hammer/GlassHammer/GlassHammer
+    rank: B
+    notes: "207 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Grineer/Melee/GrineerTylAxeAndBoar/RegorAxeShield
+    rank: B
+    notes: "195 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Maces/PaladinMace/PaladinMaceWeapon
+    rank: D
+    notes: "396 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Syndicates/PerrinSequence/Melee/PSLecta
+    rank: B
+    notes: "199 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Tonfa/TonfaContestWinner/TennoTonfa
+    rank: B
+    notes: "252 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Warfan/WarfanWeapon
+    rank: B
+    notes: "223 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Grineer/Melee/GrineerClaws/GrnClaws
+    rank: B
+    notes: "248 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Swords/CutlassAndPoignard/TennoCutlass
+    rank: D
+    notes: "285 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Syndicates/SteelMeridian/Melee/SMSydon
+    rank: B
+    notes: "159 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Swords/KatanaAndWakizashi/Katana
+    rank: B
+    notes: "289 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Infested/Melee/Whip/InfestedWhip/InfestedWhipWeapon
+    rank: B
+    notes: "151 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Grineer/Melee/GrnEgyptSwd/GrnEgyptSwdWeapon
+    rank: B
+    notes: "186 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Gunblade/GunbladeAutomatic/TnoGunbladeAutomatic
+    rank: B
+    notes: "201 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Gunblade/TnoGunblade
+    rank: B
+    notes: "299 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Grineer/Melee/GrineerMachetteAndCleaver/PrismaMachete
+    rank: B
+    notes: "139 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Glaives/TeshinGlaive/TnTeshinGlaiveWep
+    rank: B
+    notes: "324 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Hammer/IceHammer/IceHammer
+    rank: D
+    notes: "227 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/SwordsAndBoards/PacifistShieldAndSword/PacifistShieldSword
+    rank: B
+    notes: "188 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Swords/StalkerMios/StalkerMios
+    rank: B
+    notes: "198 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Scythe/ParisScythe/ParisScythe
+    rank: C
+    notes: "240 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Gauntlet/PrimeAnkyros/PrimeAnkyros
+    rank: C
+    notes: "160 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Staff/SingleStaff
+    rank: C
+    notes: "161 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Scythe/EtherScytheWeapon
+    rank: C
+    notes: "238 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/SwordsAndBoards/MeleeContestWinnerOne/TennoSwordShield
+    rank: C
+    notes: "264 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Grineer/Melee/GrnQueenSceptre/GrnQueenSceptreWeapon
+    rank: C
+    notes: "420 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Polearms/PolearmWeapon
+    rank: C
+    notes: "245 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Swords/TennoSai/TennoSais
+    rank: C
+    notes: "148 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Swords/TnChiselKanabo/TnChiselKanabo
+    rank: C
+    notes: "190 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Grineer/Melee/GrnGhoulSaw/GrnGhoulSawPlayer
+    rank: D
+    notes: "218 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Polearms/FlowerPowerPolearm/FlowerPowerPolearmWep
+    rank: C
+    notes: "148 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Grineer/Melee/GrnSparring/GrnSpiderSparring/GrnSpiderSparring
+    rank: C
+    notes: "131 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/GreatSword/GreatSword
+    rank: C
+    notes: "231 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Cephalon/Melee/Hammer/CephHammerWeapon
+    rank: C
+    notes: "162 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Swords/ThreeLeaf/ThreeLeaf
+    rank: C
+    notes: "167 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/ClanTech/Energy/VandalElectroProd
+    rank: C
+    notes: "132 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Staff/GrnStaff
+    rank: C
+    notes: "241 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/PersianMachete/DjinnMachete
+    rank: C
+    notes: "151 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Tonfa/Boltonfa/Boltonfa
+    rank: C
+    notes: "177 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Infested/Melee/Staff/InfStaff/InfStaff
+    rank: C
+    notes: "127 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Staff/MonkSpade/TnoMonkStaff
+    rank: C
+    notes: "200 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Axe/DualAxeWeapon
+    rank: C
+    notes: "203 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Corpus/Melee/Polearm/CorpusPolearm01/CorpusPolearmWeapon
+    rank: C
+    notes: "148 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Grineer/Melee/GrineerHalberd/GrnHalberd
+    rank: C
+    notes: "152 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Swords/DarkSword/DarkLongSword
+    rank: C
+    notes: "170 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Nunchaku/Nunchaku/Nunchaku
+    rank: C
+    notes: "166 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Grineer/Melee/GrineerMachetteAndCleaver/DualCleaverWeapon
+    rank: C
+    notes: "170 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Soma/SomaDualKamas
+    rank: C
+    notes: "146 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Glaives/LightGlaive/LightGlaiveWeapon
+    rank: D
+    notes: "204 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Swords/TnoRapier/TnoRapier
+    rank: C
+    notes: "171 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Claws/TennoClaws
+    rank: C
+    notes: "156 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Swords/HeatSword/HeatLongSword
+    rank: C
+    notes: "369 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Corpus/Melee/CrpVenusHatchet/CrpVenusHatchet
+    rank: C
+    notes: "111 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/DualDagger/DualEtherDagger
+    rank: C
+    notes: "271 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/LongSword/LongSword
+    rank: C
+    notes: "354 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Swords/JawSword/JawLongSword
+    rank: C
+    notes: "167 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/DualKamas/DualKamas
+    rank: C
+    notes: "183 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Swords/KrisDagger/KrisDagger
+    rank: C
+    notes: "167 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Grineer/Melee/GrineerCombatKnife/GrineerCombatKnife
+    rank: D
+    notes: "168 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/DualShortSword/DualHeatSwords
+    rank: C
+    notes: "250 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Gauntlet/BrawlerKnuckles/BrawlerKnuckles
+    rank: C
+    notes: "153 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Swords/CutlassAndPoignard/CutlassPoignardSwords
+    rank: C
+    notes: "176 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Grineer/Melee/GrnBoomerang/GrnBoomerang
+    rank: D
+    notes: "166 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/LongSword/EtherSword
+    rank: C
+    notes: "179 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Corpus/Melee/Whips/CrpShockGrip/CrpShockGripWhipWeapon
+    rank: C
+    notes: "126 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/DualShortSword/DualShortSword
+    rank: D
+    notes: "259 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Axe/AxeWeapon
+    rank: C
+    notes: "193 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Nunchaku/TnoNunchaku/TnoNunchaku
+    rank: D
+    notes: "136 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Dagger/DarkDagger
+    rank: D
+    notes: "172 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Swords/PlasmaSword/PlasmaLongSword
+    rank: D
+    notes: "173 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Grineer/Melee/GrnTrident/GrnTridentWeapon
+    rank: D
+    notes: "163 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Swords/PangolinSword/PangolinLongSword
+    rank: D
+    notes: "161 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Corpus/Melee/Whip/CorpusWhipWeapon
+    rank: D
+    notes: "336 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Staff/Staff
+    rank: D
+    notes: "409 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/ClanTech/Energy/ElectroProd
+    rank: D
+    notes: "188 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Hammer/HammerWeapon
+    rank: D
+    notes: "506 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Dagger/Dagger
+    rank: D
+    notes: "304 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Grineer/Melee/GrineerMachetteAndCleaver/Machete
+    rank: D
+    notes: "203 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/MK1Series/MK1Bo
+    rank: D
+    notes: "481 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/CronusSword/CronusLongSword
+    rank: D
+    notes: "352 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/DualKamas/SingleKama
+    rank: D
+    notes: "263 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Corpus/Melee/KickAndPunch/KickPunchWeapon
+    rank: D
+    notes: "266 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Fist/Fist
+    rank: D
+    notes: "358 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Glaives/Boomerang/BoomerangWeapon
+    rank: D
+    notes: "263 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/DualDagger/DualDagger
+    rank: D
+    notes: "341 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/MK1Series/MK1Furax
+    rank: D
+    notes: "447 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/Gauntlet/Gauntlet
+    rank: D
+    notes: "327 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Melee/BrassKnuckles/BrassKnuckles
+    rank: D
+    notes: "309 archived community votes; plurality tier."

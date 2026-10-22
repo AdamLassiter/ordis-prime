@@ -1,0 +1,64 @@
+schemaVersion: 1
+source:
+  id: creator-salt-prime-kuva-weapons-2025
+  title: Salt Prime Kuva Lich weapon tier list (2025)
+  author: Salt_Prime
+  url: https://www.youtube.com/watch?v=lvte7Gpv0k0
+  publishedAt: 2025-09-22
+  gameVersion: Published 2025-09-22
+  scope: The 20 Kuva weapons reviewed in the cited video
+  licenseNote:
+    Manual factual transcription of creator rankings from the cited public video; no
+    transcript prose reproduced.
+scale:
+  - S
+  - Situational S
+  - A
+  - B
+  - C
+  - D
+entries:
+  - externalId: /Lotus/Weapons/Grineer/KuvaLich/LongGuns/Karak/KuvaKarak
+    rank: B
+  - externalId: /Lotus/Weapons/Grineer/KuvaLich/LongGuns/Drakgoon/KuvaDrakgoon
+    rank: D
+  - externalId: /Lotus/Weapons/Grineer/KuvaLich/LongGuns/Kohm/KuvaKohm
+    rank: A
+  - externalId: /Lotus/Weapons/Grineer/Bows/GrnBow/GrnBowWeapon
+    rank: S
+  - externalId: /Lotus/Weapons/Grineer/KuvaLich/LongGuns/Hind/KuvaHind
+    rank: B
+  - externalId: /Lotus/Weapons/Grineer/KuvaLich/LongGuns/Hek/KuvaHekWeapon
+    rank: Situational S
+    notes: S for one-shot boss builds; described as D for ordinary mobbing.
+  - externalId: /Lotus/Weapons/Grineer/KuvaLich/LongGuns/Tonkor/KuvaTonkor
+    rank: B
+    notes: Initially placed low A, then moved to high B in the final review.
+  - externalId: /Lotus/Weapons/Grineer/KuvaLich/LongGuns/Zarr/KuvaZarr
+    rank: S
+  - externalId: /Lotus/Weapons/Grineer/KuvaLich/LongGuns/Quartakk/KuvaQuartakk
+    rank: B
+    notes: Placement assumes aimed semi-automatic fire.
+  - externalId: /Lotus/Weapons/Grineer/KuvaLich/Secondaries/Kraken/KuvaKraken
+    rank: C
+  - externalId: /Lotus/Weapons/Grineer/KuvaLich/Secondaries/Brakk/KuvaBrakk
+    rank: C
+  - externalId: /Lotus/Weapons/Grineer/KuvaLich/LongGuns/Ogris/KuvaOgris
+    rank: A
+  - externalId: /Lotus/Weapons/Grineer/KuvaLich/Secondaries/Seer/KuvaSeer
+    rank: C
+  - externalId: /Lotus/Weapons/Grineer/LongGuns/GrnKuvaLichRifle/GrnKuvaLichRifleWeapon
+    rank: S
+  - externalId: /Lotus/Weapons/Grineer/KuvaLich/Secondaries/Stubba/KuvaStubba
+    rank: B
+  - externalId: /Lotus/Weapons/Grineer/KuvaLich/LongGuns/Sobek/KuvaSobek
+    rank: Situational S
+    notes: S on specific Acid Shells Warframes; described as high B generally.
+  - externalId: /Lotus/Weapons/Grineer/KuvaLich/Secondaries/Nukor/KuvaNukor
+    rank: S
+  - externalId: /Lotus/Weapons/Grineer/Melee/GrnKuvaLichScythe/GrnKuvaLichScytheWeapon
+    rank: A
+  - externalId: /Lotus/Weapons/Grineer/HeavyWeapons/GrnHeavyGrenadeLauncher
+    rank: C
+  - externalId: /Lotus/Weapons/Grineer/KuvaLich/HeavyWeapons/Grattler/KuvaGrattler
+    rank: A

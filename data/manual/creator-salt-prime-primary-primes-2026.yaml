@@ -1,0 +1,99 @@
+schemaVersion: 1
+source:
+  id: creator-salt-prime-primary-primes-2026
+  title: Salt Prime primary Prime weapon tier list (2026)
+  author: Salt_Prime
+  url: https://www.youtube.com/watch?v=My2venKZ7ow
+  publishedAt: 2026-04-28
+  gameVersion: Published 2026-04-28
+  scope: All 33 primary Prime weapons reviewed in the cited video
+  licenseNote:
+    Manual factual transcription of creator rankings from the cited public video; no
+    transcript prose reproduced.
+scale:
+  - S
+  - A
+  - B
+  - C
+  - D
+  - Utility
+entries:
+  - externalId: /Lotus/Weapons/Tenno/LongGuns/PrimeTenora/TenoraPrimeWeapon
+    rank: B
+  - externalId: /Lotus/Weapons/Tenno/Shotgun/PrimeBoar
+    rank: S
+    notes: Incarnon placement; base weapon was described as high B.
+  - externalId: /Lotus/Weapons/Tenno/LongGuns/PrimeTigris/PrimeTigris
+    rank: D
+  - externalId: /Lotus/Weapons/Tenno/LongGuns/PrimeBaza/PrimeBazaGun
+    rank: C
+  - externalId: /Lotus/Weapons/Tenno/LongGuns/PrimeAcceltra/PrimeAcceltraWeapon
+    rank: A
+  - externalId: /Lotus/Weapons/Tenno/LongGuns/PrimeZhuge/PrimeZhugeCrossbow
+    rank: B
+  - externalId: /Lotus/Weapons/Tenno/Bows/PrimeDaikyu/PrimeDaikyuBow
+    rank: B
+  - externalId: /Lotus/Weapons/Tenno/LongGuns/PrimePerigale/PrimePerigaleSniper
+    rank: A
+  - externalId: /Lotus/Weapons/Tenno/LongGuns/PrimeStradavar/PrimeStradavarGun
+    rank: C
+  - externalId: /Lotus/Weapons/Tenno/LongGuns/PrimeBurston/PrimeBurston
+    rank: S
+    notes: Incarnon placement; base weapon was described as low B or high C.
+  - externalId: /Lotus/Weapons/Tenno/LongGuns/PrimeCorinth/PrimeCorinth
+    rank: D
+  - externalId: /Lotus/Weapons/Tenno/LongGuns/PrimePhantasma/PhantasmaPrimeShotgun
+    rank: B
+  - externalId: /Lotus/Weapons/Tenno/LongGuns/PrimeScourge/PrimeScourgeWeapon
+    rank: Utility
+    notes: Placed for its secondary-weapon headshot utility rather than primary-fire damage.
+  - externalId: /Lotus/Weapons/Tenno/Rifle/BratonPrime
+    rank: A
+    notes: Incarnon placement; base weapon was described as low C.
+  - externalId: /Lotus/Weapons/Tenno/LongGuns/PrimeTiberon/PrimeTiberonRifle
+    rank: B
+  - externalId: /Lotus/Weapons/Tenno/LongGuns/PrimeAstilla/AstillaPrimeWeapon
+    rank: B
+  - externalId: /Lotus/Weapons/Tenno/LongGuns/PrimeStrun/PrimeStrunWeapon
+    rank: S
+    notes: Incarnon placement; base weapon was described as B.
+  - externalId: /Lotus/Weapons/Tenno/LongGuns/PrimeVectis/PrimeVectisRifle
+    rank: C
+  - externalId: /Lotus/Weapons/Tenno/LongGuns/PrimeFulmin/PrimeFulmin
+    rank: A
+    notes: Placement reflects the semi-automatic mode; automatic mode was described as B.
+  - externalId: /Lotus/Weapons/Tenno/LongGuns/PrimeCedo/PrimeCedoWeapon
+    rank: S
+  - externalId: /Lotus/Weapons/Tenno/LongGuns/PrimeAlternox/PrimeAlternoxWeapon
+    rank: B
+  - externalId: /Lotus/Weapons/Tenno/LongGuns/PrimePanthera/PrimePanthera
+    rank: D
+  - externalId: /Lotus/Weapons/Tenno/LongGuns/PrimeTrumna/PrimeTrumnaWeapon
+    rank: S
+  - externalId: /Lotus/Weapons/Tenno/LongGuns/PrimeLightningGun/PrimeLightningGun
+    rank: A
+  - externalId: /Lotus/Weapons/Tenno/Bows/PrimeHuntingBow
+    rank: A
+    notes: Incarnon placement; base weapon was described as C.
+  - externalId: /Lotus/Weapons/Tenno/LongGuns/PrimeNagantaka/PrimeNagantakaWeapon
+    rank: B
+    notes: Placement assumes use of the alternate fire; primary-only use was described as C.
+  - externalId: /Lotus/Weapons/Tenno/Rifle/LatronPrime
+    rank: S
+    notes: Incarnon placement; base weapon was described as low C or D.
+  - externalId: /Lotus/Weapons/Tenno/LongGuns/PrimeSybaris/PrimeSybarisRifle
+    rank: S
+    notes: Incarnon placement; base weapon was described as low C or D.
+  - externalId: /Lotus/Weapons/Tenno/LongGuns/PrimeSoma/PrimeSomaRifle
+    rank: A
+    notes: Placement reflects the Prime with its Incarnon adapter.
+  - externalId: /Lotus/Weapons/Tenno/LongGuns/PrimeBoltor/PrimeBoltor
+    rank: S
+    notes: Incarnon placement; base weapon was placed in D.
+  - externalId: /Lotus/Weapons/Tenno/LongGuns/RubicoPrime/RubicoPrimeWeapon
+    rank: C
+  - externalId: /Lotus/Weapons/Grineer/LongGuns/GrnOrokinRifle/GrnOrokinRifleWeapon
+    rank: A
+  - externalId: /Lotus/Weapons/Tenno/Bows/PrimeCernos/PrimeCernos
+    rank: Utility
+    notes: The reviewer declined to rank it from limited experience and parked it in Utility.

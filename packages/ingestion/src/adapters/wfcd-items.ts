@@ -34,6 +34,7 @@ interface WfcdItem {
   baseDrain?: number;
   polarity?: string;
   polarities?: unknown;
+  drops?: WfcdDrop[];
 }
 interface WfcdComponent {
   uniqueName?: string;
@@ -42,6 +43,12 @@ interface WfcdComponent {
   category?: string;
   type?: string;
   itemCount?: number;
+  drops?: WfcdDrop[];
+}
+interface WfcdDrop {
+  location?: string;
+  chance?: number;
+  rotation?: string;
 }
 const categories: Record<string, EntityKind> = {
   Warframes: "warframe",
@@ -63,9 +70,15 @@ const categories: Record<string, EntityKind> = {
   Sentinels: "companion",
   Components: "component",
   Enemy: "enemy",
+  Gear: "gear",
+  Glyphs: "cosmetic",
+  Honoria: "cosmetic",
+  Railjack: "weapon",
+  Sigils: "cosmetic",
+  Skins: "cosmetic",
 };
 export const DEFAULT_WFCD_ITEMS_URL = "https://api.warframestat.us/items";
-const PARSER_VERSION = "wfcd-items-v12";
+const PARSER_VERSION = "wfcd-items-v14";
 const ARCHON_SHARD_PREFIX = "/Lotus/Types/Gameplay/NarmerSorties/ArchonCrystal";
 const resourceTypes = new Set([
   "Resource",
@@ -203,6 +216,7 @@ export class WfcdItemsAdapter implements SourceAdapter {
         },
         evidence,
       };
+      yield* dropObservations(item, item.uniqueName, evidence, `[${index}]`);
       const companionPolarities =
         kind === "companion"
           ? parseCompanionPolarities(item.polarities, name)
@@ -277,6 +291,12 @@ export class WfcdItemsAdapter implements SourceAdapter {
             path: `[${index}].components[${componentIndex}]`,
           },
         };
+        yield* dropObservations(
+          component,
+          component.uniqueName!,
+          evidence,
+          `[${index}].components[${componentIndex}]`,
+        );
       }
       if (components.length)
         yield {
@@ -334,14 +354,83 @@ function kindFor(
 ): EntityKind {
   if (item.uniqueName?.startsWith(ARCHON_SHARD_PREFIX)) return "shard";
   if (item.type && resourceTypes.has(item.type)) return "resource";
+  if (item.type?.endsWith(" Riven Mod")) return "mod";
+  if (
+    [
+      "Amp",
+      "Exalted Weapon",
+      "Pistol",
+      "Rifle",
+      "Shotgun",
+      "Railjack Turret",
+    ].includes(item.type ?? "")
+  )
+    return "weapon";
+  if (item.type === "Nightwave Challenge") return "challenge";
+  if (item.type === "Captura" || item.type === "Ship Decoration")
+    return "decoration";
+  if (
+    item.category === "Skins" ||
+    item.category === "Glyphs" ||
+    item.category === "Sigils" ||
+    item.category === "Honoria"
+  )
+    return "cosmetic";
+  if (
+    [
+      "Boosters",
+      "Conservation Prey",
+      "Extractor",
+      "Fish Bait",
+      "Gear",
+      "Key",
+      "Orbiter",
+      "Ship Segment",
+      "Simulacrum",
+      "Specter",
+    ].includes(item.type ?? "") ||
+    item.category === "Gear"
+  )
+    return "gear";
+  if (item.type === "K-Drive Component" || item.type === "Pet Collar")
+    return "component";
   if (item.type === "Kitgun Component")
     return item.uniqueName?.includes("/Barrel/") ? "weapon" : "component";
   if (item.type === "Zaw Component")
     return /\/Tips?\//.test(item.uniqueName ?? "") ? "weapon" : "component";
-  return (
+  const categoryKind =
     categories[item.category ?? ""] ??
-    (item.type === "Blueprint" ? "blueprint" : fallback)
-  );
+    (item.type === "Blueprint" ? "blueprint" : undefined);
+  if (categoryKind) return categoryKind;
+  if (item.category === "Misc" || item.type === "Misc") return "misc";
+  return fallback;
+}
+
+function* dropObservations(
+  item: Pick<WfcdItem, "drops">,
+  rewardId: string,
+  evidence: EntityObservation["evidence"],
+  path: string,
+): Generator<Observation> {
+  for (const [index, drop] of (item.drops ?? []).entries()) {
+    if (!drop.location) continue;
+    yield {
+      type: "drop",
+      rewardExternalId: {
+        sourceId: "wfcd-items",
+        namespace: "uniqueName",
+        value: rewardId,
+      },
+      locationLabel: drop.location,
+      chance: typeof drop.chance === "number" ? drop.chance / 100 : undefined,
+      rotation: drop.rotation,
+      evidence: {
+        ...evidence,
+        sourceRecordKey: `${rewardId}:drop:${index}`,
+        path: `${path}.drops[${index}]`,
+      },
+    };
+  }
 }
 function weaponClassFor(
   item: Pick<WfcdItem, "category" | "type" | "productCategory">,

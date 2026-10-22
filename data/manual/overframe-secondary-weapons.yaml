@@ -1,0 +1,468 @@
+schemaVersion: 1
+source:
+  id: overframe-secondary-weapons
+  title: "Overframe community secondary weapons (2026-05-16)"
+  author: Overframe community
+  url: https://web.archive.org/web/20260516143528id_/https://overframe.gg/api/v1/tierlists/2/
+  publishedAt: 2026-05-16
+  gameVersion: "Archived 2026-05-16 snapshot"
+  scope: "Secondary weapons with at least 40 community votes"
+  licenseNote: "Factual plurality tiers manually transcribed from the cited public snapshot; no page text or build data copied."
+scale: [S, A, B, C, D]
+entries:
+  - externalId: /Lotus/Weapons/Grineer/KuvaLich/Secondaries/Nukor/KuvaNukor
+    rank: S
+    notes: "4957 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Zariman/Pistols/HeavyPistol/ZarimanHeavyPistol
+    rank: S
+    notes: "3148 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Pistols/PrimeEpitaph/PrimeEpitaphSidearmWeapon
+    rank: S
+    notes: "1146 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Corpus/BoardExec/Secondary/CrpBECycron/CrpBECycron
+    rank: S
+    notes: "1780 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Pistols/TnWraitheSidearm/TnWraitheSidearmWeapon
+    rank: S
+    notes: "2516 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Pistols/PrimeKompressa/PrimeKompressa
+    rank: S
+    notes: "379 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Infested/Pistols/InfKitGun/Barrels/InfBarrelEgg/InfModularBarrelEggPart
+    rank: S
+    notes: "1883 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Infested/Pistols/InfVomitGun/InfVomitGunWep
+    rank: S
+    notes: "1416 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Infested/InfestedLich/Pistols/1999InfSporePistol/1999InfSporePistolWeapon
+    rank: S
+    notes: "453 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Pistols/PrimeAkarius/PrimeAkariusWeapon
+    rank: S
+    notes: "954 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Corpus/Pistols/CrpSentExperimentPistol/CrpSentExperimentPistol
+    rank: S
+    notes: "1239 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Pistols/PrimePyrana/PrimePyranaPistol
+    rank: S
+    notes: "2901 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/ThrowingWeapons/TnOraxiaFlechette/TnOraxiaFlechette
+    rank: S
+    notes: "303 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Corpus/BoardExec/Secondary/CrpBEPlinx/CrpBEPlinxWeapon
+    rank: S
+    notes: "805 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Grimoire/TnGrimoire
+    rank: S
+    notes: "1233 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Pistols/PrimeKnell/PrimeKnellWeapon
+    rank: S
+    notes: "849 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Grineer/KuvaLich/Secondaries/Brakk/KuvaBrakk
+    rank: S
+    notes: "1105 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/SolarisUnited/Secondary/SUModularSecondarySet1/Barrel/SUModularSecondaryBarrelAPart
+    rank: S
+    notes: "1092 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/SolarisUnited/Secondary/SUModularSecondarySet1/Barrel/SUModularSecondaryBarrelBPart
+    rank: A
+    notes: "864 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Infested/InfestedLich/Pistols/CodaCatabolyst
+    rank: S
+    notes: "136 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Pistols/PrimeAksomati/PrimeAksomati
+    rank: A
+    notes: "836 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Infested/Pistols/InfKitGun/Barrels/InfBarrelBeam/InfModularBarrelBeamPart
+    rank: S
+    notes: "404 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Pistols/TnYareliPistol/TnYareliPistolWeapon
+    rank: A
+    notes: "423 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/SolarisUnited/Secondary/SUModularSecondarySet1/Barrel/SUModularSecondaryBarrelDPart
+    rank: A
+    notes: "492 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Pistols/PrimeLex/PrimeLex
+    rank: S
+    notes: "1171 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Infested/Pistols/InfBeamPistol/InfBeamPistol
+    rank: A
+    notes: "374 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Grineer/Pistols/HeatGun/GrnHeatGun
+    rank: A
+    notes: "1103 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Pistols/PrimeAkjagara/AkJagaraPrime
+    rank: A
+    notes: "633 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Corpus/Pistols/CrpBriefcaseAkimbo/CrpBriefcaseAkimboPistol
+    rank: A
+    notes: "526 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Corpus/BoardExec/Secondary/CrpBEDetron/CrpBEDetron
+    rank: A
+    notes: "337 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Pistols/PrimeHystrix/PrimeHystrixWeapon
+    rank: A
+    notes: "303 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/SolarisUnited/Secondary/SUModularSecondarySet1/Barrel/SUModularSecondaryBarrelCPart
+    rank: A
+    notes: "504 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Pistols/TnJetTurbine/TnJetTurbinePistolWeapon
+    rank: A
+    notes: "594 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Pistols/PrimeAkstiletto/PrimeAkstiletto
+    rank: A
+    notes: "588 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Thanotech/ThanoPistol/ThanotechPistol
+    rank: A
+    notes: "367 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Grineer/KuvaLich/Secondaries/Stubba/KuvaStubba
+    rank: A
+    notes: "494 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Lasria/LasSilencedPistol/LasSilencedPistolWeapon
+    rank: A
+    notes: "198 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Pistols/AllNew1hSG/AllNew1hSG
+    rank: A
+    notes: "614 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Thanotech/EntratiWristGun/EntratiWristGunWeapon
+    rank: A
+    notes: "233 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Corpus/Pistols/CrpIgniterPistol/CrpIgniterPistol
+    rank: A
+    notes: "298 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Pistols/PrimeZakti/PrimeZaktiPistol
+    rank: A
+    notes: "391 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Pistols/SapientPistol/SapientPistol
+    rank: A
+    notes: "681 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Pistols/PrimeSicarus/PrimeSicarusPistol
+    rank: A
+    notes: "418 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Pistols/PrimeZylok/ZylokPrimePistol
+    rank: A
+    notes: "228 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Grineer/LongGuns/GrineerAssaultRifle/TwinGrakatas
+    rank: A
+    notes: "676 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Pistols/PrimeVelox/PrimeVeloxPistol
+    rank: A
+    notes: "171 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Corpus/Pistols/CrpElectroMag/CrpElectroMag
+    rank: A
+    notes: "557 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Pistols/PrimePandero/PanderoPrimeWeapon
+    rank: A
+    notes: "318 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Grineer/Pistols/GrnOrokinPistol/GrnOrokinPistol
+    rank: A
+    notes: "56 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Syndicates/CephalonSuda/Pistols/CSSynoidGammacor
+    rank: A
+    notes: "510 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/ThrowingWeapons/TnChoirframeKunai/TnChoirframeKunai
+    rank: A
+    notes: "158 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Infested/Pistols/InfUzi/InfUziWeapon
+    rank: A
+    notes: "349 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Akimbo/DualMagnusPrime
+    rank: A
+    notes: "94 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Pistols/1999EntHybridPistolWeapon/1999EntHybridPistolWeapon
+    rank: A
+    notes: "98 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Corpus/Pistols/CrpHandRL/PrismaAngstrum
+    rank: A
+    notes: "326 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Grineer/ThrowingWeapons/GrnVorStickyBomb/GrnVorStickyBomb
+    rank: A
+    notes: "265 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Pistols/PrimeMagnus/PrimeMagnusWeapon
+    rank: A
+    notes: "217 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/VoidTrader/VTDetron
+    rank: A
+    notes: "422 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Corpus/Pistols/CrpSentAmalgPistol/CrpSentAmalgPistol
+    rank: A
+    notes: "386 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Pistol/LatoVandal
+    rank: A
+    notes: "246 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Pistols/PrimeVasto/AkPrimeVasto/AkPrimeVastoPistol
+    rank: A
+    notes: "336 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Grineer/Pistols/GrineerBulbousSMG/Prisma/PrismaTwinGremlinsWeapon
+    rank: A
+    notes: "350 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Grineer/KuvaLich/Secondaries/Seer/KuvaSeer
+    rank: A
+    notes: "391 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Grineer/Pistols/GrnDWUniques/GrnTwinKohmaks
+    rank: B
+    notes: "350 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Pistols/PrimeAkbolto/PrimeAkBoltoWeapon
+    rank: A
+    notes: "323 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Akimbo/AkLexPrimePistols
+    rank: A
+    notes: "466 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Pistols/TnOdaliskSmg/TnOdaliskSmgPistol
+    rank: A
+    notes: "337 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Infested/InfestedLich/Pistols/CodaTysis
+    rank: A
+    notes: "75 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Pistols/PrimeVasto/PrimeVastoPistol
+    rank: B
+    notes: "360 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Pistols/PrimeAfuris/PrimeAFurisWeapon
+    rank: B
+    notes: "140 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Infested/InfestedLich/Pistols/CodaPox
+    rank: A
+    notes: "79 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Pistol/LatoPrime
+    rank: B
+    notes: "210 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/ThrowingWeapons/PrimeLiDagger/PrimeLiDagger
+    rank: B
+    notes: "226 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Pistol/AutoPistol
+    rank: S
+    notes: "666 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Syndicates/SteelMeridian/Pistols/SMMarelok
+    rank: B
+    notes: "246 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Pistols/DexFuris/DexFuris
+    rank: B
+    notes: "367 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Pistols/TnBardPistol/TnBardPistolGun
+    rank: B
+    notes: "308 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Pistols/QuillDartgun/QuillDartGunWeapon
+    rank: B
+    notes: "261 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Corpus/Pistols/SniperPistol/CrpScopeGun
+    rank: B
+    notes: "209 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Corpus/Pistols/CorpusModularPistol/Vandal/CrpLaserPistolVandal
+    rank: B
+    notes: "187 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Infested/Pistols/InfProximityStars/InfProximityStars
+    rank: B
+    notes: "270 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Lasria/LasGooPistol/LasGooPistolPlayerWeapon
+    rank: B
+    notes: "71 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/ThrowingWeapons/PrimeThrowingStar/PrimeHikou
+    rank: B
+    notes: "245 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Grineer/KuvaLich/Secondaries/Kraken/KuvaKraken
+    rank: B
+    notes: "261 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Akimbo/PrimeAkimboShotGun
+    rank: B
+    notes: "304 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Pistols/SundialGun/SundialPistol
+    rank: B
+    notes: "240 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Grineer/Pistols/GrineerMicrowavegun/GrnMicrowavePistol
+    rank: B
+    notes: "344 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Pistols/PrimeBallistica/PrimeBallistica
+    rank: B
+    notes: "200 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Grineer/Pistols/GrnQueenGuardDualPistol/GrnQueenGuardDualPistols
+    rank: B
+    notes: "235 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/ThrowingWeapons/StalkerKunai
+    rank: C
+    notes: "377 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Grineer/Pistols/GrnAmphisPistol/GrnAmphisPistol
+    rank: B
+    notes: "240 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Syndicates/PerrinSequence/Pistols/PSDualCestra
+    rank: B
+    notes: "169 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Pistols/TnPriestPistolScope/TnPriestPistolWeapon
+    rank: B
+    notes: "258 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Pistols/SawnOffShotgun/TennoHandShotgun
+    rank: B
+    notes: "254 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Infested/Pistols/InfestedDartPistol/InfestedDartPistol
+    rank: B
+    notes: "221 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Corpus/Pistols/CrpAirPistol/CrpAirPistolArray
+    rank: B
+    notes: "316 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Pistols/SomaSidearm/AkimboSomaPistols
+    rank: B
+    notes: "238 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Pistol/BroncoPrime
+    rank: C
+    notes: "310 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Pistols/TnGuandoPistol/TnGuandoPistolGun
+    rank: B
+    notes: "246 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Syndicates/NewLoka/Pistols/NLCastanas
+    rank: B
+    notes: "189 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Grineer/Pistols/GrnTorpedoPistol/GrnTorpedoPistol
+    rank: C
+    notes: "219 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Pistols/ConclaveLeverPistol/ConclaveLeverPistol
+    rank: C
+    notes: "215 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Corpus/Pistols/CrpSonificBlastor/CrpBlastorWeapon
+    rank: C
+    notes: "219 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Akimbo/DualMagnus
+    rank: C
+    notes: "221 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Infested/Pistols/InfestedPistol
+    rank: C
+    notes: "167 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Syndicates/RedVeil/Pistols/RVBallistica
+    rank: C
+    notes: "185 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Corpus/Pistols/CrpChargeGun/CrpChargeGun
+    rank: C
+    notes: "195 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Syndicates/ArbitersOfHexis/Pistols/AHAkbolto
+    rank: C
+    notes: "152 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Grineer/Pistols/GrnKohmPistol/GrnKohmPistol
+    rank: C
+    notes: "190 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Pistols/HarlequinGun/HarlequinPistols
+    rank: C
+    notes: "232 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Grineer/Pistols/GrineerCrossbow/GrineerGooGun
+    rank: D
+    notes: "619 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Pistols/TennoUzi/TennoUzi
+    rank: C
+    notes: "209 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Grineer/Pistols/GrineerHandShotgun/GrineerHandCannon
+    rank: C
+    notes: "168 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/ThrowingWeapons/GlassKunai/GlassKunaiWeapon
+    rank: C
+    notes: "228 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Grineer/Pistols/GrnUzi/GrnUziWeapon
+    rank: C
+    notes: "188 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Grineer/Pistols/GrineerLeverActionPistol/GLAPistol
+    rank: C
+    notes: "174 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/ClanTech/Bio/AcidDartPistol
+    rank: C
+    notes: "181 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Syndicates/CephalonSuda/Pistols/CSDroidArray
+    rank: C
+    notes: "344 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Akimbo/AkLexPistols
+    rank: C
+    notes: "224 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Grineer/Pistols/WraithTwinVipers/WraithTwinVipers
+    rank: C
+    notes: "193 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Pistols/TigrisRedeemerSetPistol/TnoBladedPistols
+    rank: C
+    notes: "184 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Corpus/Pistols/CorpusMinigun/DualCorpusMinigun
+    rank: C
+    notes: "241 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Akimbo/DualVastos
+    rank: C
+    notes: "219 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Pistol/HeavyPistol
+    rank: C
+    notes: "308 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Corpus/Pistols/CorpusHandShotgun/CorpusHandCannon
+    rank: C
+    notes: "166 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Pistols/Magnum/Magnum
+    rank: C
+    notes: "218 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/ThrowingWeapons/LiDagger/LiDagger
+    rank: C
+    notes: "226 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/ThrowingWeapons/TennoStars
+    rank: C
+    notes: "252 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Akimbo/AkimboAutoPistols
+    rank: C
+    notes: "276 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Corpus/Pistols/CrpHandRL/CorpusHandRocketLauncher
+    rank: D
+    notes: "250 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Grineer/GrineerPistol/GrineerAkimboPistol
+    rank: C
+    notes: "237 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Pistol/RevolverPistol
+    rank: C
+    notes: "270 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Grineer/Pistols/WraithSingleViper/WraithSingleViper
+    rank: D
+    notes: "195 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/ThrowingWeapons/Kunai
+    rank: D
+    notes: "474 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Corpus/Pistols/CorpusMinigun/CorpusMinigun
+    rank: D
+    notes: "335 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Akimbo/AkimboBolto
+    rank: C
+    notes: "225 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/ThrowingWeapons/U18ThrowingKnives/U18throwingknives
+    rank: D
+    notes: "208 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/ClanTech/Energy/CrpLaserPistol
+    rank: D
+    notes: "158 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Grineer/GrineerPistol/GrnScopedPistolPlayer
+    rank: D
+    notes: "305 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Pistol/Pistol
+    rank: D
+    notes: "467 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/ThrowingWeapons/StickyBomb/StickyBombs
+    rank: D
+    notes: "263 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/MK1Series/MK1Kunai
+    rank: D
+    notes: "498 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Pistol/BurstPistol
+    rank: D
+    notes: "320 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/MK1Series/MK1Furis
+    rank: D
+    notes: "456 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Pistol/HandShotGun
+    rank: D
+    notes: "362 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Grineer/GrineerPistol/GrnHeavyPistol
+    rank: D
+    notes: "423 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Akimbo/AkimboViperPistols
+    rank: D
+    notes: "335 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Akimbo/AkimboShotGun
+    rank: D
+    notes: "320 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Pistol/CrossBow
+    rank: D
+    notes: "297 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Akimbo/AkimboPistol
+    rank: D
+    notes: "361 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Pistols/AutomaticHandCrossbow/AutoCrossBow
+    rank: D
+    notes: "289 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Grineer/GrineerPistol/GrineerLightPistol
+    rank: D
+    notes: "373 archived community votes; plurality tier."

@@ -1,0 +1,111 @@
+schemaVersion: 1
+source:
+  id: overframe-archwing
+  title: "Overframe community Archwing equipment (2026-04-24)"
+  author: Overframe community
+  url: https://web.archive.org/web/20260424044121id_/https://overframe.gg/api/v1/tierlists/4/
+  publishedAt: 2026-04-24
+  gameVersion: "Archived 2026-04-24 snapshot"
+  scope: "Archwings and Archwing weapons with at least 40 community votes"
+  licenseNote: "Factual plurality tiers manually transcribed from the cited public snapshot; no page text or build data copied."
+scale: [S, A, B, C, D]
+entries:
+  - externalId: /Lotus/Weapons/Tenno/Archwing/Primary/ThanoTechArchLongGun/ThanoTechLongGun
+    rank: S
+    notes: "2000 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Archwing/SupportJetPack/SupportJetPack
+    rank: S
+    notes: "1478 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Archwing/Primary/PrimeLarkspur/PrimeLarkspurWeapon
+    rank: S
+    notes: "481 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Grineer/KuvaLich/HeavyWeapons/Grattler/KuvaGrattler
+    rank: S
+    notes: "865 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Archwing/StealthJetPack/StealthJetPack
+    rank: S
+    notes: "1628 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Archwing/Primary/FoldingMachineGun/ArchMachineGunVandal
+    rank: S
+    notes: "983 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Archwing/Primary/NokkoArchGun/NokkoArchGun
+    rank: S
+    notes: "110 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Grineer/HeavyWeapons/GrnHeavyGrenadeLauncher
+    rank: S
+    notes: "745 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Archwing/Primary/PrimeCorvas/PrimeCorvasWeapon
+    rank: S
+    notes: "365 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Archwing/Primary/Railgun/ArchRailgun
+    rank: S
+    notes: "489 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Archwing/Primary/ThanoTechGrenadeLaunch/ThanoTechGrenadeLauncher
+    rank: A
+    notes: "248 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Archwing/Primary/TnShieldframeArchGun/TnShieldFrameArchGun
+    rank: A
+    notes: "392 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Archwing/Primary/RocketArtillery/ArchRocketCrossbow
+    rank: A
+    notes: "421 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Archwing/Melee/Archswordandshield/ArchSwordShield
+    rank: A
+    notes: "422 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Archwing/Primary/ThanoTechArchGun/ThanoTechArchGun
+    rank: A
+    notes: "258 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Archwing/Melee/VoidTraderArchsword/VTArchSwordWeapon
+    rank: A
+    notes: "370 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Archwing/Primary/ArchwingHeavyPistols/Prisma/PrismaArchHeavyPistols
+    rank: A
+    notes: "282 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Archwing/Primary/TnConcreteArchgun/TnConcreteArchgunWeapon
+    rank: A
+    notes: "140 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Archwing/Primary/ArchBurstGun/ArchBurstGun
+    rank: A
+    notes: "298 archived community votes; plurality tier."
+  - externalId: /Lotus/Types/Enemies/Orokin/Entrati/EntratiTech/NechroTech/AbilitySword/NechroTechSwordWeapon
+    rank: B
+    notes: "165 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Archwing/StandardJetPack/StandardJetPack
+    rank: B
+    notes: "557 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Archwing/Primary/RepurposedGrineerAntiAircraftGun/ArchGRNAAGun
+    rank: B
+    notes: "326 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Archwing/Primary/LaunchGrenade/ArchCannon
+    rank: B
+    notes: "280 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Archwing/Primary/ArchLongRifle/ArchLongRifle
+    rank: B
+    notes: "219 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Archwing/DemolitionJetPack/DemolitionJetPack
+    rank: C
+    notes: "408 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Archwing/Melee/ArchScythe/ArchScythe
+    rank: C
+    notes: "250 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Archwing/Primary/ArchwingHeavyPistols/ArchHeavyPistols
+    rank: C
+    notes: "264 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Archwing/Melee/GrnArchHand/GrnArchHandWeapon
+    rank: D
+    notes: "273 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Archwing/Primary/FoldingMachineGun/ArchMachineGun
+    rank: C
+    notes: "414 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Archwing/Melee/ArchSwordHook/ArchHookSwordWeapon
+    rank: C
+    notes: "188 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Archwing/Melee/Archaxe/ArchAxeWeapon
+    rank: C
+    notes: "186 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Archwing/Melee/ArchHammer/ArchHammer
+    rank: D
+    notes: "207 archived community votes; plurality tier."
+  - externalId: /Lotus/Weapons/Tenno/Archwing/Melee/Archsword/ArchSwordWeapon
+    rank: D
+    notes: "546 archived community votes; plurality tier."

@@ -17,7 +17,7 @@ import {
 } from "./mediawiki-lua.ts";
 import { parseEquipmentPolarities } from "./wiki-equipment-polarities.ts";
 
-const PARSER_VERSION = "warframe-wiki-warframes-v4";
+const PARSER_VERSION = "warframe-wiki-warframes-v5";
 const MODULE_TITLE = "Module:Warframes/data";
 const GROUPS = [
   { field: "Warframes", kind: "warframe", expectedType: "Warframe" },
@@ -87,6 +87,9 @@ export class WarframeWikiWarframesAdapter implements SourceAdapter {
             `WARFRAME Wiki ${group.field} record ${key} has invalid Type`,
           );
         const name = luaStringValue(nameField)?.trim() || key;
+        const description = luaStringValue(
+          luaLiteralField(field.value, "Description"),
+        )?.trim();
         const externalId = {
           sourceId: this.source.id,
           namespace: "module-record",
@@ -113,10 +116,23 @@ export class WarframeWikiWarframesAdapter implements SourceAdapter {
           fields: {
             name,
             slug: wikiSlug(name),
+            description,
             equipmentMaxRank: maxRank.value,
           },
           evidence: recordEvidence,
         };
+        for (const attribute of warframeAttributes(field.value))
+          yield {
+            type: "entity-attribute",
+            subjectExternalId: externalId,
+            key: attribute.key,
+            label: attribute.label,
+            value: attribute.value,
+            evidence: {
+              ...recordEvidence,
+              sourceRecordKey: `${recordKey}:${attribute.key}`,
+            },
+          };
         yield {
           type: "equipment-polarity-set",
           subjectExternalId: externalId,
@@ -140,4 +156,27 @@ export class WarframeWikiWarframesAdapter implements SourceAdapter {
         );
     }
   }
+}
+
+function warframeAttributes(
+  record: Parameters<typeof luaLiteralField>[0],
+): Array<{ key: string; label: string; value: string }> {
+  const numeric = [
+    ["Health", "health", "Health"],
+    ["Shield", "shield", "Shield"],
+    ["Armor", "armor", "Armor"],
+    ["Energy", "energy", "Energy"],
+    ["Sprint", "sprint-speed", "Sprint speed"],
+  ] as const;
+  const attributes: Array<{ key: string; label: string; value: string }> =
+    numeric.flatMap(([field, key, label]) => {
+      const value = luaLiteralField(record, field);
+      return value?.type === "NumericLiteral"
+        ? [{ key, label, value: String(value.value) }]
+        : [];
+    });
+  const passive = luaStringValue(luaLiteralField(record, "Passive"))?.trim();
+  if (passive)
+    attributes.push({ key: "passive", label: "Passive", value: passive });
+  return attributes;
 }

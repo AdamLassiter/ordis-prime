@@ -45,6 +45,13 @@ export interface DiscoveryCatalogEntry extends CatalogSummary {
 }
 
 export interface CatalogItem extends CatalogSummary {
+  attributes: Array<{
+    key: string;
+    label: string;
+    value: string;
+    sourceName: string;
+    citationUrl?: string;
+  }>;
   factoryPolaritySets: CatalogEquipmentPolaritySet[];
   components: Array<{
     kind: string;
@@ -232,6 +239,7 @@ export function searchCatalog(
   sqlite: Database.Database,
   query = "",
   limit = 100,
+  kind?: string,
 ): CatalogSummary[] {
   const normalizedLimit = Math.max(1, Math.min(500, Math.trunc(limit)));
   const pattern = `%${escapeLike(query.trim())}%`;
@@ -240,12 +248,29 @@ export function searchCatalog(
       `
     select kind, slug, name, description
     from entities
-    where retired = 0 and name like ? escape '\\'
+    where retired = 0 and name like ? escape '\\' and (? is null or kind = ?)
     order by case when lower(name) = lower(?) then 0 else 1 end, name collate nocase, kind
     limit ?
   `,
     )
-    .all(pattern, query.trim(), normalizedLimit) as CatalogSummary[];
+    .all(
+      pattern,
+      kind ?? null,
+      kind ?? null,
+      query.trim(),
+      normalizedLimit,
+    ) as CatalogSummary[];
+}
+
+export function listCatalogKinds(
+  sqlite: Database.Database,
+): Array<{ kind: string; count: number }> {
+  return sqlite
+    .prepare(
+      `select kind, count(*) as count from entities
+       where retired = 0 group by kind order by kind collate nocase`,
+    )
+    .all() as Array<{ kind: string; count: number }>;
 }
 
 export function searchDiscoveryCatalog(
@@ -400,6 +425,38 @@ export function findCatalogItem(
     sqlite,
     item.id,
   );
+  const attributes = sqlite
+    .prepare(
+      `with ranked as (
+         select attribute.key, attribute.label, attribute.value,
+                source.name as sourceName, attribute.citation_url as citationUrl,
+                row_number() over (
+                  partition by attribute.key
+                  order by source.priority desc, run.retrieved_at desc,
+                           source.id, attribute.source_record_key
+                ) as preference
+         from entity_attributes attribute
+         join source_runs run on run.id = attribute.source_run_id and run.status = 'active'
+         join sources source on source.id = run.source_id
+         where attribute.entity_id = ?
+       )
+       select key, label, value, sourceName, citationUrl
+       from ranked where preference = 1 order by key`,
+    )
+    .all(item.id)
+    .map((row) => {
+      const attribute = row as {
+        key: string;
+        label: string;
+        value: string;
+        sourceName: string;
+        citationUrl: string | null;
+      };
+      return {
+        ...attribute,
+        citationUrl: attribute.citationUrl ?? undefined,
+      };
+    });
 
   const components = sqlite
     .prepare(
@@ -679,6 +736,7 @@ export function findCatalogItem(
     ...(modMaxRank !== null ? { modMaxRank } : {}),
     ...(modBaseDrain !== null ? { modBaseDrain } : {}),
     ...(modPolarity ? { modPolarity } : {}),
+    attributes,
     factoryPolaritySets,
     components,
     drops,

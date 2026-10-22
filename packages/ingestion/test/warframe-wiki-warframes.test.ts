@@ -21,6 +21,12 @@ test("wiki Warframe adapter imports Warframe and Archwing maximum ranks", async 
         Warframes = {
           ["Excalibur Umbra"] = {
             Description = "A warrior’s resolve.",
+            Armor = 300,
+            Energy = 100,
+            Health = 455,
+            Passive = "Resists a lethal blow.",
+            Shield = 300,
+            Sprint = 1.1,
             AuraPolarity = "Madurai",
             ExilusPolarity = "None",
             MaxRank = 30,
@@ -67,6 +73,21 @@ test("wiki Warframe adapter imports Warframe and Archwing maximum ranks", async 
         citationUrl:
           "https://wiki.warframe.com/w/Module:Warframes/data?oldid=42",
       },
+    ],
+  );
+  assert.deepEqual(
+    observations.flatMap((observation) =>
+      observation.type === "entity-attribute"
+        ? [[observation.key, observation.label, observation.value]]
+        : [],
+    ),
+    [
+      ["health", "Health", "455"],
+      ["shield", "Shield", "300"],
+      ["armor", "Armor", "300"],
+      ["energy", "Energy", "100"],
+      ["sprint-speed", "Sprint speed", "1.1"],
+      ["passive", "Passive", "Resists a lethal blow."],
     ],
   );
   assert.deepEqual(

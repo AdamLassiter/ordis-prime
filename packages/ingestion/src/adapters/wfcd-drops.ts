@@ -17,8 +17,16 @@ interface Mission {
 }
 interface DropsPayload {
   missionRewards?: Record<string, Record<string, Mission>>;
+  modNames?: string[];
 }
-const PARSER_VERSION = "wfcd-drops-v2";
+interface ModLocationsPayload {
+  modLocations?: Array<{ modName?: string }>;
+}
+const PARSER_VERSION = "wfcd-drops-v3";
+const DEFAULT_DROPS_URL =
+  "https://drops.warframestat.us/data/missionRewards.json";
+const DEFAULT_MOD_LOCATIONS_URL =
+  "https://drops.warframestat.us/data/modLocations.json";
 
 export class WfcdDropsAdapter implements SourceAdapter {
   readonly minimumRetainedObservationRatio = 0.5;
@@ -30,22 +38,41 @@ export class WfcdDropsAdapter implements SourceAdapter {
     priority: 90,
   };
   private readonly url: string;
-  constructor(url = "https://drops.warframestat.us/data/missionRewards.json") {
+  private readonly modLocationsUrl: string;
+  constructor(
+    url = DEFAULT_DROPS_URL,
+    modLocationsUrl = DEFAULT_MOD_LOCATIONS_URL,
+  ) {
     this.url = url;
+    this.modLocationsUrl = modLocationsUrl;
   }
   async fetch(context: { signal?: AbortSignal }): Promise<Snapshot> {
-    const response = await fetch(this.url, {
-      signal: context.signal,
-      headers: {
-        "User-Agent":
-          "OrdisPrime/0.1 (+https://github.com/adamlassiter/ordis-prime)",
-      },
-    });
-    if (!response.ok)
-      throw new Error(`WFCD drops fetch failed: ${response.status}`);
-    const bytes = new Uint8Array(await response.arrayBuffer());
+    const headers = {
+      "User-Agent":
+        "OrdisPrime/0.1 (+https://github.com/adamlassiter/ordis-prime)",
+    };
+    const [dropResponse, modResponse] = await Promise.all([
+      fetch(this.url, { signal: context.signal, headers }),
+      fetch(this.modLocationsUrl, { signal: context.signal, headers }),
+    ]);
+    if (!dropResponse.ok)
+      throw new Error(`WFCD drops fetch failed: ${dropResponse.status}`);
+    if (!modResponse.ok)
+      throw new Error(`WFCD mod locations fetch failed: ${modResponse.status}`);
+    const drops = (await dropResponse.json()) as DropsPayload;
+    const modLocations = (await modResponse.json()) as ModLocationsPayload;
+    const bytes = new TextEncoder().encode(
+      JSON.stringify({
+        ...drops,
+        modNames: (modLocations.modLocations ?? []).flatMap(({ modName }) =>
+          modName ? [modName] : [],
+        ),
+      }),
+    );
     const upstreamVersion =
-      response.headers.get("etag") ?? new Date().toISOString();
+      [dropResponse.headers.get("etag"), modResponse.headers.get("etag")]
+        .filter(Boolean)
+        .join("+") || new Date().toISOString();
     return createSnapshot({
       sourceId: this.source.id,
       version: `${upstreamVersion}|${PARSER_VERSION}`,
@@ -58,6 +85,7 @@ export class WfcdDropsAdapter implements SourceAdapter {
     const payload = JSON.parse(
       new TextDecoder().decode(snapshot.bytes),
     ) as DropsPayload;
+    const modNames = new Set(payload.modNames ?? []);
     for (const [planet, missions] of Object.entries(
       payload.missionRewards ?? {},
     )) {
@@ -113,7 +141,7 @@ export class WfcdDropsAdapter implements SourceAdapter {
             };
             yield {
               type: "entity",
-              kind: "unknown",
+              kind: rewardKind(reward.itemName, modNames),
               externalIds: [
                 {
                   sourceId: this.source.id,
@@ -146,6 +174,18 @@ export class WfcdDropsAdapter implements SourceAdapter {
       }
     }
   }
+}
+function rewardKind(itemName: string, modNames: Set<string>) {
+  if (modNames.has(itemName)) return "mod" as const;
+  if (/^(?:Lith|Meso|Neo|Axi|Requiem)\s.+\sRelic(?:\s\(.+\))?$/i.test(itemName))
+    return "relic" as const;
+  if (/Blueprint$/i.test(itemName)) return "blueprint" as const;
+  if (
+    /(?:^|\s)(?:Endo|Credits? Cache|Höllars? Cache)$/i.test(itemName) ||
+    /^\d+(?:X| ×)\s/i.test(itemName)
+  )
+    return "resource" as const;
+  return "misc" as const;
 }
 function slugify(value: string) {
   return value

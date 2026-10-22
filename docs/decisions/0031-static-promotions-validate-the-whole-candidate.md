@@ -28,10 +28,11 @@ coherent may still produce a reviewable conflict when composed with other active
 sources.
 
 The WFCD item parser now performs a payload-wide identity pass before emitting
-observations. Shared materials retain intrinsic names, one-off generic parts are
-parent-qualified, and genuinely distinct same-kind display collisions receive
-stable provider-type qualifiers. Semantically duplicate store/internal records
-with the same display name and type still converge intentionally.
+observations. Declared materials retain their intrinsic kind and name regardless
+of occurrence count, undeclared one-off generic parts are parent-qualified, and
+genuinely distinct same-kind display collisions receive stable provider-type
+qualifiers. Semantically duplicate store/internal records with the same display
+name and type still converge intentionally.
 
 ## Consequences
 
@@ -40,5 +41,5 @@ with the same display name and type still converge intentionally.
 - Malformed snapshots leave no staged run and cannot replace active data.
 - Candidate validation does not assert cross-source completeness. Suspicious
   count shrinkage is handled separately by the per-source policy in ADR 0042.
-- Parser version `wfcd-items-v6` ensures unchanged upstream bytes replay under
-  the corrected shared-material semantics.
+- Parser version bumps ensure unchanged upstream bytes replay when identity
+  semantics change.

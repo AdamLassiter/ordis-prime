@@ -43,6 +43,12 @@ const ENTITY_KINDS = [
   "secret",
   "ability",
   "archwing",
+  "challenge",
+  "cosmetic",
+  "decoration",
+  "gear",
+  "misc",
+  "vehicle",
 ] as const satisfies readonly EntityKind[];
 
 interface ManualFactsDocument {

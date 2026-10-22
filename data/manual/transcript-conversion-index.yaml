@@ -1,0 +1,50 @@
+schemaVersion: 1
+kind: transcript-conversion-index
+reviewedAt: 2026-10-22
+method:
+  - Treat the creator video and transcript as the ranking source.
+  - Correct names against canonical WFCD item names and uniqueName identifiers.
+  - Preserve conditional, speculative, mode-specific, and Incarnon qualifications in entry notes.
+  - Do not invent a second opinion when two transcript files contain the same video.
+sources:
+  - input: data/unstructured/brozime-warframes.txt
+    sha256: 9aa44da039f31a587a151abe0bd8dd23153301989682e8506623f1e48a9ac05f
+    video: https://www.youtube.com/watch?v=J_4SMeNx-DQ
+    output: data/manual/creator-brozime-warframes-2026.yaml
+    status: converted
+  - input: data/unstructured/knightmareframe-warframes.txt
+    sha256: 61ba78bf62376eab26beee68f8566bea6bfd4f550669eab1afddf91f9645ee26
+    video: https://www.youtube.com/watch?v=J_4SMeNx-DQ
+    output: data/manual/creator-brozime-warframes-2026.yaml
+    status: duplicate
+    notes: The body is byte-for-byte identical to the Brozime transcript after the first URL line.
+  - input: data/unstructured/saltprime-coda.txt
+    sha256: c3f223915dc4f282ebc860f5d0cd47bc1106bbd0794124cc7a34894f8964d10f
+    video: https://www.youtube.com/watch?v=sUYFLeQdVIc
+    output: data/manual/creator-salt-prime-coda-weapons-2025.yaml
+    status: converted
+  - input: data/unstructured/saltprime-kuva.txt
+    sha256: aa14556084aff9f477db33fcc9ba2567e2be6176950db6773557a0b87d7f9135
+    video: https://www.youtube.com/watch?v=lvte7Gpv0k0
+    output: data/manual/creator-salt-prime-kuva-weapons-2025.yaml
+    status: converted
+  - input: data/unstructured/saltprime-melee.txt
+    sha256: de79f90a6f1ca8cb20d2fd21864e5ff7a52f019475a89b79f1b73481b2a7ab0c
+    video: https://www.youtube.com/watch?v=kc5uuIDI7lM
+    output: data/manual/creator-salt-prime-melee-primes-2026.yaml
+    status: converted
+  - input: data/unstructured/saltprime-primaries.txt
+    sha256: 50807f12e30e27ced3e87914b005b3e3f3b9a055458dcc3ac0357c7b12f6699b
+    video: https://www.youtube.com/watch?v=My2venKZ7ow
+    output: data/manual/creator-salt-prime-primary-primes-2026.yaml
+    status: converted
+  - input: data/unstructured/saltprime-secondaries.txt
+    sha256: 2773e5d2a8b2ab3e5caeea141c2b8f563a5e49b2bcc77d37d71372d3c2cbdebc
+    video: https://www.youtube.com/watch?v=erN_0Ps2UN4
+    output: data/manual/creator-salt-prime-secondary-primes-2026.yaml
+    status: converted
+  - input: data/unstructured/saltprime-tenet.txt
+    sha256: 5d907b05ff737d9ae01e51b67f8b5c1884f663db225296ad948a1bff7078a78a
+    video: https://www.youtube.com/watch?v=GzgNczmWNFc
+    output: data/manual/creator-salt-prime-tenet-weapons-2025.yaml
+    status: converted

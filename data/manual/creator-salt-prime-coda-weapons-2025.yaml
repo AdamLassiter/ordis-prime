@@ -1,0 +1,50 @@
+schemaVersion: 1
+source:
+  id: creator-salt-prime-coda-weapons-2025
+  title: Salt Prime Coda Lich weapon tier list (2025)
+  author: Salt_Prime
+  url: https://www.youtube.com/watch?v=sUYFLeQdVIc
+  publishedAt: 2025-09-26
+  gameVersion: Published 2025-09-26
+  scope: The 13 Coda weapons reviewed in the cited video
+  licenseNote:
+    Manual factual transcription of creator rankings from the cited public video; no
+    transcript prose reproduced.
+scale:
+  - S
+  - A
+  - B
+  - C
+  - D
+entries:
+  - externalId: /Lotus/Weapons/Infested/InfestedLich/LongGuns/CodaHema
+    rank: A
+  - externalId: /Lotus/Weapons/Infested/InfestedLich/Pistols/CodaPox
+    rank: B
+  - externalId: /Lotus/Weapons/Infested/InfestedLich/LongGuns/CodaSporothrix
+    rank: S
+  - externalId: /Lotus/Weapons/Infested/InfestedLich/LongGuns/CodaSynapse
+    rank: B
+    notes: Kept in high B during the final review.
+  - externalId: /Lotus/Weapons/Infested/InfestedLich/Pistols/1999InfSporePistol/1999InfSporePistolWeapon
+    rank: B
+    notes: Kept in high B during the final review.
+  - externalId: /Lotus/Weapons/Infested/InfestedLich/Pistols/CodaTysis
+    rank: C
+  - externalId: /Lotus/Weapons/Infested/InfestedLich/Pistols/CodaCatabolyst
+    rank: A
+    notes: Kept in high A during the final review.
+  - externalId: /Lotus/Weapons/Infested/InfestedLich/LongGuns/1999InfShotgun/1999InfShotgunWeapon
+    rank: S
+  - externalId: /Lotus/Weapons/Infested/InfestedLich/Melee/CodaHirudo
+    rank: S
+  - externalId: /Lotus/Weapons/Infested/InfestedLich/Melee/CodaCaustacyst/CodaCaustacyst
+    rank: S
+  - externalId: /Lotus/Weapons/Infested/InfestedLich/Melee/CodaMire
+    rank: B
+    notes: Initially placed in A, then moved to B.
+  - externalId: /Lotus/Weapons/Infested/InfestedLich/Melee/InfestedHammer/InfLichHammerWeapon
+    rank: A
+  - externalId: /Lotus/Weapons/Infested/InfestedLich/Melee/CodaPathocyst/CodaPathocyst
+    rank: S
+    notes: Explicitly described as a speculative placement because the reviewer did not own it.

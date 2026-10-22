@@ -1,0 +1,52 @@
+schemaVersion: 1
+source:
+  id: creator-salt-prime-tenet-weapons-2025
+  title: Salt Prime Tenet Sister weapon tier list (2025)
+  author: Salt_Prime
+  url: https://www.youtube.com/watch?v=GzgNczmWNFc
+  publishedAt: 2025-09-24
+  gameVersion: Published 2025-09-24
+  scope: The 15 Tenet weapons reviewed in the cited video
+  licenseNote:
+    Manual factual transcription of creator rankings from the cited public video; no
+    transcript prose reproduced.
+scale:
+  - S
+  - A
+  - B
+  - C
+  - D
+entries:
+  - externalId: /Lotus/Weapons/Corpus/BoardExec/Primary/CrpBEFluxRifle/CrpBEFluxRifle
+    rank: B
+  - externalId: /Lotus/Weapons/Corpus/BoardExec/Primary/CrpBEGlaxion/CrpBEGlaxion
+    rank: A
+  - externalId: /Lotus/Weapons/Corpus/Pistols/CrpBriefcaseAkimbo/CrpBriefcaseAkimboPistol
+    rank: C
+    notes: PC placement; the reviewer suggested B on console or mobile.
+  - externalId: /Lotus/Weapons/Corpus/BoardExec/Primary/CrpBEFerrox/CrpBEFerrox
+    rank: A
+  - externalId: /Lotus/Weapons/Corpus/Pistols/CrpIgniterPistol/CrpIgniterPistol
+    rank: A
+  - externalId: /Lotus/Weapons/Corpus/BoardExec/Primary/CrpBETetra/CrpBETetra
+    rank: B
+    notes: Both primary and alternate fire were placed in B.
+  - externalId: /Lotus/Weapons/Corpus/BoardExec/Primary/CrpBEArcaPlasmor/CrpBEArcaPlasmor
+    rank: S
+  - externalId: /Lotus/Weapons/Corpus/BoardExec/Secondary/CrpBEDetron/CrpBEDetron
+    rank: B
+  - externalId: /Lotus/Weapons/Corpus/BoardExec/Secondary/CrpBEPlinx/CrpBEPlinxWeapon
+    rank: A
+    notes: Placed in A alone and described as S in a loadout that eliminates its downtime.
+  - externalId: /Lotus/Weapons/Corpus/LongGuns/CrpBriefcaseLauncher/CrpBriefcaseLauncher
+    rank: A
+  - externalId: /Lotus/Weapons/Corpus/BoardExec/Secondary/CrpBECycron/CrpBECycron
+    rank: S
+  - externalId: /Lotus/Weapons/Tenno/Melee/Swords/CrpBigSlash/CrpBigSlash
+    rank: S
+  - externalId: /Lotus/Weapons/Corpus/Melee/CrpBriefcaseScythe/CrpBriefcaseScythe
+    rank: B
+  - externalId: /Lotus/Weapons/Corpus/Melee/CrpBriefcase2HKatana/CrpBriefcase2HKatana
+    rank: A
+  - externalId: /Lotus/Weapons/Corpus/Melee/ShieldAndSword/CrpHammerShield/CrpHammerShield
+    rank: B

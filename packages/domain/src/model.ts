@@ -43,7 +43,13 @@ export type EntityKind =
   | "mechanic"
   | "secret"
   | "ability"
-  | "archwing";
+  | "archwing"
+  | "challenge"
+  | "cosmetic"
+  | "decoration"
+  | "gear"
+  | "misc"
+  | "vehicle";
 
 export const EQUIPMENT_KINDS = [
   "warframe",
@@ -254,6 +260,15 @@ export interface EntityRelationObservation {
   evidence: Evidence;
 }
 
+export interface EntityAttributeObservation {
+  type: "entity-attribute";
+  subjectExternalId: ExternalIdentifier;
+  key: string;
+  label: string;
+  value: string;
+  evidence: Evidence;
+}
+
 export interface EnhancementOptionObservation {
   type: "enhancement-option";
   subjectExternalId: ExternalIdentifier;
@@ -309,6 +324,7 @@ export type Observation =
   | NodeObjectiveObservation
   | NodeRewardObservation
   | EntityRelationObservation
+  | EntityAttributeObservation
   | EnhancementOptionObservation
   | EquipmentPolaritySetObservation
   | RankingSetObservation

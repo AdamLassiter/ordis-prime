@@ -431,6 +431,32 @@ export const entityRelations = sqliteTable(
     index("entity_relations_to").on(table.toEntityId),
   ],
 );
+export const entityAttributes = sqliteTable(
+  "entity_attributes",
+  {
+    id: text().primaryKey(),
+    entityId: text("entity_id")
+      .notNull()
+      .references(() => entities.id),
+    key: text().notNull(),
+    label: text().notNull(),
+    value: text().notNull(),
+    sourceRunId: text("source_run_id")
+      .notNull()
+      .references(() => sourceRuns.id),
+    sourceRecordKey: text("source_record_key").notNull(),
+    citationUrl: text("citation_url"),
+    sourcePath: text("source_path"),
+  },
+  (table) => [
+    uniqueIndex("entity_attribute_run_key").on(
+      table.sourceRunId,
+      table.entityId,
+      table.key,
+    ),
+    index("entity_attribute_entity").on(table.entityId),
+  ],
+);
 export const enhancementOptions = sqliteTable(
   "entity_enhancement_options",
   {

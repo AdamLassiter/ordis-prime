@@ -1,0 +1,87 @@
+schemaVersion: 1
+source:
+  id: creator-salt-prime-secondary-primes-2026
+  title: Salt Prime secondary Prime weapon tier list (2026)
+  author: Salt_Prime
+  url: https://www.youtube.com/watch?v=erN_0Ps2UN4
+  publishedAt: 2026-05-02
+  gameVersion: Published 2026-05-02
+  scope: All 29 secondary Prime weapons reviewed in the cited video
+  licenseNote:
+    Manual factual transcription of creator rankings from the cited public video; no
+    transcript prose reproduced.
+scale:
+  - S
+  - A
+  - B
+  - C
+  - D
+  - Utility
+entries:
+  - externalId: /Lotus/Weapons/Tenno/Pistols/PrimeAfuris/PrimeAFurisWeapon
+    rank: B
+  - externalId: /Lotus/Weapons/Tenno/Pistols/PrimeLex/PrimeLex
+    rank: S
+    notes: Incarnon placement.
+  - externalId: /Lotus/Weapons/Tenno/Akimbo/AkLexPrimePistols
+    rank: C
+  - externalId: /Lotus/Weapons/Tenno/Pistols/PrimeBallistica/PrimeBallistica
+    rank: D
+  - externalId: /Lotus/Weapons/Tenno/Pistols/PrimeMagnus/PrimeMagnusWeapon
+    rank: C
+  - externalId: /Lotus/Weapons/Tenno/Akimbo/DualMagnusPrime
+    rank: C
+  - externalId: /Lotus/Weapons/Tenno/Pistols/PrimeKnell/PrimeKnellWeapon
+    rank: A
+  - externalId: /Lotus/Weapons/Tenno/Pistols/PrimeAkstiletto/PrimeAkstiletto
+    rank: B
+  - externalId: /Lotus/Weapons/Tenno/Pistols/PrimeAksomati/PrimeAksomati
+    rank: B
+  - externalId: /Lotus/Weapons/Tenno/Pistol/BroncoPrime
+    rank: A
+    notes: Incarnon placement; base weapon was described as high D.
+  - externalId: /Lotus/Weapons/Tenno/Akimbo/PrimeAkimboShotGun
+    rank: C
+  - externalId: /Lotus/Weapons/Tenno/Pistols/PrimeVasto/PrimeVastoPistol
+    rank: B
+    notes: Incarnon placement; base weapon was described as low C.
+  - externalId: /Lotus/Weapons/Tenno/Pistols/PrimeVasto/AkPrimeVasto/AkPrimeVastoPistol
+    rank: C
+  - externalId: /Lotus/Weapons/Tenno/Pistols/PrimeKompressa/PrimeKompressa
+    rank: S
+  - externalId: /Lotus/Weapons/Tenno/Pistols/PrimeEpitaph/PrimeEpitaphSidearmWeapon
+    rank: Utility
+    notes: Placed for quick-fire priming; charged damage was described as B.
+  - externalId: /Lotus/Weapons/Tenno/Pistols/AllNew1hSG/AllNew1hSG
+    rank: D
+  - externalId: /Lotus/Weapons/Tenno/Pistols/PrimeZylok/ZylokPrimePistol
+    rank: B
+    notes: Incarnon placement; base weapon was described as high C.
+  - externalId: /Lotus/Weapons/Tenno/ThrowingWeapons/PrimeLiDagger/PrimeLiDagger
+    rank: C
+  - externalId: /Lotus/Weapons/Tenno/Pistols/PrimeZakti/PrimeZaktiPistol
+    rank: B
+    notes: Placement assumes Secondary Enervate; without it the reviewer described low C.
+  - externalId: /Lotus/Weapons/Tenno/Pistols/PrimeAkjagara/AkJagaraPrime
+    rank: C
+  - externalId: /Lotus/Weapons/Tenno/Pistols/PrimeAkbolto/PrimeAkBoltoWeapon
+    rank: C
+  - externalId: /Lotus/Weapons/Tenno/Pistols/PrimePandero/PanderoPrimeWeapon
+    rank: C
+  - externalId: /Lotus/Weapons/Tenno/Pistols/PrimePyrana/PrimePyranaPistol
+    rank: C
+  - externalId: /Lotus/Weapons/Tenno/Pistols/PrimeVelox/PrimeVeloxPistol
+    rank: Utility
+    notes: Placed for its augment's ability-strength utility rather than damage.
+  - externalId: /Lotus/Weapons/Grineer/Pistols/GrnOrokinPistol/GrnOrokinPistol
+    rank: B
+  - externalId: /Lotus/Weapons/Tenno/Pistols/PrimeSicarus/PrimeSicarusPistol
+    rank: S
+    notes: Incarnon placement.
+  - externalId: /Lotus/Weapons/Tenno/Pistols/PrimeHystrix/PrimeHystrixWeapon
+    rank: B
+  - externalId: /Lotus/Weapons/Tenno/Pistols/PrimeAkarius/PrimeAkariusWeapon
+    rank: A
+  - externalId: /Lotus/Weapons/Tenno/ThrowingWeapons/PrimeThrowingStar/PrimeHikou
+    rank: Utility
+    notes: The reviewer declined a firm rank from limited experience and parked it in Utility.

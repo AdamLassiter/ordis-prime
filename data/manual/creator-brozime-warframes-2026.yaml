@@ -1,0 +1,153 @@
+schemaVersion: 1
+source:
+  id: creator-brozime-warframes-2026
+  title: Brozime full roster Warframe review (2026)
+  author: Brozime
+  url: https://www.youtube.com/watch?v=J_4SMeNx-DQ
+  publishedAt: 2026-03-18
+  gameVersion: Published 2026-03-18
+  scope: All 63 unique Warframes available in the cited review
+  licenseNote:
+    Manual factual transcription of creator rankings from the cited public video; no
+    transcript prose reproduced.
+scale:
+  - S
+  - A+
+  - A
+  - A-
+  - B+
+  - B
+  - B-
+  - C++
+  - C+
+  - C
+  - C-
+  - D
+  - F
+entries:
+  - externalId: /Lotus/Powersuits/Ninja/Ninja
+    rank: B+
+  - externalId: /Lotus/Powersuits/Brawler/Brawler
+    rank: A
+  - externalId: /Lotus/Powersuits/Banshee/Banshee
+    rank: D
+  - externalId: /Lotus/Powersuits/Pacifist/Pacifist
+    rank: A-
+  - externalId: /Lotus/Powersuits/Sentient/Sentient
+    rank: B+
+  - externalId: /Lotus/Powersuits/Dragon/Dragon
+    rank: B-
+  - externalId: /Lotus/Powersuits/Geode/Geode
+    rank: A-
+  - externalId: /Lotus/Powersuits/Frumentarius/Frumentarius
+    rank: A-
+  - externalId: /Lotus/Powersuits/Dagath/Dagath
+    rank: B-
+  - externalId: /Lotus/Powersuits/Pagemaster/Pagemaster
+    rank: A+
+  - externalId: /Lotus/Powersuits/Ember/Ember
+    rank: B-
+  - externalId: /Lotus/Powersuits/YinYang/YinYang
+    rank: D
+  - externalId: /Lotus/Powersuits/Excalibur/Excalibur
+    rank: A-
+  - externalId: /Lotus/Powersuits/Frost/Frost
+    rank: A-
+  - externalId: /Lotus/Powersuits/Glass/Glass
+    rank: A+
+  - externalId: /Lotus/Powersuits/Garuda/Garuda
+    rank: B
+  - externalId: /Lotus/Powersuits/Runner/Runner
+    rank: A-
+  - externalId: /Lotus/Powersuits/Devourer/Devourer
+    rank: A-
+  - externalId: /Lotus/Powersuits/Gyre/Gyre
+    rank: C++
+  - externalId: /Lotus/Powersuits/Priest/Priest
+    rank: C+
+  - externalId: /Lotus/Powersuits/IronFrame/IronFrame
+    rank: A
+  - externalId: /Lotus/Powersuits/Pirate/Pirate
+    rank: A-
+  - externalId: /Lotus/Powersuits/Sandman/Sandman
+    rank: B+
+  - externalId: /Lotus/Powersuits/Ranger/Ranger
+    rank: B
+  - externalId: /Lotus/Powersuits/Choir/Choir
+    rank: A-
+  - externalId: /Lotus/Powersuits/Khora/Khora
+    rank: A+
+  - externalId: /Lotus/Powersuits/Koumei/Koumei
+    rank: B-
+  - externalId: /Lotus/Powersuits/PaxDuviricus/PaxDuviricus
+    rank: A+
+  - externalId: /Lotus/Powersuits/Alchemist/Alchemist
+    rank: C++
+  - externalId: /Lotus/Powersuits/Magician/Magician
+    rank: D
+  - externalId: /Lotus/Powersuits/Loki/Loki
+    rank: C
+  - externalId: /Lotus/Powersuits/Mag/Mag
+    rank: A-
+  - externalId: /Lotus/Powersuits/Cowgirl/Cowgirl
+    rank: A+
+  - externalId: /Lotus/Powersuits/Harlequin/Harlequin
+    rank: A+
+  - externalId: /Lotus/Powersuits/Necro/Necro
+    rank: D
+  - externalId: /Lotus/Powersuits/Nezha/Nezha
+    rank: A+
+  - externalId: /Lotus/Powersuits/Infestation/Infestation
+    rank: C-
+  - externalId: /Lotus/Powersuits/Nokko/Nokko
+    rank: A+
+  - externalId: /Lotus/Powersuits/AntiMatter/Anti
+    rank: A+
+  - externalId: /Lotus/Powersuits/Jade/Jade
+    rank: A
+  - externalId: /Lotus/Powersuits/Paladin/Paladin
+    rank: C++
+  - externalId: /Lotus/Powersuits/Bard/Bard
+    rank: A
+  - externalId: /Lotus/Powersuits/Oraxia/Oraxia
+    rank: A-
+  - externalId: /Lotus/Powersuits/Odalisk/Odalisk
+    rank: A+
+  - externalId: /Lotus/Powersuits/ConcreteFrame/ConcreteFrame
+    rank: B-
+  - externalId: /Lotus/Powersuits/Revenant/Revenant
+    rank: A+
+  - externalId: /Lotus/Powersuits/Rhino/Rhino
+    rank: A-
+  - externalId: /Lotus/Powersuits/Saryn/Saryn
+    rank: A+
+  - externalId: /Lotus/Powersuits/Wraith/Wraith
+    rank: A
+  - externalId: /Lotus/Powersuits/Hoplite/Hoplite
+    rank: A+
+  - externalId: /Lotus/Powersuits/Temple/Temple
+    rank: B
+  - externalId: /Lotus/Powersuits/Fairy/Fairy
+    rank: A+
+  - externalId: /Lotus/Powersuits/Trinity/Trinity
+    rank: B
+  - externalId: /Lotus/Powersuits/DemonFrame/DemonFrame
+    rank: B+
+  - externalId: /Lotus/Powersuits/Berserker/Berserker
+    rank: A
+  - externalId: /Lotus/Powersuits/Trapper/Trapper
+    rank: C+
+  - externalId: /Lotus/Powersuits/Volt/Volt
+    rank: A-
+  - externalId: /Lotus/Powersuits/Werewolf/Werewolf
+    rank: A-
+  - externalId: /Lotus/Powersuits/Wisp/Wisp
+    rank: A
+  - externalId: /Lotus/Powersuits/MonkeyKing/MonkeyKing
+    rank: A+
+  - externalId: /Lotus/Powersuits/BrokenFrame/BrokenFrame
+    rank: A-
+  - externalId: /Lotus/Powersuits/Yareli/Yareli
+    rank: B+
+  - externalId: /Lotus/Powersuits/Tengu/Tengu
+    rank: A+

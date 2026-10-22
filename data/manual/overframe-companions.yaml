@@ -1,0 +1,186 @@
+schemaVersion: 1
+source:
+  id: overframe-companions
+  title: "Overframe community companions (2026-07-28)"
+  author: Overframe community
+  url: https://web.archive.org/web/20260728212222id_/https://overframe.gg/api/v1/tierlists/5/
+  publishedAt: 2026-07-28
+  gameVersion: "Archived 2026-07-28 snapshot"
+  scope: "Companions and companion weapons with at least 40 community votes"
+  licenseNote: "Factual plurality tiers manually transcribed from the cited public snapshot; no page text or build data copied."
+scale: [S, A, B, C, D]
+entries:
+  - externalId: /Lotus/Types/Sentinels/SentinelWeapons/SentinelFreezeRayPrimeRifle
+    rank: S
+    notes: "738 archived community votes; plurality tier."
+  - externalId: /Lotus/Types/Friendly/Pets/CreaturePets/ArmoredInfestedCatbrowPetPowerSuit
+    rank: S
+    notes: "2931 archived community votes; plurality tier."
+  - externalId: /Lotus/Types/Game/CatbrowPet/CheshireCatbrowPetPowerSuit
+    rank: S
+    notes: "3309 archived community votes; plurality tier."
+  - externalId: /Lotus/Types/Sentinels/SentinelPowersuits/EmpyreanSentinelPowerSuit
+    rank: S
+    notes: "1076 archived community votes; plurality tier."
+  - externalId: /Lotus/Types/Sentinels/SentinelPowersuits/PrimeHeliosPowerSuit
+    rank: S
+    notes: "98 archived community votes; plurality tier."
+  - externalId: /Lotus/Types/Sentinels/SentinelPowersuits/MeleePetPowerSuit
+    rank: S
+    notes: "2570 archived community votes; plurality tier."
+  - externalId: /Lotus/Types/Sentinels/SentinelWeapons/SentinelFreezeRayRifle
+    rank: S
+    notes: "911 archived community votes; plurality tier."
+  - externalId: /Lotus/Types/Sentinels/SentinelWeapons/DeconstructorPrime/PrimeHeliosGlaiveWeapon
+    rank: S
+    notes: "1036 archived community votes; plurality tier."
+  - externalId: /Lotus/Types/Sentinels/SentinelPowersuits/CarrierPowerSuit
+    rank: S
+    notes: "1047 archived community votes; plurality tier."
+  - externalId: /Lotus/Powersuits/Khora/Kavat/KhoraKavatPowerSuit
+    rank: S
+    notes: "771 archived community votes; plurality tier."
+  - externalId: /Lotus/Types/Friendly/Pets/MoaPets/MoaPetComponents/SwarmerWeapon
+    rank: S
+    notes: "439 archived community votes; plurality tier."
+  - externalId: /Lotus/Types/Game/CatbrowPet/MirrorCatbrowPetPowerSuit
+    rank: A
+    notes: "662 archived community votes; plurality tier."
+  - externalId: /Lotus/Types/Sentinels/SentinelPowersuits/DethCubePowerSuit
+    rank: A
+    notes: "798 archived community votes; plurality tier."
+  - externalId: /Lotus/Types/Sentinels/SentinelPowersuits/ArcDronePowerSuit
+    rank: S
+    notes: "570 archived community votes; plurality tier."
+  - externalId: /Lotus/Types/Friendly/Pets/ZanukaPets/ZanukaPetParts/ZanukaPetPartHeadB
+    rank: S
+    notes: "258 archived community votes; plurality tier."
+  - externalId: /Lotus/Types/Sentinels/SentinelPowersuits/WyrmPowerSuit
+    rank: S
+    notes: "503 archived community votes; plurality tier."
+  - externalId: /Lotus/Types/Friendly/Pets/CreaturePets/VulpineInfestedCatbrowPetPowerSuit
+    rank: A
+    notes: "362 archived community votes; plurality tier."
+  - externalId: /Lotus/Types/Friendly/Pets/ZanukaPets/ZanukaPetParts/ZanukaPetPartHeadA
+    rank: S
+    notes: "217 archived community votes; plurality tier."
+  - externalId: /Lotus/Types/Sentinels/SentinelWeapons/PrimeSentShotgun
+    rank: A
+    notes: "359 archived community votes; plurality tier."
+  - externalId: /Lotus/Types/Friendly/Pets/ZanukaPets/ZanukaPetParts/ZanukaPetPartHeadC
+    rank: S
+    notes: "208 archived community votes; plurality tier."
+  - externalId: /Lotus/Types/Game/KubrowPet/AdventurerKubrowPetPowerSuit
+    rank: A
+    notes: "486 archived community votes; plurality tier."
+  - externalId: /Lotus/Types/Sentinels/SentinelPowersuits/GubberPowerSuit
+    rank: A
+    notes: "461 archived community votes; plurality tier."
+  - externalId: /Lotus/Types/Game/CatbrowPet/VampireCatbrowPetPowerSuit
+    rank: A
+    notes: "432 archived community votes; plurality tier."
+  - externalId: /Lotus/Types/Friendly/Pets/CreaturePets/HornedInfestedCatbrowPetPowerSuit
+    rank: A
+    notes: "264 archived community votes; plurality tier."
+  - externalId: /Lotus/Types/Sentinels/SentinelWeapons/PrimeDethMachineRifle
+    rank: A
+    notes: "365 archived community votes; plurality tier."
+  - externalId: /Lotus/Types/Friendly/Pets/MoaPets/MoaPetComponents/CryoxionWeapon
+    rank: A
+    notes: "288 archived community votes; plurality tier."
+  - externalId: /Lotus/Types/Game/KubrowPet/ChargerKubrowPetPowerSuit
+    rank: A
+    notes: "490 archived community votes; plurality tier."
+  - externalId: /Lotus/Types/Friendly/Pets/CreaturePets/PharaohPredatorKubrowPetPowerSuit
+    rank: B
+    notes: "234 archived community votes; plurality tier."
+  - externalId: /Lotus/Types/Game/KubrowPet/FurtiveKubrowPetPowerSuit
+    rank: A
+    notes: "374 archived community votes; plurality tier."
+  - externalId: /Lotus/Types/Sentinels/SentinelWeapons/PrimeBurstLaserPistol
+    rank: B
+    notes: "133 archived community votes; plurality tier."
+  - externalId: /Lotus/Types/Game/KubrowPet/RetrieverKubrowPetPowerSuit
+    rank: B
+    notes: "343 archived community votes; plurality tier."
+  - externalId: /Lotus/Types/Sentinels/SentinelPowersuits/ShadePowerSuit
+    rank: B
+    notes: "371 archived community votes; plurality tier."
+  - externalId: /Lotus/Types/Sentinels/SentinelWeapons/SentElecRailgun
+    rank: B
+    notes: "242 archived community votes; plurality tier."
+  - externalId: /Lotus/Types/Friendly/Pets/ZanukaPets/ZanukaPetMeleeWeaponPS
+    rank: B
+    notes: "139 archived community votes; plurality tier."
+  - externalId: /Lotus/Types/Sentinels/SentinelPowersuits/RadarPowerSuit
+    rank: B
+    notes: "356 archived community votes; plurality tier."
+  - externalId: /Lotus/Types/Friendly/Pets/CreaturePets/VizierPredatorKubrowPetPowerSuit
+    rank: B
+    notes: "193 archived community votes; plurality tier."
+  - externalId: /Lotus/Types/Friendly/Pets/ZanukaPets/ZanukaPetMeleeWeaponIS
+    rank: B
+    notes: "131 archived community votes; plurality tier."
+  - externalId: /Lotus/Types/Sentinels/SentinelWeapons/PrimeLaserRifle
+    rank: B
+    notes: "182 archived community votes; plurality tier."
+  - externalId: /Lotus/Types/Friendly/Pets/MoaPets/MoaPetParts/MoaPetHeadMelee
+    rank: B
+    notes: "176 archived community votes; plurality tier."
+  - externalId: /Lotus/Types/Friendly/Pets/MoaPets/MoaPetParts/MoaPetHeadLambeo
+    rank: B
+    notes: "166 archived community votes; plurality tier."
+  - externalId: /Lotus/Types/Sentinels/SentinelWeapons/Gremlin
+    rank: B
+    notes: "271 archived community votes; plurality tier."
+  - externalId: /Lotus/Types/Sentinels/SentinelWeapons/SentGlaiveWeapon
+    rank: B
+    notes: "208 archived community votes; plurality tier."
+  - externalId: /Lotus/Types/Friendly/Pets/CreaturePets/MedjayPredatorKubrowPetPowerSuit
+    rank: B
+    notes: "157 archived community votes; plurality tier."
+  - externalId: /Lotus/Types/Sentinels/SentinelWeapons/PrismaBurstLaserPistol
+    rank: B
+    notes: "163 archived community votes; plurality tier."
+  - externalId: /Lotus/Types/Friendly/Pets/ZanukaPets/ZanukaPetMeleeWeaponIP
+    rank: B
+    notes: "128 archived community votes; plurality tier."
+  - externalId: /Lotus/Types/Friendly/Pets/MoaPets/MoaPetParts/MoaPetHeadPara
+    rank: B
+    notes: "156 archived community votes; plurality tier."
+  - externalId: /Lotus/Types/Game/KubrowPet/HunterKubrowPetPowerSuit
+    rank: C
+    notes: "279 archived community votes; plurality tier."
+  - externalId: /Lotus/Types/Friendly/Pets/MoaPets/MoaPetParts/MoaPetHeadOloro
+    rank: B
+    notes: "163 archived community votes; plurality tier."
+  - externalId: /Lotus/Types/Friendly/Pets/MoaPets/MoaPetComponents/TazronWeapon
+    rank: D
+    notes: "225 archived community votes; plurality tier."
+  - externalId: /Lotus/Types/Game/KubrowPet/GuardKubrowPetPowerSuit
+    rank: C
+    notes: "257 archived community votes; plurality tier."
+  - externalId: /Lotus/Types/Sentinels/SentinelPowersuits/TnSentinelCrossPowerSuit
+    rank: C
+    notes: "461 archived community votes; plurality tier."
+  - externalId: /Lotus/Types/Friendly/Pets/MoaPets/MoaPetComponents/ThermocorMoaWeapon
+    rank: C
+    notes: "150 archived community votes; plurality tier."
+  - externalId: /Lotus/Types/Sentinels/SentinelWeapons/DethMachineRifle
+    rank: C
+    notes: "190 archived community votes; plurality tier."
+  - externalId: /Lotus/Types/Sentinels/SentinelWeapons/SentShotgun
+    rank: C
+    notes: "179 archived community votes; plurality tier."
+  - externalId: /Lotus/Types/Sentinels/SentinelWeapons/SentBioWeapon
+    rank: C
+    notes: "155 archived community votes; plurality tier."
+  - externalId: /Lotus/Types/Sentinels/SentinelWeapons/LaserRifle
+    rank: D
+    notes: "175 archived community votes; plurality tier."
+  - externalId: /Lotus/Types/Friendly/Pets/MoaPets/MoaPetComponents/HextraWeapon
+    rank: D
+    notes: "159 archived community votes; plurality tier."
+  - externalId: /Lotus/Types/Sentinels/SentinelWeapons/BurstLaserPistol
+    rank: D
+    notes: "189 archived community votes; plurality tier."
