@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Fragment } from "react";
 import {
   DISCOVERY_KINDS,
   findPlayerInventoryEntry,
@@ -59,6 +60,23 @@ export default async function ItemPage({
       <h1>{item.name}</h1>
       {item.description && <p className="lede">{item.description}</p>}
       <dl className="facts">
+        {item.attributes.map((attribute) => (
+          <Fragment key={attribute.key}>
+            <dt>{attribute.label}</dt>
+            <dd>
+              {attribute.value}{" "}
+              <span className="muted">
+                (
+                {attribute.citationUrl ? (
+                  <a href={attribute.citationUrl}>{attribute.sourceName}</a>
+                ) : (
+                  attribute.sourceName
+                )}
+                )
+              </span>
+            </dd>
+          </Fragment>
+        ))}
         {item.arcaneClass && (
           <>
             <dt>Arcane class</dt>
@@ -335,7 +353,7 @@ export default async function ItemPage({
           <h2>Todo</h2>
           {openTodo ? (
             <p>
-              <Link href="/todos">Open task: {openTodo.title}</Link>
+              <Link href="/planner#tasks">Open task: {openTodo.title}</Link>
             </p>
           ) : (
             <form action={addCatalogTodo.bind(null, kind, slug)}>

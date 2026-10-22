@@ -1,5 +1,10 @@
 import Link from "next/link";
-import { getPlayerSettings, listStarChartNodes } from "@ordis-prime/db";
+import {
+  getPlayerSettings,
+  listCurrentWorldState,
+  listPlayerTodos,
+  listStarChartNodes,
+} from "@ordis-prime/db";
 import {
   deriveNodeAccessStatus,
   type NodeAccessStatus,
@@ -10,6 +15,7 @@ import { buildStarChartNeighborhood } from "@/lib/star-chart-topology";
 import { starChartHref } from "@/lib/star-chart-url";
 import { updateVisibleNodeCompletions } from "./actions";
 import { matchesStarChartQuery } from "@/lib/star-chart-search";
+import { buildPlanetMap } from "@/lib/planet-map";
 
 export const dynamic = "force-dynamic";
 
@@ -39,6 +45,19 @@ export default async function StarChartPage({
     completion: selectedCompletion,
   };
   const database = getDatabase();
+  const currentWindows = listCurrentWorldState(database);
+  const eventNodeSlugs = new Set(
+    currentWindows.flatMap((window) => (window.node ? [window.node.slug] : [])),
+  );
+  const todoNodeSlugs = new Set(
+    session
+      ? listPlayerTodos(database, session.user.id).flatMap((todo) =>
+          todo.status === "open" && todo.entity?.kind === "node"
+            ? [todo.entity.slug]
+            : [],
+        )
+      : [],
+  );
   const playerSettings = session
     ? getPlayerSettings(database, session.user.id)
     : undefined;
@@ -276,6 +295,90 @@ export default async function StarChartPage({
           <button className="button">Save visible completion</button>
         </form>
       )}
+      <section className="origin-system-map" aria-label="Origin System map">
+        {[...planets.entries()]
+          .sort(([left], [right]) => left.localeCompare(right))
+          .map(([planet, planetNodes]) => {
+            const map = buildPlanetMap(planetNodes);
+            return (
+              <article className="planet-map" key={planet}>
+                <h2>{planet}</h2>
+                <svg
+                  aria-label={`${planet} mission graph`}
+                  role="img"
+                  viewBox={`0 0 ${map.width} ${map.height}`}
+                >
+                  <circle
+                    className="planet-orb"
+                    cx={map.centerX}
+                    cy={map.centerY}
+                    r="54"
+                  />
+                  <text
+                    className="planet-label"
+                    textAnchor="middle"
+                    x={map.centerX}
+                    y={map.centerY + 5}
+                  >
+                    {planet}
+                  </text>
+                  {map.edges.map((edge) => {
+                    const from = map.nodes.find(
+                      ({ slug }) => slug === edge.fromSlug,
+                    )!;
+                    const to = map.nodes.find(
+                      ({ slug }) => slug === edge.toSlug,
+                    )!;
+                    return (
+                      <line
+                        className="planet-route"
+                        key={`${edge.fromSlug}:${edge.toSlug}`}
+                        x1={from.x}
+                        x2={to.x}
+                        y1={from.y}
+                        y2={to.y}
+                      />
+                    );
+                  })}
+                  {map.nodes.map((mapNode) => {
+                    const node = nodesBySlug.get(mapNode.slug)!;
+                    const classes = [
+                      "planet-node",
+                      eventNodeSlugs.has(node.slug) ? "has-event" : "",
+                      todoNodeSlugs.has(node.slug) ? "has-todo" : "",
+                      (node.neededRewardCount ?? 0) > 0 ? "has-needed" : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ");
+                    return (
+                      <a href={`/nodes/${node.slug}`} key={node.slug}>
+                        <circle
+                          className={classes}
+                          cx={mapNode.x}
+                          cy={mapNode.y}
+                          r="9"
+                        />
+                        <text
+                          className="planet-node-label"
+                          textAnchor="middle"
+                          x={mapNode.x}
+                          y={mapNode.y + 22}
+                        >
+                          {shortNodeLabel(node.name)}
+                        </text>
+                      </a>
+                    );
+                  })}
+                </svg>
+              </article>
+            );
+          })}
+      </section>
+      <p className="map-legend muted">
+        <span className="map-key event" /> live event or fissure
+        <span className="map-key todo" /> open Foundry task
+        <span className="map-key needed" /> unowned reward
+      </p>
       {[...planets.entries()]
         .sort(([left], [right]) => left.localeCompare(right))
         .map(([planet, planetNodes]) => (

@@ -104,3 +104,11 @@ manual count or infers mastery, so an old snapshot cannot erase player-authored
 state. Unresolved paths are counted rather than matched by display name.
 Consequently this is a convenient evidence merge, not yet an authoritative
 two-way account synchronization mechanism.
+
+The accepted file is the inventory object itself, not a network archive,
+launcher log, portable Ordis Prime profile, or credentials. Players may obtain
+that response through an exporter they already trust, save its response body as
+JSON, and upload it locally. Ordis Prime deliberately does not implement a
+Warframe account-login proxy: the application never needs an account password,
+two-factor code, or session token. The inventory screen lists the supported
+top-level arrays and shows a minimal example before upload.

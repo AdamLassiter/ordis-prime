@@ -4,21 +4,24 @@ import { redirect } from "next/navigation";
 import {
   buildAcquisitionPlan,
   findLiveAcquisitionOpportunities,
+  listPlayerTodos,
 } from "@ordis-prime/db";
 import { getDatabase } from "@/lib/database";
 import { getCurrentSession } from "@/lib/session";
 import { GoalForm } from "./goal-form";
 import { chooseRecipe } from "./actions";
+import { TaskManager } from "./task-manager";
 
 export const dynamic = "force-dynamic";
 
 export default async function Planner() {
   const session = await getCurrentSession();
   if (!session) redirect("/sign-in");
+  const database = getDatabase();
+  const todos = listPlayerTodos(database, session.user.id);
   let plan;
   let opportunities;
   try {
-    const database = getDatabase();
     plan = buildAcquisitionPlan(database, session.user.id);
     opportunities = findLiveAcquisitionOpportunities(database, plan);
   } catch (error) {
@@ -32,6 +35,7 @@ export default async function Planner() {
           The plan could not be expanded:{" "}
           {error instanceof Error ? error.message : "unknown catalog error"}
         </p>
+        <TaskManager todos={todos} />
       </>
     );
   }
@@ -45,6 +49,7 @@ export default async function Planner() {
         Name the destination. The console accounts for what is already aboard,
         unfolds each recipe, and marks the missions that move the plan forward.
       </p>
+      <TaskManager todos={todos} />
 
       {opportunities.length > 0 && (
         <section className="planner-section">

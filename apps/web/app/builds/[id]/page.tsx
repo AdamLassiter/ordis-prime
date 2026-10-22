@@ -124,8 +124,22 @@ export default async function BuildEditor({
           ← All builds
         </Link>
       </p>
+      <nav className="arsenal-side-menu" aria-label="Build sections">
+        <strong>Arsenal</strong>
+        <a href="#build-details">Overview</a>
+        {BUILD_SLOTS.map((slot) => (
+          <a href={`#slot-${slot}`} key={slot}>
+            {slot.replaceAll("-", " ")}
+          </a>
+        ))}
+        <a href="#arsenal-mods">Mods</a>
+        <a href="#arsenal-enhancements">Arcanes &amp; shards</a>
+        <a href="#build-acquisition">Acquisition</a>
+        <a href="#build-sharing">Sharing</a>
+      </nav>
       <form
         className="card form-stack build-details"
+        id="build-details"
         action={saveBuildDetails.bind(null, id)}
       >
         <label>
@@ -160,7 +174,11 @@ export default async function BuildEditor({
               (entry) => entry.slot === slot,
             );
             return (
-              <article className="card build-slot" key={slot}>
+              <article
+                className="card build-slot"
+                id={`slot-${slot}`}
+                key={slot}
+              >
                 <span className="tag">{slot}</span>
                 {equipment ? (
                   <>
@@ -347,7 +365,7 @@ export default async function BuildEditor({
                       <button className="nav-button">Save mod slot</button>
                     </form>
                     {equipment.mods.length > 0 && (
-                      <ol className="mod-list">
+                      <ol className="mod-list mod-grid">
                         {equipment.mods.map((mod) => (
                           <li key={mod.position}>
                             <Link
@@ -490,184 +508,186 @@ export default async function BuildEditor({
           </div>
         )}
       </section>
-      <section className="planner-section">
-        <h2>Find mods</h2>
-        {build.equipment.length ? (
-          <>
-            <form className="inline-form">
-              <label>
-                Equipment
-                <select name="modslot" defaultValue={modSlot}>
-                  {build.equipment.map(({ slot, entity }) => (
-                    <option value={slot} key={slot}>
-                      {slot}: {entity.name}
-                    </option>
+      <div className="arsenal-upgrades">
+        <section className="planner-section" id="arsenal-mods">
+          <h2>Find mods</h2>
+          {build.equipment.length ? (
+            <>
+              <form className="inline-form">
+                <label>
+                  Equipment
+                  <select name="modslot" defaultValue={modSlot}>
+                    {build.equipment.map(({ slot, entity }) => (
+                      <option value={slot} key={slot}>
+                        {slot}: {entity.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  Position
+                  <input
+                    name="position"
+                    type="number"
+                    min="0"
+                    max="19"
+                    defaultValue={position}
+                    required
+                  />
+                </label>
+                <label>
+                  Search
+                  <input name="modq" defaultValue={query.modq} required />
+                </label>
+                <button className="button">Search</button>
+              </form>
+              {modCandidates.length > 0 && modSlot && (
+                <div className="candidate-list">
+                  {modCandidates.map((item) => (
+                    <form
+                      action={assignMod.bind(
+                        null,
+                        id,
+                        modSlot,
+                        position,
+                        item.kind,
+                        item.slug,
+                      )}
+                      key={`${item.kind}:${item.slug}`}
+                    >
+                      <span>{item.name}</span>
+                      <label>
+                        Rank
+                        <input
+                          name="rank"
+                          type="number"
+                          min="0"
+                          max={item.modMaxRank ?? 100}
+                        />
+                      </label>
+                      <button className="button">Assign</button>
+                    </form>
                   ))}
-                </select>
-              </label>
-              <label>
-                Position
-                <input
-                  name="position"
-                  type="number"
-                  min="0"
-                  max="19"
-                  defaultValue={position}
-                  required
-                />
-              </label>
-              <label>
-                Search
-                <input name="modq" defaultValue={query.modq} required />
-              </label>
-              <button className="button">Search</button>
-            </form>
-            {modCandidates.length > 0 && modSlot && (
-              <div className="candidate-list">
-                {modCandidates.map((item) => (
-                  <form
-                    action={assignMod.bind(
-                      null,
-                      id,
-                      modSlot,
-                      position,
-                      item.kind,
-                      item.slug,
+                </div>
+              )}
+            </>
+          ) : (
+            <p className="notice">Assign equipment before adding mods.</p>
+          )}
+        </section>
+        <section className="planner-section" id="arsenal-enhancements">
+          <h2>Arcanes and Archon Shards</h2>
+          {build.enhancements.length > 0 && (
+            <div className="candidate-list enhancement-grid">
+              {build.enhancements.map((enhancement) => (
+                <div key={enhancement.slot}>
+                  <span>
+                    <span className="tag">{enhancement.slot}</span>{" "}
+                    <Link
+                      href={`/catalog/${enhancement.entity.kind}/${enhancement.entity.slug}`}
+                    >
+                      {enhancement.entity.name}
+                    </Link>
+                    {enhancement.rank === undefined
+                      ? ""
+                      : ` · rank ${enhancement.rank}`}
+                    {enhancement.option ? (
+                      <>
+                        {" "}
+                        · {enhancement.option.label}
+                        {!enhancement.option.available && (
+                          <span className="error">
+                            {" "}
+                            (effect no longer active)
+                          </span>
+                        )}
+                      </>
+                    ) : enhancement.entity.kind === "shard" ? (
+                      <span className="error"> · effect not selected</span>
+                    ) : (
+                      ""
                     )}
-                    key={`${item.kind}:${item.slug}`}
+                  </span>
+                  <form
+                    action={clearEnhancement.bind(null, id, enhancement.slot)}
                   >
-                    <span>{item.name}</span>
+                    <button className="nav-button danger-text">Remove</button>
+                  </form>
+                </div>
+              ))}
+            </div>
+          )}
+          <form className="inline-form">
+            <label>
+              Slot
+              <select name="enhancementslot" defaultValue={enhancementSlot}>
+                {BUILD_ENHANCEMENT_SLOTS.map((slot) => (
+                  <option key={slot}>{slot}</option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Search
+              <input
+                name="enhancementq"
+                defaultValue={query.enhancementq}
+                required
+              />
+            </label>
+            <button className="button">Search</button>
+          </form>
+          {enhancementCandidates.length > 0 && (
+            <div className="candidate-list">
+              {enhancementCandidates.map((item) => (
+                <form
+                  action={assignEnhancement.bind(
+                    null,
+                    id,
+                    enhancementSlot,
+                    item.kind,
+                    item.slug,
+                  )}
+                  key={`${item.kind}:${item.slug}`}
+                >
+                  <span>{item.name}</span>
+                  {item.kind === "arcane" && (
                     <label>
                       Rank
-                      <input
-                        name="rank"
-                        type="number"
-                        min="0"
-                        max={item.modMaxRank ?? 100}
-                      />
+                      <input name="rank" type="number" min="0" max="100" />
                     </label>
-                    <button className="button">Assign</button>
-                  </form>
-                ))}
-              </div>
-            )}
-          </>
-        ) : (
-          <p className="notice">Assign equipment before adding mods.</p>
-        )}
-      </section>
-      <section className="planner-section">
-        <h2>Arcanes and Archon Shards</h2>
-        {build.enhancements.length > 0 && (
-          <div className="candidate-list">
-            {build.enhancements.map((enhancement) => (
-              <div key={enhancement.slot}>
-                <span>
-                  <span className="tag">{enhancement.slot}</span>{" "}
-                  <Link
-                    href={`/catalog/${enhancement.entity.kind}/${enhancement.entity.slug}`}
-                  >
-                    {enhancement.entity.name}
-                  </Link>
-                  {enhancement.rank === undefined
-                    ? ""
-                    : ` · rank ${enhancement.rank}`}
-                  {enhancement.option ? (
-                    <>
-                      {" "}
-                      · {enhancement.option.label}
-                      {!enhancement.option.available && (
-                        <span className="error">
-                          {" "}
-                          (effect no longer active)
-                        </span>
-                      )}
-                    </>
-                  ) : enhancement.entity.kind === "shard" ? (
-                    <span className="error"> · effect not selected</span>
-                  ) : (
-                    ""
                   )}
-                </span>
-                <form
-                  action={clearEnhancement.bind(null, id, enhancement.slot)}
-                >
-                  <button className="nav-button danger-text">Remove</button>
+                  {item.kind === "shard" &&
+                    (item.enhancementOptions?.length ? (
+                      <label>
+                        Effect
+                        <select name="optionKey" required>
+                          {item.enhancementOptions.map((option) => (
+                            <option value={option.key} key={option.key}>
+                              {option.label} · {option.sourceName}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    ) : (
+                      <span className="error">
+                        No active source supplies effects for this shard.
+                      </span>
+                    ))}
+                  <button
+                    className="button"
+                    disabled={
+                      item.kind === "shard" && !item.enhancementOptions?.length
+                    }
+                  >
+                    Assign
+                  </button>
                 </form>
-              </div>
-            ))}
-          </div>
-        )}
-        <form className="inline-form">
-          <label>
-            Slot
-            <select name="enhancementslot" defaultValue={enhancementSlot}>
-              {BUILD_ENHANCEMENT_SLOTS.map((slot) => (
-                <option key={slot}>{slot}</option>
               ))}
-            </select>
-          </label>
-          <label>
-            Search
-            <input
-              name="enhancementq"
-              defaultValue={query.enhancementq}
-              required
-            />
-          </label>
-          <button className="button">Search</button>
-        </form>
-        {enhancementCandidates.length > 0 && (
-          <div className="candidate-list">
-            {enhancementCandidates.map((item) => (
-              <form
-                action={assignEnhancement.bind(
-                  null,
-                  id,
-                  enhancementSlot,
-                  item.kind,
-                  item.slug,
-                )}
-                key={`${item.kind}:${item.slug}`}
-              >
-                <span>{item.name}</span>
-                {item.kind === "arcane" && (
-                  <label>
-                    Rank
-                    <input name="rank" type="number" min="0" max="100" />
-                  </label>
-                )}
-                {item.kind === "shard" &&
-                  (item.enhancementOptions?.length ? (
-                    <label>
-                      Effect
-                      <select name="optionKey" required>
-                        {item.enhancementOptions.map((option) => (
-                          <option value={option.key} key={option.key}>
-                            {option.label} · {option.sourceName}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                  ) : (
-                    <span className="error">
-                      No active source supplies effects for this shard.
-                    </span>
-                  ))}
-                <button
-                  className="button"
-                  disabled={
-                    item.kind === "shard" && !item.enhancementOptions?.length
-                  }
-                >
-                  Assign
-                </button>
-              </form>
-            ))}
-          </div>
-        )}
-      </section>
-      <section className="card build-details">
+            </div>
+          )}
+        </section>
+      </div>
+      <section className="card build-details" id="build-acquisition">
         <h2>Acquisition</h2>
         <p className="muted">
           Add unowned equipment and mod quantities from this draft to your
@@ -677,7 +697,7 @@ export default async function BuildEditor({
           <button className="button">Plan missing build items</button>
         </form>
       </section>
-      <section className="planner-section">
+      <section className="planner-section" id="build-sharing">
         <h2>Share history</h2>
         {shares.length ? (
           <div className="todo-list">

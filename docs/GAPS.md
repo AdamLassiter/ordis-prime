@@ -26,8 +26,11 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   runs containing resolver conflicts remain protected for review. Refresh-operation
   rows are bounded per source. Raw content-addressed payloads without any retained
   database reference are collected after a configurable safety grace. A
-  SQLite-leased job runner handles recurring work. Migrations run lazily when
-  the web process first opens SQLite. Canonical entity fields are recomputed
+  SQLite-leased job runner handles recurring work. The default development
+  command starts that worker beside the web app; an administrator warning
+  detects overdue unclaimed work when no active lease is visible. This is an
+  inferred local-health signal rather than a persisted worker heartbeat.
+  Migrations run lazily when the web process first opens SQLite. Canonical entity fields are recomputed
   from value-bearing provenance whenever active source membership changes, so
   priority fallback, exact-tie selection and withdrawal are deterministic across
   import order. Name and slug are still
@@ -54,7 +57,12 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   name from their internal identifier rather than collapsing unrelated parts.
   A stable external ID whose winning kind/slug would collide with a different
   canonical entity rejects the whole candidate with record-level context; it is
-  not silently merged. Historical kind disagreements remain reviewable conflicts.
+  not silently merged. One bounded exception repairs legacy `wfcd-items`
+  parser drift for an exact provider identifier, including splitting
+  incompatible IDs that old same-name matching joined. Exact provider IDs may
+  also refine and merge an untyped placeholder into one unambiguous typed
+  canonical match. Unknown current kinds, ambiguous repair targets, and
+  ordinary cross-source disagreements still remain reviewable conflicts.
   Structured WARFRAME Wiki adapters also import cited weapon, Warframe and
   Archwing maximum ranks plus mission metadata and star-chart connections from
   versioned Lua data modules without executing provider code. A separate Wiki
@@ -115,6 +123,14 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   snapshot/promotion pipeline. A dry run executes and rolls back the same
   resolver/promotion transaction before the separately confirmed import.
   Manual uploads still run synchronously in the web request.
+  Catalog search and node reward/discovery lists expose canonical-kind filters.
+  The current live catalog has no active `unknown` entities after the expanded
+  WFCD taxonomy and typed drop/mod indexes are applied. New or changed provider
+  categories can still fail closed or reintroduce unknowns until their semantics
+  are reviewed. Entity detail pages render generic cited key/value attributes;
+  the Wiki Warframe source currently supplies description, health, shield,
+  armor, energy, sprint speed and passive text. Arbitrary weapon damage modes
+  and fully structured ability mechanics remain future source-specific work.
 - The shared navigation, landing console and primary player consoles now use an
   original Cephalon-inspired visual and writing system, with responsive layouts
   and reduced-motion support. It deliberately keeps evidence and administration
@@ -201,10 +217,19 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   scales and disagreement. An opt-in derived ordinal summary exposes its exact
   scale-position median and range method beside the raw tiers. It deliberately
   does not model source authority, recency, scope alignment or patch relevance.
+  Six bundled Overframe community sets provide a dated starter comparison for
+  Warframes, primary, secondary and melee weapons, Archwing equipment, and
+  companions. They are manually transcribed snapshots with captured vote counts
+  and are never refreshed automatically, so their staleness is visible and
+  intentional. Creator transcript conversions add seven independently cited
+  sets and a hash-based conversion index; one mislabeled duplicate transcript is
+  explicitly recorded without becoming a second opinion. Rankings can be
+  ordered by tier and a single source opens as a tier-grouped isolated list.
 - WFCD item and drop observations compose planet, mission and level metadata in
-  a public planet-grouped star-chart explorer with a player-needed overlay. The
-  imported WFCD sources do not provide connection edges or coordinates, so it is
-  not yet a source-faithful global visual graph. The structured Wiki mission
+  a public planet-grouped star-chart explorer with a player-needed overlay. Each
+  planet now has a deterministic SVG node graph with current-event, open-task
+  and unowned-reward markers. Imported sources do not provide coordinates, so
+  it is not an exact source-faithful global layout. The structured Wiki mission
   adapter now supplies the current attributed node and connection set;
   `connects-to` observations are shown symmetrically and a focused topology
   explorer supports direct traversal plus a derived one-hop SVG map. It derives
@@ -223,8 +248,8 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   label-only because the current WFCD component identities are conflated.
   Linked grants compose with private inventory and the chart's unowned filter,
   but completing a task does not automatically mutate inventory or quest state.
-  Stable global visual positions are still missing; local ring positions are
-  transient presentation state.
+  Stable global visual positions are still missing; planet and local ring
+  positions are transient presentation state.
 - A public discovery atlas searches canonical quest, ability, enemy, boss,
   mechanic and secret kinds. WFCD currently populates quests and enemies;
   structured Wiki data populates current abilities and their typed

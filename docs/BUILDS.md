@@ -71,6 +71,12 @@ public snapshot into a new private draft. The immutable source snapshot is not
 changed and the clone resolves every embedded kind/slug against the recipient
 installation's active catalog in one transaction.
 
+The draft editor uses an Arsenal-style sticky side rail linking to overview,
+every equipment slot, mods, enhancements, acquisition and sharing. Installed
+mods render as a grid; mod search and the arcane/Archon Shard panel share the
+main upgrade workspace on wide screens and collapse responsively. This is an
+information-layout resemblance, not a pixel-identical reproduction of the game.
+
 The editor can project a draft into acquisition goals. It counts repeated mod
 requirements (including repeated shard slots), ignores requirements already covered by owned or built inventory,
 and never reduces a larger existing goal. The regular planner then expands

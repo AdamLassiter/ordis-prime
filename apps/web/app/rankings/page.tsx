@@ -11,14 +11,29 @@ export default async function RankingsPage({
     q?: string;
     set?: string | string[];
     summary?: string;
+    sort?: string;
   }>;
 }) {
-  const { q = "", set, summary } = await searchParams;
+  const { q = "", set, summary, sort } = await searchParams;
   const setIds = typeof set === "string" ? [set] : (set ?? []);
   const showSummary = summary === "yes";
   const database = getDatabase();
-  const available = compareEditorialRankings(database);
-  const comparison = compareEditorialRankings(database, { query: q, setIds });
+  const available = compareEditorialRankings(database, { limit: 1 });
+  const comparison = compareEditorialRankings(database, {
+    query: q,
+    setIds,
+    limit: 1_000,
+  });
+  const sortMode = sort === "tier" ? "tier" : "name";
+  const rows = [...comparison.rows].sort((left, right) =>
+    sortMode === "tier"
+      ? compareByTier(left, right, comparison.sets)
+      : left.entity.name.localeCompare(right.entity.name),
+  );
+  const isolatedSet =
+    setIds.length === 1 && comparison.sets.length === 1
+      ? comparison.sets[0]
+      : undefined;
   return (
     <>
       <p className="eyebrow">Consensus chamber // cited opinions</p>
@@ -59,6 +74,13 @@ export default async function RankingsPage({
           />{" "}
           Show derived ordinal summary
         </label>
+        <label>
+          Sort items
+          <select name="sort" defaultValue={sortMode}>
+            <option value="name">Name</option>
+            <option value="tier">Tier (best first)</option>
+          </select>
+        </label>
         <button className="button">Compare selected sources</button>
       </form>
       {comparison.sets.length ? (
@@ -82,6 +104,12 @@ export default async function RankingsPage({
                   ))}
                 </p>
                 <p className="muted">Published {formatDate(set.publishedAt)}</p>
+                <Link
+                  className="nav-button"
+                  href={`/rankings?set=${encodeURIComponent(set.id)}&sort=tier`}
+                >
+                  View this list alone
+                </Link>
               </article>
             ))}
           </div>
@@ -99,7 +127,39 @@ export default async function RankingsPage({
               </p>
             </section>
           )}
-          {comparison.rows.length ? (
+          {rows.length && isolatedSet ? (
+            <section className="ranking-isolated">
+              <p className="eyebrow">Isolated tier list</p>
+              <h2>{isolatedSet.title}</h2>
+              {isolatedSet.scale.map((tier) => {
+                const tierRows = rows.filter(
+                  (row) => row.rankings[isolatedSet.id]?.tier === tier,
+                );
+                return tierRows.length ? (
+                  <section className="ranking-tier" key={tier}>
+                    <h3>{tier}</h3>
+                    <div className="grid">
+                      {tierRows.map((row) => (
+                        <Link
+                          className="card"
+                          href={`/catalog/${row.entity.kind}/${row.entity.slug}`}
+                          key={`${row.entity.kind}:${row.entity.slug}`}
+                        >
+                          <span className="tag">{tier}</span>
+                          <h3>{row.entity.name}</h3>
+                          {row.rankings[isolatedSet.id]?.notes && (
+                            <p className="muted">
+                              {row.rankings[isolatedSet.id]?.notes}
+                            </p>
+                          )}
+                        </Link>
+                      ))}
+                    </div>
+                  </section>
+                ) : null;
+              })}
+            </section>
+          ) : rows.length ? (
             <div className="ranking-table-wrap">
               <table className="ranking-table">
                 <thead>
@@ -113,7 +173,7 @@ export default async function RankingsPage({
                   </tr>
                 </thead>
                 <tbody>
-                  {comparison.rows.map((row) => (
+                  {rows.map((row) => (
                     <tr key={`${row.entity.kind}:${row.entity.slug}`}>
                       <th>
                         <Link
@@ -216,4 +276,30 @@ function formatTimestamp(seconds: number): string {
 }
 function formatPercent(value: number): string {
   return `${Math.round(value * 100)}%`;
+}
+
+type RankingRow = ReturnType<typeof compareEditorialRankings>["rows"][number];
+type RankingSet = ReturnType<typeof compareEditorialRankings>["sets"][number];
+
+function compareByTier(
+  left: RankingRow,
+  right: RankingRow,
+  sets: RankingSet[],
+): number {
+  const score = (row: RankingRow) => {
+    const positions = sets.flatMap((set) => {
+      const ranking = row.rankings[set.id];
+      const index = ranking ? set.scale.indexOf(ranking.tier) : -1;
+      return index < 0 || set.scale.length < 2
+        ? []
+        : [index / (set.scale.length - 1)];
+    });
+    return positions.length
+      ? positions.reduce((total, value) => total + value, 0) / positions.length
+      : Number.POSITIVE_INFINITY;
+  };
+  return (
+    score(left) - score(right) ||
+    left.entity.name.localeCompare(right.entity.name)
+  );
 }

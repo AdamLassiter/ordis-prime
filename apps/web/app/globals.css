@@ -230,6 +230,81 @@ h2 {
 .facts dd {
   margin: 0;
 }
+.origin-system-map {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(22rem, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+.planet-map {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: radial-gradient(
+    circle at center,
+    rgb(43 88 110 / 22%),
+    rgb(4 10 18 / 92%) 62%
+  );
+  padding: 1rem;
+}
+.planet-map svg {
+  width: 100%;
+  min-height: 16rem;
+}
+.planet-orb {
+  fill: #132c3d;
+  stroke: var(--gold);
+  stroke-width: 2;
+}
+.planet-label,
+.planet-node-label {
+  fill: var(--text);
+  font-size: 10px;
+}
+.planet-label {
+  font-size: 14px;
+  letter-spacing: 1px;
+}
+.planet-route {
+  stroke: #315369;
+  stroke-width: 1.5;
+}
+.planet-node {
+  fill: #8aa8b8;
+  stroke: #d8edf4;
+  stroke-width: 1;
+}
+.planet-node.has-event {
+  fill: #ff7a59;
+  filter: drop-shadow(0 0 5px #ff7a59);
+}
+.planet-node.has-todo {
+  stroke: #f5d88a;
+  stroke-width: 4;
+}
+.planet-node.has-needed {
+  fill: var(--cyan);
+}
+.map-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  align-items: center;
+}
+.map-key {
+  width: 0.8rem;
+  height: 0.8rem;
+  border-radius: 50%;
+  display: inline-block;
+}
+.map-key.event {
+  background: #ff7a59;
+}
+.map-key.todo {
+  border: 3px solid #f5d88a;
+}
+.map-key.needed {
+  background: var(--cyan);
+}
 .button {
   display: inline-block;
   border: 1px solid var(--gold);
@@ -480,8 +555,22 @@ textarea:focus {
 }
 .filters {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
   margin: 1.25rem 0;
+}
+.source-controls,
+.source-controls .filters > * {
+  min-width: 0;
+  max-width: 100%;
+}
+.source-controls code,
+.source-controls .tag {
+  overflow-wrap: anywhere;
+}
+.source-controls .button {
+  max-width: 100%;
+  white-space: normal;
 }
 .tag.active {
   color: var(--bg);
@@ -785,6 +874,56 @@ textarea:focus {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 1rem;
+}
+.arsenal-side-menu {
+  position: sticky;
+  top: 0.5rem;
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+  margin: 1rem 0;
+  padding: 0.65rem;
+  border: 1px solid var(--line);
+  background: rgb(5 13 22 / 94%);
+  backdrop-filter: blur(8px);
+}
+.arsenal-side-menu a {
+  border-left: 1px solid var(--line);
+  padding: 0.25rem 0.55rem;
+  text-transform: capitalize;
+}
+.arsenal-upgrades {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem;
+}
+.arsenal-upgrades > section {
+  border: 1px solid var(--line);
+  padding: 1rem;
+}
+.mod-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 0.5rem;
+  padding: 0;
+  list-style-position: inside;
+}
+.mod-grid li,
+.enhancement-grid > div {
+  min-height: 7rem;
+  border: 1px solid #315369;
+  background: rgb(11 28 40 / 70%);
+  padding: 0.7rem;
+}
+@media (max-width: 850px) {
+  .arsenal-upgrades {
+    grid-template-columns: 1fr;
+  }
+  .arsenal-side-menu {
+    position: static;
+  }
 }
 .build-slot h3 {
   margin: 0.8rem 0;

@@ -19,10 +19,14 @@ export default async function NodePage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ needed?: string }>;
+  searchParams: Promise<{
+    needed?: string;
+    rewardKind?: string;
+    discoveryKind?: string;
+  }>;
 }) {
   const { slug } = await params;
-  const { needed } = await searchParams;
+  const { needed, rewardKind, discoveryKind } = await searchParams;
   const session = await getCurrentSession();
   const database = getDatabase();
   const node = await findNode(slug, session?.user.id);
@@ -44,9 +48,24 @@ export default async function NodePage({
       )
     : undefined;
   const neededOnly = session && needed === "1";
-  const drops = neededOnly
-    ? node.drops.filter((drop) => drop.inventory?.needed)
-    : node.drops;
+  const rewardKinds = [...new Set(node.drops.map((drop) => drop.kind))].sort();
+  const selectedRewardKind = rewardKinds.includes(rewardKind ?? "")
+    ? rewardKind
+    : undefined;
+  const discoveryKinds = [
+    ...new Set(node.discoveries.map((entry) => entry.kind)),
+  ].sort();
+  const selectedDiscoveryKind = discoveryKinds.includes(discoveryKind ?? "")
+    ? discoveryKind
+    : undefined;
+  const drops = (
+    neededOnly
+      ? node.drops.filter((drop) => drop.inventory?.needed)
+      : node.drops
+  ).filter((drop) => !selectedRewardKind || drop.kind === selectedRewardKind);
+  const discoveries = node.discoveries.filter(
+    (entry) => !selectedDiscoveryKind || entry.kind === selectedDiscoveryKind,
+  );
   return (
     <>
       <p className="eyebrow">Star chart node</p>
@@ -67,7 +86,7 @@ export default async function NodePage({
           <h2>Todo</h2>
           {openTodo ? (
             <p>
-              <Link href="/todos">Open task: {openTodo.title}</Link>
+              <Link href="/planner#tasks">Open task: {openTodo.title}</Link>
             </p>
           ) : (
             <form action={addCatalogTodo.bind(null, "node", slug)}>
@@ -400,8 +419,31 @@ export default async function NodePage({
       {node.discoveries.length > 0 && (
         <section>
           <h2>At this node</h2>
+          <form className="inline-form">
+            {neededOnly && <input type="hidden" name="needed" value="1" />}
+            {selectedRewardKind && (
+              <input
+                type="hidden"
+                name="rewardKind"
+                value={selectedRewardKind}
+              />
+            )}
+            <label>
+              Record type
+              <select
+                name="discoveryKind"
+                defaultValue={selectedDiscoveryKind ?? ""}
+              >
+                <option value="">All types</option>
+                {discoveryKinds.map((kind) => (
+                  <option key={kind}>{kind}</option>
+                ))}
+              </select>
+            </label>
+            <button className="nav-button">Filter links</button>
+          </form>
           <ul>
-            {node.discoveries.map((discovery, index) => (
+            {discoveries.map((discovery, index) => (
               <li
                 key={`${discovery.relationKind}:${discovery.kind}:${discovery.slug}:${index}`}
               >
@@ -439,7 +481,7 @@ export default async function NodePage({
           </Link>
           <Link
             className={neededOnly ? "tag active" : "tag"}
-            href={`/nodes/${slug}?needed=1`}
+            href={`/nodes/${slug}?needed=1${selectedRewardKind ? `&rewardKind=${encodeURIComponent(selectedRewardKind)}` : ""}`}
           >
             Needed only
           </Link>
@@ -449,6 +491,28 @@ export default async function NodePage({
           <Link href="/sign-in">Sign in</Link> to show rewards you do not own or
           still want.
         </p>
+      )}
+      {rewardKinds.length > 1 && (
+        <form className="inline-form">
+          {neededOnly && <input type="hidden" name="needed" value="1" />}
+          {selectedDiscoveryKind && (
+            <input
+              type="hidden"
+              name="discoveryKind"
+              value={selectedDiscoveryKind}
+            />
+          )}
+          <label>
+            Reward type
+            <select name="rewardKind" defaultValue={selectedRewardKind ?? ""}>
+              <option value="">All types</option>
+              {rewardKinds.map((kind) => (
+                <option key={kind}>{kind}</option>
+              ))}
+            </select>
+          </label>
+          <button className="nav-button">Filter rewards</button>
+        </form>
       )}
       {drops.length ? (
         <section className="grid">

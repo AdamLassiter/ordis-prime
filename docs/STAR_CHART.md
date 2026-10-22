@@ -51,7 +51,14 @@ faction or linked discovery text, including cited boss names. Signed-in players
 can restrict it to nodes with at least one
 reward their inventory marks as unowned or still wanted. Node detail pages show
 the same metadata beside their full reward lists. Active cited `connects-to`
-relations are treated as undirected navigation edges: either endpoint lists the
+relations also drive a compact SVG mission graph for every planet. The graph
+places the planet at its centre and deterministically arranges its mission nodes
+around it; cited within-planet connections are the only rendered routes. Node
+markers highlight a current world-state window, an open linked Foundry task,
+and an unowned reward. The detailed accessible list remains below the
+visualization and uses the same filtered node set.
+
+Connections are treated as undirected navigation edges: either endpoint lists the
 other, even though a source only needs to state the edge once. A shareable
 `focus=` view lets a player traverse those direct connections and move between
 topology and a node's rewards without inventing domain positions. The focused
@@ -105,11 +112,11 @@ either category without pretending a grant has a drop chance.
 
 ## Current compromise
 
-No imported source supplies stable visual coordinates. The current chart can
-answer node-adjacency questions from the attributed Wiki graph and visualize a
-focused one-hop neighborhood, but remains a planet-grouped index plus a local
-topological connection explorer rather than a reproduction of the in-game map.
-A global source-faithful layout still needs another attributed source.
+No imported source supplies stable visual coordinates. The current planet maps
+therefore reproduce the in-game chart's planet-and-linked-node visual model, but
+not Digital Extremes' exact geometry. Planet and focused-neighborhood positions
+are deterministic presentation state over cited identities and edges. A global
+source-faithful layout still needs another attributed coordinate source.
 
 Enemy and quest identities are imported, but richer domain-specific facts and
 complete curated discovery links remain future work.

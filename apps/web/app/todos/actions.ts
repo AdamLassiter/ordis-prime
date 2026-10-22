@@ -54,13 +54,14 @@ export async function addTodo(form: FormData) {
         )
       : undefined,
   });
-  revalidatePath("/todos");
+  revalidatePath("/planner");
 }
 
 export async function addCatalogTodo(kind: string, slug: string) {
   const session = await requireCurrentSession();
   createEntityTodo(getDatabase(), session.user.id, { kind, slug });
   revalidatePath("/todos");
+  revalidatePath("/planner");
   revalidatePath(`/catalog/${kind}/${slug}`);
   if (kind === "node") revalidatePath(`/nodes/${slug}`);
 }
@@ -71,13 +72,13 @@ export async function changeTodoStatus(
 ) {
   const session = await requireCurrentSession();
   setPlayerTodoStatus(getDatabase(), session.user.id, todoId, status);
-  revalidatePath("/todos");
+  revalidatePath("/planner");
 }
 
 export async function removeTodo(todoId: string) {
   const session = await requireCurrentSession();
   deletePlayerTodo(getDatabase(), session.user.id, todoId);
-  revalidatePath("/todos");
+  revalidatePath("/planner");
 }
 
 export async function addWatch(form: FormData) {

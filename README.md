@@ -44,6 +44,8 @@ pnpm build
 pnpm db:migrate
 pnpm data:refresh wfcd-items wfcd-drops warframe-wiki-weapons warframe-wiki-warframes warframe-wiki-missions warframe-wiki-abilities warframe-wiki-quests
 pnpm data:refresh manual-ranking:data/manual/editorial.example.yaml
+pnpm data:rankings:overframe
+pnpm data:rankings:creators
 pnpm data:refresh manual-discovery:data/manual/discovery.example.yaml
 pnpm data:refresh manual-facts:data/manual/facts.example.yaml
 pnpm dev
@@ -58,9 +60,20 @@ administrator. Registration remains closed unless explicitly enabled.
 fetch, immutable snapshot storage, parsing, validation, and transactional
 promotion. Omit names to refresh every registered adapter.
 
-`data:worker` runs recurring world-state and static catalog refreshes for
-development. Docker Compose runs that worker alongside the web service over the
-same durable volume.
+`dev` starts both the web application and the leased data worker. Use `dev:web`
+only when intentionally running the web process alone; the provenance console
+then warns administrators when due work has gone unclaimed. `data:worker` also
+runs the worker by itself. Docker Compose runs the same two services over one
+durable volume.
+
+`data:rankings:overframe` imports the six checked-in, dated Overframe community
+tier snapshots. It never fetches Overframe; refreshing those files is a manual
+editorial task.
+
+`data:rankings:creators` imports the seven reviewed ranking snapshots converted
+from the supplied creator transcripts. Their conversion index records all eight
+inputs, including one duplicate transcript that deliberately does not become a
+second opinion.
 
 ## Data safety
 

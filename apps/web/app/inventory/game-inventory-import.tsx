@@ -59,6 +59,39 @@ export function GameInventoryImport() {
         recorded values, but this merge will not reduce manual counts or infer
         mastery.
       </p>
+      <details>
+        <summary>What file does this accept?</summary>
+        <ol>
+          <li>
+            Export or capture the raw inventory response from a tool you already
+            trust. Ordis Prime never asks for your Warframe email, password,
+            two-factor code, or session token.
+          </li>
+          <li>
+            Save the response body as JSON. It must be the inventory object
+            itself, with arrays such as <code>Suits</code>,{" "}
+            <code>LongGuns</code>,<code>Pistols</code>, <code>Melee</code>,{" "}
+            <code>RawUpgrades</code>, or
+            <code>MiscItems</code>. Each owned record uses its stable
+            <code> ItemType</code> path and may include <code>ItemCount</code>.
+          </li>
+          <li>
+            Upload that JSON below. Review the matched and unresolved counts;
+            unresolved paths are never guessed by display name.
+          </li>
+        </ol>
+        <p className="notice">
+          Do not upload a network archive, launcher log, credentials, or the
+          portable Ordis Prime profile export here. If your exporter wraps the
+          inventory in another object, extract the inventory object first.
+        </p>
+        <pre>{`{
+  "Suits": [
+    { "ItemType": "/Lotus/Powersuits/Excalibur/Excalibur", "ItemCount": 1 }
+  ],
+  "RawUpgrades": []
+}`}</pre>
+      </details>
       <form className="form-stack compact-form" onSubmit={submit}>
         <label>
           Raw inventory JSON

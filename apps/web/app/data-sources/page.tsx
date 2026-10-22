@@ -12,11 +12,11 @@ import {
   previewManualSource,
   queueSourceRefresh,
 } from "./actions";
+import { getWorkerQueueHealth, summarizeWorkerTasks } from "./worker-health";
 
 export const dynamic = "force-dynamic";
 
 const JOB_KINDS = ["refresh-world-state", "refresh-catalog-source"] as const;
-const JOB_STATUSES = ["queued", "running", "succeeded", "failed"] as const;
 const AUTOMATIC_SOURCES = [
   ...AUTOMATIC_CATALOG_SOURCE_IDS,
   "wfcd-worldstate",
@@ -26,9 +26,8 @@ export default async function Sources({
   searchParams,
 }: {
   searchParams: Promise<{
-    jobKind?: string;
-    jobStatus?: string;
-    jobSource?: string;
+    jobHistoryKind?: string;
+    jobHistorySource?: string;
     previewSource?: string;
     previewObservations?: string;
     previewEntities?: string;
@@ -46,31 +45,38 @@ export default async function Sources({
   const release = getActiveCatalogRelease(database);
   const session = await getCurrentSession();
   const isAdmin = session?.user.role === "admin";
-  const jobKind = (JOB_KINDS as readonly string[]).includes(
-    filters.jobKind ?? "",
+  const historyKind = (JOB_KINDS as readonly string[]).includes(
+    filters.jobHistoryKind ?? "",
   )
-    ? (filters.jobKind as (typeof JOB_KINDS)[number])
-    : undefined;
-  const jobStatus = (JOB_STATUSES as readonly string[]).includes(
-    filters.jobStatus ?? "",
-  )
-    ? (filters.jobStatus as (typeof JOB_STATUSES)[number])
+    ? (filters.jobHistoryKind as (typeof JOB_KINDS)[number])
     : undefined;
   const jobSources = AUTOMATIC_SOURCES.map((id) => ({
     id,
     name: sources.find((source) => source.id === id)?.name ?? id,
   }));
-  const jobSource = jobSources.some(({ id }) => id === filters.jobSource)
-    ? filters.jobSource
+  const historySource = jobSources.some(
+    ({ id }) => id === filters.jobHistorySource,
+  )
+    ? filters.jobHistorySource
     : undefined;
-  const jobs = isAdmin
-    ? listRecentJobs(database, {
-        limit: 30,
-        kind: jobKind,
-        status: jobStatus,
-        sourceId: jobSource,
-      })
-    : [];
+  const workerJobs = isAdmin ? listRecentJobs(database, { limit: 200 }) : [];
+  const workerHealth = getWorkerQueueHealth(workerJobs);
+  const tasks = summarizeWorkerTasks(workerJobs);
+  const requestedTask =
+    historyKind && historySource
+      ? tasks.find(
+          (task) =>
+            task.kind === historyKind && task.sourceId === historySource,
+        )
+      : undefined;
+  const jobs =
+    isAdmin && requestedTask
+      ? listRecentJobs(database, {
+          limit: 200,
+          kind: requestedTask.kind,
+          sourceId: requestedTask.sourceId,
+        })
+      : [];
   const preview =
     filters.previewSource && filters.previewSource.length <= 200
       ? {
@@ -188,73 +194,66 @@ export default async function Sources({
         </section>
       )}
       {isAdmin && (
-        <section className="planner-section">
-          <h2>Recent worker jobs</h2>
-          <form className="inline-form">
-            <label>
-              Kind
-              <select name="jobKind" defaultValue={jobKind ?? ""}>
-                <option value="">All kinds</option>
-                {JOB_KINDS.map((kind) => (
-                  <option key={kind}>{kind}</option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Status
-              <select name="jobStatus" defaultValue={jobStatus ?? ""}>
-                <option value="">All statuses</option>
-                {JOB_STATUSES.map((status) => (
-                  <option key={status}>{status}</option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Source
-              <select name="jobSource" defaultValue={jobSource ?? ""}>
-                <option value="">All sources</option>
-                {jobSources.map((source) => (
-                  <option value={source.id} key={source.id}>
-                    {source.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <button className="nav-button">Filter jobs</button>
-          </form>
-          {jobs.length ? (
+        <section className="planner-section" id="worker-jobs">
+          <h2>
+            {requestedTask
+              ? `${sourceName(requestedTask.sourceId, jobSources)} run history`
+              : "Worker tasks"}
+          </h2>
+          {workerHealth.appearsInactive && (
+            <div className="notice">
+              <strong>Background worker appears offline.</strong>
+              <p>
+                {workerHealth.overdueUnclaimedCount} due job
+                {workerHealth.overdueUnclaimedCount === 1
+                  ? " is"
+                  : "s are"}{" "}
+                still waiting after the polling grace period. Start{" "}
+                <code>pnpm data:worker</code>, or use <code>pnpm dev</code> to
+                launch the worker with the web app.
+              </p>
+            </div>
+          )}
+          {requestedTask ? (
+            <>
+              <p>
+                <Link className="nav-button" href="/data-sources#worker-jobs">
+                  ← Return to task overview
+                </Link>
+              </p>
+              {jobs.length ? (
+                <div className="operations">
+                  {jobs.map((job) => (
+                    <WorkerRunCard job={job} key={job.id} />
+                  ))}
+                </div>
+              ) : (
+                <p className="notice">No retained runs exist for this task.</p>
+              )}
+            </>
+          ) : tasks.length ? (
             <div className="operations">
-              {jobs.map((job) => (
-                <article className="card" key={job.id}>
-                  <span
-                    className={`tag ${job.status === "failed" ? "danger" : ""}`}
-                  >
-                    {job.status}
-                  </span>
-                  <h3>{job.kind}</h3>
-                  <p>
-                    Source{" "}
-                    <code>
-                      {typeof job.payload.source === "string"
-                        ? job.payload.source
-                        : "unknown"}
-                    </code>{" "}
-                    · due {new Date(job.runAfter).toISOString()}
+              {tasks.map((task) => (
+                <article className="card" key={task.key}>
+                  <JobStatus status={task.displayedRun.status} />
+                  <h3>{sourceName(task.sourceId, jobSources)}</h3>
+                  <p className="muted">
+                    <code>{task.kind}</code>
                   </p>
-                  {job.leaseOwner && (
-                    <p className="muted">
-                      Lease {job.leaseOwner}
-                      {job.leaseUntil
-                        ? ` until ${new Date(job.leaseUntil).toISOString()}`
-                        : ""}
-                    </p>
-                  )}
-                  {job.error && <pre className="error-block">{job.error}</pre>}
+                  <RunDetails job={task.displayedRun} />
+                  <p>
+                    <Link
+                      className="nav-button"
+                      href={jobHistoryHref(task.kind, task.sourceId)}
+                    >
+                      Show run history
+                    </Link>
+                  </p>
                 </article>
               ))}
             </div>
           ) : (
-            <p className="notice">No worker jobs match these filters.</p>
+            <p className="notice">No worker tasks have been scheduled yet.</p>
           )}
         </section>
       )}
@@ -322,4 +321,66 @@ export default async function Sources({
 
 function previewCount(value: string | undefined): number {
   return value && /^\d{1,9}$/.test(value) ? Number(value) : 0;
+}
+
+function WorkerRunCard({
+  job,
+}: {
+  job: ReturnType<typeof listRecentJobs>[number];
+}) {
+  return (
+    <article className="card">
+      <JobStatus status={job.status} />
+      <h3>{job.kind}</h3>
+      <RunDetails job={job} />
+    </article>
+  );
+}
+
+function JobStatus({
+  status,
+}: {
+  status: ReturnType<typeof listRecentJobs>[number]["status"];
+}) {
+  return (
+    <span className={`tag ${status === "failed" ? "danger" : ""}`}>
+      {status}
+    </span>
+  );
+}
+
+function RunDetails({
+  job,
+}: {
+  job: ReturnType<typeof listRecentJobs>[number];
+}) {
+  return (
+    <>
+      <p>Scheduled {new Date(job.runAfter).toISOString()}</p>
+      {job.leaseOwner && (
+        <p className="muted">
+          Lease {job.leaseOwner}
+          {job.leaseUntil
+            ? ` until ${new Date(job.leaseUntil).toISOString()}`
+            : ""}
+        </p>
+      )}
+      {job.error && <pre className="error-block">{job.error}</pre>}
+    </>
+  );
+}
+
+function sourceName(
+  sourceId: string,
+  sources: Array<{ id: string; name: string }>,
+): string {
+  return sources.find((source) => source.id === sourceId)?.name ?? sourceId;
+}
+
+function jobHistoryHref(kind: string, sourceId: string): string {
+  const query = new URLSearchParams({
+    jobHistoryKind: kind,
+    jobHistorySource: sourceId,
+  });
+  return `/data-sources?${query}#worker-jobs`;
 }

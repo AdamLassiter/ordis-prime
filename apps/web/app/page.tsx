@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { searchCatalog } from "@/lib/catalog";
+import { catalogKinds, searchCatalog } from "@/lib/catalog";
 
 const briefings = [
   "Operator, your open tabs have achieved critical mass. I have arranged them.",
@@ -40,10 +40,14 @@ const launchCards = [
 export default async function Home({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; kind?: string }>;
 }) {
-  const { q = "" } = await searchParams;
-  const items = await searchCatalog(q);
+  const { q = "", kind = "" } = await searchParams;
+  const kinds = await catalogKinds();
+  const selectedKind = kinds.some((entry) => entry.kind === kind)
+    ? kind
+    : undefined;
+  const items = await searchCatalog(q, selectedKind);
   const briefing = briefings[new Date().getUTCDate() % briefings.length];
   return (
     <>
@@ -75,6 +79,15 @@ export default async function Home({
             />
             <button className="button">Locate</button>
           </div>
+          <label htmlFor="codex-kind">Record type</label>
+          <select id="codex-kind" name="kind" defaultValue={selectedKind ?? ""}>
+            <option value="">All types</option>
+            {kinds.map((entry) => (
+              <option key={entry.kind} value={entry.kind}>
+                {entry.kind} ({entry.count})
+              </option>
+            ))}
+          </select>
         </form>
       </section>
       {!q && (
@@ -94,7 +107,10 @@ export default async function Home({
           <div className="section-heading">
             <div>
               <p className="eyebrow">Codex response</p>
-              <h2>{q ? `Matches for “${q}”` : "Catalog signal"}</h2>
+              <h2>
+                {q ? `Matches for “${q}”` : "Catalog signal"}
+                {selectedKind ? ` · ${selectedKind}` : ""}
+              </h2>
             </div>
             <span>{items.length} records</span>
           </div>
