@@ -167,6 +167,39 @@ test("an exact kind alias outranks an unknown placeholder", () => {
   );
 });
 
+test("retired aliases do not compete with the active canonical entity", () => {
+  const activeId = "active" as EntityId;
+  const retiredId = "retired" as EntityId;
+  const observation = {
+    ...base,
+    kind: "component",
+    fields: { name: "Nokko Chassis" },
+    externalIds: [],
+  } satisfies EntityObservation;
+  const active = {
+    ...state.entities.values().next().value!,
+    id: activeId,
+    kind: "component" as const,
+    name: "Nokko Chassis",
+    retired: false,
+  };
+  const retired = { ...active, id: retiredId, retired: true };
+
+  assert.deepEqual(
+    resolveEntity(observation, {
+      entities: new Map([
+        [activeId, active],
+        [retiredId, retired],
+      ]),
+      aliases: new Map([
+        [normalizedAlias("Nokko Chassis"), [activeId, retiredId]],
+      ]),
+      externalIds: new Map(),
+    }),
+    { status: "matched", entityId: activeId, by: "alias" },
+  );
+});
+
 test("boss observations refine enemies while enemy observations retain bosses", () => {
   const enemy = "enemy:jackal" as EntityId;
   const entities = new Map<EntityId, CanonicalEntity>([

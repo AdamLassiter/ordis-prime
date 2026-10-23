@@ -3,10 +3,10 @@
 | Source                  | Initial use                                                                                                                                                                                                                                                                                                                                                                                                  | Policy                                                                                                                                                               |
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | WFCD warframe-items     | identities, typed items across the provider taxonomy, embedded item/component drops, weapon and arcane classes, mod rank/drain/polarity facts, disclosed companion factory-polarity sets, modular weapon representatives/components, Archwings, Archon Shards, node levels/planets, quests                                                                                                                   | Fetch the maintained aggregate API endpoint; snapshot, validate, retain version/hash and MIT attribution                                                             |
-| WFCD warframe-drop-data | mission metadata, typed enemy, mod, relic and rotation drops                                                                                                                                                                                                                                                                                                                                                 | Snapshot mission rewards together with the maintained mod-location index and retain upstream attribution                                                             |
+| WFCD warframe-drop-data | mission metadata and rotation drops reconciled through typed item identities                                                                                                                                                                                                                                                                                                                                                            | Snapshot mission rewards together with the maintained mod-location index and item catalog; retain upstream attribution                                               |
 | WFCD WarframeStat.us    | live cycles, events, alerts, fissures and traders                                                                                                                                                                                                                                                                                                                                                            | Snapshot the PC English aggregate response; normalize absolute availability windows and retain MIT attribution                                                       |
 | Manual YAML             | published editorial rankings; curated discovery facts and relations; factual overlays                                                                                                                                                                                                                                                                                                                        | Require source-specific citations and licence notes; retain each source as an independent versioned set and resolve overlays by explicit external ID                 |
-| WARFRAME Wiki           | weapon, Warframe and Archwing maximum ranks and factory-polarity sets; sourced Warframe descriptions and display attributes; abilities and powersuit links; quests, sequence, allow-listed quest/node/Intrinsics access and exact Mastery gates; mission metadata, bosses, star-chart connections, Junction objectives and one-time rewards; external detail links; a curated Archon Shard effect vocabulary | Fetch selected structured modules and narrowly scoped pages through MediaWiki; parse source syntax without executing it; retain CC BY-NC-SA 3.0 attribution per fact |
+| WARFRAME Wiki           | weapon, Warframe and Archwing maximum ranks and factory-polarity sets; sourced Warframe and ability descriptions; powersuit/ability/augment links; quests and access gates; mission metadata, bosses, star-chart connections, Junction objectives and one-time rewards; cited vendors and offerings; external detail links; a curated Archon Shard effect vocabulary | Fetch selected structured modules and narrowly scoped pages through MediaWiki; parse source syntax without executing it; retain CC BY-NC-SA 3.0 attribution per fact |
 
 Provider absence never means deletion. Removals require an explicit tombstone,
 and records referenced by player data are retired rather than physically deleted.
@@ -142,6 +142,15 @@ factory sets. A missing companion `polarities` field remains unknown rather
 than being promoted as an empty set; WFCD Warframe and weapon records are not
 used for this fact because they do not expose the complete special-slot roles.
 
+The WFCD drop adapter snapshots a reduced item-identity index beside each drop
+table. The index uses the item adapter's canonical names and kinds, including
+parent-qualified embedded weapon parts. A reward with one viable typed identity
+emits both its historical drop ID and all matching item IDs. Promotion may then
+move an old drop-only shell onto the canonical typed entity and carry private
+tracking plus linked catalog reward facts with it. This repair requires the
+explicit provider-ID bridge; equal display names alone never merge a node with
+a weapon, an enemy with a mod, or another legitimate cross-domain collision.
+
 The structured weapon and Warframe adapters also retain each record's complete
 factory-polarity set. Normal, Aura, Stance and Exilus roles map to the canonical
 polarity vocabulary; the Wiki's `Universal` slot value maps to the domain's
@@ -212,10 +221,23 @@ successful replay materializes the approved external ID in the canonical map.
 Revocation removes both the override and that materialized mapping, reopens the
 origin conflict, and changes the replay revision.
 
+The ability adapter snapshots both `Module:Ability/data` and
+`Module:Mods/data`. Current ability records retain their Wiki descriptions;
+augment rows emit described mod entities and cited `augments` relations from
+the mod to the exact ability. The relationship is not inferred from prose or
+from a shared Warframe owner.
+
+The vendor adapter reads structured vendor data, but a vendor is promoted onto
+the Star Chart only when a separately cited page establishes its canonical
+location. Nightcap is currently the supported mapping: the adapter imports the
+vendor, its Fortuna location, Fergolyte-priced offerings and the page-level
+Deepmines context. Structured offerings do not by themselves prove a node.
+
 The leased worker schedules `wfcd-items`, `wfcd-drops`,
 `warframe-wiki-weapons`, `warframe-wiki-warframes`,
-`warframe-wiki-missions`, `warframe-wiki-junctions`, `warframe-wiki-abilities`, and
-`warframe-wiki-quests` and `warframe-wiki-enemies` independently once per
+`warframe-wiki-missions`, `warframe-wiki-junctions`, `warframe-wiki-abilities`,
+`warframe-wiki-quests`, `warframe-wiki-enemies`, and
+`warframe-wiki-vendors` independently once per
 day by default, while world state runs every five minutes. An administrator can
 bring any of those queued jobs forward from `/data-sources`; this does not run
 network work in the web request or create a duplicate queued job. Manual files

@@ -138,9 +138,49 @@ test("wiki ability adapter rejects a mistyped powersuit record", async () => {
   );
 });
 
+test("wiki ability adapter links augment mods with sourced descriptions", async () => {
+  const observations = await collect(
+    new WarframeWikiAbilitiesAdapter(),
+    wikiSnapshot(
+      `return { Ability = { Chaos = {
+        Name = "Chaos", Powersuit = "Nyx", Augments = { "Chaos Sphere" },
+        Description = "Nyx disorients nearby enemies.",
+      } } }`,
+      `return { Warframes = { Nyx = { Name = "Nyx", Type = "Warframe" } }, Archwings = {} }`,
+      `return { Mods = { ["Chaos Sphere"] = {
+        Name = "Chaos Sphere", IsAbilityAugment = true,
+        Description = "Chaos Augment: Enemies entering the Effect Range are affected.",
+      } } }`,
+    ),
+  );
+
+  assert.equal(
+    observations.some(
+      (observation) =>
+        observation.type === "entity" &&
+        observation.kind === "mod" &&
+        observation.fields.name === "Chaos Sphere" &&
+        observation.fields.description ===
+          "Chaos Augment: Enemies entering the Effect Range are affected.",
+    ),
+    true,
+  );
+  assert.equal(
+    observations.some(
+      (observation) =>
+        observation.type === "entity-relation" &&
+        observation.kind === "augments" &&
+        observation.fromExternalId.value === "Chaos Sphere" &&
+        observation.toExternalId.value === "Chaos",
+    ),
+    true,
+  );
+});
+
 function wikiSnapshot(
   abilityContent: string,
   warframeContent: string,
+  modContent = "return { Mods = {} }",
 ): Snapshot {
   const bytes = new TextEncoder().encode(
     JSON.stringify({
@@ -161,6 +201,15 @@ function wikiSnapshot(
               {
                 revid: 42,
                 slots: { main: { content: warframeContent } },
+              },
+            ],
+          },
+          {
+            title: "Module:Mods/data",
+            revisions: [
+              {
+                revid: 99,
+                slots: { main: { content: modContent } },
               },
             ],
           },

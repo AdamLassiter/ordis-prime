@@ -847,3 +847,91 @@ test("drop adapter uses its archived mod index and typed reward fallbacks", asyn
     ],
   );
 });
+
+test("drop adapter bridges uniquely named rewards to canonical WFCD item identities", async () => {
+  const observations = await collect(new WfcdDropsAdapter(), {
+    ...snapshot,
+    sourceId: "wfcd-drops",
+    bytes: new TextEncoder().encode(
+      JSON.stringify({
+        itemIdentities: [
+          {
+            uniqueName: "/Lotus/Types/Items/MiscItems/OrokinCell",
+            name: "Orokin Cell",
+            category: "Resources",
+            type: "Resource",
+            kind: "resource",
+          },
+          {
+            uniqueName: "/Lotus/Upgrades/CosmeticEnhancers/ArcaneEnergize",
+            name: "Arcane Energize",
+            category: "Arcanes",
+            type: "Warframe Arcane",
+            kind: "arcane",
+          },
+          {
+            uniqueName: "/Lotus/Types/Recipes/Weapons/AkbroncoBlueprint",
+            name: "Akbronco Blueprint",
+            category: "Components",
+            type: "Blueprint",
+            kind: "component",
+          },
+        ],
+        modNames: ["Arcane Energize"],
+        missionRewards: {
+          Saturn: {
+            Helene: {
+              rewards: [
+                { _id: "cell-drop", itemName: "Orokin Cell" },
+                { _id: "arcane-drop", itemName: "Arcane Energize" },
+                { _id: "blueprint-drop", itemName: "Akbronco Blueprint" },
+              ],
+            },
+          },
+        },
+      }),
+    ),
+  });
+  const rewards = observations.flatMap((entry) =>
+    entry.type === "entity" && entry.kind !== "node" ? [entry] : [],
+  );
+  assert.deepEqual(
+    rewards.map((entry) => [entry.fields.name, entry.kind]),
+    [
+      ["Orokin Cell", "resource"],
+      ["Arcane Energize", "arcane"],
+      ["Akbronco Blueprint", "component"],
+    ],
+  );
+  assert.deepEqual(
+    rewards.map((entry) =>
+      entry.externalIds.map(({ sourceId, namespace, value }) => [
+        sourceId,
+        namespace,
+        value,
+      ]),
+    ),
+    [
+      [
+        ["wfcd-drops", "reward", "cell-drop"],
+        ["wfcd-items", "uniqueName", "/Lotus/Types/Items/MiscItems/OrokinCell"],
+      ],
+      [
+        ["wfcd-drops", "reward", "arcane-drop"],
+        [
+          "wfcd-items",
+          "uniqueName",
+          "/Lotus/Upgrades/CosmeticEnhancers/ArcaneEnergize",
+        ],
+      ],
+      [
+        ["wfcd-drops", "reward", "blueprint-drop"],
+        [
+          "wfcd-items",
+          "uniqueName",
+          "/Lotus/Types/Recipes/Weapons/AkbroncoBlueprint",
+        ],
+      ],
+    ],
+  );
+});

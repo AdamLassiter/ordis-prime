@@ -1143,6 +1143,13 @@ function resolveAndWriteEntity(
   counts: Omit<PromotionResult, "sourceRunId" | "releaseId">,
 ): EntityId | undefined {
   let resolution = resolveEntity(observation, state);
+  if (resolution.status === "conflict")
+    resolution = repairExplicitProviderBridge(
+      sqlite,
+      state,
+      observation,
+      resolution.candidateIds,
+    );
   if (resolution.status === "matched" && resolution.by === "external-id")
     resolution = repairExactProviderIdentity(
       sqlite,
@@ -1339,6 +1346,86 @@ function resolveAndWriteEntity(
   return entityId;
 }
 
+/**
+ * A WFCD drop snapshot can explicitly assert both its historical reward ID and
+ * the canonical warframe-items ID. That assertion is stronger than a name
+ * match and lets us retire the old reward-only shell without merging arbitrary
+ * same-name entities from unrelated providers.
+ */
+function repairExplicitProviderBridge(
+  sqlite: Database.Database,
+  state: ResolutionState,
+  observation: EntityObservation,
+  candidateIds: EntityId[],
+): ReturnType<typeof resolveEntity> {
+  const itemIdentifiers = observation.externalIds.filter(
+    ({ sourceId, namespace }) =>
+      sourceId === "wfcd-items" && namespace === "uniqueName",
+  );
+  const dropIdentifiers = observation.externalIds.filter(
+    ({ sourceId, namespace }) =>
+      sourceId === "wfcd-drops" && namespace === "reward",
+  );
+  if (
+    observation.evidence.sourceId !== "wfcd-drops" ||
+    itemIdentifiers.length < 1 ||
+    dropIdentifiers.length !== 1
+  )
+    return { status: "conflict", candidateIds };
+
+  const itemTargetIds = new Set(
+    itemIdentifiers.map((identifier) =>
+      state.externalIds.get(externalKey(identifier)),
+    ),
+  );
+  itemTargetIds.delete(undefined);
+  const targetId = itemTargetIds.size === 1 ? [...itemTargetIds][0] : undefined;
+  const legacyId = state.externalIds.get(externalKey(dropIdentifiers[0]!));
+  if (
+    !targetId ||
+    !legacyId ||
+    targetId === legacyId ||
+    !candidateIds.includes(targetId) ||
+    !candidateIds.includes(legacyId) ||
+    state.entities.get(targetId)?.kind !== observation.kind
+  )
+    return { status: "conflict", candidateIds };
+
+  const legacyIdentifiers = sqlite
+    .prepare(
+      "select source_id as sourceId, namespace, value from external_ids where entity_id = ?",
+    )
+    .all(legacyId) as ExternalIdentifier[];
+  if (
+    !legacyIdentifiers.some(
+      (identifier) =>
+        externalKey(identifier) === externalKey(dropIdentifiers[0]!),
+    )
+  )
+    return { status: "conflict", candidateIds };
+
+  const moveIdentifier = sqlite.prepare(
+    "update external_ids set entity_id = ? where source_id = ? and namespace = ? and value = ? and entity_id = ?",
+  );
+  for (const identifier of legacyIdentifiers) {
+    moveIdentifier.run(
+      targetId,
+      identifier.sourceId,
+      identifier.namespace,
+      identifier.value,
+      legacyId,
+    );
+    state.externalIds.set(externalKey(identifier), targetId);
+  }
+  migratePrivateEntityReferences(sqlite, legacyId, targetId);
+  sqlite
+    .prepare("update entities set retired = 1, updated_at = ? where id = ?")
+    .run(Date.now(), legacyId);
+  const legacy = state.entities.get(legacyId);
+  if (legacy) state.entities.set(legacyId, { ...legacy, retired: true });
+  return { status: "matched", entityId: targetId, by: "external-id" };
+}
+
 function repairExactProviderIdentity(
   sqlite: Database.Database,
   state: ResolutionState,
@@ -1458,6 +1545,28 @@ function migratePrivateEntityReferences(
   sourceId: EntityId,
   targetId: EntityId,
 ): void {
+  // Provider identity repairs also have to carry independently sourced catalog
+  // facts. Otherwise the old shell cannot be retired without invalidating the
+  // composed release (junction rewards are the common case).
+  sqlite
+    .prepare(
+      "update node_rewards set reward_entity_id = ? where reward_entity_id = ?",
+    )
+    .run(targetId, sourceId);
+  sqlite
+    .prepare("update drops set reward_id = ? where reward_id = ?")
+    .run(targetId, sourceId);
+  sqlite
+    .prepare(
+      "update entity_relations set from_entity_id = ? where from_entity_id = ?",
+    )
+    .run(targetId, sourceId);
+  sqlite
+    .prepare(
+      "update entity_relations set to_entity_id = ? where to_entity_id = ?",
+    )
+    .run(targetId, sourceId);
+
   sqlite
     .prepare(
       `

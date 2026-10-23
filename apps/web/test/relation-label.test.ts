@@ -16,3 +16,8 @@ test("relation labels make incoming access requirements readable", () => {
   assert.equal(relationLabel("requires", "outgoing"), "requires");
   assert.equal(relationLabel("requires", "incoming"), "required by");
 });
+
+test("relation labels describe ability augment links from either endpoint", () => {
+  assert.equal(relationLabel("augments", "outgoing"), "augments");
+  assert.equal(relationLabel("augments", "incoming"), "augmented by");
+});

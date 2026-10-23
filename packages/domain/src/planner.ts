@@ -155,12 +155,19 @@ export function recommendNodes(
       neededRewards: [],
       reasons: [],
     };
-    recommendation.neededRewards.push({
+    const reward = {
       entityId: drop.rewardId,
       quantity,
       chance: drop.chance,
       rotation: drop.rotation,
-    });
+    };
+    const alreadyIncluded = recommendation.neededRewards.some(
+      (candidate) =>
+        candidate.entityId === reward.entityId &&
+        candidate.chance === reward.chance &&
+        candidate.rotation === reward.rotation,
+    );
+    if (!alreadyIncluded) recommendation.neededRewards.push(reward);
     grouped.set(key, recommendation);
   }
   for (const recommendation of grouped.values()) {

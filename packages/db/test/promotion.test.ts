@@ -1789,6 +1789,136 @@ test("WFCD identity repair does not reclassify a cross-source same-name entity",
   );
 });
 
+test("an explicit WFCD drop-to-item bridge retires the legacy reward shell", async (context) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-wfcd-bridge-"));
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const databasePath = path.join(root, "catalog.sqlite");
+  migrateDatabase(databasePath);
+  const sqlite = new Database(databasePath);
+  sqlite.pragma("foreign_keys = ON");
+  context.after(() => sqlite.close());
+
+  const itemId = "/Lotus/Types/Items/MiscItems/OrokinCell";
+  promoteSource(
+    sqlite,
+    wfcdInput("v1", [wfcdEntity(itemId, "Orokin Cell", "resource", "v1")]),
+  );
+  const dropSource = {
+    id: "wfcd-drops",
+    name: "WFCD drops fixture",
+    homepage: "https://example.test/drops",
+    license: "MIT",
+    priority: 90,
+  };
+  const dropInput = (version: string, observations: Observation[]) => ({
+    source: dropSource,
+    version,
+    contentHash: `sha256:${`drops-${version}`.padEnd(64, "0")}`,
+    retrievedAt: "2026-10-13T12:00:00.000Z",
+    observations,
+  });
+  const dropEntity = (
+    version: string,
+    kind: "misc" | "resource",
+    externalIds: Array<{
+      sourceId: string;
+      namespace: string;
+      value: string;
+    }>,
+  ): Observation => ({
+    type: "entity",
+    kind,
+    externalIds,
+    fields: { name: "Orokin Cell", slug: "orokin-cell" },
+    evidence: {
+      ...evidence(version, "wfcd-drops"),
+      sourceRecordKey: "cell-drop",
+    },
+  });
+  promoteSource(
+    sqlite,
+    dropInput("v1", [
+      dropEntity("v1", "misc", [
+        { sourceId: "wfcd-drops", namespace: "reward", value: "cell-drop" },
+      ]),
+    ]),
+  );
+  const canonicalId = (
+    sqlite
+      .prepare(
+        "select entity_id as id from external_ids where source_id = 'wfcd-items' and value = ?",
+      )
+      .get(itemId) as { id: string }
+  ).id;
+  const legacyId = (
+    sqlite
+      .prepare(
+        "select entity_id as id from external_ids where source_id = 'wfcd-drops' and value = 'cell-drop'",
+      )
+      .get() as { id: string }
+  ).id;
+  assert.notEqual(canonicalId, legacyId);
+  sqlite
+    .prepare(
+      "insert into external_ids (entity_id, source_id, namespace, value) values (?, 'wfcd-drops', 'legacy-reward-name', 'Orokin Cell')",
+    )
+    .run(legacyId);
+
+  sqlite
+    .prepare(
+      "insert into users (id, username, email, email_verified, role, created_at, updated_at) values ('player', 'Player', 'player@example.test', 1, 'player', 1, 1)",
+    )
+    .run();
+  sqlite
+    .prepare(
+      "insert into player_inventory (user_id, entity_id, owned_count, built_count, wanted_count, updated_at) values ('player', ?, 4, 0, 0, 1)",
+    )
+    .run(legacyId);
+
+  const result = promoteSource(
+    sqlite,
+    dropInput("v2", [
+      dropEntity("v2", "resource", [
+        { sourceId: "wfcd-drops", namespace: "reward", value: "cell-drop" },
+        { sourceId: "wfcd-items", namespace: "uniqueName", value: itemId },
+      ]),
+    ]),
+  );
+
+  assert.equal(result.conflictsCreated, 0);
+  assert.deepEqual(
+    sqlite
+      .prepare(
+        "select source_id as sourceId, entity_id as entityId from external_ids where value in ('cell-drop', ?) order by source_id",
+      )
+      .all(itemId),
+    [
+      { sourceId: "wfcd-drops", entityId: canonicalId },
+      { sourceId: "wfcd-items", entityId: canonicalId },
+    ],
+  );
+  assert.deepEqual(
+    sqlite
+      .prepare(
+        "select entity_id as entityId from external_ids where source_id = 'wfcd-drops' and namespace = 'legacy-reward-name'",
+      )
+      .get(),
+    { entityId: canonicalId },
+  );
+  assert.deepEqual(
+    sqlite
+      .prepare(
+        "select entity_id as entityId, owned_count as ownedCount from player_inventory where user_id = 'player'",
+      )
+      .all(),
+    [{ entityId: canonicalId, ownedCount: 4 }],
+  );
+  assert.deepEqual(
+    sqlite.prepare("select retired from entities where id = ?").get(legacyId),
+    { retired: 1 },
+  );
+});
+
 test("an overlay targeting an unimported provider becomes a reviewable conflict", async (context) => {
   const root = await fs.mkdtemp(
     path.join(os.tmpdir(), "ordis-missing-source-"),

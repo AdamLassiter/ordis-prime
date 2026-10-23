@@ -8,6 +8,7 @@ export const AUTOMATIC_CATALOG_SOURCE_IDS = [
   "warframe-wiki-abilities",
   "warframe-wiki-quests",
   "warframe-wiki-enemies",
+  "warframe-wiki-vendors",
 ] as const;
 
 export type AutomaticCatalogSourceId =

@@ -61,7 +61,7 @@ export function resolveEntity(
       .flatMap((name) => state.aliases.get(normalizedAlias(name)) ?? [])
       .filter((entityId) => {
         const candidate = state.entities.get(entityId);
-        if (!candidate) return false;
+        if (!candidate || candidate.retired) return false;
         if (observation.kind === "unknown") return candidate.kind === "unknown";
         return entityKindsCompatible(candidate.kind, observation.kind);
       }),

@@ -13,6 +13,8 @@ export function relationLabel(
       rewards: "rewarded by",
       "connects-to": "connects to",
       follows: "followed by",
+      augments: "augmented by",
+      offers: "offered by",
     }[kind] ?? `is ${kind.replaceAll("-", " ")} by`
   );
 }

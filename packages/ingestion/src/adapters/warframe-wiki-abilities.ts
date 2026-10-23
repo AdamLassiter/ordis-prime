@@ -21,9 +21,10 @@ import {
   wikiSlug,
 } from "./mediawiki-lua.ts";
 
-const PARSER_VERSION = "warframe-wiki-abilities-v1";
+const PARSER_VERSION = "warframe-wiki-abilities-v2";
 const ABILITY_MODULE = "Module:Ability/data";
 const WARFRAME_MODULE = "Module:Warframes/data";
+const MOD_MODULE = "Module:Mods/data";
 const POWERSUIT_GROUPS = [
   { field: "Warframes", kind: "warframe", expectedType: "Warframe" },
   { field: "Archwings", kind: "archwing", expectedType: "Archwing" },
@@ -38,6 +39,14 @@ interface AbilityRecord {
   name: string;
   description?: string;
   powersuit: string;
+  augments: string[];
+  line?: number;
+}
+
+interface AugmentRecord {
+  key: string;
+  name: string;
+  description?: string;
   line?: number;
 }
 
@@ -59,7 +68,7 @@ export class WarframeWikiAbilitiesAdapter implements SourceAdapter {
   async fetch(context: FetchContext): Promise<Snapshot> {
     return fetchMediaWikiLuaSnapshot({
       apiUrl: this.apiUrl,
-      moduleTitles: [ABILITY_MODULE, WARFRAME_MODULE],
+      moduleTitles: [ABILITY_MODULE, WARFRAME_MODULE, MOD_MODULE],
       sourceId: this.source.id,
       parserVersion: PARSER_VERSION,
       signal: context.signal,
@@ -67,10 +76,10 @@ export class WarframeWikiAbilitiesAdapter implements SourceAdapter {
   }
 
   async *parse(snapshot: Snapshot): AsyncIterable<Observation> {
-    const [abilityPage, warframePage] = readMediaWikiLuaPages(snapshot.bytes, [
-      ABILITY_MODULE,
-      WARFRAME_MODULE,
-    ]);
+    const [abilityPage, warframePage, modPage] = readMediaWikiLuaPages(
+      snapshot.bytes,
+      [ABILITY_MODULE, WARFRAME_MODULE, MOD_MODULE],
+    );
     const equipment = parsePowersuits(warframePage!.content);
     const root = parseLuaReturnTable(abilityPage!.content, abilityPage!.title);
     const abilityTable = luaLiteralField(root, "Ability");
@@ -81,6 +90,7 @@ export class WarframeWikiAbilitiesAdapter implements SourceAdapter {
       throw new Error(
         `WARFRAME Wiki ${ABILITY_MODULE} has no current abilities`,
       );
+    const augments = parseAugments(modPage!.content);
 
     const linkedPowersuits = new Set(
       abilities
@@ -136,6 +146,51 @@ export class WarframeWikiAbilitiesAdapter implements SourceAdapter {
           ability.line,
         ),
       };
+      for (const augmentName of ability.augments) {
+        const augment = augments.get(augmentName) ?? {
+          key: augmentName,
+          name: augmentName,
+        };
+        const augmentEvidence = augments.has(augmentName)
+          ? evidence(
+              snapshot,
+              modPage!.title,
+              modPage!.revisionId,
+              `Mods:${augment.key}`,
+              augment.line,
+            )
+          : evidence(
+              snapshot,
+              abilityPage!.title,
+              abilityPage!.revisionId,
+              `Ability:${ability.key}:Augments:${augment.key}`,
+              ability.line,
+            );
+        yield {
+          type: "entity",
+          kind: "mod",
+          externalIds: [augmentExternalId(augment.key)],
+          fields: {
+            name: augment.name,
+            slug: wikiSlug(augment.name),
+            description: augment.description,
+          },
+          evidence: augmentEvidence,
+        };
+        yield {
+          type: "entity-relation",
+          kind: "augments",
+          fromExternalId: augmentExternalId(augment.key),
+          toExternalId: abilityExternalId(ability.key),
+          evidence: evidence(
+            snapshot,
+            abilityPage!.title,
+            abilityPage!.revisionId,
+            `${ability.key}:augment:${augment.key}`,
+            ability.line,
+          ),
+        };
+      }
     }
   }
 }
@@ -156,18 +211,62 @@ function parseAbilities(table: TableConstructorExpression): AbilityRecord[] {
     const rawDescription = luaStringValue(
       luaLiteralField(field.value, "Description"),
     )?.trim();
+    const augmentTable = luaLiteralField(field.value, "Augments");
+    const augments =
+      augmentTable?.type === "TableConstructorExpression"
+        ? augmentTable.fields.flatMap((augmentField) => {
+            if (augmentField.type !== "TableValue") return [];
+            const value = luaStringValue(augmentField.value)?.trim();
+            return value ? [value] : [];
+          })
+        : [];
     records.push({
       key,
       name,
       powersuit,
-      description: rawDescription
-        ?.replace(/<[A-Z0-9_]+>/g, "")
-        .replace(/\s+/g, " ")
-        .trim(),
+      augments,
+      description: cleanDescription(rawDescription),
       line: field.loc?.start.line,
     });
   }
   return records;
+}
+
+function parseAugments(source: string): Map<string, AugmentRecord> {
+  const root = parseLuaReturnTable(source, MOD_MODULE);
+  const table = luaLiteralField(root, "Mods");
+  if (table?.type !== "TableConstructorExpression")
+    throw new Error(`WARFRAME Wiki ${MOD_MODULE} has no Mods table`);
+  const result = new Map<string, AugmentRecord>();
+  for (const field of table.fields) {
+    if (
+      field.type === "TableValue" ||
+      field.value.type !== "TableConstructorExpression"
+    )
+      continue;
+    const key = luaFieldKey(field);
+    if (!key) continue;
+    const isAugment = luaLiteralField(field.value, "IsAbilityAugment");
+    if (isAugment?.type !== "BooleanLiteral" || !isAugment.value) continue;
+    const name =
+      luaStringValue(luaLiteralField(field.value, "Name"))?.trim() || key;
+    result.set(name, {
+      key,
+      name,
+      description: cleanDescription(
+        luaStringValue(luaLiteralField(field.value, "Description"))?.trim(),
+      ),
+      line: field.loc?.start.line,
+    });
+  }
+  return result;
+}
+
+function cleanDescription(value: string | undefined): string | undefined {
+  return value
+    ?.replace(/<[A-Z0-9_]+>/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function parsePowersuits(source: string): Map<string, EntityKind> {
@@ -214,6 +313,14 @@ function powersuitExternalId(name: string): ExternalIdentifier {
     sourceId: "warframe-wiki-abilities",
     namespace: "powersuit-name",
     value: name,
+  };
+}
+
+function augmentExternalId(key: string): ExternalIdentifier {
+  return {
+    sourceId: "warframe-wiki-abilities",
+    namespace: "augment-record",
+    value: key,
   };
 }
 

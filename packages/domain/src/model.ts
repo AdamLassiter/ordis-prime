@@ -49,7 +49,8 @@ export type EntityKind =
   | "decoration"
   | "gear"
   | "misc"
-  | "vehicle";
+  | "vehicle"
+  | "vendor";
 
 export const EQUIPMENT_KINDS = [
   "warframe",
@@ -248,6 +249,8 @@ export const RELATION_KINDS = [
   "rewards",
   "connects-to",
   "follows",
+  "augments",
+  "offers",
 ] as const;
 export type RelationKind = (typeof RELATION_KINDS)[number];
 

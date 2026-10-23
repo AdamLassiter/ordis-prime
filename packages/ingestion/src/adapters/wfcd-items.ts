@@ -16,13 +16,16 @@ import {
   type SourceAdapter,
 } from "../adapter.ts";
 
-interface WfcdItem {
+export interface WfcdItemIdentity {
   uniqueName?: string;
   name?: string;
-  description?: string;
   category?: string;
   type?: string;
   productCategory?: string;
+  description?: string;
+  components?: WfcdItemIdentity[];
+}
+interface WfcdItem extends WfcdItemIdentity {
   wikiaUrl?: string;
   components?: WfcdComponent[];
   systemName?: string;
@@ -36,12 +39,7 @@ interface WfcdItem {
   polarities?: unknown;
   drops?: WfcdDrop[];
 }
-interface WfcdComponent {
-  uniqueName?: string;
-  name?: string;
-  description?: string;
-  category?: string;
-  type?: string;
+interface WfcdComponent extends WfcdItemIdentity {
   itemCount?: number;
   drops?: WfcdDrop[];
 }
@@ -404,6 +402,83 @@ function kindFor(
   if (categoryKind) return categoryKind;
   if (item.category === "Misc" || item.type === "Misc") return "misc";
   return fallback;
+}
+
+export function classifyWfcdItem(
+  item: WfcdItemIdentity,
+  fallback: EntityKind = "unknown",
+): EntityKind {
+  return kindFor(item, fallback);
+}
+
+export interface CanonicalWfcdItemIdentity extends WfcdItemIdentity {
+  uniqueName: string;
+  name: string;
+  kind: EntityKind;
+}
+
+/**
+ * Produces the same identities exposed by this adapter, including canonical
+ * names for embedded components which do not appear as top-level API items.
+ */
+export function canonicalWfcdItemIdentities(
+  items: WfcdItemIdentity[],
+): CanonicalWfcdItemIdentity[] {
+  const typedItems = items as WfcdItem[];
+  const declaredItems = new Map(
+    typedItems
+      .filter((item) => item.uniqueName)
+      .map((item) => [item.uniqueName!, item]),
+  );
+  const canonicalNames = canonicalNamesForItems([...declaredItems.values()]);
+  const componentOccurrences = new Map<string, number>();
+  for (const item of typedItems)
+    for (const component of item.components ?? [])
+      if (component.uniqueName)
+        componentOccurrences.set(
+          component.uniqueName,
+          (componentOccurrences.get(component.uniqueName) ?? 0) + 1,
+        );
+
+  const result: CanonicalWfcdItemIdentity[] = [];
+  const seen = new Set<string>();
+  const add = (
+    item: WfcdItemIdentity,
+    name: string,
+    kind: EntityKind,
+  ): void => {
+    if (!item.uniqueName || seen.has(`${item.uniqueName}\0${name}`)) return;
+    seen.add(`${item.uniqueName}\0${name}`);
+    result.push({ ...item, uniqueName: item.uniqueName, name, kind });
+  };
+
+  for (const item of typedItems) {
+    if (!item.uniqueName || !item.name) continue;
+    add(
+      item,
+      canonicalNames.get(item.uniqueName) ?? cleanName(item.name),
+      kindFor(item),
+    );
+    for (const component of item.components ?? []) {
+      if (!component.uniqueName || !component.name) continue;
+      const declared = declaredItems.get(component.uniqueName);
+      const shared = (componentOccurrences.get(component.uniqueName) ?? 0) > 1;
+      const componentKind = declared
+        ? kindFor(declared)
+        : shared && component.category === "Misc"
+          ? "resource"
+          : kindFor(component, "component");
+      const componentName = declared?.name
+        ? (canonicalNames.get(component.uniqueName) ?? cleanName(declared.name))
+        : componentKind === "component"
+          ? shared
+            ? sharedComponentName(component)
+            : `${item.name} ${component.name}`
+          : cleanName(component.name);
+      add(declared ?? component, componentName, componentKind);
+    }
+  }
+  return result;
 }
 
 function* dropObservations(

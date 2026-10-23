@@ -111,3 +111,25 @@ test("consumes shared inventory only once across multiple goals", () => {
     [{ entityId: "resource:shared", quantity: 1 }],
   );
 });
+
+test("deduplicates equivalent drop evidence in node recommendations", () => {
+  const missing = [
+    { entityId: id("resource:salvage"), quantity: 75_000, via: [] },
+  ];
+  const duplicate: DropSource = {
+    rewardId: id("resource:salvage"),
+    nodeId: id("node:ceres-a"),
+    locationLabel: "Ceres/A",
+    chance: 0.1265,
+    quantity: 1,
+  };
+
+  const recommendations = recommendNodes(missing, [duplicate, duplicate]);
+
+  assert.equal(recommendations.length, 1);
+  assert.equal(recommendations[0]?.neededRewards.length, 1);
+  assert.deepEqual(recommendations[0]?.reasons, [
+    "Drops 1 missing goal item",
+    "resource:salvage: need 75000, 12.65% documented chance",
+  ]);
+});

@@ -13,6 +13,7 @@ import { WarframeWikiJunctionsAdapter } from "./adapters/warframe-wiki-junctions
 import { WarframeWikiAbilitiesAdapter } from "./adapters/warframe-wiki-abilities.ts";
 import { WarframeWikiQuestsAdapter } from "./adapters/warframe-wiki-quests.ts";
 import { WarframeWikiEnemiesAdapter } from "./adapters/warframe-wiki-enemies.ts";
+import { WarframeWikiVendorsAdapter } from "./adapters/warframe-wiki-vendors.ts";
 
 const dataDirectory =
   process.env.ORDIS_DATA_DIR ??
@@ -84,6 +85,7 @@ const catalogAdapters = [
   new WarframeWikiAbilitiesAdapter(),
   new WarframeWikiQuestsAdapter(),
   new WarframeWikiEnemiesAdapter(),
+  new WarframeWikiVendorsAdapter(),
 ];
 process.stdout.write(
   `${JSON.stringify({ event: "worker-started", owner, databasePath, refreshInterval, catalogRefreshInterval, jobHistoryLimit, worldStateSnapshotHistoryLimit, notificationRetentionMilliseconds, catalogReleaseHistoryLimit, sourceRefreshHistoryLimit, snapshotPruneGraceMilliseconds })}\n`,
