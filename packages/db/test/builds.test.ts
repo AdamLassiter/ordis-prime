@@ -813,6 +813,9 @@ test("Focus schools and sourced Helminth replacements survive shares and clones"
   seedEntity(database, "shock", "ability", "Shock", "shock");
   seedEntity(database, "blocked", "ability", "Discharge", "discharge");
   database
+    .prepare("update entities set description = ? where id = ?")
+    .run("Shock an enemy with electricity.", "shock");
+  database
     .prepare(
       "insert into sources (id, name, homepage, priority, enabled) values ('ability-facts', 'Ability facts', 'https://example.test/abilities', 100, 1)",
     )
@@ -848,6 +851,13 @@ test("Focus schools and sourced Helminth replacements survive shares and clones"
       "helminth-eligible",
       "Helminth eligible",
       "true",
+    ],
+    [
+      "shock-variant",
+      "shock",
+      "helminth-variant",
+      "Helminth version",
+      "Damage is reduced when infused.",
     ],
     ["blocked-slot", "blocked", "ability-slot", "Ability slot", "4"],
     [
@@ -900,10 +910,23 @@ test("Focus schools and sourced Helminth replacements survive shares and clones"
   const build = getPlayerBuild(database, owner, buildId)!;
   assert.equal(build.focusSchool?.name, "Vazarin");
   assert.equal(build.abilityReplacement?.replacement.name, "Shock");
+  assert.equal(
+    build.abilityReplacement?.replacement.description,
+    "Shock an enemy with electricity.",
+  );
+  assert.equal(
+    build.abilityReplacement?.replacement.helminthVariant?.baseValue,
+    "Damage is reduced when infused.",
+  );
   const shareKey = createBuildShare(database, owner, buildId);
   assert.equal(
     findSharedBuild(database, shareKey)?.focusSchool?.name,
     "Vazarin",
+  );
+  assert.equal(
+    findSharedBuild(database, shareKey)?.abilityReplacement?.replacement
+      .helminthVariant?.baseValue,
+    "Damage is reduced when infused.",
   );
   assert.equal(
     getPlayerBuild(database, owner, clonePlayerBuild(database, owner, buildId))

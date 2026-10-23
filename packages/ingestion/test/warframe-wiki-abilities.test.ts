@@ -194,11 +194,76 @@ test("wiki ability adapter links augment mods with sourced descriptions", async 
   );
 });
 
+test("wiki ability adapter imports cited Helminth variant notes", async () => {
+  const observations = await collect(
+    new WarframeWikiAbilitiesAdapter(),
+    wikiSnapshot(
+      `return { Ability = {
+        Nourish = { Name = "Nourish", Powersuit = "Grendel", Subsumable = true },
+        Dispensary = { Name = "Dispensary", Powersuit = "Protea", Subsumable = true },
+      } }`,
+      `return { Warframes = {
+        Grendel = { Name = "Grendel", Type = "Warframe" },
+        Protea = { Name = "Protea", Type = "Warframe" },
+      }, Archwings = {} }`,
+      "return { Mods = {} }",
+      `
+{{HighlightTable/Start|id=Subsumable Ability Checklist|class=stickyHeader}}
+|- data-rowid="Grendel"
+| data-sort-value="Grendel" | {{WF|Grendel}} || data-sort-value="Nourish" | {{A|Nourish}} || — || Damage Buff
+| {{D|Viral}}
+| '''[[File:HelminthChrysalis.png|20px]] ALTERED: Self-Heal Removed'''<br />Energy multiplier is reduced to {{Stat|Ability Strength|icon=only}}'''1.6x'''.
+| costs
+| costs
+| 1
+|- data-rowid="Protea"
+| data-sort-value="Protea" | {{WF|Protea}} || data-sort-value="Grenade Fan" | {{A|Dispensary}} || — || Support
+| —
+| —
+| costs
+| costs
+| 1
+{{HighlightTable/End}}
+`,
+    ),
+  );
+  const variant = observations.find(
+    (observation) =>
+      observation.type === "entity-attribute" &&
+      observation.key === "helminth-variant",
+  );
+  assert.equal(variant?.type, "entity-attribute");
+  if (variant?.type === "entity-attribute") {
+    assert.equal(variant.subjectExternalId.value, "Nourish");
+    assert.equal(
+      variant.value,
+      "ALTERED: Self-Heal Removed Energy multiplier is reduced to Ability Strength1.6x.",
+    );
+    assert.match(variant.evidence.citationUrl ?? "", /Helminth.*oldid=123/);
+  }
+  assert.equal(
+    observations.some(
+      (observation) =>
+        observation.type === "entity-attribute" &&
+        observation.subjectExternalId.value === "Dispensary" &&
+        observation.key === "helminth-variant",
+    ),
+    false,
+  );
+});
+
 function wikiSnapshot(
   abilityContent: string,
   warframeContent: string,
   modContent = "return { Mods = {} }",
+  helminthContent?: string,
 ): Snapshot {
+  const currentAbilityContent =
+    abilityContent.split(/\bAbility\s*=\s*\{/, 2)[1] ?? abilityContent;
+  const inferredAbility =
+    currentAbilityContent.match(/Name\s*=\s*"([^"]+)"/)?.[1] ??
+    currentAbilityContent.match(/^\s*([A-Za-z0-9_]+)\s*=/)?.[1] ??
+    "Unknown";
   const bytes = new TextEncoder().encode(
     JSON.stringify({
       query: {
@@ -227,6 +292,21 @@ function wikiSnapshot(
               {
                 revid: 99,
                 slots: { main: { content: modContent } },
+              },
+            ],
+          },
+          {
+            title: "Helminth",
+            revisions: [
+              {
+                revid: 123,
+                slots: {
+                  main: {
+                    content:
+                      helminthContent ??
+                      `{{HighlightTable/Start|id=Subsumable Ability Checklist|class=stickyHeader}}\n|- data-rowid="Test"\n| {{WF|Test}} || {{A|${inferredAbility}}} || — || Role\n| —\n| —\n| costs\n| costs\n| 1\n{{HighlightTable/End}}`,
+                  },
+                },
               },
             ],
           },

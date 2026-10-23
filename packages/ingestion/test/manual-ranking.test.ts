@@ -65,16 +65,42 @@ entries:
 });
 
 const overframeFiles = [
-  ["overframe-warframes.yaml", "overframe-warframes", 70],
-  ["overframe-primary-weapons.yaml", "overframe-primary-weapons", 191],
-  ["overframe-secondary-weapons.yaml", "overframe-secondary-weapons", 152],
-  ["overframe-melee-weapons.yaml", "overframe-melee-weapons", 237],
-  ["overframe-archwing.yaml", "overframe-archwing", 33],
-  ["overframe-companions.yaml", "overframe-companions", 58],
+  ["overframe-warframes.yaml", "overframe-warframes", 70, "wfcd-items"],
+  [
+    "overframe-primary-weapons.yaml",
+    "overframe-primary-weapons",
+    191,
+    "wfcd-items",
+  ],
+  [
+    "overframe-secondary-weapons.yaml",
+    "overframe-secondary-weapons",
+    152,
+    "wfcd-items",
+  ],
+  [
+    "overframe-melee-weapons.yaml",
+    "overframe-melee-weapons",
+    237,
+    "wfcd-items",
+  ],
+  ["overframe-archwing.yaml", "overframe-archwing", 33, "wfcd-items"],
+  ["overframe-companions.yaml", "overframe-companions", 58, "wfcd-items"],
+  [
+    "overframe-helminth-abilities.yaml",
+    "overframe-helminth-abilities",
+    36,
+    "warframe-wiki-abilities",
+  ],
 ] as const;
 
 test("checked-in Overframe snapshots remain complete, cited manual rankings", async () => {
-  for (const [file, sourceId, expectedRankings] of overframeFiles) {
+  for (const [
+    file,
+    sourceId,
+    expectedRankings,
+    subjectSourceId,
+  ] of overframeFiles) {
     const adapter = await ManualRankingAdapter.fromFile(
       path.resolve("data/manual", file),
     );
@@ -91,7 +117,7 @@ test("checked-in Overframe snapshots remain complete, cited manual rankings", as
       rankings.every((observation) => {
         assert.equal(observation.type, "ranking");
         if (observation.type !== "ranking") return false;
-        assert.equal(observation.subjectExternalId.sourceId, "wfcd-items");
+        assert.equal(observation.subjectExternalId.sourceId, subjectSourceId);
         assert.match(
           observation.notes ?? "",
           /^\d+ archived community votes; plurality tier\.$/,

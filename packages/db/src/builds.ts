@@ -144,6 +144,7 @@ export interface BuildAbility extends BuildEntityReference {
   description?: string;
   slot: number;
   helminthEligible: boolean;
+  helminthVariant?: BuildStat;
   sourceName?: string;
   citationUrl?: string;
 }
@@ -1614,6 +1615,9 @@ function hydrateAbility(
     attributes.find(({ key }) => key === "ability-slot")?.baseValue ?? 0,
   );
   const eligibility = attributes.find(({ key }) => key === "helminth-eligible");
+  const helminthVariant = attributes.find(
+    ({ key }) => key === "helminth-variant",
+  );
   return {
     kind: entity.kind,
     slug: entity.slug,
@@ -1621,6 +1625,7 @@ function hydrateAbility(
     ...(entity.description ? { description: entity.description } : {}),
     slot: Number.isSafeInteger(slot) ? slot : 0,
     helminthEligible: eligibility?.baseValue === "true",
+    ...(helminthVariant ? { helminthVariant } : {}),
     ...(eligibility
       ? {
           sourceName: eligibility.sourceName,

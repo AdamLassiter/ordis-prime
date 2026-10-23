@@ -1,0 +1,123 @@
+schemaVersion: 2
+source:
+  id: overframe-helminth-abilities
+  title: "Overframe community Helminth abilities (2026-07-08)"
+  author: Overframe community
+  url: https://web.archive.org/web/20260708131330id_/https://overframe.gg/api/v1/tierlists/6/
+  publishedAt: 2026-07-08
+  gameVersion: "Archived 2026-07-08 snapshot"
+  scope: "Helminth abilities with at least 40 community votes"
+  licenseNote: "Factual plurality tiers manually transcribed from the cited public snapshot; no page text or build data copied."
+subject:
+  sourceId: warframe-wiki-abilities
+  namespace: ability-record
+scale: [S, A, B, C, D]
+entries:
+  - externalId: Roar
+    rank: S
+    notes: "81 archived community votes; plurality tier."
+  - externalId: Nourish
+    rank: S
+    notes: "73 archived community votes; plurality tier."
+  - externalId: Xata's Whisper
+    rank: S
+    notes: "61 archived community votes; plurality tier."
+  - externalId: Eclipse
+    rank: S
+    notes: "57 archived community votes; plurality tier."
+  - externalId: Wrathful Advance
+    rank: S
+    notes: "57 archived community votes; plurality tier."
+  - externalId: Gloom
+    rank: S
+    notes: "56 archived community votes; plurality tier."
+  - externalId: Pillage
+    rank: S
+    notes: "56 archived community votes; plurality tier."
+  - externalId: Dispensary
+    rank: S
+    notes: "50 archived community votes; plurality tier."
+  - externalId: Thermal Sunder
+    rank: A
+    notes: "50 archived community votes; plurality tier."
+  - externalId: Breach Surge
+    rank: A
+    notes: "49 archived community votes; plurality tier."
+  - externalId: Warcry
+    rank: A
+    notes: "48 archived community votes; plurality tier."
+  - externalId: Silence
+    rank: A
+    notes: "46 archived community votes; plurality tier."
+  - externalId: Terrify
+    rank: A
+    notes: "46 archived community votes; plurality tier."
+  - externalId: Ensnare
+    rank: A
+    notes: "44 archived community votes; plurality tier."
+  - externalId: Shock
+    rank: A
+    notes: "43 archived community votes; plurality tier."
+  - externalId: Larva
+    rank: A
+    notes: "42 archived community votes; plurality tier."
+  - externalId: Null Star
+    rank: A
+    notes: "42 archived community votes; plurality tier."
+  - externalId: Condemn
+    rank: A
+    notes: "41 archived community votes; plurality tier."
+  - externalId: Smite
+    rank: A
+    notes: "41 archived community votes; plurality tier."
+  - externalId: Spectrorage
+    rank: A
+    notes: "41 archived community votes; plurality tier."
+  - externalId: Lycath's Hunt
+    rank: B
+    notes: "44 archived community votes; plurality tier."
+  - externalId: Pull
+    rank: B
+    notes: "44 archived community votes; plurality tier."
+  - externalId: Molt
+    rank: B
+    notes: "43 archived community votes; plurality tier."
+  - externalId: Shooting Gallery
+    rank: B
+    notes: "43 archived community votes; plurality tier."
+  - externalId: Elemental Ward
+    rank: B
+    notes: "42 archived community votes; plurality tier."
+  - externalId: Reave
+    rank: B
+    notes: "42 archived community votes; plurality tier."
+  - externalId: Tharros Strike
+    rank: B
+    notes: "42 archived community votes; plurality tier."
+  - externalId: Pyrotechnics
+    rank: B
+    notes: "41 archived community votes; plurality tier."
+  - externalId: Aquablades
+    rank: B
+    notes: "40 archived community votes; plurality tier."
+  - externalId: Blood Altar
+    rank: B
+    notes: "40 archived community votes; plurality tier."
+  - externalId: Defy
+    rank: B
+    notes: "40 archived community votes; plurality tier."
+  - externalId: Tempest Barrage
+    rank: B
+    notes: "40 archived community votes; plurality tier."
+  - externalId: Quiver
+    rank: C
+    notes: "40 archived community votes; plurality tier."
+  - externalId: Decoy
+    rank: D
+    notes: "42 archived community votes; plurality tier."
+  - externalId: Banish
+    rank: D
+    notes: "41 archived community votes; plurality tier."
+  - externalId: Shuriken
+    rank: D
+    notes: "41 archived community votes; plurality tier."

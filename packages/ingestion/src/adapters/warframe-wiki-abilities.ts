@@ -11,20 +11,21 @@ import {
 } from "../adapter.ts";
 import {
   DEFAULT_WARFRAME_WIKI_API_URL,
-  fetchMediaWikiLuaSnapshot,
+  fetchMediaWikiPagesSnapshot,
   luaFieldKey,
   luaLiteralField,
   luaStringValue,
   parseLuaReturnTable,
-  readMediaWikiLuaPages,
+  readMediaWikiPages,
   wikiRevisionUrl,
   wikiSlug,
 } from "./mediawiki-lua.ts";
 
-const PARSER_VERSION = "warframe-wiki-abilities-v3";
+const PARSER_VERSION = "warframe-wiki-abilities-v4";
 const ABILITY_MODULE = "Module:Ability/data";
 const WARFRAME_MODULE = "Module:Warframes/data";
 const MOD_MODULE = "Module:Mods/data";
+const HELMINTH_PAGE = "Helminth";
 const POWERSUIT_GROUPS = [
   { field: "Warframes", kind: "warframe", expectedType: "Warframe" },
   { field: "Archwings", kind: "archwing", expectedType: "Archwing" },
@@ -52,6 +53,12 @@ interface AugmentRecord {
   line?: number;
 }
 
+interface HelminthVariantRecord {
+  abilityName: string;
+  notes?: string;
+  line: number;
+}
+
 export class WarframeWikiAbilitiesAdapter implements SourceAdapter {
   readonly minimumRetainedObservationRatio = 0.5;
   readonly source = {
@@ -68,9 +75,9 @@ export class WarframeWikiAbilitiesAdapter implements SourceAdapter {
   }
 
   async fetch(context: FetchContext): Promise<Snapshot> {
-    return fetchMediaWikiLuaSnapshot({
+    return fetchMediaWikiPagesSnapshot({
       apiUrl: this.apiUrl,
-      moduleTitles: [ABILITY_MODULE, WARFRAME_MODULE, MOD_MODULE],
+      pageTitles: [ABILITY_MODULE, WARFRAME_MODULE, MOD_MODULE, HELMINTH_PAGE],
       sourceId: this.source.id,
       parserVersion: PARSER_VERSION,
       signal: context.signal,
@@ -80,10 +87,13 @@ export class WarframeWikiAbilitiesAdapter implements SourceAdapter {
   }
 
   async *parse(snapshot: Snapshot): AsyncIterable<Observation> {
-    const [abilityPage, warframePage, modPage] = readMediaWikiLuaPages(
-      snapshot.bytes,
-      [ABILITY_MODULE, WARFRAME_MODULE, MOD_MODULE],
-    );
+    const [abilityPage, warframePage, modPage, helminthPage] =
+      readMediaWikiPages(snapshot.bytes, [
+        ABILITY_MODULE,
+        WARFRAME_MODULE,
+        MOD_MODULE,
+        HELMINTH_PAGE,
+      ]);
     const equipment = parsePowersuits(warframePage!.content);
     const equipmentAbilities = parsePowersuitAbilities(warframePage!.content);
     const root = parseLuaReturnTable(abilityPage!.content, abilityPage!.title);
@@ -96,6 +106,37 @@ export class WarframeWikiAbilitiesAdapter implements SourceAdapter {
         `WARFRAME Wiki ${ABILITY_MODULE} has no current abilities`,
       );
     const augments = parseAugments(modPage!.content);
+    const helminthVariants = parseHelminthVariants(helminthPage!.content);
+    const abilitiesByName = new Map(
+      abilities.map((ability) => [
+        normalizedAbilityName(ability.name),
+        ability,
+      ]),
+    );
+    for (const variant of helminthVariants) {
+      const ability = abilitiesByName.get(
+        normalizedAbilityName(variant.abilityName),
+      );
+      if (!ability)
+        throw new Error(
+          `WARFRAME Wiki ${HELMINTH_PAGE} references unknown ability ${variant.abilityName}`,
+        );
+      if (variant.notes)
+        yield {
+          type: "entity-attribute",
+          subjectExternalId: abilityExternalId(ability.key),
+          key: "helminth-variant",
+          label: "Helminth version",
+          value: variant.notes,
+          evidence: evidence(
+            snapshot,
+            helminthPage!.title,
+            helminthPage!.revisionId,
+            `Subsumable Ability Checklist:${variant.abilityName}:notes`,
+            variant.line,
+          ),
+        };
+    }
 
     const linkedPowersuits = new Set([
       ...[...equipmentAbilities.keys()].filter((powersuit) =>
@@ -237,6 +278,115 @@ export class WarframeWikiAbilitiesAdapter implements SourceAdapter {
       }
     }
   }
+}
+
+function parseHelminthVariants(source: string): HelminthVariantRecord[] {
+  const startToken =
+    "{{HighlightTable/Start|id=Subsumable Ability Checklist|class=stickyHeader}}";
+  const start = source.indexOf(startToken);
+  const end = source.indexOf(
+    "{{HighlightTable/End}}",
+    start + startToken.length,
+  );
+  if (start < 0 || end < 0)
+    throw new Error(
+      `WARFRAME Wiki ${HELMINTH_PAGE} has no Subsumable Ability Checklist`,
+    );
+  const table = source.slice(start + startToken.length, end);
+  const rowPattern = /^\|-\s+data-rowid="[^"]+"\s*$/gm;
+  const starts = [...table.matchAll(rowPattern)];
+  if (!starts.length)
+    throw new Error(
+      `WARFRAME Wiki ${HELMINTH_PAGE} checklist has no ability rows`,
+    );
+  const seen = new Set<string>();
+  return starts.map((match, index) => {
+    const rowStart = match.index! + match[0].length;
+    const rowEnd = starts[index + 1]?.index ?? table.length;
+    const cells = parseWikitextTableCells(table.slice(rowStart, rowEnd));
+    if (cells.length < 6)
+      throw new Error(
+        `WARFRAME Wiki ${HELMINTH_PAGE} checklist row ${index} is incomplete`,
+      );
+    const abilityName = cells[1]
+      ?.match(/\{\{A\|([^}|]+)(?:\|[^}]*)?\}\}/)?.[1]
+      ?.trim();
+    if (!abilityName)
+      throw new Error(
+        `WARFRAME Wiki ${HELMINTH_PAGE} checklist row ${index} has no ability template`,
+      );
+    const key = normalizedAbilityName(abilityName);
+    if (seen.has(key))
+      throw new Error(
+        `WARFRAME Wiki ${HELMINTH_PAGE} checklist repeats ability ${abilityName}`,
+      );
+    seen.add(key);
+    const rawNotes = cells[5]?.trim();
+    return {
+      abilityName,
+      notes:
+        rawNotes && rawNotes !== "—" && rawNotes !== "-"
+          ? cleanHelminthWikitext(rawNotes, abilityName)
+          : undefined,
+      line: source
+        .slice(0, start + startToken.length + match.index!)
+        .split("\n").length,
+    };
+  });
+}
+
+function parseWikitextTableCells(row: string): string[] {
+  const cells: string[] = [];
+  for (const line of row.split("\n")) {
+    if (!line.startsWith("|")) {
+      if (line.trim() && cells.length)
+        cells[cells.length - 1] += ` ${line.trim()}`;
+      continue;
+    }
+    const parts = line.slice(1).split("||");
+    for (const part of parts) {
+      const value = part.trim().replace(/^data-[^|]+\|\s*/, "");
+      cells.push(value);
+    }
+  }
+  return cells;
+}
+
+function cleanHelminthWikitext(value: string, abilityName: string): string {
+  let result = value
+    .replace(/<br\s*\/?\s*>/gi, " ")
+    .replace(/\[\[File:[^\]]+\]\]/gi, "")
+    .replace(/\[\[([^\]|]+)\|([^\]]+)\]\]/g, "$2")
+    .replace(/\[\[([^\]]+)\]\]/g, "$1");
+  for (let pass = 0; pass < 8 && /\{\{[^{}]+\}\}/.test(result); pass++)
+    result = result.replace(/\{\{([^{}]+)\}\}/g, (_template, body: string) => {
+      const [name, ...parameters] = body.split("|").map((part) => part.trim());
+      const positional = parameters.filter((part) => !part.includes("="));
+      if (
+        ["A", "Arcane", "D", "M", "Resource", "Stat", "WF", "Weapon"].includes(
+          name ?? "",
+        )
+      )
+        return positional.at(-1) || positional[0] || "";
+      throw new Error(
+        `WARFRAME Wiki ${HELMINTH_PAGE} notes for ${abilityName} use unsupported template ${name}`,
+      );
+    });
+  result = result
+    .replace(/<[^>]+>/g, "")
+    .replace(/'{2,}/g, "")
+    .replace(/&nbsp;/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!result || /\{\{|\}\}|\[\[|\]\]/.test(result))
+    throw new Error(
+      `WARFRAME Wiki ${HELMINTH_PAGE} notes for ${abilityName} could not be normalized`,
+    );
+  return result;
+}
+
+function normalizedAbilityName(value: string): string {
+  return value.toLocaleLowerCase("en").replace(/[^a-z0-9]+/g, "");
 }
 
 function parseAbilities(table: TableConstructorExpression): AbilityRecord[] {

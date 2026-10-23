@@ -397,7 +397,26 @@ function Abilities({
                   {ability.slot}. {ability.name}
                 </strong>
                 {replacement && <span> → {replacement.name} (Helminth)</span>}
-                {ability.description && <p>{ability.description}</p>}
+                {(replacement?.description ?? ability.description) && (
+                  <p>{replacement?.description ?? ability.description}</p>
+                )}
+                {replacement?.helminthVariant && (
+                  <p className="notice">
+                    <strong>{replacement.helminthVariant.label}:</strong>{" "}
+                    {replacement.helminthVariant.baseValue}{" "}
+                    <span className="muted">
+                      (
+                      {replacement.helminthVariant.citationUrl ? (
+                        <a href={replacement.helminthVariant.citationUrl}>
+                          {replacement.helminthVariant.sourceName}
+                        </a>
+                      ) : (
+                        replacement.helminthVariant.sourceName
+                      )}
+                      )
+                    </span>
+                  </p>
+                )}
               </li>
             );
           })}
