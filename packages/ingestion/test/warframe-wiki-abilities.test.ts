@@ -21,6 +21,8 @@ test("wiki ability adapter imports current abilities and typed powersuit links",
               Name = "Slash Dash",
               Description = "Dash between enemies while <DT_SLASH_COLOR>slashing them.",
               Powersuit = "Excalibur",
+              Key = 1,
+              Subsumable = true,
             },
             Blink = {
               Description = "Teleport a short distance.",
@@ -37,7 +39,8 @@ test("wiki ability adapter imports current abilities and typed powersuit links",
       `
         return {
           Warframes = {
-            Excalibur = { Name = "Excalibur", Type = "Warframe" },
+            Excalibur = { Name = "Excalibur", Type = "Warframe", Abilities = { "Slash Dash" } },
+            ["Excalibur Prime"] = { Name = "Excalibur Prime", Type = "Warframe", Abilities = { "Slash Dash" } },
             Stalker = { Name = "Stalker", Type = "Warframe", _IgnoreEntry = true },
           },
           Archwings = {
@@ -58,6 +61,7 @@ test("wiki ability adapter imports current abilities and typed powersuit links",
       })),
     [
       { kind: "warframe", name: "Excalibur", description: undefined },
+      { kind: "warframe", name: "Excalibur Prime", description: undefined },
       { kind: "archwing", name: "Itzal", description: undefined },
       {
         kind: "ability",
@@ -86,7 +90,20 @@ test("wiki ability adapter imports current abilities and typed powersuit links",
       })),
     [
       { from: "Excalibur", to: "SlashDash", kind: "involves" },
+      { from: "Excalibur Prime", to: "SlashDash", kind: "involves" },
       { from: "Itzal", to: "Blink", kind: "involves" },
+    ],
+  );
+  assert.deepEqual(
+    observations.flatMap((observation) =>
+      observation.type === "entity-attribute" &&
+      observation.subjectExternalId.value === "SlashDash"
+        ? [[observation.key, observation.value]]
+        : [],
+    ),
+    [
+      ["ability-slot", "1"],
+      ["helminth-eligible", "true"],
     ],
   );
   assert.equal(

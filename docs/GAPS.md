@@ -184,16 +184,15 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   can be edited, paused and resumed without losing generated alerts.
   Read, expired alerts have configurable time-based retention; unread and
   non-expiring alert history is deliberately not pruned automatically.
-- Private, revisioned build persistence supports partial equipment loadouts,
-  positioned mods, mod and equipment ranks, configuration labels, Forma counts,
+- Private, revisioned build persistence supports partial equipment loadouts in
+  a focused Arsenal rail, positioned mods, reduced mod ranks, configuration labels, Forma counts,
   capacity-upgrade flags, notes and immutable unlisted share snapshots.
   Authenticated editor and public snapshot routes use canonical catalog links. Sourced mod
   maximum-rank, base-drain and polarity facts validate selected ranks and expose
   per-mod unpolarized drain. Player-authored mod-slot roles and polarities are
   preserved independently of installed mods and drive a derived adjusted drain
   or capacity bonus at matching positions. Whole-build capacity combines
-  Update 38.5 rank progression, private combined Mastery/Legendary Rank,
-  capacity upgrades and fully known adjusted mod values. Incomplete inputs
+  max-rank equipment capacity, Orokin upgrades and fully known adjusted mod values. Incomplete inputs
   produce a partial or unknown result rather than an estimate, and Operator
   Amps are excluded from this mod-capacity model. Cited factory-polarity role
   and count sets guide build setup, while exact factory positions and
@@ -211,7 +210,12 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   Authenticated recipients can clone a public snapshot into a private draft.
   Draft equipment and mods can seed missing-item acquisition goals, but the
   planner does not yet use build capacity to optimize alternative mod ranks or
-  configuration-specific requirements.
+  configuration-specific requirements. Warframes expose sourced base stats,
+  passives and ordered abilities, with one validated subsumable Helminth
+  replacement and five shard slots. The combined Operator panel stores one of
+  five Focus schools and the Amp, but does not model individual Way ranks.
+  Mod effects are not yet parsed into derived item stats, and deeper Helminth
+  incompatibilities beyond explicit eligibility remain advisory gaps.
 - Active cited editorial ranking sets have a public source-and-item comparison
   matrix with source-subset controls and coverage counts that preserve unlike
   scales and disagreement. An opt-in derived ordinal summary exposes its exact

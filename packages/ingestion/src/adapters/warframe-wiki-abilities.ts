@@ -21,7 +21,7 @@ import {
   wikiSlug,
 } from "./mediawiki-lua.ts";
 
-const PARSER_VERSION = "warframe-wiki-abilities-v2";
+const PARSER_VERSION = "warframe-wiki-abilities-v3";
 const ABILITY_MODULE = "Module:Ability/data";
 const WARFRAME_MODULE = "Module:Warframes/data";
 const MOD_MODULE = "Module:Mods/data";
@@ -40,6 +40,8 @@ interface AbilityRecord {
   description?: string;
   powersuit: string;
   augments: string[];
+  slot?: number;
+  subsumable: boolean;
   line?: number;
 }
 
@@ -81,6 +83,7 @@ export class WarframeWikiAbilitiesAdapter implements SourceAdapter {
       [ABILITY_MODULE, WARFRAME_MODULE, MOD_MODULE],
     );
     const equipment = parsePowersuits(warframePage!.content);
+    const equipmentAbilities = parsePowersuitAbilities(warframePage!.content);
     const root = parseLuaReturnTable(abilityPage!.content, abilityPage!.title);
     const abilityTable = luaLiteralField(root, "Ability");
     if (abilityTable?.type !== "TableConstructorExpression")
@@ -92,11 +95,14 @@ export class WarframeWikiAbilitiesAdapter implements SourceAdapter {
       );
     const augments = parseAugments(modPage!.content);
 
-    const linkedPowersuits = new Set(
-      abilities
+    const linkedPowersuits = new Set([
+      ...[...equipmentAbilities.keys()].filter((powersuit) =>
+        equipment.has(powersuit),
+      ),
+      ...abilities
         .map(({ powersuit }) => powersuit)
         .filter((powersuit) => equipment.has(powersuit)),
-    );
+    ]);
     for (const powersuit of linkedPowersuits) {
       const kind = equipment.get(powersuit)!;
       yield {
@@ -132,20 +138,56 @@ export class WarframeWikiAbilitiesAdapter implements SourceAdapter {
           ability.line,
         ),
       };
-      if (!equipment.has(ability.powersuit)) continue;
+      if (ability.slot !== undefined)
+        yield {
+          type: "entity-attribute",
+          subjectExternalId: abilityExternalId(ability.key),
+          key: "ability-slot",
+          label: "Ability slot",
+          value: String(ability.slot),
+          evidence: evidence(
+            snapshot,
+            abilityPage!.title,
+            abilityPage!.revisionId,
+            `Ability:${ability.key}:slot`,
+            ability.line,
+          ),
+        };
       yield {
-        type: "entity-relation",
-        kind: "involves",
-        fromExternalId: powersuitExternalId(ability.powersuit),
-        toExternalId: abilityExternalId(ability.key),
+        type: "entity-attribute",
+        subjectExternalId: abilityExternalId(ability.key),
+        key: "helminth-eligible",
+        label: "Helminth eligible",
+        value: ability.subsumable ? "true" : "false",
         evidence: evidence(
           snapshot,
           abilityPage!.title,
           abilityPage!.revisionId,
-          `${ability.powersuit}:${ability.key}`,
+          `Ability:${ability.key}:helminth-eligible`,
           ability.line,
         ),
       };
+      const owners = [...equipmentAbilities.entries()].filter(([, names]) =>
+        names.includes(ability.name),
+      );
+      const typedOwners = owners.filter(([owner]) => equipment.has(owner));
+      if (!typedOwners.length && equipment.has(ability.powersuit))
+        typedOwners.push([ability.powersuit, [ability.name]]);
+      for (const [owner] of typedOwners)
+        yield {
+          type: "entity-relation",
+          kind: "involves",
+          fromExternalId: powersuitExternalId(owner),
+          toExternalId: abilityExternalId(ability.key),
+          notes: `ability-slot:${equipmentAbilities.get(owner)?.indexOf(ability.name)! + 1 || ability.slot || 0}`,
+          evidence: evidence(
+            snapshot,
+            warframePage!.title,
+            warframePage!.revisionId,
+            `${owner}:ability:${ability.key}`,
+            ability.line,
+          ),
+        };
       for (const augmentName of ability.augments) {
         const augment = augments.get(augmentName) ?? {
           key: augmentName,
@@ -196,7 +238,10 @@ export class WarframeWikiAbilitiesAdapter implements SourceAdapter {
 }
 
 function parseAbilities(table: TableConstructorExpression): AbilityRecord[] {
-  const records: AbilityRecord[] = [];
+  // Lua keeps the final value for a repeated table key. Mirror that behavior
+  // without executing the module; the live Wiki currently contains one such
+  // duplicate Drifter record.
+  const records = new Map<string, AbilityRecord>();
   for (const field of table.fields) {
     if (field.type === "TableValue") continue;
     const key = luaFieldKey(field);
@@ -220,16 +265,53 @@ function parseAbilities(table: TableConstructorExpression): AbilityRecord[] {
             return value ? [value] : [];
           })
         : [];
-    records.push({
+    records.set(key, {
       key,
       name,
       powersuit,
       augments,
+      slot:
+        luaLiteralField(field.value, "Key")?.type === "NumericLiteral"
+          ? (luaLiteralField(field.value, "Key") as { value: number }).value
+          : undefined,
+      subsumable:
+        luaLiteralField(field.value, "Subsumable")?.type === "BooleanLiteral" &&
+        (luaLiteralField(field.value, "Subsumable") as { value: boolean })
+          .value,
       description: cleanDescription(rawDescription),
       line: field.loc?.start.line,
     });
   }
-  return records;
+  return [...records.values()];
+}
+
+function parsePowersuitAbilities(source: string): Map<string, string[]> {
+  const root = parseLuaReturnTable(source, WARFRAME_MODULE);
+  const result = new Map<string, string[]>();
+  for (const group of POWERSUIT_GROUPS) {
+    const table = luaLiteralField(root, group.field);
+    if (table?.type !== "TableConstructorExpression") continue;
+    for (const field of table.fields) {
+      if (
+        field.type === "TableValue" ||
+        field.value.type !== "TableConstructorExpression"
+      )
+        continue;
+      const key = luaFieldKey(field);
+      if (!key) continue;
+      const name =
+        luaStringValue(luaLiteralField(field.value, "Name"))?.trim() || key;
+      const values = luaLiteralField(field.value, "Abilities");
+      if (values?.type !== "TableConstructorExpression") continue;
+      const abilities = values.fields.flatMap((abilityField) => {
+        if (abilityField.type !== "TableValue") return [];
+        const ability = luaStringValue(abilityField.value)?.trim();
+        return ability ? [ability] : [];
+      });
+      if (abilities.length) result.set(name, abilities);
+    }
+  }
+  return result;
 }
 
 function parseAugments(source: string): Map<string, AugmentRecord> {

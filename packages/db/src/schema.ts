@@ -880,6 +880,10 @@ export const playerBuilds = sqliteTable(
     title: text().notNull(),
     category: text(),
     notes: text(),
+    focusSchoolEntityId: text("focus_school_entity_id").references(
+      () => entities.id,
+      { onDelete: "set null" },
+    ),
     revision: integer().notNull().default(1),
     createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
     updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
@@ -951,12 +955,7 @@ export const buildModSlots = sqliteTable(
     role: text().notNull(),
     polarity: text(),
   },
-  (table) => [
-    primaryKey({ columns: [table.equipmentId, table.position] }),
-    uniqueIndex("build_mod_slot_special_role")
-      .on(table.equipmentId, table.role)
-      .where(sql`${table.role} <> 'normal'`),
-  ],
+  (table) => [primaryKey({ columns: [table.equipmentId, table.position] })],
 );
 export const buildEnhancements = sqliteTable(
   "build_enhancements",
@@ -976,6 +975,20 @@ export const buildEnhancements = sqliteTable(
   (table) => [
     uniqueIndex("build_enhancement_slot").on(table.buildId, table.slot),
   ],
+);
+export const buildAbilityReplacements = sqliteTable(
+  "build_ability_replacements",
+  {
+    buildId: text("build_id")
+      .primaryKey()
+      .references(() => playerBuilds.id, { onDelete: "cascade" }),
+    originalAbilityId: text("original_ability_id")
+      .notNull()
+      .references(() => entities.id),
+    replacementAbilityId: text("replacement_ability_id")
+      .notNull()
+      .references(() => entities.id),
+  },
 );
 export const buildShareSnapshots = sqliteTable(
   "build_share_snapshots",

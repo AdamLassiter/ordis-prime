@@ -9,6 +9,7 @@ export * from "./adapters/warframe-wiki-warframes.ts";
 export * from "./adapters/warframe-wiki-missions.ts";
 export * from "./adapters/warframe-wiki-junctions.ts";
 export * from "./adapters/warframe-wiki-abilities.ts";
+export * from "./adapters/warframe-wiki-focus.ts";
 export * from "./adapters/warframe-wiki-quests.ts";
 export * from "./adapters/warframe-wiki-enemies.ts";
 export * from "./adapters/warframe-wiki-vendors.ts";

@@ -47,6 +47,60 @@ export const BUILD_SLOTS = [
   "operator-amp",
 ] as const;
 export type BuildSlot = (typeof BUILD_SLOTS)[number];
+export const BUILD_PANEL_KEYS = [
+  "warframe",
+  "primary",
+  "secondary",
+  "melee",
+  "companion",
+  "companion-weapon",
+  "archwing",
+  "archgun",
+  "archmelee",
+  "operator",
+] as const;
+export type BuildPanelKey = (typeof BUILD_PANEL_KEYS)[number];
+export interface BuildSlotProfile {
+  normalSlots: number;
+  auraSlots: number;
+  stanceSlots: number;
+  exilusSlots: number;
+  capacityUpgrade: "reactor" | "catalyst" | undefined;
+}
+export function buildSlotProfile(slot: BuildSlot): BuildSlotProfile {
+  if (slot === "operator-amp")
+    return {
+      normalSlots: 0,
+      auraSlots: 0,
+      stanceSlots: 0,
+      exilusSlots: 0,
+      capacityUpgrade: undefined,
+    };
+  return {
+    normalSlots: slot === "companion" ? 10 : 8,
+    auraSlots: slot === "warframe" ? 1 : 0,
+    stanceSlots: slot === "melee" ? 1 : 0,
+    exilusSlots: ["warframe", "primary", "secondary", "melee"].includes(slot)
+      ? 1
+      : 0,
+    capacityUpgrade: ["warframe", "companion", "archwing"].includes(slot)
+      ? "reactor"
+      : "catalyst",
+  };
+}
+
+export function buildModSlotRoleAt(
+  slot: BuildSlot,
+  position: number,
+): BuildModSlotRole | undefined {
+  const profile = buildSlotProfile(slot);
+  if (position >= 0 && position < profile.normalSlots) return "normal";
+  if (slot === "warframe" && (position === 10 || position === 11))
+    return "aura";
+  if (slot === "melee" && position === 10) return "stance";
+  if (profile.exilusSlots && position === 12) return "exilus";
+  return undefined;
+}
 export function buildModSlotRolesFor(slot: BuildSlot): BuildModSlotRole[] {
   return BUILD_MOD_SLOT_ROLES.filter(
     (role) =>
@@ -79,6 +133,24 @@ export interface BuildEntityReference {
   slug: string;
   name: string;
 }
+export interface BuildStat {
+  key: string;
+  label: string;
+  baseValue: string;
+  sourceName: string;
+  citationUrl?: string;
+}
+export interface BuildAbility extends BuildEntityReference {
+  description?: string;
+  slot: number;
+  helminthEligible: boolean;
+  sourceName?: string;
+  citationUrl?: string;
+}
+export interface BuildAbilityReplacement {
+  original: BuildAbility;
+  replacement: BuildAbility;
+}
 export interface BuildMod {
   position: number;
   entity: BuildEntityReference;
@@ -106,6 +178,9 @@ export interface BuildEquipmentEntry {
   maxRank?: number;
   formaCount: number;
   capacityUpgrade: boolean;
+  stats?: BuildStat[];
+  passive?: BuildStat;
+  abilities?: BuildAbility[];
   capacity?: BuildCapacity;
   factoryPolaritySets?: CatalogEquipmentPolaritySet[];
   modularPartRoles: ModularPartRole[];
@@ -137,6 +212,8 @@ export interface PlayerBuild {
   revision: number;
   createdAt: number;
   updatedAt: number;
+  focusSchool?: BuildEntityReference & { description?: string };
+  abilityReplacement?: BuildAbilityReplacement;
   equipment: BuildEquipmentEntry[];
   enhancements: BuildEnhancement[];
 }
@@ -296,7 +373,13 @@ function cloneBuildSnapshot(
   userId: string,
   source: Pick<
     PlayerBuild,
-    "title" | "category" | "notes" | "equipment" | "enhancements"
+    | "title"
+    | "category"
+    | "notes"
+    | "equipment"
+    | "enhancements"
+    | "focusSchool"
+    | "abilityReplacement"
   >,
 ): string {
   return sqlite.transaction(() => {
@@ -305,6 +388,8 @@ function cloneBuildSnapshot(
       category: source.category,
       notes: source.notes,
     });
+    if (source.focusSchool)
+      setBuildFocusSchool(sqlite, userId, cloneId, source.focusSchool);
     for (const equipment of source.equipment) {
       setBuildEquipment(
         sqlite,
@@ -360,8 +445,145 @@ function cloneBuildSnapshot(
         enhancement.rank,
         enhancement.option?.key,
       );
+    if (source.abilityReplacement)
+      setBuildAbilityReplacement(
+        sqlite,
+        userId,
+        cloneId,
+        source.abilityReplacement.original,
+        source.abilityReplacement.replacement,
+      );
     return cloneId;
   })();
+}
+
+export function searchBuildFocusSchools(
+  sqlite: Database.Database,
+  query: string,
+  limit = 20,
+): BuildCandidate[] {
+  return sqlite
+    .prepare(
+      `select kind, slug, name from entities
+       where retired = 0 and kind = 'focus-school' and name like ? escape '\\'
+       order by name collate nocase limit ?`,
+    )
+    .all(
+      `%${escapeLike(query.trim())}%`,
+      Math.max(1, Math.min(20, limit)),
+    ) as BuildCandidate[];
+}
+
+export function setBuildFocusSchool(
+  sqlite: Database.Database,
+  userId: string,
+  buildId: string,
+  reference: { kind: string; slug: string },
+): void {
+  sqlite.transaction(() => {
+    assertBuildOwner(sqlite, userId, buildId);
+    const entity = findEntity(sqlite, reference);
+    if (entity.kind !== "focus-school")
+      throw new Error("Operator Focus requires a focus school");
+    sqlite
+      .prepare(
+        "update player_builds set focus_school_entity_id = ? where id = ?",
+      )
+      .run(entity.id, buildId);
+    touchBuild(sqlite, buildId);
+  })();
+}
+
+export function removeBuildFocusSchool(
+  sqlite: Database.Database,
+  userId: string,
+  buildId: string,
+): void {
+  assertBuildOwner(sqlite, userId, buildId);
+  sqlite
+    .prepare(
+      "update player_builds set focus_school_entity_id = null where id = ?",
+    )
+    .run(buildId);
+  touchBuild(sqlite, buildId);
+}
+
+export function searchHelminthAbilities(
+  sqlite: Database.Database,
+  query: string,
+  limit = 30,
+): BuildAbility[] {
+  const rows = sqlite
+    .prepare(
+      `select distinct entity.id
+       from entities entity
+       join entity_attributes attribute on attribute.entity_id = entity.id
+       join source_runs run on run.id = attribute.source_run_id and run.status = 'active'
+       where entity.retired = 0 and entity.kind = 'ability'
+         and attribute.key = 'helminth-eligible' and attribute.value = 'true'
+         and entity.name like ? escape '\\'
+       order by entity.name collate nocase limit ?`,
+    )
+    .all(
+      `%${escapeLike(query.trim())}%`,
+      Math.max(1, Math.min(100, Math.trunc(limit))),
+    ) as Array<{ id: string }>;
+  return rows.map(({ id }) => hydrateAbility(sqlite, id));
+}
+
+export function setBuildAbilityReplacement(
+  sqlite: Database.Database,
+  userId: string,
+  buildId: string,
+  originalReference: { kind: string; slug: string },
+  replacementReference: { kind: string; slug: string },
+): void {
+  sqlite.transaction(() => {
+    assertBuildOwner(sqlite, userId, buildId);
+    const original = findEntity(sqlite, originalReference);
+    const replacement = findEntity(sqlite, replacementReference);
+    if (original.kind !== "ability" || replacement.kind !== "ability")
+      throw new Error("Helminth replacement requires two abilities");
+    const warframe = sqlite
+      .prepare(
+        "select entity_id as entityId from build_equipment where build_id = ? and slot = 'warframe'",
+      )
+      .get(buildId) as { entityId: string } | undefined;
+    if (!warframe)
+      throw new Error("Equip a Warframe before replacing an ability");
+    if (!abilityBelongsTo(sqlite, warframe.entityId, original.id))
+      throw new Error(
+        "Original ability does not belong to the equipped Warframe",
+      );
+    if (!hydrateAbility(sqlite, replacement.id).helminthEligible)
+      throw new Error(
+        "Replacement ability is not sourced as Helminth eligible",
+      );
+    if (original.id === replacement.id)
+      throw new Error("Replacement ability must differ from the original");
+    sqlite
+      .prepare(
+        `insert into build_ability_replacements (build_id, original_ability_id, replacement_ability_id)
+         values (?, ?, ?)
+         on conflict(build_id) do update set original_ability_id = excluded.original_ability_id,
+           replacement_ability_id = excluded.replacement_ability_id`,
+      )
+      .run(buildId, original.id, replacement.id);
+    touchBuild(sqlite, buildId);
+  })();
+}
+
+export function removeBuildAbilityReplacement(
+  sqlite: Database.Database,
+  userId: string,
+  buildId: string,
+): void {
+  assertBuildOwner(sqlite, userId, buildId);
+  const result = sqlite
+    .prepare("delete from build_ability_replacements where build_id = ?")
+    .run(buildId);
+  if (result.changes !== 1) throw new Error("Helminth replacement not found");
+  touchBuild(sqlite, buildId);
 }
 
 export function searchBuildCandidates(
@@ -649,6 +871,12 @@ export function setBuildEquipment(
             "update build_equipment set entity_id = ?, notes = ?, configuration = null, rank = null, forma_count = 0, capacity_upgrade = 0 where id = ?",
           )
           .run(entity.id, normalizedNotes ?? null, existing.id);
+        if (slot === "warframe")
+          sqlite
+            .prepare(
+              "delete from build_ability_replacements where build_id = ?",
+            )
+            .run(buildId);
       } else {
         sqlite
           .prepare("update build_equipment set notes = ? where id = ?")
@@ -677,6 +905,10 @@ export function removeBuildEquipment(
       .prepare("delete from build_equipment where build_id = ? and slot = ?")
       .run(buildId, slot);
     if (result.changes !== 1) throw new Error("Build equipment not found");
+    if (slot === "warframe")
+      sqlite
+        .prepare("delete from build_ability_replacements where build_id = ?")
+        .run(buildId);
     touchBuild(sqlite, buildId);
   })();
 }
@@ -809,8 +1041,7 @@ export function setBuildModSlot(
   role: BuildModSlotRole,
   polarity?: ModPolarity,
 ): void {
-  if (!Number.isSafeInteger(position) || position < 0 || position > 19)
-    throw new Error("Mod slot position must be between 0 and 19");
+  if (!Number.isSafeInteger(position)) throw new Error("Mod slot is invalid");
   if (!(BUILD_MOD_SLOT_ROLES as readonly string[]).includes(role))
     throw new Error("Mod slot role is invalid");
   if (
@@ -822,6 +1053,8 @@ export function setBuildModSlot(
     throw new Error("Aura slots are only valid on Warframes");
   if (role === "stance" && slot !== "melee")
     throw new Error("Stance slots are only valid on melee weapons");
+  if (buildModSlotRoleAt(slot, position) !== role)
+    throw new Error("Mod slot role does not match the equipment slot profile");
   sqlite.transaction(() => {
     assertBuildOwner(sqlite, userId, buildId);
     const equipment = sqlite
@@ -829,15 +1062,6 @@ export function setBuildModSlot(
       .get(buildId, slot) as { id: string } | undefined;
     if (!equipment)
       throw new Error("Add equipment before configuring mod slots");
-    if (role !== "normal") {
-      const duplicate = sqlite
-        .prepare(
-          "select position from build_mod_slots where equipment_id = ? and role = ? and position <> ?",
-        )
-        .get(equipment.id, role, position) as { position: number } | undefined;
-      if (duplicate)
-        throw new Error(`Equipment already has a configured ${role} slot`);
-    }
     sqlite
       .prepare(
         `insert into build_mod_slots (equipment_id, position, role, polarity) values (?, ?, ?, ?)
@@ -876,8 +1100,8 @@ export function setBuildMod(
   reference: { kind: string; slug: string },
   rank?: number,
 ): void {
-  if (!Number.isSafeInteger(position) || position < 0 || position > 19)
-    throw new Error("Mod position must be between 0 and 19");
+  if (!Number.isSafeInteger(position) || !buildModSlotRoleAt(slot, position))
+    throw new Error("Mod position is not valid for this equipment slot");
   if (
     rank !== undefined &&
     (!Number.isSafeInteger(rank) || rank < 0 || rank > 100)
@@ -896,12 +1120,25 @@ export function setBuildMod(
       throw new Error(`${mod.name} rank must not exceed ${mod.modMaxRank}`);
     sqlite
       .prepare(
+        `insert into build_mod_slots (equipment_id, position, role, polarity)
+         values (?, ?, ?, null)
+         on conflict(equipment_id, position) do nothing`,
+      )
+      .run(equipment.id, position, buildModSlotRoleAt(slot, position));
+    sqlite
+      .prepare(
         `
       insert into build_mods (id, equipment_id, position, entity_id, rank) values (?, ?, ?, ?, ?)
       on conflict(equipment_id, position) do update set entity_id = excluded.entity_id, rank = excluded.rank
     `,
       )
-      .run(randomUUID(), equipment.id, position, mod.id, rank ?? null);
+      .run(
+        randomUUID(),
+        equipment.id,
+        position,
+        mod.id,
+        rank ?? mod.modMaxRank ?? null,
+      );
     touchBuild(sqlite, buildId);
   })();
 }
@@ -1006,23 +1243,38 @@ export function addBuildAcquisitionGoals(
   const requirements = sqlite
     .prepare(
       `
-    select entity_id as entityId, count(*) as quantity from (
-      select entity_id from build_equipment where build_id = ?
+    select entity_id as entityId, count(*) as quantity,
+      max(is_helminth_donor) as isHelminthDonor from (
+      select entity_id, 0 as is_helminth_donor from build_equipment where build_id = ?
       union all
-      select part.entity_id from build_modular_parts part join build_equipment equipment on equipment.id = part.equipment_id where equipment.build_id = ?
+      select part.entity_id, 0 from build_modular_parts part join build_equipment equipment on equipment.id = part.equipment_id where equipment.build_id = ?
       union all
-      select mod.entity_id from build_mods mod join build_equipment equipment on equipment.id = mod.equipment_id where equipment.build_id = ?
+      select mod.entity_id, 0 from build_mods mod join build_equipment equipment on equipment.id = mod.equipment_id where equipment.build_id = ?
       union all
-      select entity_id from build_enhancements where build_id = ?
+      select entity_id, 0 from build_enhancements where build_id = ?
+      union all
+      select entityId, 1 from (
+        select donor.id as entityId
+        from build_ability_replacements replacement
+        join entity_relations relation on relation.to_entity_id = replacement.replacement_ability_id
+          and relation.kind = 'involves'
+        join source_runs run on run.id = relation.source_run_id and run.status = 'active'
+        join entities donor on donor.id = relation.from_entity_id and donor.kind = 'warframe'
+        where replacement.build_id = ?
+        order by case when donor.name like '% Prime' then 1 else 0 end,
+          length(donor.name), donor.name collate nocase
+        limit 1
+      )
     ) group by entity_id
   `,
     )
-    .all(buildId, buildId, buildId, buildId) as Array<{
+    .all(buildId, buildId, buildId, buildId, buildId) as Array<{
     entityId: string;
     quantity: number;
+    isHelminthDonor: number;
   }>;
   const inventory = sqlite.prepare(
-    "select coalesce(owned_count, 0) + coalesce(built_count, 0) as available from player_inventory where user_id = ? and entity_id = ?",
+    "select coalesce(owned_count, 0) + coalesce(built_count, 0) as available, subsumed from player_inventory where user_id = ? and entity_id = ?",
   );
   const existingGoal = sqlite.prepare(
     "select target_quantity as targetQuantity from player_goals where user_id = ? and entity_id = ?",
@@ -1035,11 +1287,10 @@ export function addBuildAcquisitionGoals(
   return sqlite.transaction(() => {
     let changed = 0;
     for (const requirement of requirements) {
-      const available =
-        (
-          inventory.get(userId, requirement.entityId) as
-            { available: number } | undefined
-        )?.available ?? 0;
+      const inventoryEntry = inventory.get(userId, requirement.entityId) as
+        { available: number; subsumed: number } | undefined;
+      if (requirement.isHelminthDonor && inventoryEntry?.subsumed) continue;
+      const available = inventoryEntry?.available ?? 0;
       if (available >= requirement.quantity) continue;
       const currentTarget =
         (
@@ -1069,6 +1320,21 @@ function hydrateBuild(
   },
   playerMasteryRank: number | undefined,
 ): PlayerBuild {
+  const focusSchool = sqlite
+    .prepare(
+      `select entity.kind, entity.slug, entity.name, entity.description
+       from player_builds build join entities entity on entity.id = build.focus_school_entity_id
+       where build.id = ?`,
+    )
+    .get(build.id) as
+    | { kind: string; slug: string; name: string; description: string | null }
+    | undefined;
+  const replacementRow = sqlite
+    .prepare(
+      `select original_ability_id as originalId, replacement_ability_id as replacementId
+       from build_ability_replacements where build_id = ?`,
+    )
+    .get(build.id) as { originalId: string; replacementId: string } | undefined;
   const equipmentRows = sqlite
     .prepare(
       `
@@ -1143,6 +1409,26 @@ function hydrateBuild(
     revision: build.revision,
     createdAt: build.createdAt,
     updatedAt: build.updatedAt,
+    ...(focusSchool
+      ? {
+          focusSchool: {
+            kind: focusSchool.kind,
+            slug: focusSchool.slug,
+            name: focusSchool.name,
+            ...(focusSchool.description
+              ? { description: focusSchool.description }
+              : {}),
+          },
+        }
+      : {}),
+    ...(replacementRow
+      ? {
+          abilityReplacement: {
+            original: hydrateAbility(sqlite, replacementRow.originalId),
+            replacement: hydrateAbility(sqlite, replacementRow.replacementId),
+          },
+        }
+      : {}),
     equipment: equipmentRows.map((entry) => {
       const modSlots = (
         modSlotsQuery.all(entry.id) as Array<{
@@ -1181,9 +1467,10 @@ function hydrateBuild(
           slotRole,
           slotPolarity,
         }) => {
+          const effectiveRank = rank ?? modMaxRank ?? undefined;
           const drain = calculateRankedModDrain(
             modBaseDrain ?? undefined,
-            rank ?? undefined,
+            effectiveRank,
           );
           const adjustedDrain = calculatePolarityAdjustedDrain(
             drain,
@@ -1198,7 +1485,7 @@ function hydrateBuild(
           );
           return {
             position,
-            rank: rank ?? undefined,
+            rank: effectiveRank,
             ...(modMaxRank !== null ? { maxRank: modMaxRank } : {}),
             ...(modBaseDrain !== null ? { baseDrain: modBaseDrain } : {}),
             ...(modPolarity !== null ? { polarity: modPolarity } : {}),
@@ -1223,18 +1510,27 @@ function hydrateBuild(
         role,
         entity: { kind, slug, name },
       }));
+      const attributes = listActiveBuildAttributes(sqlite, entry.entityId);
+      const passive = attributes.find(({ key }) => key === "passive");
+      const stats = attributes.filter(({ key }) => key !== "passive");
+      const abilities = ["warframe", "archwing"].includes(entry.slot)
+        ? listEquipmentAbilities(sqlite, entry.entityId)
+        : [];
       return {
         id: entry.id,
         slot: entry.slot,
         entity: { kind: entry.kind, slug: entry.slug, name: entry.name },
         notes: entry.notes ?? undefined,
         configuration: entry.configuration ?? undefined,
-        rank: entry.rank ?? undefined,
+        rank: entry.rank ?? entry.equipmentMaxRank ?? undefined,
         ...(entry.equipmentMaxRank !== null
           ? { maxRank: entry.equipmentMaxRank }
           : {}),
         formaCount: entry.formaCount,
         capacityUpgrade: Boolean(entry.capacityUpgrade),
+        ...(stats.length ? { stats } : {}),
+        ...(passive ? { passive } : {}),
+        ...(abilities.length ? { abilities } : {}),
         modularPartRoles: modularPartRolesForWeaponClass(
           entry.weaponClass ?? undefined,
         ),
@@ -1244,9 +1540,9 @@ function hydrateBuild(
           ? {}
           : {
               capacity: calculateBuildCapacity(
-                entry.rank ?? undefined,
                 entry.equipmentMaxRank ?? undefined,
-                playerMasteryRank,
+                entry.equipmentMaxRank ?? undefined,
+                undefined,
                 Boolean(entry.capacityUpgrade),
                 mods,
               ),
@@ -1274,6 +1570,105 @@ function hydrateBuild(
       }),
     ),
   };
+}
+
+function listActiveBuildAttributes(
+  sqlite: Database.Database,
+  entityId: string,
+): BuildStat[] {
+  return sqlite
+    .prepare(
+      `with ranked as (
+         select attribute.key, attribute.label, attribute.value as baseValue,
+           source.name as sourceName, attribute.citation_url as citationUrl,
+           row_number() over (
+             partition by attribute.key
+             order by source.priority desc, run.retrieved_at desc,
+               source.id, attribute.source_record_key
+           ) as preference
+         from entity_attributes attribute
+         join source_runs run on run.id = attribute.source_run_id and run.status = 'active'
+         join sources source on source.id = run.source_id
+         where attribute.entity_id = ?
+       )
+       select key, label, baseValue, sourceName, citationUrl
+       from ranked where preference = 1 order by key`,
+    )
+    .all(entityId) as BuildStat[];
+}
+
+function hydrateAbility(
+  sqlite: Database.Database,
+  entityId: string,
+): BuildAbility {
+  const entity = sqlite
+    .prepare(
+      "select kind, slug, name, description from entities where id = ? and kind = 'ability'",
+    )
+    .get(entityId) as
+    | { kind: string; slug: string; name: string; description: string | null }
+    | undefined;
+  if (!entity) throw new Error("Build ability is unavailable");
+  const attributes = listActiveBuildAttributes(sqlite, entityId);
+  const slot = Number(
+    attributes.find(({ key }) => key === "ability-slot")?.baseValue ?? 0,
+  );
+  const eligibility = attributes.find(({ key }) => key === "helminth-eligible");
+  return {
+    kind: entity.kind,
+    slug: entity.slug,
+    name: entity.name,
+    ...(entity.description ? { description: entity.description } : {}),
+    slot: Number.isSafeInteger(slot) ? slot : 0,
+    helminthEligible: eligibility?.baseValue === "true",
+    ...(eligibility
+      ? {
+          sourceName: eligibility.sourceName,
+          ...(eligibility.citationUrl
+            ? { citationUrl: eligibility.citationUrl }
+            : {}),
+        }
+      : {}),
+  };
+}
+
+function abilityBelongsTo(
+  sqlite: Database.Database,
+  equipmentEntityId: string,
+  abilityEntityId: string,
+): boolean {
+  return Boolean(
+    sqlite
+      .prepare(
+        `select 1 from entity_relations relation
+         join source_runs run on run.id = relation.source_run_id and run.status = 'active'
+         where relation.from_entity_id = ? and relation.to_entity_id = ?
+           and relation.kind = 'involves' limit 1`,
+      )
+      .get(equipmentEntityId, abilityEntityId),
+  );
+}
+
+function listEquipmentAbilities(
+  sqlite: Database.Database,
+  equipmentEntityId: string,
+): BuildAbility[] {
+  const rows = sqlite
+    .prepare(
+      `select distinct ability.id
+       from entity_relations relation
+       join source_runs run on run.id = relation.source_run_id and run.status = 'active'
+       join entities ability on ability.id = relation.to_entity_id
+       where relation.from_entity_id = ? and relation.kind = 'involves'
+         and ability.kind = 'ability' and ability.retired = 0`,
+    )
+    .all(equipmentEntityId) as Array<{ id: string }>;
+  return rows
+    .map(({ id }) => hydrateAbility(sqlite, id))
+    .sort(
+      (left, right) =>
+        left.slot - right.slot || left.name.localeCompare(right.name),
+    );
 }
 
 function validateDetails(input: {

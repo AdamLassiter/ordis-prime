@@ -12,6 +12,7 @@ import { WarframeWikiWarframesAdapter } from "./adapters/warframe-wiki-warframes
 import { WarframeWikiMissionsAdapter } from "./adapters/warframe-wiki-missions.ts";
 import { WarframeWikiJunctionsAdapter } from "./adapters/warframe-wiki-junctions.ts";
 import { WarframeWikiAbilitiesAdapter } from "./adapters/warframe-wiki-abilities.ts";
+import { WarframeWikiFocusAdapter } from "./adapters/warframe-wiki-focus.ts";
 import { WarframeWikiQuestsAdapter } from "./adapters/warframe-wiki-quests.ts";
 import { WarframeWikiEnemiesAdapter } from "./adapters/warframe-wiki-enemies.ts";
 import { WarframeWikiVendorsAdapter } from "./adapters/warframe-wiki-vendors.ts";
@@ -27,6 +28,7 @@ const adapters = {
   "warframe-wiki-missions": () => new WarframeWikiMissionsAdapter(),
   "warframe-wiki-junctions": () => new WarframeWikiJunctionsAdapter(),
   "warframe-wiki-abilities": () => new WarframeWikiAbilitiesAdapter(),
+  "warframe-wiki-focus": () => new WarframeWikiFocusAdapter(),
   "warframe-wiki-quests": () => new WarframeWikiQuestsAdapter(),
   "warframe-wiki-enemies": () => new WarframeWikiEnemiesAdapter(),
   "warframe-wiki-vendors": () => new WarframeWikiVendorsAdapter(),

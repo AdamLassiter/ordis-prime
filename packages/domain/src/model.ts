@@ -43,6 +43,7 @@ export type EntityKind =
   | "mechanic"
   | "secret"
   | "ability"
+  | "focus-school"
   | "archwing"
   | "challenge"
   | "cosmetic"

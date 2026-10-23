@@ -1,113 +1,81 @@
 # Builds and sharing
 
-Builds are private player-owned drafts composed from canonical catalog entities.
-They can be partial: a player may record only a Warframe, one weapon, or any
-subset of the supported loadout slots. Each equipment entry can carry notes and
-up to twenty positioned mods with optional ranks. It can also record a freeform
-configuration label (for example, an Incarnon or named config), Forma count, and
-whether an Orokin capacity upgrade is installed. An optional current equipment
-rank records the player's actual configuration independently from Forma count.
-Equipment also owns an optional mod-slot grid. A configured position records a
-normal, Aura, Stance or Exilus role and an optional polarity independently from
-the mod installed at that position, so an empty Forma'd slot is not lost.
-Catalog equipment can also expose cited factory-polarity sets as role and count
-summaries, including source-defined empty sets and named hybrid configurations. The
-source does not assert positions, so these summaries guide the player's grid
-without automatically changing it.
-When a mod has sourced rank and base-drain metadata, the editor constrains its
-selected rank and shows its unpolarized ranked drain. Positive drain increases
-by one per rank; negative aura/stance drain becomes a larger capacity bonus.
-When the mod's position has an explicitly configured slot, the editor also
-shows polarity-adjusted drain or bonus using the game's distinct normal and
-Aura/Stance rounding rules. Unknown metadata or slot configuration stays visibly
-absent rather than being guessed. The editor combines those adjusted values
-with current equipment rank, private combined Mastery/Legendary Rank, sourced
-maximum rank and the capacity-upgrade flag. It shows equipment capacity alone
-when only that subtotal is exact, and shows used, total and remaining capacity
-only when every installed mod is calculable. Rank-zero capacity follows the
-current 15-point base rule; progression through rank 30 is gained every two
-ranks, while rank-40 equipment continues one point per rank. Operator Amps are
-excluded because they do not use this mod-capacity system.
-Build-level enhancement slots record Warframe, operator/amp and weapon arcanes
-plus five positioned Archon Shards. Arcanes can retain an optional rank. Every
-new shard assignment chooses one active, cited effect option; the build stores
-the stable option key and the label shown at selection time. If a later source
-version removes that option, the draft keeps its historical choice and marks it
-unavailable rather than silently substituting another effect.
+Builds are private, revisioned drafts composed from canonical catalog entities.
+They may contain any subset of the supported loadout. The editor and immutable
+share route use the same focused Arsenal presentation: a ten-card rail selects
+Warframe, Primary, Secondary, Melee, Companion, Companion Weapon, Archwing,
+Archgun, Archwing Melee, or a combined Operator/Amp panel. The selected item
+alone supplies the stats, configuration and applicable arcanes; build metadata,
+acquisition and publishing remain outside the rail.
 
-Changing an equipment item clears that slot's mods and configuration because
-those assignments are usually item-specific. Every edit increments the build revision. Slot validation
-currently requires Warframe, companion and weapon entity kinds as appropriate;
-mod positions require canonical mod entities, and enhancement slots require
-canonical arcane or shard entities. Arcane search and assignment also require
-an active, sourced class compatible with the broad slot family: Warframe,
-Operator, Amp, Primary, Secondary or Melee. Specialized Bow, Shotgun, Kitgun
-and Zaw arcanes additionally require matching equipped weapon classes whenever
-that equipment is present. Equipment searches and assignments likewise enforce
-Primary, Secondary, Melee, companion-weapon, Archgun, Archmelee, Amp and
-Archwing slot semantics.
+Equipment is treated as max rank. Mods start at their sourced maximum rank but
+may be stepped down, while arcanes retain an optional selected rank. Each item
+can also store notes, a configuration label, Forma count, modular parts, and an
+Orokin Reactor or Catalyst where applicable. The Operator panel combines a
+maxed Focus-school selection with the Amp and two Operator plus two Amp arcanes.
+Individual Focus Ways are intentionally represented by freeform build notes.
 
-## Share semantics
+## Mod grid and capacity
+
+Slot geometry is defined by equipment family rather than freeform positions:
+
+- Warframes have eight normal slots plus Aura and Exilus. A second Aura slot is
+  exposed when cited factory facts or existing configuration require it.
+- Primary and Secondary weapons have eight normal slots plus Exilus.
+- Melee weapons have eight normal slots plus Stance and Exilus.
+- Companions have ten normal slots.
+- Companion weapons, Archwings, Archguns and Archwing Melee have eight normal
+  slots. Amps do not use this capacity model.
+
+Normal slots render odd positions across the first row and even positions
+across the second. Aura, Stance and Exilus occupy a top row beside a sourced
+passive. Empty slots remain visible. Each slot independently preserves its
+polarity, and each installed mod shows its polarity, selected rank, raw drain
+and polarity-adjusted drain or capacity grant.
+
+Matching ordinary polarity uses `ceil(drain / 2)` and a mismatch uses
+`ceil(drain * 1.25)`. Matching Aura or Stance polarity doubles the grant; a
+mismatch uses `floor(grant * 0.8)`. Reactors and Catalysts double max-rank base
+capacity before Aura or Stance grants. Unknown source facts remain visibly
+unknown rather than being estimated. Cited factory-polarity role/count sets are
+shown as guidance because their sources do not assert exact positions.
+
+## Abilities, enhancements and stats
+
+Warframe panels expose active sourced base stats, passive, ordered abilities,
+and five Archon Shard slots. One Helminth replacement may be stored. Its
+original ability must belong to the equipped Warframe and its replacement must
+have an active sourced eligibility fact. Changing or removing the Warframe
+clears the replacement. The donor Warframe participates in acquisition planning
+unless the player already records it as subsumed.
+
+Warframes have two arcane slots; Primary, Secondary and Melee have one each.
+Arcane assignment enforces sourced broad and specialized weapon classes.
+Archon Shards require a cited effect option and retain their historical label
+if a later source removes that option. Structured base stats are embedded into
+shares, but mod effects are not yet applied to derive modified stats.
+
+## Share and portability semantics
 
 Sharing creates an immutable, unlisted snapshot with a random 144-bit key. The
-snapshot embeds names, kinds and slugs at that revision, so later draft edits or
-catalog changes cannot rewrite what a recipient saw. Deleting a source build
-does not delete its snapshots. A new share action creates a new URL rather than
-mutating an old one.
+snapshot embeds displayed names, stats, abilities, Focus/Helminth selections,
+configuration and enhancements at that revision, so later draft or catalog
+changes cannot rewrite what a recipient saw. New publications create new URLs;
+individual snapshots may be revoked. Deleting the source draft does not delete
+its snapshots.
 
-This is intentional: an editable public build would make discussion links and
-cited recommendations unstable. Authentication is required to edit a draft but
-not to view a snapshot.
+Authenticated recipients can resolve an immutable snapshot into a private
+clone. Focus schools, Helminth replacements, modular parts, slots, mods and
+enhancements also survive private cloning and portable profile export/import.
+Published capability URLs are installation-local and are not included in the
+portable profile.
 
-The authenticated `/builds` workshop creates drafts. Its editor searches the
-canonical catalog with slot-specific kind filtering, assigns equipment, mods and
-enhancements,
-records build and per-slot notes, and publishes snapshots. Public snapshot routes
-render without authentication and link embedded entities back into the catalog.
-The draft page lists every snapshot it published, can revoke an individual
-capability URL, and can clone the current private draft with its equipment,
-configuration and mods intact. An authenticated recipient can also clone a
-public snapshot into a new private draft. The immutable source snapshot is not
-changed and the clone resolves every embedded kind/slug against the recipient
-installation's active catalog in one transaction.
+## Current compromises
 
-The draft editor uses an Arsenal-style sticky side rail linking to overview,
-every equipment slot, mods, enhancements, acquisition and sharing. Installed
-mods render as a grid; mod search and the arcane/Archon Shard panel share the
-main upgrade workspace on wide screens and collapse responsively. This is an
-information-layout resemblance, not a pixel-identical reproduction of the game.
-
-The editor can project a draft into acquisition goals. It counts repeated mod
-requirements (including repeated shard slots), ignores requirements already covered by owned or built inventory,
-and never reduces a larger existing goal. The regular planner then expands
-recipes and recommends nodes using the same canonical IDs.
-
-## Current limits
-
-- Current equipment rank, Forma count, a capacity-upgrade flag, a configuration
-  label, and player-authored mod-slot roles and polarities are recorded.
-  A sourced equipment maximum rank constrains current rank when available and
-  remains absent otherwise. Structured Wiki data now supplies broad weapon,
-  Warframe and Archwing maximum-rank coverage; companion coverage is still
-  incomplete.
-  The catalog now retains sourced mod maximum rank, base drain and polarity,
-  and calculates each known mod's unpolarized ranked drain. Structured Wiki
-  equipment sets and disclosed WFCD companion sets show factory polarity roles
-  and counts with citations, but exact source positions are unavailable.
-  Companion maximum-rank coverage is not yet
-  modeled. Whole-build
-  capacity is derived conservatively; those missing facts can leave a result
-  partial rather than estimated. Broad arcane
-  and specialized weapon compatibility are enforced from cited canonical
-  facts. A Kitgun chamber or Zaw strike is currently the representative
-  canonical weapon. A build can attach exactly one compatible grip plus loader
-  or link to that representative, and those selections survive sharing,
-  cloning, acquisition planning and portable profile transfer. Combination
-  statistics are not yet derived. Abilities, schools and structured weapon
-  configuration variants are also absent.
-- Private build drafts are included in portable profile export/import. Published
-  share snapshots are deliberately installation-local capability URLs.
-- Share keys are unlisted capabilities, not access-controlled invitations.
-  Revocation deletes that immutable snapshot; anyone with the URL then receives
-  a not-found response.
-- Search is submit-driven rather than an autocomplete.
+- Weapon base-stat coverage remains incomplete. Missing structured values are
+  shown as unavailable rather than parsed from prose.
+- Mod effects and modular-weapon combination statistics are not yet calculated.
+- Helminth validation uses explicit subsumable eligibility but does not yet
+  encode every category or Warframe-specific incompatibility.
+- Focus Ways, ranks and Way-Bound progression are outside the build schema.
+- Search is submit-driven and contextual rather than autocomplete or drag/drop.

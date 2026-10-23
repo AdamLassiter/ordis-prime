@@ -5,12 +5,14 @@ import {
   BUILD_MOD_SLOT_ROLES,
   BUILD_MOD_SLOT_POLARITIES,
   BUILD_SLOTS,
-  buildModSlotRolesFor,
+  buildModSlotRoleAt,
   configureBuildEquipment,
   createPlayerBuild,
   listPlayerBuilds,
   setBuildEnhancement,
+  setBuildAbilityReplacement,
   setBuildEquipment,
+  setBuildFocusSchool,
   setBuildMod,
   setBuildModularPart,
   setBuildModSlot,
@@ -323,6 +325,11 @@ export interface PortableBuild {
   title: string;
   category?: string;
   notes?: string;
+  focusSchool?: PortableEntityReference;
+  abilityReplacement?: {
+    original: PortableEntityReference;
+    replacement: PortableEntityReference;
+  };
   equipment: Array<{
     slot: BuildSlot;
     entity: PortableEntityReference;
@@ -695,10 +702,35 @@ export function exportPlayerProfile(
       }),
     ),
     builds: listPlayerBuilds(sqlite, userId).map(
-      ({ title, category, notes, equipment, enhancements }) => ({
+      ({
         title,
         category,
         notes,
+        equipment,
+        enhancements,
+        focusSchool,
+        abilityReplacement,
+      }) => ({
+        title,
+        category,
+        notes,
+        focusSchool: focusSchool
+          ? portableReferenceForCatalogEntity(sqlite, identifiers, focusSchool)
+          : undefined,
+        abilityReplacement: abilityReplacement
+          ? {
+              original: portableReferenceForCatalogEntity(
+                sqlite,
+                identifiers,
+                abilityReplacement.original,
+              ),
+              replacement: portableReferenceForCatalogEntity(
+                sqlite,
+                identifiers,
+                abilityReplacement.replacement,
+              ),
+            }
+          : undefined,
         equipment: equipment.map(
           ({
             slot,
@@ -803,6 +835,11 @@ export function importPlayerProfile(
   > = [];
   const resolvedBuilds: Array<{
     build: PortableBuild;
+    focusSchool?: { kind: string; slug: string };
+    abilityReplacement?: {
+      original: { kind: string; slug: string };
+      replacement: { kind: string; slug: string };
+    };
     equipment: Array<{
       slot: BuildSlot;
       reference: { kind: string; slug: string };
@@ -1027,6 +1064,38 @@ export function importPlayerProfile(
   }
   for (const [index, build] of profile.builds.entries()) {
     let complete = true;
+    const resolveBuildReference = (
+      reference: PortableEntityReference,
+      label: string,
+    ): { kind: string; slug: string } | undefined => {
+      const resolution = resolvePortableEntity(sqlite, reference);
+      if (resolution.reason) {
+        unresolved.push({
+          section: "builds",
+          index,
+          name: `${build.title}: ${label}`,
+          reason: resolution.reason,
+        });
+        complete = false;
+        return undefined;
+      }
+      return catalogReferenceById(sqlite, resolution.entityId!);
+    };
+    const focusSchool = build.focusSchool
+      ? resolveBuildReference(build.focusSchool, build.focusSchool.name)
+      : undefined;
+    const abilityReplacement = build.abilityReplacement
+      ? {
+          original: resolveBuildReference(
+            build.abilityReplacement.original,
+            build.abilityReplacement.original.name,
+          ),
+          replacement: resolveBuildReference(
+            build.abilityReplacement.replacement,
+            build.abilityReplacement.replacement.name,
+          ),
+        }
+      : undefined;
     const equipment = build.equipment.map((entry) => {
       const equipmentResolution = resolvePortableEntity(sqlite, entry.entity);
       if (equipmentResolution.reason) {
@@ -1131,7 +1200,21 @@ export function importPlayerProfile(
           : { kind: entry.entity.kind, slug: entry.entity.slug },
       };
     });
-    if (complete) resolvedBuilds.push({ build, equipment, enhancements });
+    if (complete)
+      resolvedBuilds.push({
+        build,
+        equipment,
+        enhancements,
+        ...(focusSchool ? { focusSchool } : {}),
+        ...(abilityReplacement?.original && abilityReplacement.replacement
+          ? {
+              abilityReplacement: {
+                original: abilityReplacement.original,
+                replacement: abilityReplacement.replacement,
+              },
+            }
+          : {}),
+      });
   }
 
   sqlite.transaction(() => {
@@ -1283,8 +1366,16 @@ export function importPlayerProfile(
           )
           .run(id, userId);
     }
-    for (const { build, equipment, enhancements } of resolvedBuilds) {
+    for (const {
+      build,
+      equipment,
+      enhancements,
+      focusSchool,
+      abilityReplacement,
+    } of resolvedBuilds) {
       const buildId = createPlayerBuild(sqlite, userId, build);
+      if (focusSchool)
+        setBuildFocusSchool(sqlite, userId, buildId, focusSchool);
       for (const entry of equipment) {
         setBuildEquipment(
           sqlite,
@@ -1334,6 +1425,14 @@ export function importPlayerProfile(
           enhancement.reference,
           enhancement.rank,
           enhancement.optionKey,
+        );
+      if (abilityReplacement)
+        setBuildAbilityReplacement(
+          sqlite,
+          userId,
+          buildId,
+          abilityReplacement.original,
+          abilityReplacement.replacement,
         );
     }
   })();
@@ -1700,7 +1799,7 @@ function parsePortableBuild(value: unknown, index: number): PortableBuild {
       );
     slots.add(entry.slot);
     const modSlotPositions = new Set<number>();
-    const specialRoles = new Set<string>();
+    const specialRoles = new Map<string, number>();
     const modSlots = entry.modSlots.map((modSlot, modSlotIndex) => {
       if (
         !isRecord(modSlot) ||
@@ -1722,16 +1821,19 @@ function parsePortableBuild(value: unknown, index: number): PortableBuild {
         );
       modSlotPositions.add(modSlot.position as number);
       if (modSlot.role !== "normal") {
-        if (specialRoles.has(modSlot.role))
+        const count = specialRoles.get(modSlot.role) ?? 0;
+        const maximum = modSlot.role === "aura" ? 2 : 1;
+        if (count >= maximum)
           throw new Error(
             `Profile ${label} contains duplicate ${modSlot.role} slots`,
           );
-        specialRoles.add(modSlot.role);
+        specialRoles.set(modSlot.role, count + 1);
       }
       if (
-        !buildModSlotRolesFor(entry.slot as BuildSlot).includes(
-          modSlot.role as BuildModSlot["role"],
-        )
+        buildModSlotRoleAt(
+          entry.slot as BuildSlot,
+          modSlot.position as number,
+        ) !== modSlot.role
       )
         throw new Error(`Profile ${label} has an invalid mod slot role`);
       return {
@@ -1832,10 +1934,41 @@ function parsePortableBuild(value: unknown, index: number): PortableBuild {
       entity,
     };
   });
+  const focusSchool =
+    value.focusSchool === undefined
+      ? undefined
+      : parsePortableEntity(
+          value.focusSchool,
+          `build entry ${index} focus school`,
+        );
+  if (focusSchool && focusSchool.kind !== "focus-school")
+    throw new Error(`Profile build entry ${index} has an invalid focus school`);
+  let abilityReplacement: PortableBuild["abilityReplacement"];
+  if (value.abilityReplacement !== undefined) {
+    if (!isRecord(value.abilityReplacement))
+      throw new Error(
+        `Profile build entry ${index} has an invalid ability replacement`,
+      );
+    const original = parsePortableEntity(
+      value.abilityReplacement.original,
+      `build entry ${index} original ability`,
+    );
+    const replacement = parsePortableEntity(
+      value.abilityReplacement.replacement,
+      `build entry ${index} replacement ability`,
+    );
+    if (original.kind !== "ability" || replacement.kind !== "ability")
+      throw new Error(
+        `Profile build entry ${index} has an invalid ability replacement`,
+      );
+    abilityReplacement = { original, replacement };
+  }
   return {
     title: value.title,
     category: optionalText(value.category, 80, `build entry ${index} category`),
     notes: optionalText(value.notes, 10_000, `build entry ${index} notes`),
+    focusSchool,
+    abilityReplacement,
     equipment,
     enhancements,
   };

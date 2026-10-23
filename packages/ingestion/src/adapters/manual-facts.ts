@@ -42,6 +42,7 @@ const ENTITY_KINDS = [
   "mechanic",
   "secret",
   "ability",
+  "focus-school",
   "archwing",
   "challenge",
   "cosmetic",

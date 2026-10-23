@@ -1,23 +1,30 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { findSharedBuild } from "@ordis-prime/db";
+import {
+  BUILD_PANEL_KEYS,
+  findSharedBuild,
+  type BuildPanelKey,
+} from "@ordis-prime/db";
 import { getDatabase } from "@/lib/database";
 import { getCurrentSession } from "@/lib/session";
+import { ArsenalLayout } from "../../arsenal-layout";
 import { cloneSharedBuildToDraft } from "../../actions";
-import { BuildCapacitySummary } from "../../capacity-summary";
-import { FactoryPolaritySummary } from "../../factory-polarity-summary";
 
 export const dynamic = "force-dynamic";
 
 export default async function SharedBuildPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ shareKey: string }>;
+  searchParams: Promise<{ slot?: string }>;
 }) {
   const { shareKey } = await params;
+  const query = await searchParams;
   const build = findSharedBuild(getDatabase(), shareKey);
   if (!build) notFound();
   const session = await getCurrentSession();
+  const selectedPanel = isBuildPanel(query.slot) ? query.slot : "warframe";
   return (
     <>
       <p className="eyebrow">
@@ -39,107 +46,17 @@ export default async function SharedBuildPage({
           editable private draft.
         </p>
       )}
-      <section className="planner-section">
-        <h2>Loadout</h2>
-        <div className="build-slots">
-          {build.equipment.map((equipment) => (
-            <article className="card build-slot" key={equipment.slot}>
-              <span className="tag">{equipment.slot}</span>
-              <h3>
-                <Link
-                  href={`/catalog/${equipment.entity.kind}/${equipment.entity.slug}`}
-                >
-                  {equipment.entity.name}
-                </Link>
-              </h3>
-              <p className="muted">
-                {equipment.configuration ? `${equipment.configuration} · ` : ""}
-                {equipment.rank === undefined
-                  ? ""
-                  : `rank ${equipment.rank}${equipment.maxRank === undefined ? "" : `/${equipment.maxRank}`} · `}
-                {equipment.formaCount} Forma
-                {equipment.capacityUpgrade ? " · capacity upgraded" : ""}
-              </p>
-              <BuildCapacitySummary capacity={equipment.capacity} />
-              <FactoryPolaritySummary values={equipment.factoryPolaritySets} />
-              {equipment.notes && (
-                <p className="muted build-notes">{equipment.notes}</p>
-              )}
-              {equipment.modularParts.length > 0 && (
-                <ul className="mod-list">
-                  {equipment.modularParts.map((part) => (
-                    <li key={part.role}>
-                      {part.role}:{" "}
-                      <Link
-                        href={`/catalog/${part.entity.kind}/${part.entity.slug}`}
-                      >
-                        {part.entity.name}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              )}
-              {equipment.modSlots.length > 0 && (
-                <p className="muted">
-                  Slots:{" "}
-                  {equipment.modSlots
-                    .map(
-                      ({ position, role, polarity }) =>
-                        `${position} ${role} (${polarity ?? "unpolarized"})`,
-                    )
-                    .join(", ")}
-                </p>
-              )}
-              {equipment.mods.length > 0 && (
-                <ol className="mod-list">
-                  {equipment.mods.map((mod) => (
-                    <li key={mod.position}>
-                      <Link
-                        href={`/catalog/${mod.entity.kind}/${mod.entity.slug}`}
-                      >
-                        {mod.entity.name}
-                      </Link>
-                      {mod.rank === undefined
-                        ? ""
-                        : ` · rank ${mod.rank}${mod.maxRank === undefined ? "" : `/${mod.maxRank}`}`}
-                      {mod.drain === undefined ? "" : ` · ${mod.drain} drain`}
-                      {mod.adjustedDrain === undefined
-                        ? ""
-                        : ` · ${mod.adjustedDrain} after slot polarity`}
-                      {mod.polarity ? ` · ${mod.polarity}` : ""}
-                    </li>
-                  ))}
-                </ol>
-              )}
-            </article>
-          ))}
-        </div>
-      </section>
-      {build.enhancements.length > 0 && (
-        <section className="planner-section">
-          <h2>Arcanes and Archon Shards</h2>
-          <div className="candidate-list">
-            {build.enhancements.map((enhancement) => (
-              <div key={enhancement.slot}>
-                <span>
-                  <span className="tag">{enhancement.slot}</span>{" "}
-                  <Link
-                    href={`/catalog/${enhancement.entity.kind}/${enhancement.entity.slug}`}
-                  >
-                    {enhancement.entity.name}
-                  </Link>
-                  {enhancement.rank === undefined
-                    ? ""
-                    : ` · rank ${enhancement.rank}`}
-                  {enhancement.option ? ` · ${enhancement.option.label}` : ""}
-                </span>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
+      <ArsenalLayout
+        build={build}
+        selectedPanel={selectedPanel}
+        basePath={`/builds/shared/${shareKey}`}
+      />
     </>
   );
+}
+
+function isBuildPanel(value: string | undefined): value is BuildPanelKey {
+  return (BUILD_PANEL_KEYS as readonly string[]).includes(value ?? "");
 }
 
 function formatInstant(timestamp: number): string {

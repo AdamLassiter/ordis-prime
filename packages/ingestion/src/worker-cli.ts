@@ -11,6 +11,7 @@ import { WarframeWikiWarframesAdapter } from "./adapters/warframe-wiki-warframes
 import { WarframeWikiMissionsAdapter } from "./adapters/warframe-wiki-missions.ts";
 import { WarframeWikiJunctionsAdapter } from "./adapters/warframe-wiki-junctions.ts";
 import { WarframeWikiAbilitiesAdapter } from "./adapters/warframe-wiki-abilities.ts";
+import { WarframeWikiFocusAdapter } from "./adapters/warframe-wiki-focus.ts";
 import { WarframeWikiQuestsAdapter } from "./adapters/warframe-wiki-quests.ts";
 import { WarframeWikiEnemiesAdapter } from "./adapters/warframe-wiki-enemies.ts";
 import { WarframeWikiVendorsAdapter } from "./adapters/warframe-wiki-vendors.ts";
@@ -83,6 +84,7 @@ const catalogAdapters = [
   new WarframeWikiMissionsAdapter(),
   new WarframeWikiJunctionsAdapter(),
   new WarframeWikiAbilitiesAdapter(),
+  new WarframeWikiFocusAdapter(),
   new WarframeWikiQuestsAdapter(),
   new WarframeWikiEnemiesAdapter(),
   new WarframeWikiVendorsAdapter(),

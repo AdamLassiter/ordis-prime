@@ -11,13 +11,17 @@ import {
   createPlayerBuild,
   deletePlayerBuild,
   removeBuildEnhancement,
+  removeBuildAbilityReplacement,
   removeBuildEquipment,
+  removeBuildFocusSchool,
   removeBuildMod,
   removeBuildModularPart,
   removeBuildModSlot,
   revokeBuildShare,
   setBuildEnhancement,
+  setBuildAbilityReplacement,
   setBuildEquipment,
+  setBuildFocusSchool,
   setBuildMod,
   setBuildModularPart,
   setBuildModSlot,
@@ -91,17 +95,54 @@ export async function saveEquipmentConfiguration(
 ) {
   const session = await requireCurrentSession();
   const rawFormaCount = String(form.get("formaCount") ?? "");
-  const rawRank = String(form.get("rank") ?? "");
   if (!/^\d+$/.test(rawFormaCount))
     throw new Error("Forma count must be a non-negative integer");
-  if (rawRank && !/^\d+$/.test(rawRank))
-    throw new Error("Equipment rank must be a non-negative integer");
   configureBuildEquipment(getDatabase(), session.user.id, buildId, slot, {
     configuration: String(form.get("configuration") ?? ""),
-    rank: rawRank ? Number(rawRank) : undefined,
+    rank: undefined,
     formaCount: Number(rawFormaCount),
     capacityUpgrade: form.get("capacityUpgrade") === "yes",
   });
+  revalidatePath(`/builds/${buildId}`);
+}
+
+export async function assignFocusSchool(
+  buildId: string,
+  kind: string,
+  slug: string,
+) {
+  const session = await requireCurrentSession();
+  setBuildFocusSchool(getDatabase(), session.user.id, buildId, { kind, slug });
+  revalidatePath(`/builds/${buildId}`);
+}
+
+export async function clearFocusSchool(buildId: string) {
+  const session = await requireCurrentSession();
+  removeBuildFocusSchool(getDatabase(), session.user.id, buildId);
+  revalidatePath(`/builds/${buildId}`);
+}
+
+export async function assignAbilityReplacement(
+  buildId: string,
+  originalKind: string,
+  originalSlug: string,
+  replacementKind: string,
+  replacementSlug: string,
+) {
+  const session = await requireCurrentSession();
+  setBuildAbilityReplacement(
+    getDatabase(),
+    session.user.id,
+    buildId,
+    { kind: originalKind, slug: originalSlug },
+    { kind: replacementKind, slug: replacementSlug },
+  );
+  revalidatePath(`/builds/${buildId}`);
+}
+
+export async function clearAbilityReplacement(buildId: string) {
+  const session = await requireCurrentSession();
+  removeBuildAbilityReplacement(getDatabase(), session.user.id, buildId);
   revalidatePath(`/builds/${buildId}`);
 }
 

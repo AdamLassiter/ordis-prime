@@ -9,6 +9,8 @@ import {
   calculateEquipmentBaseCapacity,
   calculatePolarityAdjustedDrain,
   calculateRankedModDrain,
+  buildModSlotRoleAt,
+  buildSlotProfile,
   clonePlayerBuild,
   cloneSharedBuild,
   configureBuildEquipment,
@@ -28,8 +30,12 @@ import {
   searchBuildCandidates,
   searchBuildEnhancementCandidates,
   searchBuildModularPartCandidates,
+  searchBuildFocusSchools,
+  searchHelminthAbilities,
+  setBuildAbilityReplacement,
   setBuildEnhancement,
   setBuildEquipment,
+  setBuildFocusSchool,
   setBuildMod,
   setBuildModularPart,
   setBuildModSlot,
@@ -44,6 +50,17 @@ test("ranked mod drain preserves aura and stance capacity bonuses", () => {
   assert.equal(calculateRankedModDrain(-2, 5), -7);
   assert.equal(calculateRankedModDrain(undefined, 5), undefined);
   assert.equal(calculateRankedModDrain(4, undefined), undefined);
+});
+
+test("Arsenal slot profiles expose game-shaped grids", () => {
+  assert.equal(buildSlotProfile("warframe").normalSlots, 8);
+  assert.equal(buildSlotProfile("companion").normalSlots, 10);
+  assert.equal(buildSlotProfile("operator-amp").normalSlots, 0);
+  assert.equal(buildModSlotRoleAt("warframe", 10), "aura");
+  assert.equal(buildModSlotRoleAt("warframe", 11), "aura");
+  assert.equal(buildModSlotRoleAt("melee", 10), "stance");
+  assert.equal(buildModSlotRoleAt("primary", 12), "exilus");
+  assert.equal(buildModSlotRoleAt("companion", 10), undefined);
 });
 
 test("slot polarity adjusts ordinary drain and special-slot capacity bonuses", () => {
@@ -333,9 +350,10 @@ test("build drafts are private and share snapshots remain immutable", async (con
       ),
     /Mod slot polarity is invalid/,
   );
+  setBuildModSlot(database, owner, buildId, "warframe", 11, "aura");
   assert.throws(
-    () => setBuildModSlot(database, owner, buildId, "warframe", 11, "aura"),
-    /already has a configured aura slot/,
+    () => setBuildModSlot(database, owner, buildId, "warframe", 9, "aura"),
+    /does not match the equipment slot profile/,
   );
   setBuildMod(
     database,
@@ -444,11 +462,11 @@ test("build drafts are private and share snapshots remain immutable", async (con
         },
       ],
       capacity: {
-        base: 56,
+        base: 60,
         bonus: 0,
-        total: 56,
+        total: 60,
         drain: 5,
-        remaining: 51,
+        remaining: 55,
       },
       notes: undefined,
       modSlots: [{ position: 0, role: "normal", polarity: "madurai" }],
@@ -502,11 +520,14 @@ test("build drafts are private and share snapshots remain immutable", async (con
   );
   assert.deepEqual(
     shared.equipment.find(({ slot }) => slot === "primary")?.capacity,
-    { base: 56, bonus: 0, total: 56, drain: 5, remaining: 51 },
+    { base: 60, bonus: 0, total: 60, drain: 5, remaining: 55 },
   );
   assert.deepEqual(
     shared.equipment.find(({ slot }) => slot === "warframe")?.modSlots,
-    [{ position: 10, role: "aura", polarity: "vazarin" }],
+    [
+      { position: 10, role: "aura", polarity: "vazarin" },
+      { position: 11, role: "aura" },
+    ],
   );
   assert.deepEqual(shared.enhancements, [
     {
@@ -613,7 +634,10 @@ test("build drafts are private and share snapshots remain immutable", async (con
   );
   assert.deepEqual(
     clone.equipment.find(({ slot }) => slot === "warframe")?.modSlots,
-    [{ position: 10, role: "aura", polarity: "vazarin" }],
+    [
+      { position: 10, role: "aura", polarity: "vazarin" },
+      { position: 11, role: "aura" },
+    ],
   );
   assert.equal(clone.enhancements.length, 3);
   revokeBuildShare(database, owner, buildId, shareKey);
@@ -771,6 +795,146 @@ test("specialized weapon arcanes remain valid regardless of assignment order", a
   assert.equal(
     getPlayerBuild(database, owner, buildId)?.equipment[0]?.entity.name,
     "Dread",
+  );
+});
+
+test("Focus schools and sourced Helminth replacements survive shares and clones", async (context) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-focus-build-"));
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const databasePath = path.join(root, "builds.sqlite");
+  migrateDatabase(databasePath);
+  const database = openSqliteDatabase(databasePath);
+  context.after(() => database.close());
+  const owner = createLocalUser(database, { username: "Builder" });
+  seedEntity(database, "school", "focus-school", "Vazarin", "vazarin");
+  seedEntity(database, "frame", "warframe", "Mag", "mag");
+  seedEntity(database, "other-frame", "warframe", "Volt", "volt");
+  seedEntity(database, "pull", "ability", "Pull", "pull");
+  seedEntity(database, "shock", "ability", "Shock", "shock");
+  seedEntity(database, "blocked", "ability", "Discharge", "discharge");
+  database
+    .prepare(
+      "insert into sources (id, name, homepage, priority, enabled) values ('ability-facts', 'Ability facts', 'https://example.test/abilities', 100, 1)",
+    )
+    .run();
+  database
+    .prepare(
+      "insert into source_runs (id, source_id, version, content_hash, retrieved_at, status) values ('ability-run', 'ability-facts', 'v1', 'hash', ?, 'active')",
+    )
+    .run(Date.now());
+  database
+    .prepare(
+      "insert into entity_relations (id, from_entity_id, to_entity_id, kind, source_run_id, source_record_key) values ('pull-link', 'frame', 'pull', 'involves', 'ability-run', 'pull-link')",
+    )
+    .run();
+  database
+    .prepare(
+      "insert into entity_relations (id, from_entity_id, to_entity_id, kind, source_run_id, source_record_key) values ('shock-link', 'other-frame', 'shock', 'involves', 'ability-run', 'shock-link')",
+    )
+    .run();
+  for (const [id, entityId, key, label, value] of [
+    ["pull-slot", "pull", "ability-slot", "Ability slot", "1"],
+    [
+      "pull-eligible",
+      "pull",
+      "helminth-eligible",
+      "Helminth eligible",
+      "false",
+    ],
+    ["shock-slot", "shock", "ability-slot", "Ability slot", "1"],
+    [
+      "shock-eligible",
+      "shock",
+      "helminth-eligible",
+      "Helminth eligible",
+      "true",
+    ],
+    ["blocked-slot", "blocked", "ability-slot", "Ability slot", "4"],
+    [
+      "blocked-eligible",
+      "blocked",
+      "helminth-eligible",
+      "Helminth eligible",
+      "false",
+    ],
+  ])
+    database
+      .prepare(
+        "insert into entity_attributes (id, entity_id, key, label, value, source_run_id, source_record_key) values (?, ?, ?, ?, ?, 'ability-run', ?)",
+      )
+      .run(id, entityId, key, label, value, id);
+
+  const buildId = createPlayerBuild(database, owner, {
+    title: "Operator setup",
+  });
+  setBuildEquipment(database, owner, buildId, "warframe", {
+    kind: "warframe",
+    slug: "mag",
+  });
+  setBuildFocusSchool(database, owner, buildId, {
+    kind: "focus-school",
+    slug: "vazarin",
+  });
+  assert.deepEqual(searchBuildFocusSchools(database, "Vaz"), [
+    { kind: "focus-school", slug: "vazarin", name: "Vazarin" },
+  ]);
+  assert.equal(searchHelminthAbilities(database, "Shock")[0]?.name, "Shock");
+  assert.throws(
+    () =>
+      setBuildAbilityReplacement(
+        database,
+        owner,
+        buildId,
+        { kind: "ability", slug: "pull" },
+        { kind: "ability", slug: "discharge" },
+      ),
+    /not sourced as Helminth eligible/,
+  );
+  setBuildAbilityReplacement(
+    database,
+    owner,
+    buildId,
+    { kind: "ability", slug: "pull" },
+    { kind: "ability", slug: "shock" },
+  );
+  const build = getPlayerBuild(database, owner, buildId)!;
+  assert.equal(build.focusSchool?.name, "Vazarin");
+  assert.equal(build.abilityReplacement?.replacement.name, "Shock");
+  const shareKey = createBuildShare(database, owner, buildId);
+  assert.equal(
+    findSharedBuild(database, shareKey)?.focusSchool?.name,
+    "Vazarin",
+  );
+  assert.equal(
+    getPlayerBuild(database, owner, clonePlayerBuild(database, owner, buildId))
+      ?.abilityReplacement?.replacement.name,
+    "Shock",
+  );
+  const importedUser = createLocalUser(database, {
+    username: "ImportedBuilder",
+  });
+  const imported = importPlayerProfile(
+    database,
+    importedUser,
+    exportPlayerProfile(database, owner),
+  );
+  assert.equal(imported.unresolved.length, 0);
+  assert.equal(
+    listPlayerBuilds(database, importedUser)[0]?.focusSchool?.name,
+    "Vazarin",
+  );
+  assert.equal(
+    listPlayerBuilds(database, importedUser)[0]?.abilityReplacement?.replacement
+      .name,
+    "Shock",
+  );
+  setBuildEquipment(database, owner, buildId, "warframe", {
+    kind: "warframe",
+    slug: "volt",
+  });
+  assert.equal(
+    getPlayerBuild(database, owner, buildId)?.abilityReplacement,
+    undefined,
   );
 });
 
