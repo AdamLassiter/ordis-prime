@@ -1,4 +1,4 @@
-schemaVersion: 1
+schemaVersion: 2
 source:
   id: example-video-ranking
   title: Example weapon ranking
@@ -8,6 +8,9 @@ source:
   gameVersion: Example only
   scope: Primary weapons, general play
   licenseNote: Factual ranking transcribed with citation; no transcript copied.
+subject:
+  sourceId: wfcd-items
+  namespace: uniqueName
 scale: [S, A, B, C, D]
 entries:
   - externalId: /Lotus/Weapons/Tenno/Rifle/Rifle

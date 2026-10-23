@@ -1,4 +1,4 @@
-schemaVersion: 1
+schemaVersion: 2
 source:
   id: creator-salt-prime-tenet-weapons-2025
   title: Salt Prime Tenet Sister weapon tier list (2025)
@@ -10,6 +10,9 @@ source:
   licenseNote:
     Manual factual transcription of creator rankings from the cited public video; no
     transcript prose reproduced.
+subject:
+  sourceId: wfcd-items
+  namespace: uniqueName
 scale:
   - S
   - A

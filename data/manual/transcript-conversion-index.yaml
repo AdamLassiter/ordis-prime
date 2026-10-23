@@ -1,6 +1,6 @@
 schemaVersion: 1
 kind: transcript-conversion-index
-reviewedAt: 2026-10-22
+reviewedAt: 2026-10-23
 method:
   - Treat the creator video and transcript as the ranking source.
   - Correct names against canonical WFCD item names and uniqueName identifiers.
@@ -13,11 +13,13 @@ sources:
     output: data/manual/creator-brozime-warframes-2026.yaml
     status: converted
   - input: data/unstructured/knightmareframe-warframes.txt
-    sha256: 61ba78bf62376eab26beee68f8566bea6bfd4f550669eab1afddf91f9645ee26
-    video: https://www.youtube.com/watch?v=J_4SMeNx-DQ
-    output: data/manual/creator-brozime-warframes-2026.yaml
-    status: duplicate
-    notes: The body is byte-for-byte identical to the Brozime transcript after the first URL line.
+    sha256: faa0cfd43c34ad04e5ee0e36d452f306558aa0041f9382a7d5e5b8ea9488e4ce
+    video: https://www.youtube.com/watch?v=rMmIa0NYlIk
+    outputs:
+      - data/manual/creator-knightmareframe-warframes-2026-average.yaml
+      - data/manual/creator-knightmareframe-warframes-2026-high-investment.yaml
+    status: converted
+    notes: The video explicitly ranks every Warframe twice, for average and high investment.
   - input: data/unstructured/saltprime-coda.txt
     sha256: c3f223915dc4f282ebc860f5d0cd47bc1106bbd0794124cc7a34894f8964d10f
     video: https://www.youtube.com/watch?v=sUYFLeQdVIc

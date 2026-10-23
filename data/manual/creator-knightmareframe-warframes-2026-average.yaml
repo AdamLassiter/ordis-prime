@@ -1,0 +1,147 @@
+schemaVersion: 2
+source:
+  id: creator-knightmareframe-warframes-2026-average
+  title: "KnightmareFrame Warframes — average investment (2026)"
+  author: KnightmareFrame
+  url: https://www.youtube.com/watch?v=rMmIa0NYlIk
+  publishedAt: 2025-12-19
+  gameVersion: "Published 2025-12-19"
+  scope: "All 63 Warframes ranked from their base kit and ordinary investment in the cited review"
+  licenseNote:
+    Manual factual transcription of creator rankings from the cited public video; no
+    transcript prose reproduced.
+subject:
+  sourceId: wfcd-items
+  namespace: uniqueName
+scale: [S, A, B, C, D, F]
+entries:
+  - externalId: /Lotus/Powersuits/Ninja/Ninja
+    rank: C
+  - externalId: /Lotus/Powersuits/Brawler/Brawler
+    rank: C
+  - externalId: /Lotus/Powersuits/Banshee/Banshee
+    rank: D
+  - externalId: /Lotus/Powersuits/Pacifist/Pacifist
+    rank: C
+  - externalId: /Lotus/Powersuits/Sentient/Sentient
+    rank: A
+  - externalId: /Lotus/Powersuits/Dragon/Dragon
+    rank: C
+  - externalId: /Lotus/Powersuits/Geode/Geode
+    rank: A
+  - externalId: /Lotus/Powersuits/Frumentarius/Frumentarius
+    rank: A
+  - externalId: /Lotus/Powersuits/Dagath/Dagath
+    rank: B
+  - externalId: /Lotus/Powersuits/Pagemaster/Pagemaster
+    rank: A
+  - externalId: /Lotus/Powersuits/Ember/Ember
+    rank: D
+  - externalId: /Lotus/Powersuits/YinYang/YinYang
+    rank: D
+  - externalId: /Lotus/Powersuits/Excalibur/Excalibur
+    rank: B
+  - externalId: /Lotus/Powersuits/Frost/Frost
+    rank: B
+  - externalId: /Lotus/Powersuits/Glass/Glass
+    rank: A
+  - externalId: /Lotus/Powersuits/Garuda/Garuda
+    rank: A
+  - externalId: /Lotus/Powersuits/Runner/Runner
+    rank: S
+  - externalId: /Lotus/Powersuits/Devourer/Devourer
+    rank: C
+  - externalId: /Lotus/Powersuits/Gyre/Gyre
+    rank: B
+  - externalId: /Lotus/Powersuits/Priest/Priest
+    rank: A
+  - externalId: /Lotus/Powersuits/IronFrame/IronFrame
+    rank: D
+  - externalId: /Lotus/Powersuits/Pirate/Pirate
+    rank: A
+  - externalId: /Lotus/Powersuits/Sandman/Sandman
+    rank: B
+  - externalId: /Lotus/Powersuits/Ranger/Ranger
+    rank: C
+  - externalId: /Lotus/Powersuits/Choir/Choir
+    rank: B
+  - externalId: /Lotus/Powersuits/Khora/Khora
+    rank: A
+  - externalId: /Lotus/Powersuits/Koumei/Koumei
+    rank: F
+    notes: "Placed below D; the review describes the base kit as requiring excessive setup."
+  - externalId: /Lotus/Powersuits/PaxDuviricus/PaxDuviricus
+    rank: A
+  - externalId: /Lotus/Powersuits/Alchemist/Alchemist
+    rank: C
+  - externalId: /Lotus/Powersuits/Magician/Magician
+    rank: F
+    notes: "Placed below D pending a rework."
+  - externalId: /Lotus/Powersuits/Loki/Loki
+    rank: C
+  - externalId: /Lotus/Powersuits/Mag/Mag
+    rank: A
+  - externalId: /Lotus/Powersuits/Cowgirl/Cowgirl
+    rank: A
+  - externalId: /Lotus/Powersuits/Harlequin/Harlequin
+    rank: A
+  - externalId: /Lotus/Powersuits/Necro/Necro
+    rank: B
+  - externalId: /Lotus/Powersuits/Nezha/Nezha
+    rank: B
+  - externalId: /Lotus/Powersuits/Infestation/Infestation
+    rank: C
+  - externalId: /Lotus/Powersuits/Nokko/Nokko
+    rank: B
+  - externalId: /Lotus/Powersuits/AntiMatter/Anti
+    rank: A
+  - externalId: /Lotus/Powersuits/Jade/Jade
+    rank: B
+  - externalId: /Lotus/Powersuits/Paladin/Paladin
+    rank: B
+  - externalId: /Lotus/Powersuits/Bard/Bard
+    rank: B
+  - externalId: /Lotus/Powersuits/Oraxia/Oraxia
+    rank: A
+  - externalId: /Lotus/Powersuits/Odalisk/Odalisk
+    rank: S
+  - externalId: /Lotus/Powersuits/ConcreteFrame/ConcreteFrame
+    rank: D
+  - externalId: /Lotus/Powersuits/Revenant/Revenant
+    rank: S
+    notes: "Placement is presented through the repeated “press two” survivability demonstration."
+  - externalId: /Lotus/Powersuits/Rhino/Rhino
+    rank: B
+  - externalId: /Lotus/Powersuits/Saryn/Saryn
+    rank: S
+  - externalId: /Lotus/Powersuits/Wraith/Wraith
+    rank: B
+  - externalId: /Lotus/Powersuits/Hoplite/Hoplite
+    rank: C
+  - externalId: /Lotus/Powersuits/Temple/Temple
+    rank: B
+  - externalId: /Lotus/Powersuits/Fairy/Fairy
+    rank: C
+  - externalId: /Lotus/Powersuits/Trinity/Trinity
+    rank: A
+  - externalId: /Lotus/Powersuits/DemonFrame/DemonFrame
+    rank: B
+  - externalId: /Lotus/Powersuits/Berserker/Berserker
+    rank: A
+  - externalId: /Lotus/Powersuits/Trapper/Trapper
+    rank: C
+  - externalId: /Lotus/Powersuits/Volt/Volt
+    rank: B
+  - externalId: /Lotus/Powersuits/Werewolf/Werewolf
+    rank: A
+  - externalId: /Lotus/Powersuits/Wisp/Wisp
+    rank: A
+  - externalId: /Lotus/Powersuits/MonkeyKing/MonkeyKing
+    rank: A
+  - externalId: /Lotus/Powersuits/BrokenFrame/BrokenFrame
+    rank: B
+  - externalId: /Lotus/Powersuits/Yareli/Yareli
+    rank: F
+    notes: "Placed below D; the review calls for a substantial buff and rework."
+  - externalId: /Lotus/Powersuits/Tengu/Tengu
+    rank: B

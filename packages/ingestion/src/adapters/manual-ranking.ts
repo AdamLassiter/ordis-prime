@@ -10,7 +10,7 @@ import {
 } from "../adapter.ts";
 
 interface ManualRankingDocument {
-  schemaVersion: 1;
+  schemaVersion: 2;
   source: {
     id: string;
     title: string;
@@ -21,6 +21,10 @@ interface ManualRankingDocument {
     scope: string;
     licenseNote: string;
     priority?: number;
+  };
+  subject: {
+    sourceId: string;
+    namespace: string;
   };
   scale: string[];
   entries: Array<{
@@ -112,8 +116,8 @@ export class ManualRankingAdapter implements SourceAdapter {
         type: "ranking",
         setKey: document.source.id,
         subjectExternalId: {
-          sourceId: "wfcd-items",
-          namespace: "uniqueName",
+          sourceId: document.subject.sourceId,
+          namespace: document.subject.namespace,
           value: entry.externalId,
         },
         tier: entry.rank,
@@ -132,11 +136,20 @@ export class ManualRankingAdapter implements SourceAdapter {
 
 function parseDocument(bytes: Uint8Array): ManualRankingDocument {
   const value = parse(new TextDecoder().decode(bytes)) as unknown;
-  if (!isRecord(value) || value.schemaVersion !== 1 || !isRecord(value.source))
+  if (
+    !isRecord(value) ||
+    value.schemaVersion !== 2 ||
+    !isRecord(value.source) ||
+    !isRecord(value.subject)
+  )
     throw new Error(
-      "Manual ranking must use schemaVersion 1 and include source metadata",
+      "Manual ranking must use schemaVersion 2 and include source and subject metadata",
     );
   const source = value.source;
+  const subject = value.subject;
+  for (const field of ["sourceId", "namespace"] as const)
+    if (typeof subject[field] !== "string" || !subject[field])
+      throw new Error(`Manual ranking subject.${field} is required`);
   const requiredSourceStrings = [
     "id",
     "title",
@@ -199,8 +212,9 @@ function parseDocument(bytes: Uint8Array): ManualRankingDocument {
     return entry as ManualRankingDocument["entries"][number];
   });
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     source: source as unknown as ManualRankingDocument["source"],
+    subject: subject as unknown as ManualRankingDocument["subject"],
     scale,
     entries,
   };

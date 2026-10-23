@@ -1,4 +1,4 @@
-schemaVersion: 1
+schemaVersion: 2
 source:
   id: creator-salt-prime-melee-primes-2026
   title: Salt Prime melee Prime weapon tier list (2026)
@@ -10,6 +10,9 @@ source:
   licenseNote:
     Manual factual transcription of creator rankings from the cited public video; no
     transcript prose reproduced.
+subject:
+  sourceId: wfcd-items
+  namespace: uniqueName
 scale:
   - S+
   - S

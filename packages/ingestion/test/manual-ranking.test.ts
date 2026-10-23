@@ -31,6 +31,39 @@ test("manual ranking YAML retains citation context and stable WFCD links", async
   }
 });
 
+test("manual ranking schema requires an explicit subject namespace", () => {
+  assert.throws(
+    () =>
+      ManualRankingAdapter.fromBytes(
+        new TextEncoder().encode(`schemaVersion: 1\nsource: {}\n`),
+      ),
+    /schemaVersion 2/,
+  );
+  assert.throws(
+    () =>
+      ManualRankingAdapter.fromBytes(
+        new TextEncoder().encode(`
+schemaVersion: 2
+source:
+  id: invalid
+  title: Invalid
+  author: Invalid
+  url: https://example.invalid
+  publishedAt: 2026-01-01
+  scope: Invalid
+  licenseNote: Invalid
+subject:
+  sourceId: wfcd-items
+scale: [S, A]
+entries:
+  - externalId: item
+    rank: S
+`),
+      ),
+    /subject.namespace/,
+  );
+});
+
 const overframeFiles = [
   ["overframe-warframes.yaml", "overframe-warframes", 70],
   ["overframe-primary-weapons.yaml", "overframe-primary-weapons", 191],
@@ -78,6 +111,8 @@ test("checked-in Overframe snapshots remain complete, cited manual rankings", as
 
 const creatorFiles = [
   ["creator-brozime-warframes-2026.yaml", 63],
+  ["creator-knightmareframe-warframes-2026-average.yaml", 63],
+  ["creator-knightmareframe-warframes-2026-high-investment.yaml", 63],
   ["creator-salt-prime-coda-weapons-2025.yaml", 13],
   ["creator-salt-prime-kuva-weapons-2025.yaml", 20],
   ["creator-salt-prime-tenet-weapons-2025.yaml", 15],
@@ -118,7 +153,8 @@ test("transcript conversion index accounts for every input without inventing a d
   const index = parse(await fs.readFile(indexPath, "utf8")) as {
     sources: Array<{
       input: string;
-      output: string;
+      output?: string;
+      outputs?: string[];
       sha256: string;
       status: string;
     }>;
@@ -137,32 +173,45 @@ test("transcript conversion index accounts for every input without inventing a d
       createHash("sha256").update(bytes).digest("hex"),
       source.sha256,
     );
-    await fs.access(path.resolve(source.output));
+    for (const output of source.outputs ??
+      (source.output ? [source.output] : []))
+      await fs.access(path.resolve(output));
+    assert.ok(source.output || source.outputs?.length);
   }
 
-  const duplicate = index.sources.find(
-    (source) => source.status === "duplicate",
+  const knightmare = index.sources.find(
+    (source) =>
+      source.input === "data/unstructured/knightmareframe-warframes.txt",
   );
-  assert.equal(
-    duplicate?.input,
-    "data/unstructured/knightmareframe-warframes.txt",
-  );
-  assert.equal(
-    duplicate?.output,
-    "data/manual/creator-brozime-warframes-2026.yaml",
-  );
-  const [brozime, mislabeled] = await Promise.all([
-    fs.readFile(
-      path.resolve("data/unstructured/brozime-warframes.txt"),
-      "utf8",
-    ),
-    fs.readFile(
-      path.resolve("data/unstructured/knightmareframe-warframes.txt"),
-      "utf8",
-    ),
+  assert.equal(knightmare?.status, "converted");
+  assert.deepEqual(knightmare?.outputs, [
+    "data/manual/creator-knightmareframe-warframes-2026-average.yaml",
+    "data/manual/creator-knightmareframe-warframes-2026-high-investment.yaml",
   ]);
-  assert.equal(
-    brozime.split("\n").slice(1).join("\n"),
-    mislabeled.split("\n").slice(1).join("\n"),
+});
+
+test("KnightmareFrame contexts remain independent complete rankings", async () => {
+  const files = [
+    "creator-knightmareframe-warframes-2026-average.yaml",
+    "creator-knightmareframe-warframes-2026-high-investment.yaml",
+  ];
+  const sets = await Promise.all(
+    files.map(async (file) => {
+      const adapter = await ManualRankingAdapter.fromFile(
+        path.resolve("data/manual", file),
+      );
+      const observations = await collect(adapter, await adapter.fetch({}));
+      return observations.slice(1).map((observation) => {
+        assert.equal(observation.type, "ranking");
+        return observation.type === "ranking"
+          ? [observation.subjectExternalId.value, observation.tier]
+          : ["", ""];
+      });
+    }),
   );
+  assert.deepEqual(
+    sets[0]!.map(([subject]) => subject),
+    sets[1]!.map(([subject]) => subject),
+  );
+  assert.notDeepEqual(sets[0], sets[1]);
 });

@@ -1,4 +1,4 @@
-schemaVersion: 1
+schemaVersion: 2
 source:
   id: overframe-secondary-weapons
   title: "Overframe community secondary weapons (2026-05-16)"
@@ -8,6 +8,9 @@ source:
   gameVersion: "Archived 2026-05-16 snapshot"
   scope: "Secondary weapons with at least 40 community votes"
   licenseNote: "Factual plurality tiers manually transcribed from the cited public snapshot; no page text or build data copied."
+subject:
+  sourceId: wfcd-items
+  namespace: uniqueName
 scale: [S, A, B, C, D]
 entries:
   - externalId: /Lotus/Weapons/Grineer/KuvaLich/Secondaries/Nukor/KuvaNukor
