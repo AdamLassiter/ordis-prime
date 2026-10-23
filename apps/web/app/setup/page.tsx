@@ -11,10 +11,8 @@ export default function SetupPage() {
   if (result.count > 0)
     return (
       <>
-        <p className="eyebrow">Orbiter commissioning // complete</p>
-        <h1>
-          This Orbiter already has an <u>Operator.</u>
-        </h1>
+        <p className="eyebrow">Administrator setup · complete</p>
+        <h1>Setup is complete.</h1>
         <p className="lede">
           The bootstrap token cannot create additional administrators.
         </p>
@@ -25,13 +23,11 @@ export default function SetupPage() {
     );
   return (
     <>
-      <p className="eyebrow">Orbiter commissioning // first run</p>
-      <h1>
-        Assign the first <u>Operator.</u>
-      </h1>
+      <p className="eyebrow">Administrator setup · first run</p>
+      <h1>Create the first administrator.</h1>
       <p className="lede">
-        Create the installation administrator with the configured bootstrap
-        token. The token is accepted only while no accounts exist.
+        Use the configured bootstrap token. It is accepted only while no
+        accounts exist.
       </p>
       <SetupForm />
     </>

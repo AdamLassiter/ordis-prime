@@ -148,6 +148,12 @@ nav {
   border-color: var(--cyan);
   background: rgb(108 231 239 / 4%);
 }
+.nav-links a.active,
+.nav-links a[aria-current="page"] {
+  color: var(--text);
+  border-color: var(--gold);
+  background: rgb(239 200 110 / 8%);
+}
 .nav-session {
   padding-left: 0.55rem;
   border-left: 1px solid var(--line);
@@ -166,19 +172,21 @@ h1 {
   letter-spacing: -0.045em;
   text-wrap: balance;
 }
-h1 u {
-  color: var(--gold);
-  text-decoration: none;
-  text-shadow: 0 0 28px rgb(239 200 110 / 18%);
-}
 h2 {
   margin-top: 0;
   letter-spacing: -0.02em;
 }
 .eyebrow {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.8rem;
+  margin: 0 0 0.4rem;
+  padding: 0.3rem 0.65rem;
+  border-left: 3px solid var(--gold);
+  background: rgb(108 231 239 / 7%);
   color: var(--cyan);
   text-transform: uppercase;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.12em;
   font-size: 0.7rem;
   font-weight: 700;
 }

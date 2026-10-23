@@ -56,13 +56,11 @@ export default async function Home({
     <>
       <section className="command-hero">
         <div className="hero-copy">
-          <p className="eyebrow">Cephalon link // Orbiter ready</p>
-          <h1>
-            Bring the <u>Origin System</u> into focus.
-          </h1>
+          <p className="eyebrow">Public · sourced catalog</p>
+          <h1>Search the Warframe catalog.</h1>
           <p className="lede">
-            Find the gear. Trace the farm. Watch the cycle. Keep the build. One
-            living console for everything your next mission depends on.
+            Find equipment and resources, follow their acquisition paths, and
+            open the tools that use the same linked data.
           </p>
         </div>
         <aside className="cephalon-briefing">
@@ -92,6 +90,7 @@ export default async function Home({
         aria-label="Codex record type"
       >
         <Link
+          aria-current={!selectedKind ? "page" : undefined}
           className={!selectedKind ? "tag active" : "tag"}
           href={codexHref(q)}
         >
@@ -99,6 +98,7 @@ export default async function Home({
         </Link>
         {resultKinds.map((entry) => (
           <Link
+            aria-current={selectedKind === entry.kind ? "page" : undefined}
             className={selectedKind === entry.kind ? "tag active" : "tag"}
             href={codexHref(q, entry.kind)}
             key={entry.kind}
@@ -123,9 +123,9 @@ export default async function Home({
         <section className="search-results">
           <div className="section-heading">
             <div>
-              <p className="eyebrow">Codex response</p>
+              <p className="eyebrow">Sourced catalog results</p>
               <h2>
-                {q ? `Matches for “${q}”` : "Catalog signal"}
+                {q ? `Matches for “${q}”` : "Catalog records"}
                 {selectedKind ? ` · ${selectedKind}` : ""}
               </h2>
             </div>
@@ -150,8 +150,8 @@ export default async function Home({
       ) : (
         <p className="notice search-empty">
           {q
-            ? "No Codex signal matches that query. Try a shorter designation or another spelling."
-            : "The Codex is waiting for its first data transmission."}
+            ? "No catalog record matches that query. Try a shorter name or another spelling."
+            : "No catalog data has been imported yet."}
         </p>
       )}
     </>

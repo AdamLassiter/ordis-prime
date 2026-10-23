@@ -25,14 +25,11 @@ export default async function TodosPage() {
   const notifications = listPlayerNotifications(getDatabase(), session.user.id);
   return (
     <>
-      <p className="eyebrow">Operator directives // private</p>
-      <h1>
-        Keep every loose end <u>in orbit.</u>
-      </h1>
+      <p className="eyebrow">Private player data</p>
+      <h1>Notifications and watches</h1>
       <p className="lede">
-        Configure automated alarms for live cycles, fissures, traders, alerts,
-        and event windows. Farming notes and collection tasks live in the
-        Foundry plan.
+        Create alerts for cycles, fissures, traders, and events. Collection
+        tasks remain in the acquisition plan.
       </p>
       <div className="dashboard-columns">
         {notifications.length > 0 && (

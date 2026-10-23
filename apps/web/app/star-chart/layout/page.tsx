@@ -75,13 +75,11 @@ export default function StarChartLayoutPage() {
 
   return (
     <>
-      <p className="eyebrow">Navigation cartography // local tool</p>
-      <h1>Trace the in-game Star Chart.</h1>
+      <p className="eyebrow">Local administrator tool</p>
+      <h1>Trace a Star Chart layout</h1>
       <p className="lede">
-        Load a screenshot, name each body or node, and click its centre. All
-        coordinates are exported as normalized values so layouts remain stable
-        at any display size. The image remains in your browser and is not
-        uploaded.
+        Load a screenshot, select catalog entities, and mark their centers and
+        sizes. The screenshot stays in this browser.
       </p>
       <p>
         <Link className="nav-button" href="/star-chart">

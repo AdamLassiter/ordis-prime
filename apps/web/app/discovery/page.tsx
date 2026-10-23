@@ -54,14 +54,11 @@ export default async function DiscoveryPage({
     : undefined;
   return (
     <>
-      <p className="eyebrow">Orbiter archives // linked intelligence</p>
-      <h1>
-        Chart the <u>unknown.</u>
-      </h1>
+      <p className="eyebrow">Public · sourced discovery data</p>
+      <h1>Explore connected discoveries</h1>
       <p className="lede">
-        Quests, abilities, adversaries, systems and secrets—connected so one
-        discovery leads naturally to the next. Quiet regions mark intelligence
-        Ordis has not verified yet.
+        Search quests, abilities, enemies, mechanics, and secrets, then follow
+        their cited relationships.
       </p>
       <form className="inline-form">
         <label>
@@ -92,6 +89,7 @@ export default async function DiscoveryPage({
       </form>
       <div className="filters">
         <Link
+          aria-current={!selectedKind ? "page" : undefined}
           className={!selectedKind ? "tag active" : "tag"}
           href={discoveryHref({ q, progress: selectedProgress })}
         >
@@ -99,6 +97,7 @@ export default async function DiscoveryPage({
         </Link>
         {DISCOVERY_KINDS.map((entry) => (
           <Link
+            aria-current={selectedKind === entry ? "page" : undefined}
             className={selectedKind === entry ? "tag active" : "tag"}
             href={discoveryHref({ q, kind: entry, progress: selectedProgress })}
             key={entry}
@@ -114,7 +113,7 @@ export default async function DiscoveryPage({
       )}
       {focusedItem && topology && (
         <section className="card connection-explorer discovery-network">
-          <p className="eyebrow">Archive link // cited relations</p>
+          <p className="eyebrow">Sourced relationships</p>
           <h2>{focusedItem.name}</h2>
           <p className="muted">
             <span className="tag">{focusedItem.kind}</span>{" "}
@@ -337,8 +336,8 @@ export default async function DiscoveryPage({
         </section>
       ) : (
         <p className="notice">
-          No archive entries match those filters. The selected region may also
-          be waiting for a verified transmission.
+          No discovery entries match those filters. The selected region may not
+          have verified source data yet.
         </p>
       )}
     </>

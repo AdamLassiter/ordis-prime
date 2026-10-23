@@ -21,7 +21,7 @@ These TODO items should be fixed, with written commits as progress is made:
       - Planetary orbits (X proxima, usually)
     - Sanctuary / Dark Refactory / Duviri
       - Some of these may need edges manuall added between nodes
-- [ ] Language still needs improving
+- [x] Language still needs improving
   - The emphasis highlighting on headings is inconsistent, not very helpful, and does not clearly indicate which tab is currently focussed
   - The language in ledes is a mix of appropriate, overly verbose, overly technical, or overly thematically-in-game
   - The language in eyebrows is stylistically pretty but functionally useless

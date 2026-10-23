@@ -12,10 +12,10 @@ overenthusiastic Cephalon, but it must not reproduce dialogue from the game.
 
 Copy follows the player's context rather than forcing one tone everywhere.
 
-1. **Player-facing navigation and guidance** is concise, confident and lightly
-   diegetic. Headings such as “Choose the next waypoint” or “Catch the right
-   window” should lead with the outcome. A small amount of Cephalon personality
-   can make an empty state or briefing memorable.
+1. **Player-facing navigation and guidance** is concise, confident and direct.
+   Headings name the page or the task, while ledes explain what the player can
+   do there. A small amount of Cephalon personality can make a secondary
+   briefing memorable, but it does not replace operational language.
 2. **Evidence and methodology** is exact and readable. Citations, provider
    identity, uncertainty, ranking methodology and access reasons must not be
    disguised by lore language. The surrounding explanation can be friendly,
@@ -43,10 +43,27 @@ context that a first-time visitor does not need to understand the metaphor.
 - Contrast, focus indicators, semantic HTML and explicit labels remain product
   requirements. Diegetic styling does not replace accessibility.
 
+## Interface hierarchy
+
+- The eyebrow above a page title states the scope of the data or access on that
+  page: public sourced data, live data, private player data, shared snapshots or
+  administrator access. It is not decorative flavour text.
+- The `h1` names the page or current record without highlighted fragments. A
+  short lede describes the page's primary use in plain language.
+- The current primary destination and the current local tab use visible active
+  styling and `aria-current="page"`. Colour or heading emphasis must not be the
+  only indication of location.
+- Game terminology remains appropriate where it is the clearest label. Product
+  and data-pipeline terminology is explained or confined to provenance and
+  administration views.
+- Ordis-style personality belongs in clearly secondary material such as the
+  optional landing-page briefing. Actions, status, errors and empty states stay
+  literal enough to scan quickly.
+
 ## Current compromise
 
-The shared shell, landing console and primary player consoles establish this
-system. Detail-heavy evidence views and administration screens intentionally
-remain more technical. Visual refinements are still largely CSS-native: there is
-no bespoke illustration or motion system, which keeps the first pass fast and
-accessible but limits its cinematic quality.
+The shared shell and application pages now use the scope, title and lede
+hierarchy consistently. Detail-heavy evidence views and administration screens
+intentionally remain more technical. Visual refinements are still largely
+CSS-native: there is no bespoke illustration or motion system, which keeps the
+first pass fast and accessible but limits its cinematic quality.

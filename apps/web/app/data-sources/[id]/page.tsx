@@ -35,12 +35,11 @@ export default async function SourceOperationsPage({
   const overrides = listIdentityOverrides(database, id);
   return (
     <>
-      <p className="eyebrow">Administrator · source operations</p>
+      <p className="eyebrow">Administrator access · source operations</p>
       <h1>{source.name}</h1>
       <p className="lede">
-        Operational attempts and resolver conflicts remain separate from the
-        active catalog. Paths below refer to retained files inside this
-        installation.
+        Review refresh attempts, retained snapshots, and identity conflicts for
+        this source.
       </p>
       <p className="notice">
         A review note closes a conflict without changing identity. A candidate

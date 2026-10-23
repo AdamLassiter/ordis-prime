@@ -131,12 +131,11 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   the Wiki Warframe source currently supplies description, health, shield,
   armor, energy, sprint speed and passive text. Arbitrary weapon damage modes
   and fully structured ability mechanics remain future source-specific work.
-- The shared navigation, landing console and primary player consoles now use an
-  original Cephalon-inspired visual and writing system, with responsive layouts
-  and reduced-motion support. It deliberately keeps evidence and administration
-  language more technical than player-facing guidance. The design remains
-  CSS-native without bespoke illustration or a richer motion system, and some
-  dense detail views still need local hierarchy and copy refinement.
+- The shared navigation and application pages use a consistent scope, title and
+  lede hierarchy, visible current-page states, responsive layouts and
+  reduced-motion support. Evidence and administration language deliberately
+  remains more technical than player-facing guidance. The design remains
+  CSS-native without bespoke illustration or a richer motion system.
 - Local email/password accounts, persisted sessions, closed registration, and
   first-administrator bootstrap enforcement are wired at the authentication
   API, with first-run, sign-in, and sign-out UI. Player-state reads and mutations

@@ -133,22 +133,12 @@ export default async function StarChartPage({
 
   return (
     <>
-      <p className="eyebrow">Navigation // Origin System</p>
-      <h1>
-        {selectedPlanet ? (
-          <>
-            Plot a course through <u>{selectedPlanet}.</u>
-          </>
-        ) : (
-          <>
-            Survey the <u>Origin System.</u>
-          </>
-        )}
-      </h1>
+      <p className="eyebrow">Public · sourced map · private progress overlay</p>
+      <h1>{selectedPlanet ? `${selectedPlanet} mission map` : "Star Chart"}</h1>
       <p className="lede">
         {selectedPlanet
-          ? "Inspect mission routes and reveal only the operational detail useful for this run."
-          : "Start with each celestial body and its current signals, then zoom in to inspect mission nodes and their cited connections."}
+          ? "Inspect mission routes, rewards, access requirements, and your selected private overlays."
+          : "Choose a region, then open a location to inspect its mission nodes and sourced connections."}
       </p>
       <nav className="view-tabs" aria-label="Star Chart region">
         {STAR_CHART_SCOPES.map(([scope, label]) => {
@@ -221,8 +211,8 @@ function SystemOverview({
     <>
       <div className="star-chart-toolbar">
         <p className="muted">
-          Planet summaries include live signals, open Foundry tasks, and unowned
-          rewards where player data is available.
+          Location summaries include live activity, open Foundry tasks, and
+          unowned rewards where player data is available.
         </p>
         <Link className="nav-button" href="/star-chart/layout">
           Trace a screenshot layout

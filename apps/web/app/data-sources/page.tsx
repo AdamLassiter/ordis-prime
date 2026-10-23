@@ -93,13 +93,11 @@ export default async function Sources({
       : undefined;
   return (
     <>
-      <p className="eyebrow">Provenance console // verified intelligence</p>
-      <h1>
-        Know why the Codex <u>says so.</u>
-      </h1>
+      <p className="eyebrow">Public provenance · administrator controls</p>
+      <h1>Data sources and operations</h1>
       <p className="lede">
-        Every provider contributes evidence, never unquestioned truth. Inspect
-        what is active, when it arrived, and where conflicts still need review.
+        Inspect active source versions, retrieval times, queued work, and
+        unresolved identity conflicts.
       </p>
       <div className="control-deck">
         {release && (
@@ -322,7 +320,7 @@ export default async function Sources({
           ))}
         </section>
       ) : (
-        <p className="lede">No intelligence sources are active yet.</p>
+        <p className="lede">No data sources are active yet.</p>
       )}
     </>
   );

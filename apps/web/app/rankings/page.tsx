@@ -36,10 +36,8 @@ export default async function RankingsPage({
       : undefined;
   return (
     <>
-      <p className="eyebrow">Consensus chamber // cited opinions</p>
-      <h1>
-        See where the experts <u>disagree.</u>
-      </h1>
+      <p className="eyebrow">Public · cited editorial data</p>
+      <h1>Compare tier lists</h1>
       <p className="lede">
         Compare tier lists side by side without flattening away their different
         scales, scopes or source notes.
@@ -136,7 +134,7 @@ export default async function RankingsPage({
           )}
           {rows.length && isolatedSet ? (
             <section className="ranking-isolated">
-              <p className="eyebrow">Isolated tier list</p>
+              <p className="eyebrow">Single cited ranking set</p>
               <h2>{isolatedSet.title}</h2>
               {isolatedSet.scale.map((tier) => {
                 const tierRows = rows.filter(

@@ -68,7 +68,9 @@ export default async function NodePage({
   );
   return (
     <>
-      <p className="eyebrow">Star chart node</p>
+      <p className="eyebrow">
+        Public · sourced node · private progress overlay
+      </p>
       <h1>{node.name}</h1>
       {node.description && <p className="lede">{node.description}</p>}
       {session && node.completionState && (
@@ -474,12 +476,14 @@ export default async function NodePage({
       {session ? (
         <div className="filters">
           <Link
+            aria-current={!neededOnly ? "page" : undefined}
             className={!neededOnly ? "tag active" : "tag"}
             href={`/nodes/${slug}`}
           >
             All rewards
           </Link>
           <Link
+            aria-current={neededOnly ? "page" : undefined}
             className={neededOnly ? "tag active" : "tag"}
             href={`/nodes/${slug}?needed=1${selectedRewardKind ? `&rewardKind=${encodeURIComponent(selectedRewardKind)}` : ""}`}
           >

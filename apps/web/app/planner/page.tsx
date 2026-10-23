@@ -27,10 +27,8 @@ export default async function Planner() {
   } catch (error) {
     return (
       <>
-        <p className="eyebrow">Foundry plan // private</p>
-        <h1>
-          Turn the wishlist into a <u>route.</u>
-        </h1>
+        <p className="eyebrow">Private player data · sourced recipes</p>
+        <h1>Acquisition plan</h1>
         <p className="error">
           The plan could not be expanded:{" "}
           {error instanceof Error ? error.message : "unknown catalog error"}
@@ -41,13 +39,11 @@ export default async function Planner() {
   }
   return (
     <>
-      <p className="eyebrow">Foundry plan // private</p>
-      <h1>
-        Turn the wishlist into a <u>route.</u>
-      </h1>
+      <p className="eyebrow">Private player data · sourced recipes</p>
+      <h1>Acquisition plan</h1>
       <p className="lede">
-        Name the destination. The console accounts for what is already aboard,
-        unfolds each recipe, and marks the missions that move the plan forward.
+        Expand item goals into required materials and identify missions that
+        provide what your inventory still lacks.
       </p>
       <TaskManager todos={todos} />
 

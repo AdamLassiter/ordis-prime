@@ -20,13 +20,10 @@ export default function WorldStatePage() {
   );
   return (
     <>
-      <p className="eyebrow">System pulse // live telemetry</p>
-      <h1>
-        Move before the <u>window closes.</u>
-      </h1>
+      <p className="eyebrow">Public · live sourced data</p>
+      <h1>Current and upcoming activity</h1>
       <p className="lede">
-        Watch cycles, events, alerts, fissures and traders from one live
-        console.
+        Check cycles, events, alerts, fissures, and trader availability.
       </p>
       {sources.length > 0 && (
         <div
@@ -58,8 +55,8 @@ export default function WorldStatePage() {
         <div className="notice empty-state">
           <p>
             {sources.length
-              ? "The current transmission contains no open windows."
-              : "No live transmission has reached the Orbiter yet."}
+              ? "The current source data contains no open windows."
+              : "No live source data is available yet."}
           </p>
           <p className="muted">
             Check Provenance for source freshness and refresh status.

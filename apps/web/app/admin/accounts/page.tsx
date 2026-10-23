@@ -13,12 +13,11 @@ export default async function AccountsPage() {
   const adminCount = accounts.filter(({ role }) => role === "admin").length;
   return (
     <>
-      <p className="eyebrow">Administrator</p>
-      <h1>Local <u>accounts</u></h1>
+      <p className="eyebrow">Administrator access</p>
+      <h1>Local accounts</h1>
       <p className="lede">
-        Promote or demote local users. Every role change invalidates that
-        account&apos;s sessions so new permissions take effect on the next
-        sign-in.
+        Change local user roles. Role changes end the affected user&apos;s
+        active sessions.
       </p>
       <section className="operations">
         {accounts.map((account) => (

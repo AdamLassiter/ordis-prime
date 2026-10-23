@@ -74,7 +74,7 @@ export default async function BuildEditor({
 
   return (
     <>
-      <p className="eyebrow">Private build · Draft {build.revision}</p>
+      <p className="eyebrow">Private player data · Draft {build.revision}</p>
       <p>
         <Link className="muted" href="/builds">
           ← All builds

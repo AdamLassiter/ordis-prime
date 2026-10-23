@@ -28,7 +28,7 @@ export default async function SharedBuildPage({
   return (
     <>
       <p className="eyebrow">
-        Arsenal transmission // revision {build.revision}
+        Shared immutable build · Revision {build.revision}
       </p>
       <h1>{build.title}</h1>
       {build.category && <span className="tag">{build.category}</span>}

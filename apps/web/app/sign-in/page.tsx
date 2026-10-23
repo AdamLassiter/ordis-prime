@@ -9,18 +9,14 @@ export default function SignInPage() {
     .get() as { count: number };
   return (
     <>
-      <p className="eyebrow">Transference link // secure</p>
-      <h1>
-        Welcome back, <u>Operator.</u>
-      </h1>
+      <p className="eyebrow">Secure account access</p>
+      <h1>Sign in.</h1>
       <p className="lede">
-        Reconnect to your private manifest, directives, builds and Foundry plan.
-        Your profile remains exportable and under your control.
+        Access your private inventory, tasks, builds, and acquisition plan.
       </p>
       {result.count === 0 ? (
         <p className="notice">
-          No account exists yet. The operator must complete{" "}
-          <a href="/setup">first-run setup</a>.
+          No account exists yet. Complete <a href="/setup">first-run setup</a>.
         </p>
       ) : (
         <SignInForm />

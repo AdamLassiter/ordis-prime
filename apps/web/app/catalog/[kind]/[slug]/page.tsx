@@ -56,7 +56,7 @@ export default async function ItemPage({
       : undefined;
   return (
     <>
-      <p className="eyebrow">{item.kind}</p>
+      <p className="eyebrow">Public · sourced record · {item.kind}</p>
       <h1>{item.name}</h1>
       {item.description && <p className="lede">{item.description}</p>}
       <dl className="facts">
