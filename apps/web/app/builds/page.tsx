@@ -22,56 +22,58 @@ export default async function BuildsPage() {
         Keep the reasoning beside the build, then share a frozen copy when it is
         ready.
       </p>
-      <form className="card form-stack build-create" action={addBuild}>
-        <h2>New build</h2>
-        <label>
-          Title
-          <input
-            name="title"
-            maxLength={160}
-            required
-            placeholder="Steel Path Mesa"
-          />
-        </label>
-        <label>
-          Category
-          <input
-            name="category"
-            maxLength={80}
-            placeholder="Steel Path, farming, beginner…"
-          />
-        </label>
-        <label>
-          Notes
-          <textarea name="notes" maxLength={10000} rows={4} />
-        </label>
-        <button className="button">Create build</button>
-      </form>
-      <section className="planner-section">
-        <h2>Your drafts</h2>
-        {builds.length ? (
-          <div className="grid">
-            {builds.map((build) => (
-              <Link
-                className="card"
-                href={`/builds/${build.id}`}
-                key={build.id}
-              >
-                {build.category && (
-                  <span className="tag">{build.category}</span>
-                )}
-                <h3>{build.title}</h3>
-                <p className="muted">
-                  Revision {build.revision} · {build.equipment.length} equipped
-                  slots
-                </p>
-              </Link>
-            ))}
-          </div>
-        ) : (
-          <p className="notice">No builds yet.</p>
-        )}
-      </section>
+      <div className="page-workspace">
+        <form className="card form-stack build-create" action={addBuild}>
+          <h2>New build</h2>
+          <label>
+            Title
+            <input
+              name="title"
+              maxLength={160}
+              required
+              placeholder="Steel Path Mesa"
+            />
+          </label>
+          <label>
+            Category
+            <input
+              name="category"
+              maxLength={80}
+              placeholder="Steel Path, farming, beginner…"
+            />
+          </label>
+          <label>
+            Notes
+            <textarea name="notes" maxLength={10000} rows={4} />
+          </label>
+          <button className="button">Create build</button>
+        </form>
+        <section className="workspace-main">
+          <h2>Your drafts</h2>
+          {builds.length ? (
+            <div className="grid compact-grid">
+              {builds.map((build) => (
+                <Link
+                  className="card"
+                  href={`/builds/${build.id}`}
+                  key={build.id}
+                >
+                  {build.category && (
+                    <span className="tag">{build.category}</span>
+                  )}
+                  <h3>{build.title}</h3>
+                  <p className="muted">
+                    Revision {build.revision} · {build.equipment.length}{" "}
+                    equipped slots
+                  </p>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <p className="notice">No builds yet.</p>
+          )}
+        </section>
+      </div>
     </>
   );
 }

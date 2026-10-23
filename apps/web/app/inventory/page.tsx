@@ -25,68 +25,71 @@ export default async function InventoryPage() {
         Record owned and built equipment so every farm, route and build can
         account for the collection you already have.
       </p>
-      <section className="card">
-        <h2>Progression</h2>
-        <p className="muted">
-          Your combined rank is used for documented star-chart gates and build
-          capacity; enter 31 for Legendary Rank 1, 32 for Legendary Rank 2, and
-          so on. Railjack access uses the highest rank you have reached in any
-          Railjack Intrinsics category. Only one adversary can be active; choose
-          None to record that explicitly, or leave it unknown. The highest
-          available Warframe rank is used only for node rules that require a
-          currently usable ranked Warframe.
-        </p>
-        <form className="form-stack compact-form" action={updateProgression}>
-          <label>
-            Combined Mastery Rank
-            <input
-              name="masteryRank"
-              type="number"
-              min="0"
-              max="40"
-              defaultValue={settings.masteryRank}
-              placeholder="Not recorded"
-            />
-          </label>
-          <label>
-            Highest Railjack Intrinsic Rank
-            <input
-              name="railjackIntrinsicRank"
-              type="number"
-              min="0"
-              max="10"
-              defaultValue={settings.railjackIntrinsicRank}
-              placeholder="Not recorded"
-            />
-          </label>
-          <label>
-            Active adversary
-            <select
-              name="activeAdversary"
-              defaultValue={settings.activeAdversary ?? ""}
-            >
-              <option value="">Not recorded</option>
-              <option value="none">None</option>
-              <option value="kuva-lich">Kuva Lich</option>
-              <option value="sister-of-parvos">Sister of Parvos</option>
-              <option value="technocyte-coda">Technocyte Coda</option>
-            </select>
-          </label>
-          <label>
-            Highest available Warframe rank
-            <input
-              name="highestWarframeRank"
-              type="number"
-              min="0"
-              max="30"
-              defaultValue={settings.highestWarframeRank}
-              placeholder="Not recorded"
-            />
-          </label>
-          <button className="button">Save progression</button>
-        </form>
-      </section>
-      <GameInventoryImport />
+      <div className="control-deck">
+        <section className="card">
+          <h2>Progression</h2>
+          <p className="muted">
+            Your combined rank is used for documented star-chart gates and build
+            capacity; enter 31 for Legendary Rank 1, 32 for Legendary Rank 2,
+            and so on. Railjack access uses the highest rank you have reached in
+            any Railjack Intrinsics category. Only one adversary can be active;
+            choose None to record that explicitly, or leave it unknown. The
+            highest available Warframe rank is used only for node rules that
+            require a currently usable ranked Warframe.
+          </p>
+          <form className="form-stack compact-form" action={updateProgression}>
+            <label>
+              Combined Mastery Rank
+              <input
+                name="masteryRank"
+                type="number"
+                min="0"
+                max="40"
+                defaultValue={settings.masteryRank}
+                placeholder="Not recorded"
+              />
+            </label>
+            <label>
+              Highest Railjack Intrinsic Rank
+              <input
+                name="railjackIntrinsicRank"
+                type="number"
+                min="0"
+                max="10"
+                defaultValue={settings.railjackIntrinsicRank}
+                placeholder="Not recorded"
+              />
+            </label>
+            <label>
+              Active adversary
+              <select
+                name="activeAdversary"
+                defaultValue={settings.activeAdversary ?? ""}
+              >
+                <option value="">Not recorded</option>
+                <option value="none">None</option>
+                <option value="kuva-lich">Kuva Lich</option>
+                <option value="sister-of-parvos">Sister of Parvos</option>
+                <option value="technocyte-coda">Technocyte Coda</option>
+              </select>
+            </label>
+            <label>
+              Highest available Warframe rank
+              <input
+                name="highestWarframeRank"
+                type="number"
+                min="0"
+                max="30"
+                defaultValue={settings.highestWarframeRank}
+                placeholder="Not recorded"
+              />
+            </label>
+            <button className="button">Save progression</button>
+          </form>
+        </section>
+        <GameInventoryImport />
+        <ProfileTransfer />
+      </div>
       {entries.length ? (
         <section className="grid">
           {entries.map((entry) => (
@@ -125,7 +128,6 @@ export default async function InventoryPage() {
           it.
         </p>
       )}
-      <ProfileTransfer />
     </>
   );
 }

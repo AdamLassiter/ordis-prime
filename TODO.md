@@ -8,7 +8,7 @@ These TODO items should be fixed, with written commits as progress is made:
 - [x] Editable field controls are poor and inconsistent.
   - Changes to e.g. a build in the arsenal should be saved by default
   - User-defined fields such as the build title and category should be editable in-line
-- [ ] Some layout doesn't take advantage of removing the max-1280px main width and could be reorganised
+- [x] Some layout doesn't take advantage of removing the max-1280px main width and could be reorganised
   - Lots of things are just grid rows stretching vertically downwards, not making efficient use of horizontal space
 - [ ] Editing the star chart layout should more easily allow rescaling the circles for planets and nodes
   - Picking the 'exact catalog label or slug' should be from a fixed list of known entities in this part of the star chart

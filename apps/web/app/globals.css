@@ -194,6 +194,54 @@ h2 {
   gap: 1rem;
   margin-top: 2rem;
 }
+.compact-grid {
+  grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+  margin-top: 1rem;
+}
+.page-workspace {
+  display: grid;
+  grid-template-columns: minmax(18rem, 28rem) minmax(0, 1fr);
+  gap: clamp(1rem, 3vw, 2.5rem);
+  align-items: start;
+  margin-top: 2rem;
+}
+.page-workspace > .form-stack {
+  position: sticky;
+  top: 6rem;
+  width: 100%;
+  max-width: none;
+  margin-top: 0;
+}
+.workspace-main {
+  min-width: 0;
+}
+.workspace-main > h2 {
+  margin-bottom: 0;
+}
+.dashboard-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem;
+  align-items: start;
+}
+.dashboard-columns > .planner-section {
+  min-width: 0;
+}
+.control-deck {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr));
+  gap: 1rem;
+  align-items: start;
+  margin: 2rem 0;
+}
+.control-deck > .card,
+.control-deck > section {
+  height: 100%;
+  margin-top: 0;
+}
+.control-deck .form-stack {
+  max-width: none;
+}
 .card {
   display: block;
   position: relative;
@@ -900,6 +948,13 @@ textarea:focus {
   }
 }
 @media (max-width: 700px) {
+  .page-workspace,
+  .dashboard-columns {
+    grid-template-columns: 1fr;
+  }
+  .page-workspace > .form-stack {
+    position: static;
+  }
   main {
     padding-top: 1.5rem;
   }

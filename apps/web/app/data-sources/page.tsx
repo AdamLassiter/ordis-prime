@@ -101,98 +101,100 @@ export default async function Sources({
         Every provider contributes evidence, never unquestioned truth. Inspect
         what is active, when it arrived, and where conflicts still need review.
       </p>
-      {release && (
-        <section className="card source-controls">
-          <h2>Active catalog release</h2>
-          <p>
-            <code>{release.id}</code> · promoted{" "}
-            {new Date(release.promotedAt).toISOString()}
-          </p>
-          <div className="filters">
-            {release.sources.map((member) => (
-              <span className="tag" key={member.sourceId}>
-                {member.sourceName}: {member.version}
-              </span>
-            ))}
-          </div>
-        </section>
-      )}
-      {isAdmin && (
-        <section className="card source-controls">
-          <h2>Refresh controls</h2>
-          <p className="muted">
-            Queue work for the leased background worker. Existing queued work is
-            brought forward instead of duplicated.
-          </p>
-          <div className="filters">
-            {[
-              ["wfcd-items", "WFCD items"],
-              ["wfcd-drops", "WFCD drops"],
-              ["warframe-wiki-weapons", "Wiki weapons"],
-              ["warframe-wiki-warframes", "Wiki Warframes"],
-              ["warframe-wiki-missions", "Wiki missions"],
-              ["warframe-wiki-junctions", "Wiki Junction tasks"],
-              ["warframe-wiki-abilities", "Wiki abilities"],
-              ["warframe-wiki-quests", "Wiki quests"],
-              ["warframe-wiki-enemies", "Wiki enemies and bosses"],
-              ["wfcd-worldstate", "World state"],
-            ].map(([id, label]) => (
-              <form action={queueSourceRefresh.bind(null, id!)} key={id}>
-                <button className="button">Queue {label}</button>
-              </form>
-            ))}
-          </div>
-        </section>
-      )}
-      {isAdmin && (
-        <section className="card source-controls">
-          <h2>Import cited manual data</h2>
-          <p className="muted">
-            Preview runs the exact validation and resolver transaction, then
-            rolls it back without retaining a snapshot. Import revalidates the
-            selected file and promotes it. Maximum 1 MB.
-          </p>
-          {preview && (
-            <div className={preview.conflicts ? "notice" : "success"}>
-              <strong>Dry run: {preview.source}</strong>
-              <p>
-                {preview.observations} observations · {preview.entities}{" "}
-                entities matched/created · {preview.recipes} recipes ·{" "}
-                {preview.drops} drops · {preview.relations} relations ·{" "}
-                {preview.options} enhancement options · {preview.rankings}{" "}
-                ranking records · {preview.conflicts} conflicts
-              </p>
-              <p>
-                Select the file again to import; preview results are
-                informational and are not retained.
-              </p>
+      <div className="control-deck">
+        {release && (
+          <section className="card source-controls">
+            <h2>Active catalog release</h2>
+            <p>
+              <code>{release.id}</code> · promoted{" "}
+              {new Date(release.promotedAt).toISOString()}
+            </p>
+            <div className="filters">
+              {release.sources.map((member) => (
+                <span className="tag" key={member.sourceId}>
+                  {member.sourceName}: {member.version}
+                </span>
+              ))}
             </div>
-          )}
-          <form className="inline-form" action={importManualSource}>
-            <label>
-              Document type
-              <select name="type" defaultValue="ranking">
-                <option value="ranking">Editorial ranking</option>
-                <option value="discovery">Discovery facts</option>
-                <option value="facts">Factual overlay</option>
-              </select>
-            </label>
-            <label>
-              YAML file
-              <input
-                name="file"
-                type="file"
-                accept=".yaml,.yml,application/yaml,text/yaml"
-                required
-              />
-            </label>
-            <button className="nav-button" formAction={previewManualSource}>
-              Preview dry run
-            </button>
-            <button className="button">Validate and import</button>
-          </form>
-        </section>
-      )}
+          </section>
+        )}
+        {isAdmin && (
+          <section className="card source-controls">
+            <h2>Refresh controls</h2>
+            <p className="muted">
+              Queue work for the leased background worker. Existing queued work
+              is brought forward instead of duplicated.
+            </p>
+            <div className="filters">
+              {[
+                ["wfcd-items", "WFCD items"],
+                ["wfcd-drops", "WFCD drops"],
+                ["warframe-wiki-weapons", "Wiki weapons"],
+                ["warframe-wiki-warframes", "Wiki Warframes"],
+                ["warframe-wiki-missions", "Wiki missions"],
+                ["warframe-wiki-junctions", "Wiki Junction tasks"],
+                ["warframe-wiki-abilities", "Wiki abilities"],
+                ["warframe-wiki-quests", "Wiki quests"],
+                ["warframe-wiki-enemies", "Wiki enemies and bosses"],
+                ["wfcd-worldstate", "World state"],
+              ].map(([id, label]) => (
+                <form action={queueSourceRefresh.bind(null, id!)} key={id}>
+                  <button className="button">Queue {label}</button>
+                </form>
+              ))}
+            </div>
+          </section>
+        )}
+        {isAdmin && (
+          <section className="card source-controls">
+            <h2>Import cited manual data</h2>
+            <p className="muted">
+              Preview runs the exact validation and resolver transaction, then
+              rolls it back without retaining a snapshot. Import revalidates the
+              selected file and promotes it. Maximum 1 MB.
+            </p>
+            {preview && (
+              <div className={preview.conflicts ? "notice" : "success"}>
+                <strong>Dry run: {preview.source}</strong>
+                <p>
+                  {preview.observations} observations · {preview.entities}{" "}
+                  entities matched/created · {preview.recipes} recipes ·{" "}
+                  {preview.drops} drops · {preview.relations} relations ·{" "}
+                  {preview.options} enhancement options · {preview.rankings}{" "}
+                  ranking records · {preview.conflicts} conflicts
+                </p>
+                <p>
+                  Select the file again to import; preview results are
+                  informational and are not retained.
+                </p>
+              </div>
+            )}
+            <form className="inline-form" action={importManualSource}>
+              <label>
+                Document type
+                <select name="type" defaultValue="ranking">
+                  <option value="ranking">Editorial ranking</option>
+                  <option value="discovery">Discovery facts</option>
+                  <option value="facts">Factual overlay</option>
+                </select>
+              </label>
+              <label>
+                YAML file
+                <input
+                  name="file"
+                  type="file"
+                  accept=".yaml,.yml,application/yaml,text/yaml"
+                  required
+                />
+              </label>
+              <button className="nav-button" formAction={previewManualSource}>
+                Preview dry run
+              </button>
+              <button className="button">Validate and import</button>
+            </form>
+          </section>
+        )}
+      </div>
       {isAdmin && (
         <section className="planner-section" id="worker-jobs">
           <h2>
