@@ -1,14 +1,8 @@
 import Link from "next/link";
 import { catalogKinds, searchCatalog } from "@/lib/catalog";
+import { randomOrdisVoiceLine } from "@/lib/ordis-voice-lines";
 
-const briefings = [
-  "Operator, your open tabs have achieved critical mass. I have arranged them.",
-  "Navigation, Foundry, Arsenal—one console. Suspiciously efficient, is it not?",
-  "The Origin System is untidy. Fortunately, Ordis has labels.",
-  "Your next objective is somewhere in this data. Ordis is almost certain.",
-  "All cycles observed. All blueprints indexed. Tea remains unavailable.",
-  "A plan without provenance is merely a hunch wearing a waypoint.",
-];
+export const dynamic = "force-dynamic";
 
 const launchCards = [
   {
@@ -51,7 +45,7 @@ export default async function Home({
     ? kind
     : undefined;
   const items = await searchCatalog(q, selectedKind);
-  const briefing = briefings[new Date().getUTCDate() % briefings.length];
+  const briefing = randomOrdisVoiceLine();
   return (
     <>
       <section className="command-hero">
