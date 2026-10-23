@@ -8,6 +8,8 @@ import {
   DEFAULT_WARFRAME_WIKI_API_URL,
   luaFieldKey,
   luaLiteralField,
+  luaLiteralValue,
+  type LuaLiteral,
   luaStringValue,
   parseLuaReturnTable,
   readMediaWikiLuaPages,
@@ -22,7 +24,7 @@ import {
 
 export { DEFAULT_WARFRAME_WIKI_API_URL } from "./mediawiki-lua.ts";
 
-const PARSER_VERSION = "warframe-wiki-weapons-v4";
+const PARSER_VERSION = "warframe-wiki-weapons-v5";
 const MODULE_TITLES = [
   "Module:Weapons/data/primary",
   "Module:Weapons/data/secondary",
@@ -40,7 +42,14 @@ interface WikiWeaponRecord {
   maxRank: number;
   configuration?: string;
   factoryPolarities: ParsedEquipmentPolarity[];
+  attributes: WikiWeaponAttribute[];
   line?: number;
+}
+
+interface WikiWeaponAttribute {
+  key: string;
+  label: string;
+  value: string;
 }
 
 export class WarframeWikiWeaponsAdapter implements SourceAdapter {
@@ -67,6 +76,8 @@ export class WarframeWikiWeaponsAdapter implements SourceAdapter {
       sourceId: this.source.id,
       parserVersion: PARSER_VERSION,
       signal: context.signal,
+      cacheDirectory: context.cacheDirectory,
+      cacheMaxAgeMilliseconds: context.cacheMaxAgeMilliseconds,
     });
   }
 
@@ -80,7 +91,9 @@ export class WarframeWikiWeaponsAdapter implements SourceAdapter {
           if (
             prior.maxRank !== record.maxRank ||
             JSON.stringify(prior.factoryPolarities) !==
-              JSON.stringify(record.factoryPolarities)
+              JSON.stringify(record.factoryPolarities) ||
+            JSON.stringify(prior.attributes) !==
+              JSON.stringify(record.attributes)
           )
             throw new Error(
               `WARFRAME Wiki weapon ${record.name} has conflicting equipment facts`,
@@ -119,6 +132,24 @@ export class WarframeWikiWeaponsAdapter implements SourceAdapter {
           },
           evidence: recordEvidence,
         };
+        for (const attribute of record.attributes) {
+          const scopedKey = record.configuration
+            ? `${wikiSlug(record.configuration)}-${attribute.key}`
+            : attribute.key;
+          yield {
+            type: "entity-attribute" as const,
+            subjectExternalId: externalId,
+            key: scopedKey,
+            label: record.configuration
+              ? `${record.configuration} — ${attribute.label}`
+              : attribute.label,
+            value: attribute.value,
+            evidence: {
+              ...recordEvidence,
+              sourceRecordKey: `${recordKey}:${scopedKey}`,
+            },
+          };
+        }
         yield {
           type: "equipment-polarity-set" as const,
           subjectExternalId: externalId,
@@ -176,8 +207,178 @@ function parseWeaponModule(source: string, title: string): WikiWeaponRecord[] {
           { field: "ExilusPolarity", role: "exilus" },
         ],
       ),
+      attributes: weaponAttributes(field.value),
       line: field.loc?.start.line,
     });
   }
   return records;
+}
+
+const OMITTED_WEAPON_FIELDS = new Set([
+  "Attacks",
+  "DefaultUpgrades",
+  "ExilusPolarity",
+  "Image",
+  "InternalName",
+  "Link",
+  "MaxRank",
+  "Name",
+  "Polarities",
+  "StancePolarity",
+]);
+
+function weaponAttributes(
+  record: Parameters<typeof luaLiteralField>[0],
+): WikiWeaponAttribute[] {
+  const attributes: WikiWeaponAttribute[] = [];
+  for (const field of record.fields) {
+    if (field.type === "TableValue") continue;
+    const name = luaFieldKey(field);
+    if (!name || name.startsWith("_") || OMITTED_WEAPON_FIELDS.has(name))
+      continue;
+    const value = luaLiteralValue(field.value);
+    if (value !== undefined)
+      flattenWeaponValue(attributes, [name], [humanizeWikiField(name)], value);
+  }
+  const attacks = luaLiteralValue(luaLiteralField(record, "Attacks"));
+  if (Array.isArray(attacks))
+    attacks.forEach((attack, index) => {
+      if (!isLiteralObject(attack)) return;
+      const attackNumber = index + 1;
+      const attackName =
+        typeof attack.AttackName === "string"
+          ? attack.AttackName
+          : `Attack ${attackNumber}`;
+      for (const [name, value] of Object.entries(attack)) {
+        if (name === "AttackName" || name === "AttackIndex") continue;
+        flattenWeaponValue(
+          attributes,
+          [`attack-${attackNumber}`, name],
+          [attackName, humanizeWikiField(name)],
+          value,
+        );
+      }
+      if (isLiteralObject(attack.Damage)) {
+        const total = Object.values(attack.Damage).reduce<number>(
+          (sum, value) => sum + (typeof value === "number" ? value : 0),
+          0,
+        );
+        if (total > 0)
+          attributes.push({
+            key: `attack-${attackNumber}-total-damage`,
+            label: `${attackName} — Total damage`,
+            value: formatNumber(total),
+          });
+      }
+    });
+  return attributes.sort((left, right) => left.key.localeCompare(right.key));
+}
+
+function flattenWeaponValue(
+  output: WikiWeaponAttribute[],
+  keyParts: string[],
+  labelParts: string[],
+  value: LuaLiteral,
+): void {
+  if (value === null) return;
+  if (Array.isArray(value)) {
+    const scalars = value.filter(isScalarLiteral);
+    if (scalars.length === value.length && value.length)
+      output.push({
+        key: weaponAttributeKey(keyParts),
+        label: labelParts.join(" — "),
+        value: scalars
+          .map((entry) => formatWeaponValue(keyParts.at(-1)!, entry))
+          .join(", "),
+      });
+    else
+      value.forEach((entry, index) =>
+        flattenWeaponValue(
+          output,
+          [...keyParts, String(index + 1)],
+          [...labelParts, String(index + 1)],
+          entry,
+        ),
+      );
+    return;
+  }
+  if (isLiteralObject(value)) {
+    for (const [name, nested] of Object.entries(value))
+      flattenWeaponValue(
+        output,
+        [...keyParts, name],
+        [...labelParts, humanizeWikiField(name)],
+        nested,
+      );
+    return;
+  }
+  output.push({
+    key: weaponAttributeKey(keyParts),
+    label: labelParts.join(" — "),
+    value: formatWeaponValue(keyParts.at(-1)!, value),
+  });
+}
+
+function isLiteralObject(
+  value: LuaLiteral | undefined,
+): value is Record<string, LuaLiteral> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isScalarLiteral(
+  value: LuaLiteral,
+): value is string | number | boolean {
+  return value !== null && typeof value !== "object";
+}
+
+function formatWeaponValue(field: string, value: string | number | boolean) {
+  if (typeof value === "boolean") return value ? "Yes" : "No";
+  if (typeof value === "number") {
+    if (/Chance$|Reduction$/.test(field))
+      return `${formatNumber(value * 100)}%`;
+    return formatNumber(value);
+  }
+  return value;
+}
+
+function weaponAttributeKey(parts: string[]): string {
+  return wikiSlug(
+    parts
+      .map((part) =>
+        part
+          .replace(/([a-z0-9])([A-Z])/g, "$1-$2")
+          .replace(/([A-Za-z])([0-9])/g, "$1-$2"),
+      )
+      .join("-"),
+  );
+}
+
+function formatNumber(value: number): string {
+  return Number(value.toFixed(6)).toLocaleString("en-US", {
+    useGrouping: false,
+    maximumFractionDigits: 6,
+  });
+}
+
+function humanizeWikiField(value: string): string {
+  const known: Record<string, string> = {
+    AmmoMax: "Maximum ammo",
+    AmmoPickup: "Ammo pickup",
+    CritChance: "Critical chance",
+    CritMultiplier: "Critical multiplier",
+    IsSilent: "Silent",
+    Mastery: "Mastery requirement",
+    Multishot: "Multishot",
+    PunchThrough: "Punch through",
+    SellPrice: "Sell price",
+    ShotSpeed: "Projectile speed",
+    ShotType: "Shot type",
+    StatusChance: "Status chance",
+  };
+  return (
+    known[value] ??
+    value
+      .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+      .replace(/^./, (character) => character.toUpperCase())
+  );
 }

@@ -41,7 +41,10 @@ providers never prevent the last promoted catalog from being served.
 The Compose deployment runs the web server and data worker as separate
 processes over one mounted data volume. The worker polls world state frequently
 and refreshes the static WFCD item/drop and selected structured WARFRAME Wiki
-sources daily. It also has a standalone CLI
+sources daily. MediaWiki acquisition first composes those source snapshots from
+a durable per-page cache; fresh pages are normally reused for 30 days and stale
+complete pages remain valid offline parser input when the provider is
+unavailable. It also has a standalone CLI
 entry point. Every worker claims recurring jobs through SQLite and recovers
 expired leases, so multiple workers can run without intentionally duplicating
 work.

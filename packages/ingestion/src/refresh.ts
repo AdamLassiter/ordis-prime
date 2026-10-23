@@ -39,6 +39,8 @@ export async function refreshSource(
     const fetchedSnapshot = await options.adapter.fetch({
       signal: options.signal,
       previousVersion: options.previousVersion,
+      cacheDirectory:
+        options.snapshotStore.auxiliaryCacheDirectory("mediawiki-pages"),
     });
     snapshotPath = await options.snapshotStore.put(fetchedSnapshot);
     attachSourceRefreshSnapshot(options.database, refreshId, snapshotPath);

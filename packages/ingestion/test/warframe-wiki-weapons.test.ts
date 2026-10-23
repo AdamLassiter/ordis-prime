@@ -147,6 +147,75 @@ test("wiki weapon adapter rejects non-literal or unknown factory polarities", as
   );
 });
 
+test("wiki weapon adapter imports public equipment and per-attack statistics", async () => {
+  const observations = await collect(
+    new WarframeWikiWeaponsAdapter(),
+    wikiSnapshot(`
+      return {
+        Braton = {
+          Accuracy = 28.6,
+          AmmoMax = 540,
+          Class = "Rifle",
+          CompatibilityTags = { "ASSAULT_AMMO", "HITSCAN" },
+          Introduced = "Vanilla",
+          Magazine = 45,
+          Mastery = 0,
+          MaxRank = 30,
+          Reload = 2,
+          Trigger = "Auto",
+          Attacks = {
+            {
+              AttackIndex = 1,
+              AttackName = "Normal Attack",
+              CritChance = 0.12,
+              CritMultiplier = 1.6,
+              Damage = { Impact = 7.25, Puncture = 7.25, Slash = 14.5 },
+              FireRate = 8.75,
+              IsSilent = false,
+              StatusChance = 0.06,
+            },
+          },
+        },
+      }
+    `),
+  );
+  const attributes = observations.filter(
+    (observation) => observation.type === "entity-attribute",
+  );
+  const facts = Object.fromEntries(
+    attributes.map((attribute) => [attribute.key, attribute.value]),
+  );
+  assert.equal(facts.accuracy, "28.6");
+  assert.equal(facts["ammo-max"], "540");
+  assert.equal(facts["compatibility-tags"], "ASSAULT_AMMO, HITSCAN");
+  assert.equal(facts["attack-1-crit-chance"], "12%");
+  assert.equal(facts["attack-1-damage-slash"], "14.5");
+  assert.equal(facts["attack-1-is-silent"], "No");
+  assert.equal(facts["attack-1-total-damage"], "29");
+});
+
+test("wiki weapon adapter scopes alternate configuration statistics", async () => {
+  const observations = await collect(
+    new WarframeWikiWeaponsAdapter(),
+    wikiSnapshot(`
+      return {
+        ["Corvas (Atmosphere)"] = {
+          Accuracy = 9.1,
+          Link = "Corvas",
+          MaxRank = 30,
+          Name = "Corvas (Atmosphere)",
+        },
+      }
+    `),
+  );
+  const accuracy = observations.find(
+    (observation) => observation.type === "entity-attribute",
+  );
+  assert.equal(accuracy?.type, "entity-attribute");
+  assert.equal(accuracy.key, "atmosphere-accuracy");
+  assert.equal(accuracy.label, "Atmosphere — Accuracy");
+});
+
 test("wiki weapon adapter fetches every partition and versions their revisions", async (t) => {
   const payload = wikiPayload("return {}", 100);
   const server = createServer((request, response) => {
@@ -167,7 +236,7 @@ test("wiki weapon adapter fetches every partition and versions their revisions",
 
   assert.equal(snapshot.sourceId, "warframe-wiki-weapons");
   assert.match(snapshot.version, /Module:Weapons\/data\/primary@100/);
-  assert.match(snapshot.version, /warframe-wiki-weapons-v4$/);
+  assert.match(snapshot.version, /warframe-wiki-weapons-v5$/);
   assert.deepEqual(
     JSON.parse(new TextDecoder().decode(snapshot.bytes)),
     payload,

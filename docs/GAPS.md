@@ -229,6 +229,14 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   sets and a hash-based conversion index; one mislabeled duplicate transcript is
   explicitly recorded without becoming a second opinion. Rankings can be
   ordered by tier and a single source opens as a tier-grouped isolated list.
+- Structured MediaWiki pages now have a durable, timestamped 30-day cache and
+  can be reprocessed offline. Weapon records expose public equipment fields and
+  per-attack damage, critical, status, firing, range and falloff facts;
+  Warframe and Archwing records expose simple public fields beyond their base
+  stats. This remains a selected-page cache rather than a whole-Wiki crawl.
+  Non-literal Lua expressions are not executed, complex tables require explicit
+  normalization, and there is not yet a cache inventory or eviction control in
+  the operator UI.
 - WFCD item and drop observations compose planet, mission and level metadata in
   a public Star Chart that opens on a planet-summary Origin System and zooms
   into one planet's cited node graph. Multi-select detail controls replace

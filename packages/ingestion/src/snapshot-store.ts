@@ -22,6 +22,11 @@ export class SnapshotStore {
     this.root = root;
   }
 
+  auxiliaryCacheDirectory(name: string): string {
+    if (!safeSegment.test(name)) throw new Error(`Unsafe cache name: ${name}`);
+    return path.join(path.dirname(this.root), "cache", name);
+  }
+
   async put(snapshot: Snapshot): Promise<string> {
     validateSnapshot(snapshot);
     const digest = snapshot.contentHash.slice("sha256:".length);

@@ -19,6 +19,10 @@ export interface Snapshot {
 export interface FetchContext {
   signal?: AbortSignal;
   previousVersion?: string;
+  /** Durable auxiliary cache shared by adapters between source refreshes. */
+  cacheDirectory?: string;
+  /** Override for tests or installations that need a different cache cadence. */
+  cacheMaxAgeMilliseconds?: number;
 }
 export interface SourceAdapter {
   readonly source: SourceDescriptor;

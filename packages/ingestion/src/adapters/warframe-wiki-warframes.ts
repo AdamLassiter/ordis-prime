@@ -9,6 +9,7 @@ import {
   fetchMediaWikiLuaSnapshot,
   luaFieldKey,
   luaLiteralField,
+  luaLiteralValue,
   luaStringValue,
   parseLuaReturnTable,
   readMediaWikiLuaPages,
@@ -17,7 +18,7 @@ import {
 } from "./mediawiki-lua.ts";
 import { parseEquipmentPolarities } from "./wiki-equipment-polarities.ts";
 
-const PARSER_VERSION = "warframe-wiki-warframes-v5";
+const PARSER_VERSION = "warframe-wiki-warframes-v6";
 const MODULE_TITLE = "Module:Warframes/data";
 const GROUPS = [
   { field: "Warframes", kind: "warframe", expectedType: "Warframe" },
@@ -50,6 +51,8 @@ export class WarframeWikiWarframesAdapter implements SourceAdapter {
       sourceId: this.source.id,
       parserVersion: PARSER_VERSION,
       signal: context.signal,
+      cacheDirectory: context.cacheDirectory,
+      cacheMaxAgeMilliseconds: context.cacheMaxAgeMilliseconds,
     });
   }
 
@@ -178,5 +181,83 @@ function warframeAttributes(
   const passive = luaStringValue(luaLiteralField(record, "Passive"))?.trim();
   if (passive)
     attributes.push({ key: "passive", label: "Passive", value: passive });
+  const handled = new Set([
+    "Armor",
+    "Energy",
+    "Health",
+    "Passive",
+    "Shield",
+    "Sprint",
+  ]);
+  const omitted = new Set([
+    "Abilities",
+    "AuraPolarity",
+    "Description",
+    "ExilusPolarity",
+    "FullImages",
+    "Image",
+    "InternalName",
+    "Link",
+    "MaxRank",
+    "Name",
+    "Polarities",
+    "Portrait",
+    "Type",
+  ]);
+  for (const field of record.fields) {
+    if (field.type === "TableValue") continue;
+    const name = luaFieldKey(field);
+    if (!name || name.startsWith("_") || handled.has(name) || omitted.has(name))
+      continue;
+    const value = luaLiteralValue(field.value);
+    const rendered = renderSimpleAttribute(value);
+    if (rendered !== undefined)
+      attributes.push({
+        key: wikiAttributeKey(name),
+        label: wikiAttributeLabel(name),
+        value: rendered,
+      });
+  }
   return attributes;
+}
+
+function renderSimpleAttribute(
+  value: ReturnType<typeof luaLiteralValue>,
+): string | undefined {
+  if (typeof value === "string" || typeof value === "number")
+    return String(value);
+  if (typeof value === "boolean") return value ? "Yes" : "No";
+  if (
+    Array.isArray(value) &&
+    value.length &&
+    value.every((entry) =>
+      ["string", "number", "boolean"].includes(typeof entry),
+    )
+  )
+    return value.map(String).join(", ");
+  return undefined;
+}
+
+function wikiAttributeKey(value: string): string {
+  return value
+    .replace(/([a-z0-9])([A-Z])/g, "$1-$2")
+    .replace(/([A-Za-z])([0-9])/g, "$1-$2")
+    .toLocaleLowerCase("en");
+}
+
+function wikiAttributeLabel(value: string): string {
+  const known: Record<string, string> = {
+    CodexSecret: "Hidden in Codex",
+    HealthRank30: "Health at rank 30",
+    InitialEnergy: "Starting energy",
+    ShieldRank30: "Shield at rank 30",
+    SellPrice: "Sell price",
+  };
+  return (
+    known[value] ??
+    value
+      .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+      .replace(/([A-Za-z])([0-9])/g, "$1 $2")
+      .replace(/^./, (character) => character.toUpperCase())
+  );
 }

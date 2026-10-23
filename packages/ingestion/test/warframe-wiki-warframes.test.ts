@@ -25,6 +25,10 @@ test("wiki Warframe adapter imports Warframe and Archwing maximum ranks", async 
             Energy = 100,
             Health = 455,
             Passive = "Resists a lethal blow.",
+            HealthRank30 = 555,
+            InitialEnergy = 50,
+            Playstyle = { "Damage", "Tank" },
+            Vaulted = true,
             Shield = 300,
             Sprint = 1.1,
             AuraPolarity = "Madurai",
@@ -88,6 +92,10 @@ test("wiki Warframe adapter imports Warframe and Archwing maximum ranks", async 
       ["energy", "Energy", "100"],
       ["sprint-speed", "Sprint speed", "1.1"],
       ["passive", "Passive", "Resists a lethal blow."],
+      ["health-rank-30", "Health at rank 30", "555"],
+      ["initial-energy", "Starting energy", "50"],
+      ["playstyle", "Playstyle", "Damage, Tank"],
+      ["vaulted", "Vaulted", "Yes"],
     ],
   );
   assert.deepEqual(

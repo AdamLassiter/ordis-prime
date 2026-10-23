@@ -68,6 +68,8 @@ export class WarframeWikiEnemiesAdapter implements SourceAdapter {
       sourceId: this.source.id,
       parserVersion: PARSER_VERSION,
       signal: context.signal,
+      cacheDirectory: context.cacheDirectory,
+      cacheMaxAgeMilliseconds: context.cacheMaxAgeMilliseconds,
     });
   }
 
