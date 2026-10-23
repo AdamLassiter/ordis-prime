@@ -25,6 +25,7 @@ import {
   shareBuild,
 } from "../actions";
 import { ArsenalLayout } from "../arsenal-layout";
+import { BuildDetailsEditor } from "../build-details-editor";
 
 export const dynamic = "force-dynamic";
 
@@ -73,13 +74,18 @@ export default async function BuildEditor({
 
   return (
     <>
-      <p className="eyebrow">Arsenal workshop // draft {build.revision}</p>
-      <h1>{build.title}</h1>
+      <p className="eyebrow">Private build · Draft {build.revision}</p>
       <p>
         <Link className="muted" href="/builds">
           ← All builds
         </Link>
       </p>
+      <BuildDetailsEditor
+        action={saveBuildDetails.bind(null, id)}
+        title={build.title}
+        category={build.category}
+        notes={build.notes}
+      />
       <ArsenalLayout
         build={build}
         buildId={id}
@@ -130,39 +136,6 @@ export default async function BuildEditor({
         }}
       />
       <section className="arsenal-secondary-grid">
-        <form
-          className="card form-stack"
-          action={saveBuildDetails.bind(null, id)}
-        >
-          <h2>Build details</h2>
-          <label>
-            Title
-            <input
-              name="title"
-              required
-              maxLength={160}
-              defaultValue={build.title}
-            />
-          </label>
-          <label>
-            Category
-            <input
-              name="category"
-              maxLength={80}
-              defaultValue={build.category}
-            />
-          </label>
-          <label>
-            Notes
-            <textarea
-              name="notes"
-              maxLength={10000}
-              rows={5}
-              defaultValue={build.notes}
-            />
-          </label>
-          <button className="button">Save details</button>
-        </form>
         <section className="card" id="build-acquisition">
           <h2>Acquisition</h2>
           <p className="muted">

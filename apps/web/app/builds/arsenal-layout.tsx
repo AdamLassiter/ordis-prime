@@ -33,6 +33,8 @@ import {
 } from "./actions";
 import { BuildCapacitySummary } from "./capacity-summary";
 import { FactoryPolaritySummary } from "./factory-polarity-summary";
+import { AutoSaveForm } from "../auto-save-form";
+import { DebouncedSearchInput } from "../debounced-search-input";
 
 const PANEL_LABELS: Record<BuildPanelKey, string> = {
   warframe: "Warframe",
@@ -197,14 +199,12 @@ function EquipmentPicker({
   return (
     <details className="arsenal-picker" open={!equipment || Boolean(query)}>
       <summary>{equipment ? "Replace item" : "Choose item"}</summary>
-      <form className="inline-form">
-        <input type="hidden" name="slot" value={panel} />
-        <label>
-          Search equipment
-          <input name="q" defaultValue={query} required />
-        </label>
-        <button className="button">Search</button>
-      </form>
+      <DebouncedSearchInput
+        label="Search equipment"
+        parameter="q"
+        value={query}
+        placeholder={`Find ${PANEL_LABELS[panel].toLocaleLowerCase("en")}…`}
+      />
       {candidates.length > 0 && (
         <div className="candidate-list compact-candidates">
           {candidates.map((candidate) => (
@@ -339,14 +339,11 @@ function FocusSchool({
       )}
       {buildId && (
         <>
-          <form className="inline-form">
-            <input type="hidden" name="slot" value="operator" />
-            <label>
-              Find school
-              <input name="focusq" defaultValue={search.focusQuery} required />
-            </label>
-            <button className="nav-button">Search</button>
-          </form>
+          <DebouncedSearchInput
+            label="Find school"
+            parameter="focusq"
+            value={search.focusQuery}
+          />
           {search.focusCandidates?.map((candidate) => (
             <form
               action={assignFocusSchool.bind(
@@ -421,31 +418,26 @@ function Abilities({
           open={Boolean(search.helminthQuery)}
         >
           <summary>Choose Helminth replacement</summary>
-          <form className="form-stack compact-form">
-            <input type="hidden" name="slot" value="warframe" />
-            <label>
-              Replace ability
-              <select
-                name="original"
-                defaultValue={search.helminthOriginal?.slug}
+          <div className="picker-tabs" aria-label="Ability to replace">
+            {equipment.abilities?.map((ability) => (
+              <Link
+                className={
+                  search.helminthOriginal?.slug === ability.slug
+                    ? "tag active"
+                    : "tag"
+                }
+                href={`${basePath}?slot=warframe&original=${ability.slug}${search.helminthQuery ? `&helminthq=${encodeURIComponent(search.helminthQuery)}` : ""}`}
+                key={ability.slug}
               >
-                {equipment.abilities?.map((ability) => (
-                  <option value={ability.slug} key={ability.slug}>
-                    {ability.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Search eligible abilities
-              <input
-                name="helminthq"
-                defaultValue={search.helminthQuery}
-                required
-              />
-            </label>
-            <button className="nav-button">Search</button>
-          </form>
+                {ability.name}
+              </Link>
+            ))}
+          </div>
+          <DebouncedSearchInput
+            label="Search eligible abilities"
+            parameter="helminthq"
+            value={search.helminthQuery}
+          />
           {search.helminthOriginal &&
             search.helminthCandidates?.map((candidate) => (
               <form
@@ -619,7 +611,7 @@ function ItemConfiguration({
       )}
       <BuildCapacitySummary capacity={equipment.capacity} />
       {buildId && profile.capacityUpgrade && (
-        <form
+        <AutoSaveForm
           className="form-stack compact-form"
           action={saveEquipmentConfiguration.bind(
             null,
@@ -657,9 +649,8 @@ function ItemConfiguration({
               Orokin{" "}
               {profile.capacityUpgrade === "reactor" ? "Reactor" : "Catalyst"}
             </label>
-            <button className="nav-button">Save</button>
           </div>
-        </form>
+        </AutoSaveForm>
       )}
       <FactoryPolaritySummary values={equipment.factoryPolaritySets} />
       {equipment.modularPartRoles.length > 0 && (
@@ -672,7 +663,7 @@ function ItemConfiguration({
         />
       )}
       {buildId ? (
-        <form
+        <AutoSaveForm
           className="form-stack compact-form"
           action={saveEquipmentNotes.bind(
             null,
@@ -691,8 +682,7 @@ function ItemConfiguration({
               defaultValue={equipment.notes}
             />
           </label>
-          <button className="nav-button">Save notes</button>
-        </form>
+        </AutoSaveForm>
       ) : equipment.notes ? (
         <p className="build-notes">{equipment.notes}</p>
       ) : null}
@@ -759,23 +749,11 @@ function ModularParts({
       })}
       {buildId && search.modularRole && (
         <div className="mod-context-picker">
-          <form className="form-stack compact-form">
-            <input type="hidden" name="slot" value={panel} />
-            <input
-              type="hidden"
-              name="modularrole"
-              value={search.modularRole}
-            />
-            <label>
-              Find {formatSlot(search.modularRole)}
-              <input
-                name="modularq"
-                defaultValue={search.modularQuery}
-                required
-              />
-            </label>
-            <button className="nav-button">Search</button>
-          </form>
+          <DebouncedSearchInput
+            label={`Find ${formatSlot(search.modularRole)}`}
+            parameter="modularq"
+            value={search.modularQuery}
+          />
           {search.modularCandidates?.map((candidate) => (
             <form
               action={assignModularPart.bind(
@@ -848,7 +826,7 @@ function ModCell({
           >
             {mod ? "Change" : "Add mod"}
           </Link>
-          <form
+          <AutoSaveForm
             className="slot-polarity-form"
             action={saveModSlot.bind(null, buildId, equipment.slot)}
           >
@@ -864,10 +842,9 @@ function ModCell({
                 <option key={polarity}>{polarity}</option>
               ))}
             </select>
-            <button className="nav-button">Set</button>
-          </form>
+          </AutoSaveForm>
           {mod && (
-            <form
+            <AutoSaveForm
               className="mod-rank-form"
               action={assignMod.bind(
                 null,
@@ -888,8 +865,7 @@ function ModCell({
                   defaultValue={mod.rank ?? mod.maxRank}
                 />
               </label>
-              <button className="nav-button">Update</button>
-            </form>
+            </AutoSaveForm>
           )}
           {mod && (
             <form
@@ -902,15 +878,11 @@ function ModCell({
       )}
       {buildId && selected && (
         <div className="mod-context-picker" id="mod-picker">
-          <form className="form-stack compact-form">
-            <input type="hidden" name="slot" value={panel} />
-            <input type="hidden" name="position" value={position} />
-            <label>
-              Find mod
-              <input name="modq" defaultValue={search.modQuery} required />
-            </label>
-            <button className="nav-button">Search</button>
-          </form>
+          <DebouncedSearchInput
+            label="Find mod"
+            parameter="modq"
+            value={search.modQuery}
+          />
           {search.modCandidates?.map((candidate) => (
             <form
               action={assignMod.bind(
@@ -1028,19 +1000,11 @@ function EnhancementCell({
           )}
           {selected && (
             <div className="mod-context-picker" id="enhancement-picker">
-              <form className="form-stack compact-form">
-                <input type="hidden" name="slot" value={panel} />
-                <input type="hidden" name="enhancementslot" value={slot} />
-                <label>
-                  Search
-                  <input
-                    name="enhancementq"
-                    defaultValue={search.enhancementQuery}
-                    required
-                  />
-                </label>
-                <button className="nav-button">Search</button>
-              </form>
+              <DebouncedSearchInput
+                label={`Find ${formatSlot(slot)}`}
+                parameter="enhancementq"
+                value={search.enhancementQuery}
+              />
               {search.enhancementCandidates?.map((candidate) => (
                 <form
                   action={assignEnhancement.bind(
