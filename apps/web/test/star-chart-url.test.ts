@@ -2,25 +2,16 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { starChartHref } from "../lib/star-chart-url.ts";
 
-test("star-chart links preserve active view state while changing focus", () => {
+test("star-chart links preserve selected detail while changing planets", () => {
   assert.equal(
-    starChartHref(
-      {
-        q: "Jackal Prime",
-        needed: true,
-        access: "blocked",
-        completion: "incomplete",
-      },
-      "fossa",
-    ),
-    "/star-chart?q=Jackal+Prime&needed=1&access=blocked&completion=incomplete&focus=fossa",
+    starChartHref({
+      planet: "Kuva Fortress",
+      show: ["events", "access"],
+    }),
+    "/star-chart?planet=Kuva+Fortress&show=events&show=access",
   );
 });
 
-test("star-chart clear-focus links omit absent filters and question marks", () => {
+test("star-chart overview links omit absent state and question marks", () => {
   assert.equal(starChartHref({}), "/star-chart");
-  assert.equal(
-    starChartHref({ access: "available" }),
-    "/star-chart?access=available",
-  );
 });

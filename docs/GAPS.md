@@ -226,20 +226,18 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   explicitly recorded without becoming a second opinion. Rankings can be
   ordered by tier and a single source opens as a tier-grouped isolated list.
 - WFCD item and drop observations compose planet, mission and level metadata in
-  a public planet-grouped star-chart explorer with a player-needed overlay. Each
-  planet now has a deterministic SVG node graph with current-event, open-task
-  and unowned-reward markers. Imported sources do not provide coordinates, so
-  it is not an exact source-faithful global layout. The structured Wiki mission
-  adapter now supplies the current attributed node and connection set;
-  `connects-to` observations are shown symmetrically and a focused topology
-  explorer supports direct traversal plus a derived one-hop SVG map. It derives
-  and filters available, conditional, blocked and
-  unknown access states from the same quest-progress and Mastery evidence as the
-  planner. Connectivity remains navigation evidence rather than proof of player
-  completion. Signed-in players can record private node completion, filter the
-  chart by completion and transfer that state in profiles. A bulk editor
-  atomically replaces completion only for its explicitly submitted filtered
-  scope. Junction pages now supply four ordered, cited public objectives per
+  a public Star Chart that opens on a planet-summary Origin System and zooms
+  into one planet's cited node graph. Multi-select detail controls replace
+  result-removing filters. A browser-only tracing tool exports normalized planet
+  circles, arc controls, mission nodes and junction positions; the renderer
+  consumes a partial checked-in layout and derives deterministic fallback
+  geometry for anything missing. No complete traced layout ships yet, so the
+  default geometry is not a claim about exact in-game positions. The structured
+  Wiki mission adapter supplies the attributed node and connection set;
+  connectivity remains navigation evidence rather than proof of player
+  completion. Signed-in players can record portable private node completion,
+  and a planet-scoped bulk editor updates only its explicit submitted scope.
+  Junction pages now supply four ordered, cited public objectives per
   Junction. Players can record portable private completion per current task and
   that state drives the shared access derivation, but there is no automatic
   game-account import or node-variant completion model yet. Their current task
@@ -248,13 +246,11 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   label-only because the current WFCD component identities are conflated.
   Linked grants compose with private inventory and the chart's unowned filter,
   but completing a task does not automatically mutate inventory or quest state.
-  Stable global visual positions are still missing; planet and local ring
-  positions are transient presentation state.
 - A public discovery atlas searches canonical quest, ability, enemy, boss,
   mechanic and secret kinds. WFCD currently populates quests and enemies;
-  structured Wiki data populates current abilities and their typed
-  Warframe/Archwing links, current quests and their sequence, plus explicitly
-  declared mission bosses and node links. A separately scheduled structured
+  structured Wiki data populates current abilities, descriptions, exact augment
+  mod links and typed Warframe/Archwing links, current quests and their
+  sequence, plus explicitly declared mission bosses and node links. A separately scheduled structured
   enemy adapter accepts only explicit Wiki `Boss` classifications across all
   declared faction partitions, including Anarchs. Its live import currently
   promotes 62 cited boss observations and preserves distinct source-qualified
@@ -268,6 +264,11 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   shareable focused graph renders every unique direct neighbor from the active
   cited relations. The graph uses transient deterministic ring positions; a
   global or multi-hop spatial layout remains.
+- Vendor discovery is intentionally narrow. Nightcap has a cited Fortuna
+  location, Fergolyte-priced offerings and Deepmines context. Other structured
+  vendor records are not promoted until an independently cited canonical node
+  mapping is reviewed; bounty rotations and random reward chances are not yet
+  modeled as vendor facts.
 - Acquisition recommendations compose active `requires` and `unlocks` relations
   with private discovery completion and sourced node Mastery Rank or Railjack
   Intrinsics requirements and allow-listed item quantities to show cited

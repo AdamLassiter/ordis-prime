@@ -5,45 +5,56 @@ import {
   listPlayerTodos,
   listStarChartNodes,
 } from "@ordis-prime/db";
-import {
-  deriveNodeAccessStatus,
-  type NodeAccessStatus,
-} from "@ordis-prime/domain";
+import { deriveNodeAccessStatus } from "@ordis-prime/domain";
 import { getDatabase } from "@/lib/database";
 import { getCurrentSession } from "@/lib/session";
-import { buildStarChartNeighborhood } from "@/lib/star-chart-topology";
+import { buildPlanetMap } from "@/lib/planet-map";
+import {
+  loadStarChartLayout,
+  type StarChartLayout,
+} from "@/lib/star-chart-layout";
 import { starChartHref } from "@/lib/star-chart-url";
 import { updateVisibleNodeCompletions } from "./actions";
-import { matchesStarChartQuery } from "@/lib/star-chart-search";
-import { buildPlanetMap } from "@/lib/planet-map";
 
 export const dynamic = "force-dynamic";
+
+const DETAIL_OPTIONS = [
+  ["events", "Live events"],
+  ["todos", "Foundry tasks"],
+  ["needed", "Unowned rewards"],
+  ["mission", "Mission and faction"],
+  ["levels", "Enemy levels"],
+  ["rewards", "Reward counts"],
+  ["access", "Access state"],
+  ["completion", "Completion state"],
+] as const;
+type DetailOption = (typeof DETAIL_OPTIONS)[number][0];
+const DEFAULT_DETAILS = new Set<DetailOption>([
+  "events",
+  "todos",
+  "needed",
+  "mission",
+  "levels",
+]);
+
+type StarNode = ReturnType<typeof listStarChartNodes>[number] & {
+  accessStatus: string;
+};
 
 export default async function StarChartPage({
   searchParams,
 }: {
   searchParams: Promise<{
-    q?: string;
-    needed?: string;
-    focus?: string;
-    access?: string;
-    completion?: string;
+    planet?: string;
+    show?: string | string[];
   }>;
 }) {
-  const session = await getCurrentSession();
-  const { q = "", needed, focus, access, completion } = await searchParams;
-  const neededOnly = Boolean(session && needed === "1");
-  const selectedAccess = isAccessStatus(access) ? access : undefined;
-  const selectedCompletion =
-    session && (completion === "completed" || completion === "incomplete")
-      ? completion
-      : undefined;
-  const viewState = {
-    q: q || undefined,
-    needed: neededOnly,
-    access: selectedAccess,
-    completion: selectedCompletion,
-  };
+  const [{ planet: requestedPlanet, show }, session, layout] =
+    await Promise.all([
+      searchParams,
+      getCurrentSession(),
+      loadStarChartLayout(),
+    ]);
   const database = getDatabase();
   const currentWindows = listCurrentWorldState(database);
   const eventNodeSlugs = new Set(
@@ -61,220 +72,418 @@ export default async function StarChartPage({
   const playerSettings = session
     ? getPlayerSettings(database, session.user.id)
     : undefined;
-  const allNodes = listStarChartNodes(database, session?.user.id).map(
-    (node) => ({
-      ...node,
-      accessStatus: deriveNodeAccessStatus({
-        requirementStates: node.accessRequirements.map(
-          ({ progressState }) => progressState,
-        ),
-        masteryRequirement: node.masteryRequirement,
-        playerRank: playerSettings?.masteryRank,
-        railjackIntrinsicRequirement: node.railjackIntrinsicRequirement,
-        playerRailjackIntrinsicRank: playerSettings?.railjackIntrinsicRank,
-        warframeRankRequirement: node.warframeRankRequirement,
-        playerHighestWarframeRank: playerSettings?.highestWarframeRank,
-        itemRequirementStates: node.itemRequirements.map(({ state }) => state),
-        objectiveStates: node.objectives.map(
-          ({ completionState }) => completionState,
-        ),
-        activeAdversaryRequirement: node.activeAdversaryRequirement,
-        playerActiveAdversary: playerSettings?.activeAdversary,
-      }),
+  const allNodes: StarNode[] = listStarChartNodes(
+    database,
+    session?.user.id,
+  ).map((node) => ({
+    ...node,
+    accessStatus: deriveNodeAccessStatus({
+      requirementStates: node.accessRequirements.map(
+        ({ progressState }) => progressState,
+      ),
+      masteryRequirement: node.masteryRequirement,
+      playerRank: playerSettings?.masteryRank,
+      railjackIntrinsicRequirement: node.railjackIntrinsicRequirement,
+      playerRailjackIntrinsicRank: playerSettings?.railjackIntrinsicRank,
+      warframeRankRequirement: node.warframeRankRequirement,
+      playerHighestWarframeRank: playerSettings?.highestWarframeRank,
+      itemRequirementStates: node.itemRequirements.map(({ state }) => state),
+      objectiveStates: node.objectives.map(
+        ({ completionState }) => completionState,
+      ),
+      activeAdversaryRequirement: node.activeAdversaryRequirement,
+      playerActiveAdversary: playerSettings?.activeAdversary,
     }),
-  );
+  }));
   const nodesBySlug = new Map(allNodes.map((node) => [node.slug, node]));
-  const focusedNode = focus ? nodesBySlug.get(focus) : undefined;
-  const neighborhood = focusedNode
-    ? buildStarChartNeighborhood(allNodes, focusedNode.slug)
-    : undefined;
-  const nodes = allNodes.filter(
-    (node) =>
-      matchesStarChartQuery(node, q) &&
-      (!neededOnly ||
-        (node.neededRewardCount ?? 0) > 0 ||
-        (node.neededOneTimeRewardCount ?? 0) > 0) &&
-      (!selectedAccess || node.accessStatus === selectedAccess) &&
-      (!selectedCompletion || node.completionState === selectedCompletion),
-  );
-  const planets = new Map<string, typeof nodes>();
-  for (const node of nodes) {
+  const planets = new Map<string, StarNode[]>();
+  for (const node of allNodes) {
     const planet = node.planet ?? "Unmapped";
     planets.set(planet, [...(planets.get(planet) ?? []), node]);
   }
+  const planetNames = [...planets.keys()].sort((left, right) =>
+    left.localeCompare(right),
+  );
+  const selectedPlanet = requestedPlanet
+    ? planetNames.find(
+        (candidate) =>
+          candidate.toLocaleLowerCase("en") ===
+          requestedPlanet.toLocaleLowerCase("en"),
+      )
+    : undefined;
+  const selectedDetails = parseDetails(show);
+
   return (
     <>
       <p className="eyebrow">Navigation // Origin System</p>
       <h1>
-        Choose the next <u>waypoint.</u>
+        {selectedPlanet ? (
+          <>
+            Plot a course through <u>{selectedPlanet}.</u>
+          </>
+        ) : (
+          <>
+            Survey the <u>Origin System.</u>
+          </>
+        )}
       </h1>
       <p className="lede">
-        See every mapped mission, the rewards still missing from your
-        collection, and the known requirements between you and launch.
+        {selectedPlanet
+          ? "Inspect mission routes and reveal only the operational detail useful for this run."
+          : "Start with each celestial body and its current signals, then zoom in to inspect mission nodes and their cited connections."}
       </p>
-      <form className="inline-form">
-        <label>
-          Filter
-          <input
-            name="q"
-            defaultValue={q}
-            placeholder="Planet, node, mission, faction, boss…"
-          />
-        </label>
-        {session && (
-          <label>
-            Completion
-            <select name="completion" defaultValue={selectedCompletion ?? ""}>
-              <option value="">Any completion state</option>
-              <option value="incomplete">Incomplete</option>
-              <option value="completed">Completed</option>
-            </select>
-          </label>
-        )}
-        {session && (
-          <label className="check-label">
-            <input
-              name="needed"
-              type="checkbox"
-              value="1"
-              defaultChecked={neededOnly}
-            />{" "}
-            Only nodes with unowned rewards
-          </label>
-        )}
-        <label>
-          Access
-          <select name="access" defaultValue={selectedAccess ?? ""}>
-            <option value="">Any access state</option>
-            <option value="available">Available</option>
-            <option value="conditional">Conditional</option>
-            <option value="blocked">Blocked</option>
-            <option value="unknown">Unknown</option>
-          </select>
-        </label>
-        <button className="button">Apply</button>
-      </form>
-      {focus && !focusedNode && (
+      {requestedPlanet && !selectedPlanet && (
         <p className="notice">
-          That focused node is not in the active catalog.
+          That celestial body is not in the active catalog. Showing the system
+          overview instead.
         </p>
       )}
-      {focusedNode && (
-        <section className="card connection-explorer">
-          <p className="eyebrow">Navigation link // cited topology</p>
-          <h2>{focusedNode.name}</h2>
-          <p className="muted">
-            {[focusedNode.planet, focusedNode.missionType, focusedNode.faction]
-              .filter(Boolean)
-              .join(" · ") || "Mission details unavailable"}
-            {` · Access ${focusedNode.accessStatus}`}
-            {focusedNode.completionState
-              ? ` · ${focusedNode.completionState}`
-              : ""}
-          </p>
-          <div className="filters">
-            <Link className="button" href={`/nodes/${focusedNode.slug}`}>
-              Inspect node and rewards
-            </Link>
-            <Link className="nav-button" href={starChartHref(viewState)}>
-              Clear focus
-            </Link>
-          </div>
-          {neighborhood && neighborhood.nodes.length > 1 && (
-            <svg
-              aria-label={`Direct connections around ${focusedNode.name}`}
-              className="topology-map"
-              role="img"
-              viewBox={`0 0 ${neighborhood.width} ${neighborhood.height}`}
-            >
-              <title>Direct connections around {focusedNode.name}</title>
-              {neighborhood.edges.map((edge) => {
-                const from = neighborhood.nodes.find(
-                  ({ slug }) => slug === edge.fromSlug,
-                )!;
-                const to = neighborhood.nodes.find(
-                  ({ slug }) => slug === edge.toSlug,
-                )!;
-                return (
-                  <line
-                    className="topology-edge"
-                    key={`${edge.fromSlug}:${edge.toSlug}`}
-                    x1={from.x}
-                    x2={to.x}
-                    y1={from.y}
-                    y2={to.y}
-                  />
-                );
-              })}
-              {neighborhood.nodes.map((node) => (
-                <a
-                  aria-label={
-                    node.focused
-                      ? `${node.name}, current node`
-                      : `Focus ${node.name}`
-                  }
-                  href={starChartHref(viewState, node.slug)}
-                  key={node.slug}
+      {selectedPlanet ? (
+        <PlanetView
+          details={selectedDetails}
+          eventNodeSlugs={eventNodeSlugs}
+          layout={layout?.planets?.[selectedPlanet]}
+          nodes={planets.get(selectedPlanet)!}
+          nodesBySlug={nodesBySlug}
+          planet={selectedPlanet}
+          session={Boolean(session)}
+          todoNodeSlugs={todoNodeSlugs}
+        />
+      ) : (
+        <SystemOverview
+          eventNodeSlugs={eventNodeSlugs}
+          layout={layout?.overview}
+          nodesBySlug={nodesBySlug}
+          planetNames={planetNames}
+          planets={planets}
+          todoNodeSlugs={todoNodeSlugs}
+        />
+      )}
+    </>
+  );
+}
+
+function SystemOverview({
+  eventNodeSlugs,
+  layout,
+  nodesBySlug,
+  planetNames,
+  planets,
+  todoNodeSlugs,
+}: {
+  eventNodeSlugs: Set<string>;
+  layout: StarChartLayout["overview"];
+  nodesBySlug: Map<string, StarNode>;
+  planetNames: string[];
+  planets: Map<string, StarNode[]>;
+  todoNodeSlugs: Set<string>;
+}) {
+  const positions = systemPositions(planetNames, layout?.planets);
+  const edges = systemEdges(planets, nodesBySlug, layout?.arcs);
+  return (
+    <>
+      <div className="star-chart-toolbar">
+        <p className="muted">
+          Planet summaries include live signals, open Foundry tasks, and unowned
+          rewards where player data is available.
+        </p>
+        <Link className="nav-button" href="/star-chart/layout">
+          Trace a screenshot layout
+        </Link>
+      </div>
+      <section className="system-overview-card">
+        <svg
+          aria-label="Zoomed-out Origin System"
+          className="system-overview-map"
+          role="img"
+          viewBox="0 0 1200 760"
+        >
+          <title>Origin System planet overview</title>
+          {edges.map((edge) => {
+            const from = positions.get(edge.from);
+            const to = positions.get(edge.to);
+            if (!from || !to) return null;
+            return (
+              <path
+                className="system-route"
+                d={routePath(from, to, edge.controls)}
+                key={`${edge.from}:${edge.to}`}
+              />
+            );
+          })}
+          {planetNames.map((planet) => {
+            const position = positions.get(planet)!;
+            const nodes = planets.get(planet)!;
+            const events = nodes.filter((node) =>
+              eventNodeSlugs.has(node.slug),
+            ).length;
+            const todos = nodes.filter((node) =>
+              todoNodeSlugs.has(node.slug),
+            ).length;
+            const needed = nodes.reduce(
+              (total, node) =>
+                total +
+                (node.neededRewardCount ?? 0) +
+                (node.neededOneTimeRewardCount ?? 0),
+              0,
+            );
+            return (
+              <a
+                aria-label={`Zoom into ${planet}`}
+                href={starChartHref({ planet })}
+                key={planet}
+              >
+                <circle
+                  className="system-planet"
+                  cx={position.x}
+                  cy={position.y}
+                  r={position.radius}
+                />
+                <text
+                  className="system-planet-name"
+                  textAnchor="middle"
+                  x={position.x}
+                  y={position.y + 4}
                 >
-                  <circle
-                    className={
-                      node.focused
-                        ? "topology-node topology-node-focused"
-                        : "topology-node"
-                    }
-                    cx={node.x}
-                    cy={node.y}
-                    r={node.focused ? 31 : 24}
-                  />
-                  <text
-                    className="topology-label"
-                    textAnchor="middle"
-                    x={node.x}
-                    y={node.y + (node.focused ? 49 : 41)}
-                  >
-                    {shortNodeLabel(node.name)}
-                  </text>
-                </a>
-              ))}
-            </svg>
-          )}
-          <h3>Directly connected nodes</h3>
-          {focusedNode.connections.length ? (
-            <div className="connection-grid">
-              {focusedNode.connections.map((connection) => {
-                const neighbor = nodesBySlug.get(connection.slug);
-                return (
-                  <Link
-                    className="connection-node"
-                    href={starChartHref(viewState, connection.slug)}
-                    key={connection.slug}
-                  >
-                    <strong>{connection.name}</strong>
-                    <span>
-                      {[
-                        connection.planet,
-                        neighbor?.missionType,
-                        neighbor?.faction,
-                      ]
-                        .filter(Boolean)
-                        .join(" · ") || "Mission details unavailable"}
-                    </span>
-                    {neighbor && (
-                      <span>
-                        {neighbor.rewardCount} repeatable rewards ·{" "}
-                        {neighbor.oneTimeRewardCount} one-time grants ·{" "}
-                        {neighbor.connectionCount} connections
-                      </span>
-                    )}
-                  </Link>
-                );
-              })}
-            </div>
-          ) : (
-            <p className="notice">
-              No active cited navigation edges are recorded for this node.
-            </p>
-          )}
+                  {shortLabel(planet, 18)}
+                </text>
+                <text
+                  className="system-planet-summary"
+                  textAnchor="middle"
+                  x={position.x}
+                  y={position.y + position.radius + 18}
+                >
+                  {nodes.length} nodes
+                  {events ? ` · ${events} live` : ""}
+                  {todos ? ` · ${todos} tasks` : ""}
+                  {needed ? ` · ${needed} needed` : ""}
+                </text>
+              </a>
+            );
+          })}
+        </svg>
+      </section>
+      <section className="grid planet-summary-grid">
+        {planetNames.map((planet) => {
+          const nodes = planets.get(planet)!;
+          const connectedPlanets = new Set(
+            nodes.flatMap((node) =>
+              node.connections.flatMap((connection) => {
+                const destination = nodesBySlug.get(connection.slug)?.planet;
+                return destination && destination !== planet
+                  ? [destination]
+                  : [];
+              }),
+            ),
+          );
+          return (
+            <Link
+              className="card planet-summary-card"
+              href={starChartHref({ planet })}
+              key={planet}
+            >
+              <span className="tag">{nodes.length} nodes</span>
+              <h2>{planet}</h2>
+              <p className="muted">
+                {[...new Set(nodes.flatMap((node) => node.faction ?? []))]
+                  .sort()
+                  .join(" · ") || "Faction data unavailable"}
+              </p>
+              <p>
+                {nodes.reduce((total, node) => total + node.rewardCount, 0)}{" "}
+                repeatable rewards
+                {connectedPlanets.size
+                  ? ` · routes to ${[...connectedPlanets].sort().join(", ")}`
+                  : ""}
+              </p>
+            </Link>
+          );
+        })}
+      </section>
+    </>
+  );
+}
+
+function PlanetView({
+  details,
+  eventNodeSlugs,
+  layout,
+  nodes,
+  nodesBySlug,
+  planet,
+  session,
+  todoNodeSlugs,
+}: {
+  details: Set<DetailOption>;
+  eventNodeSlugs: Set<string>;
+  layout?: {
+    nodes: Record<string, { x: number; y: number }>;
+    junctions?: Record<string, { x: number; y: number }>;
+  };
+  nodes: StarNode[];
+  nodesBySlug: Map<string, StarNode>;
+  planet: string;
+  session: boolean;
+  todoNodeSlugs: Set<string>;
+}) {
+  const map = applyPlanetLayout(buildPlanetMap(nodes), layout?.nodes);
+  const junctions = planetJunctions(planet, nodes, nodesBySlug);
+  return (
+    <>
+      <div className="star-chart-toolbar">
+        <Link className="nav-button" href="/star-chart">
+          ← Origin System
+        </Link>
+        <Link className="nav-button" href="/star-chart/layout">
+          Trace this planet
+        </Link>
+      </div>
+      <form className="card star-chart-detail-controls">
+        <input name="planet" type="hidden" value={planet} />
+        <fieldset>
+          <legend>Details shown</legend>
+          <div className="filters">
+            {DETAIL_OPTIONS.map(([value, label]) => (
+              <label className="check-label" key={value}>
+                <input
+                  defaultChecked={details.has(value)}
+                  name="show"
+                  type="checkbox"
+                  value={value}
+                />{" "}
+                {label}
+              </label>
+            ))}
+          </div>
+        </fieldset>
+        <button className="button">Update detail</button>
+      </form>
+      <section className="planet-map planet-map-zoomed">
+        <svg
+          aria-label={`${planet} mission graph`}
+          role="img"
+          viewBox={`0 0 ${map.width} ${map.height}`}
+        >
+          <title>{planet} mission graph</title>
+          <circle
+            className="planet-orb"
+            cx={map.centerX}
+            cy={map.centerY}
+            r="72"
+          />
+          <text
+            className="planet-label"
+            textAnchor="middle"
+            x={map.centerX}
+            y={map.centerY + 5}
+          >
+            {planet}
+          </text>
+          {map.edges.map((edge) => {
+            const from = map.nodes.find(({ slug }) => slug === edge.fromSlug)!;
+            const to = map.nodes.find(({ slug }) => slug === edge.toSlug)!;
+            return (
+              <line
+                className="planet-route"
+                key={`${edge.fromSlug}:${edge.toSlug}`}
+                x1={from.x}
+                x2={to.x}
+                y1={from.y}
+                y2={to.y}
+              />
+            );
+          })}
+          {map.nodes.map((mapNode) => {
+            const node = nodesBySlug.get(mapNode.slug)!;
+            const classes = [
+              "planet-node",
+              details.has("events") && eventNodeSlugs.has(node.slug)
+                ? "has-event"
+                : "",
+              details.has("todos") && todoNodeSlugs.has(node.slug)
+                ? "has-todo"
+                : "",
+              details.has("needed") && (node.neededRewardCount ?? 0) > 0
+                ? "has-needed"
+                : "",
+            ]
+              .filter(Boolean)
+              .join(" ");
+            return (
+              <a href={`/nodes/${node.slug}`} key={node.slug}>
+                <circle
+                  className={classes}
+                  cx={mapNode.x}
+                  cy={mapNode.y}
+                  r="10"
+                />
+                <text
+                  className="planet-node-label"
+                  textAnchor="middle"
+                  x={mapNode.x}
+                  y={mapNode.y + 24}
+                >
+                  {shortLabel(node.name, 22)}
+                </text>
+              </a>
+            );
+          })}
+          {Object.entries(layout?.junctions ?? {}).map(([label, point]) => (
+            <g key={label}>
+              <rect
+                className="planet-junction"
+                height="14"
+                transform={`rotate(45 ${point.x * map.width} ${point.y * map.height})`}
+                width="14"
+                x={point.x * map.width - 7}
+                y={point.y * map.height - 7}
+              />
+              <text
+                className="planet-node-label"
+                textAnchor="middle"
+                x={point.x * map.width}
+                y={point.y * map.height + 24}
+              >
+                {shortLabel(label.replaceAll("-", " "), 22)}
+              </text>
+            </g>
+          ))}
+        </svg>
+      </section>
+      <p className="map-legend muted">
+        {details.has("events") && (
+          <>
+            <span className="map-key event" /> live event or fissure
+          </>
+        )}
+        {details.has("todos") && (
+          <>
+            <span className="map-key todo" /> open Foundry task
+          </>
+        )}
+        {details.has("needed") && (
+          <>
+            <span className="map-key needed" /> unowned reward
+          </>
+        )}
+      </p>
+      {junctions.length > 0 && (
+        <section className="card">
+          <h2>Interplanetary routes</h2>
+          <div className="filters">
+            {junctions.map((junction) => (
+              <Link
+                className="tag"
+                href={starChartHref({
+                  planet: junction.planet,
+                  show: [...details],
+                })}
+                key={`${junction.node}:${junction.planet}`}
+              >
+                {junction.node} → {junction.planet}
+              </Link>
+            ))}
+          </div>
         </section>
       )}
       {session && nodes.length > 0 && (
@@ -284,193 +493,213 @@ export default async function StarChartPage({
           id="star-chart-completion"
         >
           <div>
-            <h2>Edit visible node completion</h2>
+            <h2>Edit {planet} completion</h2>
             <p className="muted">
-              Check every completed node below, then save. Only these{" "}
-              {nodes.length} filtered{" "}
-              {nodes.length === 1 ? "node is" : "nodes are"} changed; nodes
-              hidden by the current filters keep their existing state.
+              Check completed nodes below, then save this planet.
             </p>
           </div>
-          <button className="button">Save visible completion</button>
+          <button className="button">Save completion</button>
         </form>
       )}
-      <section className="origin-system-map" aria-label="Origin System map">
-        {[...planets.entries()]
-          .sort(([left], [right]) => left.localeCompare(right))
-          .map(([planet, planetNodes]) => {
-            const map = buildPlanetMap(planetNodes);
-            return (
-              <article className="planet-map" key={planet}>
-                <h2>{planet}</h2>
-                <svg
-                  aria-label={`${planet} mission graph`}
-                  role="img"
-                  viewBox={`0 0 ${map.width} ${map.height}`}
-                >
-                  <circle
-                    className="planet-orb"
-                    cx={map.centerX}
-                    cy={map.centerY}
-                    r="54"
-                  />
-                  <text
-                    className="planet-label"
-                    textAnchor="middle"
-                    x={map.centerX}
-                    y={map.centerY + 5}
-                  >
-                    {planet}
-                  </text>
-                  {map.edges.map((edge) => {
-                    const from = map.nodes.find(
-                      ({ slug }) => slug === edge.fromSlug,
-                    )!;
-                    const to = map.nodes.find(
-                      ({ slug }) => slug === edge.toSlug,
-                    )!;
-                    return (
-                      <line
-                        className="planet-route"
-                        key={`${edge.fromSlug}:${edge.toSlug}`}
-                        x1={from.x}
-                        x2={to.x}
-                        y1={from.y}
-                        y2={to.y}
-                      />
-                    );
-                  })}
-                  {map.nodes.map((mapNode) => {
-                    const node = nodesBySlug.get(mapNode.slug)!;
-                    const classes = [
-                      "planet-node",
-                      eventNodeSlugs.has(node.slug) ? "has-event" : "",
-                      todoNodeSlugs.has(node.slug) ? "has-todo" : "",
-                      (node.neededRewardCount ?? 0) > 0 ? "has-needed" : "",
-                    ]
-                      .filter(Boolean)
-                      .join(" ");
-                    return (
-                      <a href={`/nodes/${node.slug}`} key={node.slug}>
-                        <circle
-                          className={classes}
-                          cx={mapNode.x}
-                          cy={mapNode.y}
-                          r="9"
-                        />
-                        <text
-                          className="planet-node-label"
-                          textAnchor="middle"
-                          x={mapNode.x}
-                          y={mapNode.y + 22}
-                        >
-                          {shortNodeLabel(node.name)}
-                        </text>
-                      </a>
-                    );
-                  })}
-                </svg>
-              </article>
-            );
-          })}
-      </section>
-      <p className="map-legend muted">
-        <span className="map-key event" /> live event or fissure
-        <span className="map-key todo" /> open Foundry task
-        <span className="map-key needed" /> unowned reward
-      </p>
-      {[...planets.entries()]
-        .sort(([left], [right]) => left.localeCompare(right))
-        .map(([planet, planetNodes]) => (
-          <section className="planet-group" key={planet}>
-            <h2>{planet}</h2>
-            <div className="node-grid">
-              {planetNodes.map((node) => (
-                <article className="star-node" key={node.slug}>
-                  {session && (
-                    <input
-                      form="star-chart-completion"
-                      name="node"
-                      type="hidden"
-                      value={node.slug}
-                    />
-                  )}
-                  <h3>
-                    <Link href={`/nodes/${node.slug}`}>{node.name}</Link>
-                  </h3>
-                  <span>
-                    {[node.missionType, node.faction]
-                      .filter(Boolean)
-                      .join(" · ") || "Mission details unavailable"}
-                  </span>
-                  {node.minimumEnemyLevel !== undefined && (
-                    <span>
-                      Level {node.minimumEnemyLevel}–
-                      {node.maximumEnemyLevel ?? node.minimumEnemyLevel}
-                    </span>
-                  )}
-                  <span>
-                    {node.rewardCount} repeatable rewards
-                    {node.neededRewardCount === undefined
-                      ? ""
-                      : ` · ${node.neededRewardCount} needed`}
-                  </span>
-                  {node.oneTimeRewardCount > 0 && (
-                    <span>
-                      {node.oneTimeRewardCount} one-time grants
-                      {node.neededOneTimeRewardCount === undefined
-                        ? ""
-                        : ` · ${node.neededOneTimeRewardCount} needed`}
-                    </span>
-                  )}
-                  <span>
-                    {node.connectionCount} cited{" "}
-                    {node.connectionCount === 1 ? "connection" : "connections"}
-                  </span>
-                  <span className={`tag access-${node.accessStatus}`}>
-                    {node.accessStatus}
-                  </span>
-                  {node.completionState && (
-                    <span className={`tag progress-${node.completionState}`}>
-                      {node.completionState}
-                    </span>
-                  )}
-                  {session && node.completionState && (
-                    <label className="check-label node-completion-check">
-                      <input
-                        defaultChecked={node.completionState === "completed"}
-                        form="star-chart-completion"
-                        name="completed"
-                        type="checkbox"
-                        value={node.slug}
-                      />
-                      Completed
-                    </label>
-                  )}
-                  {node.connectionCount > 0 && (
-                    <Link
-                      className="star-node-explore"
-                      href={starChartHref(viewState, node.slug)}
-                    >
-                      Explore connections →
-                    </Link>
-                  )}
-                </article>
-              ))}
-            </div>
-          </section>
+      <section className="node-grid">
+        {nodes.map((node) => (
+          <article className="star-node" key={node.slug}>
+            {session && (
+              <input
+                form="star-chart-completion"
+                name="node"
+                type="hidden"
+                value={node.slug}
+              />
+            )}
+            <h3>
+              <Link href={`/nodes/${node.slug}`}>{node.name}</Link>
+            </h3>
+            {details.has("mission") && (
+              <span>
+                {[node.missionType, node.faction].filter(Boolean).join(" · ") ||
+                  "Mission details unavailable"}
+              </span>
+            )}
+            {details.has("levels") && node.minimumEnemyLevel !== undefined && (
+              <span>
+                Level {node.minimumEnemyLevel}–
+                {node.maximumEnemyLevel ?? node.minimumEnemyLevel}
+              </span>
+            )}
+            {details.has("rewards") && (
+              <span>
+                {node.rewardCount} repeatable · {node.oneTimeRewardCount}{" "}
+                one-time rewards
+              </span>
+            )}
+            {details.has("needed") && node.neededRewardCount !== undefined && (
+              <span>
+                {(node.neededRewardCount ?? 0) +
+                  (node.neededOneTimeRewardCount ?? 0)}{" "}
+                unowned rewards
+              </span>
+            )}
+            {details.has("access") && (
+              <span className={`tag access-${node.accessStatus}`}>
+                {node.accessStatus}
+              </span>
+            )}
+            {details.has("completion") && node.completionState && (
+              <span className={`tag progress-${node.completionState}`}>
+                {node.completionState}
+              </span>
+            )}
+            {session && details.has("completion") && node.completionState && (
+              <label className="check-label node-completion-check">
+                <input
+                  defaultChecked={node.completionState === "completed"}
+                  form="star-chart-completion"
+                  name="completed"
+                  type="checkbox"
+                  value={node.slug}
+                />{" "}
+                Completed
+              </label>
+            )}
+          </article>
         ))}
-      {!nodes.length && <p className="notice">No nodes match these filters.</p>}
+      </section>
     </>
   );
 }
 
-function shortNodeLabel(name: string): string {
-  return name.length > 22 ? `${name.slice(0, 21)}…` : name;
+function parseDetails(value: string | string[] | undefined): Set<DetailOption> {
+  if (value === undefined) return new Set(DEFAULT_DETAILS);
+  const values = typeof value === "string" ? [value] : value;
+  return new Set(
+    values.filter((entry): entry is DetailOption =>
+      DETAIL_OPTIONS.some(([candidate]) => candidate === entry),
+    ),
+  );
 }
 
-function isAccessStatus(value: string | undefined): value is NodeAccessStatus {
-  return ["available", "conditional", "blocked", "unknown"].includes(
-    value ?? "",
+function systemPositions(
+  planets: string[],
+  annotated?: Record<string, { x: number; y: number; radius: number }>,
+) {
+  const result = new Map<string, { x: number; y: number; radius: number }>();
+  planets.forEach((planet, index) => {
+    const manual = annotated?.[planet];
+    if (manual) {
+      result.set(planet, {
+        x: manual.x * 1200,
+        y: manual.y * 760,
+        radius: manual.radius * 1200,
+      });
+      return;
+    }
+    const angle =
+      (Math.PI * 2 * index) / Math.max(planets.length, 1) - Math.PI / 2;
+    const ring = index % 2 === 0 ? 260 : 330;
+    result.set(planet, {
+      x: 600 + Math.cos(angle) * ring,
+      y: 380 + Math.sin(angle) * ring * 0.72,
+      radius: 31,
+    });
+  });
+  return result;
+}
+
+function systemEdges(
+  planets: Map<string, StarNode[]>,
+  nodesBySlug: Map<string, StarNode>,
+  annotated: Array<{
+    from: string;
+    to: string;
+    controls?: Array<{ x: number; y: number }>;
+  }> = [],
+) {
+  const controls = new Map(
+    annotated.map((edge) => [
+      [edge.from, edge.to].sort().join(":"),
+      edge.controls?.map((point) => ({
+        x: point.x * 1200,
+        y: point.y * 760,
+      })),
+    ]),
   );
+  const result = new Map<
+    string,
+    {
+      from: string;
+      to: string;
+      controls?: Array<{ x: number; y: number }>;
+    }
+  >();
+  for (const [planet, nodes] of planets)
+    for (const node of nodes)
+      for (const connection of node.connections) {
+        const destination = nodesBySlug.get(connection.slug)?.planet;
+        if (!destination || destination === planet) continue;
+        const [from, to] = [planet, destination].sort() as [string, string];
+        const key = `${from}:${to}`;
+        result.set(key, { from, to, controls: controls.get(key) });
+      }
+  for (const edge of annotated) {
+    const [from, to] = [edge.from, edge.to].sort() as [string, string];
+    const key = `${from}:${to}`;
+    if (!result.has(key))
+      result.set(key, { from, to, controls: controls.get(key) });
+  }
+  return [...result.values()];
+}
+
+function routePath(
+  from: { x: number; y: number },
+  to: { x: number; y: number },
+  controls: Array<{ x: number; y: number }> = [],
+): string {
+  if (controls.length >= 2)
+    return `M ${from.x} ${from.y} C ${controls[0]!.x} ${controls[0]!.y}, ${controls[1]!.x} ${controls[1]!.y}, ${to.x} ${to.y}`;
+  if (controls.length === 1)
+    return `M ${from.x} ${from.y} Q ${controls[0]!.x} ${controls[0]!.y}, ${to.x} ${to.y}`;
+  return `M ${from.x} ${from.y} L ${to.x} ${to.y}`;
+}
+
+function applyPlanetLayout<T extends ReturnType<typeof buildPlanetMap>>(
+  map: T,
+  annotated?: Record<string, { x: number; y: number }>,
+): T {
+  if (!annotated) return map;
+  return {
+    ...map,
+    nodes: map.nodes.map((node) => {
+      const point = annotated[node.slug];
+      return point
+        ? { ...node, x: point.x * map.width, y: point.y * map.height }
+        : node;
+    }),
+  };
+}
+
+function planetJunctions(
+  planet: string,
+  nodes: StarNode[],
+  nodesBySlug: Map<string, StarNode>,
+) {
+  const result = new Map<string, { node: string; planet: string }>();
+  for (const node of nodes)
+    for (const connection of node.connections) {
+      const destination = nodesBySlug.get(connection.slug);
+      if (!destination?.planet || destination.planet === planet) continue;
+      result.set(`${node.slug}:${destination.planet}`, {
+        node: node.name,
+        planet: destination.planet,
+      });
+    }
+  return [...result.values()].sort(
+    (left, right) =>
+      left.planet.localeCompare(right.planet) ||
+      left.node.localeCompare(right.node),
+  );
+}
+
+function shortLabel(name: string, length: number): string {
+  return name.length > length ? `${name.slice(0, length - 1)}…` : name;
 }

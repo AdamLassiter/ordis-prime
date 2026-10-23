@@ -42,7 +42,7 @@ pnpm test
 pnpm check
 pnpm build
 pnpm db:migrate
-pnpm data:refresh wfcd-items wfcd-drops warframe-wiki-weapons warframe-wiki-warframes warframe-wiki-missions warframe-wiki-abilities warframe-wiki-quests
+pnpm data:refresh wfcd-items wfcd-drops warframe-wiki-weapons warframe-wiki-warframes warframe-wiki-missions warframe-wiki-junctions warframe-wiki-abilities warframe-wiki-quests warframe-wiki-enemies warframe-wiki-vendors
 pnpm data:refresh manual-ranking:data/manual/editorial.example.yaml
 pnpm data:rankings:overframe
 pnpm data:rankings:creators

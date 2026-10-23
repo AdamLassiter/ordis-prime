@@ -4,6 +4,21 @@ Manual data is a first-class source, not an edit to imported WFCD facts. This
 keeps opinion, provenance, and canonical game data separable while still
 allowing them to link through stable entity IDs.
 
+## Star Chart layout annotations
+
+`/star-chart/layout` is a local browser tool for tracing the zoomed-out Origin
+System or one planet from a screenshot. It exports `schemaVersion: 1` JSON with
+normalized 0–1 coordinates for overview planet circles, optional arc control
+points, planet mission nodes and junction markers. Save the result as
+`data/manual/star-chart-layout.json`, or set `ORDIS_STAR_CHART_LAYOUT` to another
+path. The rendered chart consumes partial files and derives fallback positions
+for anything omitted.
+
+This file is presentation input, not a promoted catalog source: it never
+creates nodes or routes and cannot override cited topology. Screenshots stay in
+the browser and are not included in the JSON. Labels must match overview planet
+names; per-planet node labels are normalized to catalog slugs.
+
 ## Editorial ranking format
 
 Version 1 YAML contains source metadata, an ordered tier scale, and entries

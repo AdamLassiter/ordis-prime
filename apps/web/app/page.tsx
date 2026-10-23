@@ -43,8 +43,11 @@ export default async function Home({
   searchParams: Promise<{ q?: string; kind?: string }>;
 }) {
   const { q = "", kind = "" } = await searchParams;
-  const kinds = await catalogKinds();
-  const selectedKind = kinds.some((entry) => entry.kind === kind)
+  const [allKinds, resultKinds] = await Promise.all([
+    catalogKinds(),
+    catalogKinds(q),
+  ]);
+  const selectedKind = allKinds.some((entry) => entry.kind === kind)
     ? kind
     : undefined;
   const items = await searchCatalog(q, selectedKind);
@@ -79,17 +82,31 @@ export default async function Home({
             />
             <button className="button">Locate</button>
           </div>
-          <label htmlFor="codex-kind">Record type</label>
-          <select id="codex-kind" name="kind" defaultValue={selectedKind ?? ""}>
-            <option value="">All types</option>
-            {kinds.map((entry) => (
-              <option key={entry.kind} value={entry.kind}>
-                {entry.kind} ({entry.count})
-              </option>
-            ))}
-          </select>
+          {selectedKind && (
+            <input name="kind" type="hidden" value={selectedKind} />
+          )}
         </form>
       </section>
+      <nav
+        className="filters codex-kind-filters"
+        aria-label="Codex record type"
+      >
+        <Link
+          className={!selectedKind ? "tag active" : "tag"}
+          href={codexHref(q)}
+        >
+          All ({resultKinds.reduce((total, entry) => total + entry.count, 0)})
+        </Link>
+        {resultKinds.map((entry) => (
+          <Link
+            className={selectedKind === entry.kind ? "tag active" : "tag"}
+            href={codexHref(q, entry.kind)}
+            key={entry.kind}
+          >
+            {entry.kind} ({entry.count})
+          </Link>
+        ))}
+      </nav>
       {!q && (
         <section className="launch-grid" aria-label="Orbiter consoles">
           {launchCards.map((card) => (
@@ -97,7 +114,7 @@ export default async function Home({
               <span className="launch-code">{card.code}</span>
               <h2>{card.title}</h2>
               <p>{card.body}</p>
-              <span className="launch-link">Open console ↗</span>
+              <span className="launch-link">Open console →</span>
             </Link>
           ))}
         </section>
@@ -139,4 +156,12 @@ export default async function Home({
       )}
     </>
   );
+}
+
+function codexHref(query: string, kind?: string): string {
+  const params = new URLSearchParams();
+  if (query) params.set("q", query);
+  if (kind) params.set("kind", kind);
+  const suffix = params.toString();
+  return suffix ? `/?${suffix}` : "/";
 }

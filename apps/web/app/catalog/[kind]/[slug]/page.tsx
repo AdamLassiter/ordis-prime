@@ -162,6 +162,43 @@ export default async function ItemPage({
               ))
             : "No crafting components recorded"}
         </dd>
+        {item.usedInRecipes.length > 0 && (
+          <>
+            <dt>Used to build</dt>
+            <dd>
+              {item.usedInRecipes.map((recipe, recipeIndex) => (
+                <div
+                  className="catalog-recipe-context"
+                  key={`${recipe.output.kind}:${recipe.output.slug}:${recipeIndex}`}
+                >
+                  <Link
+                    href={`/catalog/${recipe.output.kind}/${recipe.output.slug}`}
+                  >
+                    {recipe.outputQuantity} × {recipe.output.name}
+                  </Link>
+                  {recipe.ingredients.length > 0 && (
+                    <span className="muted">
+                      {" "}
+                      with{" "}
+                      {recipe.ingredients.map((ingredient, index) => (
+                        <Fragment
+                          key={`${ingredient.kind}:${ingredient.slug}:${index}`}
+                        >
+                          {index > 0 ? " + " : ""}
+                          <Link
+                            href={`/catalog/${ingredient.kind}/${ingredient.slug}`}
+                          >
+                            {ingredient.quantity} × {ingredient.name}
+                          </Link>
+                        </Fragment>
+                      ))}
+                    </span>
+                  )}
+                </div>
+              ))}
+            </dd>
+          </>
+        )}
         <dt>Acquisition</dt>
         <dd>
           {item.drops.length
@@ -216,11 +253,17 @@ export default async function ItemPage({
           {item.rankings.length
             ? item.rankings.map((ranking) => (
                 <div key={`${ranking.title}:${ranking.author}`}>
-                  <a href={ranking.sourceUrl}>{ranking.title}</a> by{" "}
-                  {ranking.author}: <strong>{ranking.tier}</strong>
+                  <Link
+                    href={`/rankings?set=${encodeURIComponent(ranking.setId)}&sort=tier`}
+                  >
+                    {ranking.title}
+                  </Link>{" "}
+                  by {ranking.author}: <strong>{ranking.tier}</strong>
                   {ranking.timestampSeconds === undefined
                     ? ""
                     : ` at ${formatTimestamp(ranking.timestampSeconds)}`}
+                  {" · "}
+                  <a href={ranking.sourceUrl}>source</a>
                 </div>
               ))
             : "No cited rankings recorded"}

@@ -262,8 +262,15 @@ export default async function Sources({
           {sources.map((source) => (
             <article className="card" key={source.id}>
               <h2>
-                <a href={source.homepage}>{source.name}</a>
+                {isAdmin ? (
+                  <Link href={`/data-sources/${source.id}`}>{source.name}</Link>
+                ) : (
+                  source.name
+                )}
               </h2>
+              <p>
+                <a href={source.homepage}>Upstream source</a>
+              </p>
               <p>
                 {source.version ? (
                   <>

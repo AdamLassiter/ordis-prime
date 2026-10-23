@@ -46,27 +46,33 @@ node/item/quantity facts. They reconcile to the same canonical resources used
 by inventory. Other item and mixed expressions remain absent rather than being
 reduced to a misleading subset.
 
-The public `/star-chart` view groups nodes by planet and filters by node, mission,
-faction or linked discovery text, including cited boss names. Signed-in players
-can restrict it to nodes with at least one
-reward their inventory marks as unowned or still wanted. Node detail pages show
-the same metadata beside their full reward lists. Active cited `connects-to`
-relations also drive a compact SVG mission graph for every planet. The graph
-places the planet at its centre and deterministically arranges its mission nodes
-around it; cited within-planet connections are the only rendered routes. Node
-markers highlight a current world-state window, an open linked Foundry task,
-and an unowned reward. The detailed accessible list remains below the
-visualization and uses the same filtered node set.
+The public `/star-chart` view opens on a zoomed-out Origin System. Every planet
+shows node, live-window, open-task, repeatable-reward and unowned-reward totals.
+Selecting a planet changes the shareable `planet=` query state and opens its
+mission graph and node list. Active cited `connects-to` relations drive both the
+within-planet routes and the interplanetary summary. Node markers can highlight
+a current world-state window, an open linked Foundry task, and an unowned
+reward.
 
-Connections are treated as undirected navigation edges: either endpoint lists the
-other, even though a source only needs to state the edge once. A shareable
-`focus=` view lets a player traverse those direct connections and move between
-topology and a node's rewards without inventing domain positions. The focused
-node and its direct neighbors also render as a deterministic linked SVG map.
-That local ring is derived presentation state, not a claim about the in-game
-layout. Traversing or clearing focus preserves the active search, ownership,
-access and completion filters so the graph remains in the player's current
-planning context.
+The chart does not use result filters. A repeatable `show=` query parameter is a
+multi-select presentation control for events, tasks, needed rewards, mission
+type, enemy level, reward counts, access state and private completion. These
+choices change the amount of visible detail without removing planets or nodes
+from navigation.
+
+An optional versioned layout file at `data/manual/star-chart-layout.json` can
+override planet circles, junction arcs, mission-node positions and planet-view
+junction positions with normalized screenshot coordinates. The browser-only
+tool at `/star-chart/layout` accepts an overview or planet screenshot, lets an
+operator trace those shapes and points, and imports or exports the JSON. The
+screenshot never leaves the browser and is not stored in the exported file.
+Missing annotations fall back independently to deterministic derived geometry,
+so a partial trace remains usable.
+
+Connections are treated as undirected navigation edges: either endpoint lists
+the other, even though a source only needs to state the edge once. Geometry
+never creates a connection; traced and fallback positions only place cited
+nodes and edges.
 Incoming cited `occurs-at` and `involves` relations are also listed on the node,
 so its structured boss and curated discovery topics are reachable in-app rather
 than only from the discovery side of the graph.
@@ -86,7 +92,7 @@ The Warframe-rank gate compares with the player's private highest rank among
 currently available Warframes; it is not inferred from mastery history or build
 drafts.
 The chart derives the same available, conditional, blocked or unknown state for
-every node and can filter by it. It does not persist that state or infer access
+every node and can display it. It does not persist that state or infer access
 from graph connectivity. Guests therefore see private-input-dependent evidence
 as conditional rather than available.
 
@@ -95,9 +101,9 @@ and filter the chart by completed or incomplete nodes. Absence of private state
 means incomplete. Completion is not used as a synonym for access: clearing a
 node does not rewrite sourced prerequisites, and a connection does not mark
 either endpoint complete. Completed nodes are part of portable player profiles.
-The chart also provides a bulk editor for the currently filtered nodes. Its
-explicit submitted scope means checked and unchecked visible nodes are updated
-atomically while nodes hidden by the filters remain untouched.
+The chart also provides a bulk editor for the selected planet. Its explicit
+submitted scope means checked and unchecked nodes on that planet are updated
+atomically while nodes on other planets remain untouched.
 
 Junction node pages list the current four sourced objectives in Wiki order with
 their hints and revision citations. Signed-in players can mark each current
@@ -112,11 +118,11 @@ either category without pretending a grant has a drop chance.
 
 ## Current compromise
 
-No imported source supplies stable visual coordinates. The current planet maps
-therefore reproduce the in-game chart's planet-and-linked-node visual model, but
-not Digital Extremes' exact geometry. Planet and focused-neighborhood positions
-are deterministic presentation state over cited identities and edges. A global
-source-faithful layout still needs another attributed coordinate source.
+No imported source supplies stable visual coordinates. Until a human traces and
+checks in screenshots through the local layout tool, overview and planet
+positions remain deterministic presentation state and do not claim exact
+in-game geometry. Screenshot pixels and their copyright are deliberately not
+stored; the JSON records only normalized annotations and source image metadata.
 
 Enemy and quest identities are imported, but richer domain-specific facts and
 complete curated discovery links remain future work.

@@ -11,8 +11,8 @@ export async function searchCatalog(query = "", kind?: string) {
   return searchDatabaseCatalog(getDatabase(), query, 100, kind);
 }
 
-export async function catalogKinds() {
-  return listCatalogKinds(getDatabase());
+export async function catalogKinds(query = "") {
+  return listCatalogKinds(getDatabase(), query);
 }
 
 export async function findItem(kind: string, slug: string) {

@@ -8,6 +8,7 @@ import {
   createLocalUser,
   findCatalogItem,
   findCatalogNode,
+  listCatalogKinds,
   listSourceStatuses,
   listStarChartNodes,
   migrateDatabase,
@@ -267,6 +268,9 @@ test("catalog read models join active recipes, drops, provenance, and rankings",
     searchCatalog(sqlite, "", 100, "weapon").map(({ name }) => name),
     ["Braton"],
   );
+  assert.deepEqual(listCatalogKinds(sqlite, "brat"), [
+    { kind: "weapon", count: 1 },
+  ]);
   assert.deepEqual(
     searchDiscoveryCatalog(sqlite, { kind: "quest" }).map(
       ({ name, relationCount, neighbors }) => ({
@@ -312,6 +316,7 @@ test("catalog read models join active recipes, drops, provenance, and rankings",
   assert.equal(item?.drops[0]?.nodeSlug, "mercury-caloris");
   assert.equal(item?.sources[0]?.name, "Items");
   assert.deepEqual(item?.rankings[0], {
+    setId: item?.rankings[0]?.setId,
     title: "Creator list",
     author: "Creator",
     tier: "A",
@@ -325,6 +330,18 @@ test("catalog read models join active recipes, drops, provenance, and rankings",
     true,
   );
   const alloy = findCatalogItem(sqlite, "resource", "alloy-plate")!;
+  assert.deepEqual(alloy.usedInRecipes, [
+    {
+      output: {
+        kind: "weapon",
+        slug: "braton",
+        name: "Braton",
+        description: "A balanced rifle.",
+      },
+      outputQuantity: 1,
+      ingredients: [],
+    },
+  ]);
   assert.deepEqual(alloy.requiredForNodeAccess, [
     {
       nodeSlug: "mercury-caloris",

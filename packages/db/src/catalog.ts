@@ -59,6 +59,16 @@ export interface CatalogItem extends CatalogSummary {
     name: string;
     quantity: number;
   }>;
+  usedInRecipes: Array<{
+    output: CatalogSummary;
+    outputQuantity: number;
+    ingredients: Array<{
+      kind: string;
+      slug: string;
+      name: string;
+      quantity: number;
+    }>;
+  }>;
   drops: Array<{
     nodeSlug?: string;
     node: string;
@@ -83,6 +93,7 @@ export interface CatalogItem extends CatalogSummary {
   }>;
   sources: Array<{ name: string; homepage: string }>;
   rankings: Array<{
+    setId: string;
     title: string;
     author: string;
     tier: string;
@@ -264,13 +275,16 @@ export function searchCatalog(
 
 export function listCatalogKinds(
   sqlite: Database.Database,
+  query = "",
 ): Array<{ kind: string; count: number }> {
+  const pattern = `%${escapeLike(query.trim())}%`;
   return sqlite
     .prepare(
       `select kind, count(*) as count from entities
-       where retired = 0 group by kind order by kind collate nocase`,
+       where retired = 0 and name like ? escape '\\'
+       group by kind order by kind collate nocase`,
     )
-    .all() as Array<{ kind: string; count: number }>;
+    .all(pattern) as Array<{ kind: string; count: number }>;
 }
 
 export function searchDiscoveryCatalog(
@@ -471,6 +485,56 @@ export function findCatalogItem(
   `,
     )
     .all(item.id) as CatalogItem["components"];
+  const usedInRecipeRows = sqlite
+    .prepare(
+      `select recipe.id as recipeId, output.kind as outputKind,
+              output.slug as outputSlug, output.name as outputName,
+              output.description as outputDescription,
+              recipe.output_quantity as outputQuantity,
+              ingredient.kind, ingredient.slug, ingredient.name,
+              sibling.quantity
+       from recipe_ingredients selected
+       join recipes recipe on recipe.id = selected.recipe_id
+       join source_runs run on run.id = recipe.source_run_id and run.status = 'active'
+       join entities output on output.id = recipe.output_id and output.retired = 0
+       left join recipe_ingredients sibling
+         on sibling.recipe_id = recipe.id and sibling.entity_id != selected.entity_id
+       left join entities ingredient on ingredient.id = sibling.entity_id and ingredient.retired = 0
+       where selected.entity_id = ?
+       order by output.name collate nocase, recipe.id, ingredient.name collate nocase`,
+    )
+    .all(item.id) as Array<{
+    recipeId: string;
+    outputKind: string;
+    outputSlug: string;
+    outputName: string;
+    outputDescription: string | null;
+    outputQuantity: number;
+    kind: string | null;
+    slug: string | null;
+    name: string | null;
+    quantity: number | null;
+  }>;
+  const usedInRecipeGroups = new Map<string, typeof usedInRecipeRows>();
+  for (const row of usedInRecipeRows)
+    usedInRecipeGroups.set(row.recipeId, [
+      ...(usedInRecipeGroups.get(row.recipeId) ?? []),
+      row,
+    ]);
+  const usedInRecipes = [...usedInRecipeGroups.values()].map((rows) => ({
+    output: {
+      kind: rows[0]!.outputKind,
+      slug: rows[0]!.outputSlug,
+      name: rows[0]!.outputName,
+      description: rows[0]!.outputDescription ?? undefined,
+    },
+    outputQuantity: rows[0]!.outputQuantity,
+    ingredients: rows.flatMap(({ kind, slug, name, quantity }) =>
+      kind && slug && name && quantity !== null
+        ? [{ kind, slug, name, quantity }]
+        : [],
+    ),
+  }));
   const drops = sqlite
     .prepare(
       `
@@ -555,7 +619,7 @@ export function findCatalogItem(
   const rankings = sqlite
     .prepare(
       `
-    select ranking_set.title, ranking_set.author, ranking.tier,
+    select ranking_set.id as setId, ranking_set.title, ranking_set.author, ranking.tier,
            ranking.timestamp_seconds as timestampSeconds, source.homepage as sourceUrl
     from editorial_rankings ranking
     join ranking_sets ranking_set on ranking_set.id = ranking.set_id
@@ -739,6 +803,7 @@ export function findCatalogItem(
     attributes,
     factoryPolaritySets,
     components,
+    usedInRecipes,
     drops,
     requiredForNodeAccess,
     junctionRewards,

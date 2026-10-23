@@ -89,7 +89,11 @@ export default async function RankingsPage({
             {comparison.sets.map((set) => (
               <article className="card" key={set.id}>
                 <h2>
-                  <a href={set.citationUrl}>{set.title}</a>
+                  <Link
+                    href={`/rankings?set=${encodeURIComponent(set.id)}&sort=tier`}
+                  >
+                    {set.title}
+                  </Link>
                 </h2>
                 <p>{set.author}</p>
                 <p className="muted">
@@ -104,6 +108,9 @@ export default async function RankingsPage({
                   ))}
                 </p>
                 <p className="muted">Published {formatDate(set.publishedAt)}</p>
+                <p>
+                  <a href={set.citationUrl}>Open cited source</a>
+                </p>
                 <Link
                   className="nav-button"
                   href={`/rankings?set=${encodeURIComponent(set.id)}&sort=tier`}

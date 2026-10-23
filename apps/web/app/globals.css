@@ -53,6 +53,13 @@ a {
   color: inherit;
   text-decoration: none;
 }
+a[href^="http://"]::after,
+a[href^="https://"]::after {
+  content: " ↗";
+  color: var(--cyan);
+  font-size: 0.78em;
+  white-space: nowrap;
+}
 header {
   border-top: 2px solid var(--cyan);
   border-bottom: 1px solid rgb(108 231 239 / 24%);
@@ -250,6 +257,116 @@ h2 {
   width: 100%;
   min-height: 16rem;
 }
+.planet-map-zoomed {
+  margin: 1rem 0;
+}
+.planet-map-zoomed svg {
+  min-height: 30rem;
+}
+.star-chart-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+.system-overview-card {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at center, rgb(43 88 110 / 24%), transparent 42%),
+    #050a12;
+}
+.system-overview-map {
+  display: block;
+  width: 100%;
+  min-width: 55rem;
+}
+.system-route {
+  fill: none;
+  stroke: #315369;
+  stroke-width: 2;
+}
+.system-planet {
+  fill: #132c3d;
+  stroke: var(--gold);
+  stroke-width: 2;
+  transition:
+    fill 120ms ease,
+    stroke-width 120ms ease;
+}
+.system-overview-map a:hover .system-planet,
+.system-overview-map a:focus .system-planet {
+  fill: #234257;
+  stroke-width: 4;
+}
+.system-planet-name {
+  fill: var(--text);
+  font-size: 13px;
+  font-weight: 800;
+  pointer-events: none;
+}
+.system-planet-summary {
+  fill: var(--muted);
+  font-size: 9px;
+  pointer-events: none;
+}
+.planet-summary-grid {
+  margin-top: 1rem;
+}
+.planet-summary-card h2 {
+  margin-bottom: 0;
+}
+.star-chart-detail-controls {
+  margin-bottom: 1rem;
+}
+.star-chart-detail-controls:hover {
+  transform: none;
+  border-color: var(--line);
+}
+.codex-kind-filters {
+  margin: 1rem 0 2rem;
+}
+.layout-annotator {
+  position: relative;
+  width: 100%;
+  min-height: 32rem;
+  margin: 1rem 0;
+  overflow: hidden;
+  border: 1px solid var(--cyan);
+  border-radius: 12px;
+  background-color: #050a12;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  cursor: crosshair;
+}
+.layout-marker {
+  position: absolute;
+  z-index: 1;
+  min-width: 0.9rem;
+  min-height: 0.9rem;
+  translate: -50% -50%;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--cyan);
+  border-radius: 50%;
+  color: var(--text);
+  background: rgb(5 8 13 / 72%);
+  font-size: 0.7rem;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.layout-marker-junction,
+.layout-marker-arc-control {
+  border-color: var(--gold);
+  border-radius: 0;
+}
+.layout-json-preview {
+  max-height: 24rem;
+  overflow: auto;
+}
 .planet-orb {
   fill: #132c3d;
   stroke: var(--gold);
@@ -272,6 +389,11 @@ h2 {
   fill: #8aa8b8;
   stroke: #d8edf4;
   stroke-width: 1;
+}
+.planet-junction {
+  fill: #132c3d;
+  stroke: var(--gold);
+  stroke-width: 2;
 }
 .planet-node.has-event {
   fill: #ff7a59;
