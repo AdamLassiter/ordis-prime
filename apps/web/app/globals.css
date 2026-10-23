@@ -642,7 +642,6 @@ textarea:focus {
   grid-template-columns: minmax(0, 1.5fr) minmax(17rem, 0.7fr);
   gap: 2rem 3.5rem;
   align-items: end;
-  padding: clamp(1rem, 5vw, 4.5rem) 0 2.5rem;
 }
 .hero-copy .lede {
   font-size: clamp(1rem, 2vw, 1.2rem);
