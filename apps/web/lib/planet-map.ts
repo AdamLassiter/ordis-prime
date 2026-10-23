@@ -7,6 +7,7 @@ export interface PlanetMapInput {
 export interface PlanetMapNode extends PlanetMapInput {
   x: number;
   y: number;
+  radius?: number;
 }
 
 export function buildPlanetMap(nodes: PlanetMapInput[]) {

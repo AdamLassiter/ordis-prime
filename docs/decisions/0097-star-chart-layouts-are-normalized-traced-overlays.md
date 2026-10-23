@@ -16,7 +16,9 @@ planet. Store optional layout annotations as schema-versioned normalized JSON,
 separate from catalog facts. A browser-only tool traces planet circles, arc
 control points, mission nodes and junctions over a local screenshot. The
 renderer uses annotations where present and deterministic fallbacks elsewhere.
-Only cited catalog relations create routes.
+Only cited catalog relations create factual routes. ADR 0102 later permits
+explicit planet-view edges as presentation annotations for exceptional spaces;
+those overlays never become catalog relations.
 
 ## Consequences
 

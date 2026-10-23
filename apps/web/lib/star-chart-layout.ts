@@ -10,6 +10,10 @@ export interface LayoutCircle extends LayoutPoint {
   radius: number;
 }
 
+export interface LayoutSizedPoint extends LayoutPoint {
+  radius?: number;
+}
+
 export interface StarChartLayout {
   schemaVersion: 1;
   sourceImages?: Record<
@@ -27,8 +31,13 @@ export interface StarChartLayout {
   planets?: Record<
     string,
     {
-      nodes: Record<string, LayoutPoint>;
-      junctions?: Record<string, LayoutPoint>;
+      nodes: Record<string, LayoutSizedPoint>;
+      junctions?: Record<string, LayoutSizedPoint>;
+      edges?: Array<{
+        from: string;
+        to: string;
+        controls?: LayoutPoint[];
+      }>;
     }
   >;
 }
@@ -62,16 +71,45 @@ export function parseStarChartLayout(source: string): StarChartLayout {
       if (!isRecord(entry) || !isRecord(entry.nodes))
         throw new Error(`Star-chart layout for ${planet} has no node map`);
       for (const [node, point] of Object.entries(entry.nodes))
-        validatePoint(point, `${planet}.${node}`);
+        validateSizedPoint(point, `${planet}.${node}`);
       if (entry.junctions !== undefined) {
         if (!isRecord(entry.junctions))
           throw new Error(`Star-chart junctions for ${planet} must be a map`);
         for (const [junction, point] of Object.entries(entry.junctions))
-          validatePoint(point, `${planet}.${junction}`);
+          validateSizedPoint(point, `${planet}.${junction}`);
       }
+      if (entry.edges !== undefined) validateEdges(entry.edges, planet);
     }
   }
   return value as unknown as StarChartLayout;
+}
+
+function validateEdges(value: unknown, scope: string): void {
+  if (!Array.isArray(value))
+    throw new Error(`Star-chart edges for ${scope} must be a list`);
+  for (const [index, edge] of value.entries()) {
+    if (
+      !isRecord(edge) ||
+      typeof edge.from !== "string" ||
+      !edge.from ||
+      typeof edge.to !== "string" ||
+      !edge.to ||
+      (edge.controls !== undefined && !Array.isArray(edge.controls))
+    )
+      throw new Error(`Star-chart edge ${scope}.${index} is invalid`);
+    for (const [controlIndex, control] of (edge.controls ?? []).entries())
+      validatePoint(control, `${scope}.edge.${index}.${controlIndex}`);
+  }
+}
+
+function validateSizedPoint(value: unknown, label: string): void {
+  validatePoint(value, label);
+  if (
+    isRecord(value) &&
+    value.radius !== undefined &&
+    (typeof value.radius !== "number" || value.radius <= 0 || value.radius > 1)
+  )
+    throw new Error(`Star-chart point ${label} has an invalid radius`);
 }
 
 function validateOverview(value: unknown): void {

@@ -14,6 +14,12 @@ import {
   type StarChartLayout,
 } from "@/lib/star-chart-layout";
 import { starChartHref } from "@/lib/star-chart-url";
+import {
+  isStarChartScope,
+  STAR_CHART_SCOPES,
+  starChartScope,
+  type StarChartScope,
+} from "@/lib/star-chart-scope";
 import { updateVisibleNodeCompletions } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -46,15 +52,19 @@ export default async function StarChartPage({
 }: {
   searchParams: Promise<{
     planet?: string;
+    scope?: string;
     show?: string | string[];
   }>;
 }) {
-  const [{ planet: requestedPlanet, show }, session, layout] =
-    await Promise.all([
-      searchParams,
-      getCurrentSession(),
-      loadStarChartLayout(),
-    ]);
+  const [
+    { planet: requestedPlanet, scope: requestedScope, show },
+    session,
+    layout,
+  ] = await Promise.all([
+    searchParams,
+    getCurrentSession(),
+    loadStarChartLayout(),
+  ]);
   const database = getDatabase();
   const currentWindows = listCurrentWorldState(database);
   const eventNodeSlugs = new Set(
@@ -101,16 +111,24 @@ export default async function StarChartPage({
     const planet = node.planet ?? "Unmapped";
     planets.set(planet, [...(planets.get(planet) ?? []), node]);
   }
-  const planetNames = [...planets.keys()].sort((left, right) =>
+  const allPlanetNames = [...planets.keys()].sort((left, right) =>
     left.localeCompare(right),
   );
   const selectedPlanet = requestedPlanet
-    ? planetNames.find(
+    ? allPlanetNames.find(
         (candidate) =>
           candidate.toLocaleLowerCase("en") ===
           requestedPlanet.toLocaleLowerCase("en"),
       )
     : undefined;
+  const selectedScope: StarChartScope = selectedPlanet
+    ? starChartScope(selectedPlanet)
+    : isStarChartScope(requestedScope)
+      ? requestedScope
+      : "origin";
+  const planetNames = allPlanetNames.filter(
+    (planet) => starChartScope(planet) === selectedScope,
+  );
   const selectedDetails = parseDetails(show);
 
   return (
@@ -132,6 +150,23 @@ export default async function StarChartPage({
           ? "Inspect mission routes and reveal only the operational detail useful for this run."
           : "Start with each celestial body and its current signals, then zoom in to inspect mission nodes and their cited connections."}
       </p>
+      <nav className="view-tabs" aria-label="Star Chart region">
+        {STAR_CHART_SCOPES.map(([scope, label]) => {
+          const count = allPlanetNames.filter(
+            (planet) => starChartScope(planet) === scope,
+          ).length;
+          return (
+            <Link
+              aria-current={selectedScope === scope ? "page" : undefined}
+              className={selectedScope === scope ? "active" : undefined}
+              href={starChartHref({ scope })}
+              key={scope}
+            >
+              {label} <span>{count}</span>
+            </Link>
+          );
+        })}
+      </nav>
       {requestedPlanet && !selectedPlanet && (
         <p className="notice">
           That celestial body is not in the active catalog. Showing the system
@@ -146,6 +181,7 @@ export default async function StarChartPage({
           nodes={planets.get(selectedPlanet)!}
           nodesBySlug={nodesBySlug}
           planet={selectedPlanet}
+          scope={selectedScope}
           session={Boolean(session)}
           todoNodeSlugs={todoNodeSlugs}
         />
@@ -178,6 +214,7 @@ function SystemOverview({
   planets: Map<string, StarNode[]>;
   todoNodeSlugs: Set<string>;
 }) {
+  const scope = planetNames[0] ? starChartScope(planetNames[0]) : "origin";
   const positions = systemPositions(planetNames, layout?.planets);
   const edges = systemEdges(planets, nodesBySlug, layout?.arcs);
   return (
@@ -230,7 +267,7 @@ function SystemOverview({
             return (
               <a
                 aria-label={`Zoom into ${planet}`}
-                href={starChartHref({ planet })}
+                href={starChartHref({ planet, scope })}
                 key={planet}
               >
                 <circle
@@ -279,7 +316,7 @@ function SystemOverview({
           return (
             <Link
               className="card planet-summary-card"
-              href={starChartHref({ planet })}
+              href={starChartHref({ planet, scope })}
               key={planet}
             >
               <span className="tag">{nodes.length} nodes</span>
@@ -311,18 +348,25 @@ function PlanetView({
   nodes,
   nodesBySlug,
   planet,
+  scope,
   session,
   todoNodeSlugs,
 }: {
   details: Set<DetailOption>;
   eventNodeSlugs: Set<string>;
   layout?: {
-    nodes: Record<string, { x: number; y: number }>;
-    junctions?: Record<string, { x: number; y: number }>;
+    nodes: Record<string, { x: number; y: number; radius?: number }>;
+    junctions?: Record<string, { x: number; y: number; radius?: number }>;
+    edges?: Array<{
+      from: string;
+      to: string;
+      controls?: Array<{ x: number; y: number }>;
+    }>;
   };
   nodes: StarNode[];
   nodesBySlug: Map<string, StarNode>;
   planet: string;
+  scope: StarChartScope;
   session: boolean;
   todoNodeSlugs: Set<string>;
 }) {
@@ -331,8 +375,8 @@ function PlanetView({
   return (
     <>
       <div className="star-chart-toolbar">
-        <Link className="nav-button" href="/star-chart">
-          ← Origin System
+        <Link className="nav-button" href={starChartHref({ scope })}>
+          ← {STAR_CHART_SCOPES.find(([key]) => key === scope)?.[1]}
         </Link>
         <Link className="nav-button" href="/star-chart/layout">
           Trace this planet
@@ -340,6 +384,9 @@ function PlanetView({
       </div>
       <form className="card star-chart-detail-controls">
         <input name="planet" type="hidden" value={planet} />
+        {scope !== "origin" && (
+          <input name="scope" type="hidden" value={scope} />
+        )}
         <fieldset>
           <legend>Details shown</legend>
           <div className="filters">
@@ -393,6 +440,26 @@ function PlanetView({
               />
             );
           })}
+          {layout?.edges?.map((edge, index) => {
+            const from = map.nodes.find(({ slug }) => slug === edge.from);
+            const to = map.nodes.find(({ slug }) => slug === edge.to);
+            if (!from || !to) return null;
+            return (
+              <path
+                className="planet-route"
+                d={routePath(
+                  from,
+                  to,
+                  edge.controls?.map((point) => ({
+                    x: point.x * map.width,
+                    y: point.y * map.height,
+                  })),
+                )}
+                fill="none"
+                key={`${edge.from}:${edge.to}:${index}`}
+              />
+            );
+          })}
           {map.nodes.map((mapNode) => {
             const node = nodesBySlug.get(mapNode.slug)!;
             const classes = [
@@ -415,13 +482,17 @@ function PlanetView({
                   className={classes}
                   cx={mapNode.x}
                   cy={mapNode.y}
-                  r="10"
+                  r={mapNode.radius ? mapNode.radius * map.width : 10}
                 />
                 <text
                   className="planet-node-label"
                   textAnchor="middle"
                   x={mapNode.x}
-                  y={mapNode.y + 24}
+                  y={
+                    mapNode.y +
+                    (mapNode.radius ? mapNode.radius * map.width : 10) +
+                    14
+                  }
                 >
                   {shortLabel(node.name, 22)}
                 </text>
@@ -432,17 +503,21 @@ function PlanetView({
             <g key={label}>
               <rect
                 className="planet-junction"
-                height="14"
+                height={(point.radius ?? 0.017) * map.width * 2}
                 transform={`rotate(45 ${point.x * map.width} ${point.y * map.height})`}
-                width="14"
-                x={point.x * map.width - 7}
-                y={point.y * map.height - 7}
+                width={(point.radius ?? 0.017) * map.width * 2}
+                x={point.x * map.width - (point.radius ?? 0.017) * map.width}
+                y={point.y * map.height - (point.radius ?? 0.017) * map.width}
               />
               <text
                 className="planet-node-label"
                 textAnchor="middle"
                 x={point.x * map.width}
-                y={point.y * map.height + 24}
+                y={
+                  point.y * map.height +
+                  (point.radius ?? 0.017) * map.width +
+                  14
+                }
               >
                 {shortLabel(label.replaceAll("-", " "), 22)}
               </text>
@@ -664,7 +739,7 @@ function routePath(
 
 function applyPlanetLayout<T extends ReturnType<typeof buildPlanetMap>>(
   map: T,
-  annotated?: Record<string, { x: number; y: number }>,
+  annotated?: Record<string, { x: number; y: number; radius?: number }>,
 ): T {
   if (!annotated) return map;
   return {
@@ -672,7 +747,12 @@ function applyPlanetLayout<T extends ReturnType<typeof buildPlanetMap>>(
     nodes: map.nodes.map((node) => {
       const point = annotated[node.slug];
       return point
-        ? { ...node, x: point.x * map.width, y: point.y * map.height }
+        ? {
+            ...node,
+            x: point.x * map.width,
+            y: point.y * map.height,
+            radius: point.radius,
+          }
         : node;
     }),
   };

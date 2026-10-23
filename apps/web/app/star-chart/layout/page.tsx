@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
-type MarkerKind = "planet" | "node" | "junction" | "arc-control";
+type MarkerKind =
+  "planet" | "node" | "junction" | "arc-control" | "edge-control";
 interface Marker {
   id: string;
   scope: string;
@@ -12,6 +13,14 @@ interface Marker {
   x: number;
   y: number;
   radius?: number;
+}
+
+interface LayoutOptions {
+  planets: Array<{
+    name: string;
+    scope: "origin" | "railjack" | "other";
+    nodes: Array<{ name: string; slug: string }>;
+  }>;
 }
 
 export default function StarChartLayoutPage() {
@@ -27,15 +36,42 @@ export default function StarChartLayoutPage() {
   const [label, setLabel] = useState("Venus");
   const [radius, setRadius] = useState(0.045);
   const [markers, setMarkers] = useState<Marker[]>([]);
+  const [options, setOptions] = useState<LayoutOptions>({ planets: [] });
+  const [optionsError, setOptionsError] = useState<string>();
+  const [arcTo, setArcTo] = useState("Earth");
   const imageRef = useRef<HTMLDivElement>(null);
   const activeScope = scope === "overview" ? "overview" : planet.trim();
   const visibleMarkers = markers.filter(
     (marker) => marker.scope === activeScope,
   );
+  const planetOptions = options.planets.map(({ name }) => name);
+  const nodeOptions =
+    options.planets.find(({ name }) => name === planet)?.nodes ?? [];
   const exportDocument = useMemo(
     () => buildExport(markers, imageInfo),
     [markers, imageInfo],
   );
+
+  useEffect(() => {
+    fetch("/api/star-chart/layout-options")
+      .then((response) => {
+        if (!response.ok) throw new Error("Could not load catalog labels");
+        return response.json() as Promise<LayoutOptions>;
+      })
+      .then((value) => {
+        setOptions(value);
+        const first = value.planets[0]?.name;
+        if (first && !value.planets.some(({ name }) => name === planet)) {
+          setPlanet(first);
+          setLabel(first);
+        }
+      })
+      .catch((error) =>
+        setOptionsError(
+          error instanceof Error ? error.message : "Could not load labels",
+        ),
+      );
+  }, []);
 
   return (
     <>
@@ -83,6 +119,12 @@ export default function StarChartLayoutPage() {
               const next = event.target.value;
               setScope(next);
               setKind(next === "overview" ? "planet" : "node");
+              setRadius(next === "overview" ? 0.045 : 0.012);
+              setLabel(
+                next === "overview"
+                  ? (planetOptions[0] ?? "")
+                  : (nodeOptions[0]?.name ?? ""),
+              );
             }}
           >
             <option value="overview">Zoomed-out Origin System</option>
@@ -92,17 +134,37 @@ export default function StarChartLayoutPage() {
         {scope === "planet" && (
           <label>
             Planet name
-            <input
+            <select
               value={planet}
-              onChange={(event) => setPlanet(event.target.value)}
-            />
+              onChange={(event) => {
+                const next = event.target.value;
+                setPlanet(next);
+                setLabel(
+                  options.planets.find(({ name }) => name === next)?.nodes[0]
+                    ?.name ?? "",
+                );
+              }}
+            >
+              {options.planets.map((entry) => (
+                <option key={entry.name}>{entry.name}</option>
+              ))}
+            </select>
           </label>
         )}
         <label>
           Marker type
           <select
             value={kind}
-            onChange={(event) => setKind(event.target.value as MarkerKind)}
+            onChange={(event) => {
+              const next = event.target.value as MarkerKind;
+              setKind(next);
+              setRadius(next === "planet" ? 0.045 : 0.012);
+              if (next === "planet" || next === "arc-control")
+                setLabel(planetOptions[0] ?? "");
+              else setLabel(nodeOptions[0]?.name ?? "");
+              if (next === "edge-control")
+                setArcTo(nodeOptions[1]?.name ?? nodeOptions[0]?.name ?? "");
+            }}
           >
             {scope === "overview" ? (
               <>
@@ -113,26 +175,67 @@ export default function StarChartLayoutPage() {
               <>
                 <option value="node">Mission node</option>
                 <option value="junction">Planet junction</option>
+                <option value="edge-control">Manual node edge control</option>
               </>
             )}
           </select>
         </label>
-        <label>
-          {kind === "arc-control"
-            ? "Arc endpoints (for example Earth -> Venus)"
-            : "Exact catalog label or slug"}
-          <input
-            value={label}
-            onChange={(event) => setLabel(event.target.value)}
-          />
-        </label>
-        {kind === "planet" && (
+        {optionsError && <p className="error">{optionsError}</p>}
+        {kind === "arc-control" || kind === "edge-control" ? (
+          <div className="inline-form">
+            <label>
+              {kind === "arc-control" ? "Arc from" : "Edge from"}
+              <select
+                value={label}
+                onChange={(event) => setLabel(event.target.value)}
+              >
+                {(kind === "arc-control"
+                  ? planetOptions
+                  : nodeOptions.map(({ name }) => name)
+                ).map((entry) => (
+                  <option key={entry}>{entry}</option>
+                ))}
+              </select>
+            </label>
+            <label>
+              {kind === "arc-control" ? "Arc to" : "Edge to"}
+              <select
+                value={arcTo}
+                onChange={(event) => setArcTo(event.target.value)}
+              >
+                {(kind === "arc-control"
+                  ? planetOptions
+                  : nodeOptions.map(({ name }) => name)
+                ).map((entry) => (
+                  <option key={entry}>{entry}</option>
+                ))}
+              </select>
+            </label>
+          </div>
+        ) : (
           <label>
-            Circle radius ({Math.round(radius * 1000) / 10}% of image width)
+            Catalog entity
+            <select
+              value={label}
+              onChange={(event) => setLabel(event.target.value)}
+            >
+              {(kind === "planet"
+                ? planetOptions
+                : nodeOptions.map(({ name }) => name)
+              ).map((entry) => (
+                <option key={entry}>{entry}</option>
+              ))}
+            </select>
+          </label>
+        )}
+        {kind !== "arc-control" && kind !== "edge-control" && (
+          <label>
+            {kind === "planet" ? "Planet" : "Node"} circle radius (
+            {Math.round(radius * 1000) / 10}% of image width)
             <input
-              max="0.2"
-              min="0.005"
-              step="0.005"
+              max={kind === "planet" ? "0.2" : "0.08"}
+              min="0.003"
+              step="0.002"
               type="range"
               value={radius}
               onChange={(event) => setRadius(Number(event.target.value))}
@@ -153,18 +256,23 @@ export default function StarChartLayoutPage() {
                 id: crypto.randomUUID(),
                 scope: activeScope,
                 kind,
-                label: label.trim(),
+                label:
+                  kind === "arc-control" || kind === "edge-control"
+                    ? `${label.trim()} -> ${arcTo.trim()}`
+                    : label.trim(),
                 x: clamp((event.clientX - bounds.left) / bounds.width),
                 y: clamp((event.clientY - bounds.top) / bounds.height),
-                ...(kind === "planet" ? { radius } : {}),
+                ...(kind !== "arc-control" && kind !== "edge-control"
+                  ? { radius }
+                  : {}),
               },
             ]);
           }}
           ref={imageRef}
           role="button"
-          style={{ backgroundImage: `url(${imageUrl})` }}
           tabIndex={0}
         >
+          <img alt="Imported Star Chart reference" src={imageUrl} />
           {visibleMarkers.map((marker) => (
             <span
               className={`layout-marker layout-marker-${marker.kind}`}
@@ -196,6 +304,31 @@ export default function StarChartLayoutPage() {
               <li key={marker.id}>
                 {marker.kind}: {marker.label} ({marker.x.toFixed(4)},{" "}
                 {marker.y.toFixed(4)}){" "}
+                {marker.kind !== "arc-control" &&
+                  marker.kind !== "edge-control" && (
+                    <label className="marker-radius-control">
+                      Radius
+                      <input
+                        type="range"
+                        min="0.003"
+                        max={marker.kind === "planet" ? "0.2" : "0.08"}
+                        step="0.002"
+                        value={marker.radius ?? 0.012}
+                        onChange={(event) =>
+                          setMarkers((current) =>
+                            current.map((entry) =>
+                              entry.id === marker.id
+                                ? {
+                                    ...entry,
+                                    radius: Number(event.target.value),
+                                  }
+                                : entry,
+                            ),
+                          )
+                        }
+                      />
+                    </label>
+                  )}{" "}
                 <button
                   className="text-button"
                   onClick={() =>
@@ -256,11 +389,20 @@ function buildExport(
 ) {
   const planets: Record<string, { x: number; y: number; radius: number }> = {};
   const arcs = new Map<string, Array<{ x: number; y: number }>>();
+  const nodeEdges = new Map<
+    string,
+    Map<string, Array<{ x: number; y: number }>>
+  >();
   const planetLayouts: Record<
     string,
     {
-      nodes: Record<string, { x: number; y: number }>;
-      junctions: Record<string, { x: number; y: number }>;
+      nodes: Record<string, { x: number; y: number; radius: number }>;
+      junctions: Record<string, { x: number; y: number; radius: number }>;
+      edges: Array<{
+        from: string;
+        to: string;
+        controls: Array<{ x: number; y: number }>;
+      }>;
     }
   > = {};
   for (const marker of markers) {
@@ -275,15 +417,38 @@ function buildExport(
         ...(arcs.get(marker.label) ?? []),
         { x: marker.x, y: marker.y },
       ]);
-    else if (marker.scope !== "overview") {
+    else if (marker.scope !== "overview" && marker.kind === "edge-control") {
+      const edges = nodeEdges.get(marker.scope) ?? new Map();
+      edges.set(marker.label, [
+        ...(edges.get(marker.label) ?? []),
+        { x: marker.x, y: marker.y },
+      ]);
+      nodeEdges.set(marker.scope, edges);
+    } else if (marker.scope !== "overview") {
       const layout = (planetLayouts[marker.scope] ??= {
         nodes: {},
         junctions: {},
+        edges: [],
       });
       const target =
         marker.kind === "junction" ? layout.junctions : layout.nodes;
-      target[slug(marker.label)] = { x: marker.x, y: marker.y };
+      target[slug(marker.label)] = {
+        x: marker.x,
+        y: marker.y,
+        radius: marker.radius ?? 0.012,
+      };
     }
+  }
+  for (const [scope, edges] of nodeEdges) {
+    const layout = (planetLayouts[scope] ??= {
+      nodes: {},
+      junctions: {},
+      edges: [],
+    });
+    layout.edges = [...edges].flatMap(([label, controls]) => {
+      const [from, to] = label.split(/\s*->\s*/, 2).map(slug);
+      return from && to ? [{ from, to, controls }] : [];
+    });
   }
   return {
     schemaVersion: 1,
@@ -323,8 +488,13 @@ function importMarkers(value: any): Marker[] {
       });
   for (const [planet, layoutValue] of Object.entries(value.planets ?? {})) {
     const layout = layoutValue as {
-      nodes?: Record<string, { x: number; y: number }>;
-      junctions?: Record<string, { x: number; y: number }>;
+      nodes?: Record<string, { x: number; y: number; radius?: number }>;
+      junctions?: Record<string, { x: number; y: number; radius?: number }>;
+      edges?: Array<{
+        from: string;
+        to: string;
+        controls?: Array<{ x: number; y: number }>;
+      }>;
     };
     for (const [label, point] of Object.entries(layout.nodes ?? {}))
       result.push({
@@ -342,6 +512,15 @@ function importMarkers(value: any): Marker[] {
         label,
         ...point,
       });
+    for (const edge of layout.edges ?? [])
+      for (const point of edge.controls ?? [])
+        result.push({
+          id: crypto.randomUUID(),
+          scope: planet,
+          kind: "edge-control",
+          label: `${edge.from} -> ${edge.to}`,
+          ...point,
+        });
   }
   return result;
 }

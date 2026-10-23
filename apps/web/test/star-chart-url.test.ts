@@ -14,4 +14,9 @@ test("star-chart links preserve selected detail while changing planets", () => {
 
 test("star-chart overview links omit absent state and question marks", () => {
   assert.equal(starChartHref({}), "/star-chart");
+  assert.equal(starChartHref({ scope: "origin" }), "/star-chart");
+  assert.equal(
+    starChartHref({ scope: "railjack" }),
+    "/star-chart?scope=railjack",
+  );
 });

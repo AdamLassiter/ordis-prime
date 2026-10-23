@@ -46,7 +46,11 @@ node/item/quantity facts. They reconcile to the same canonical resources used
 by inventory. Other item and mixed expressions remain absent rather than being
 reduced to a misleading subset.
 
-The public `/star-chart` view opens on a zoomed-out Origin System. Every planet
+The public `/star-chart` view opens on a zoomed-out Origin System and exposes a
+higher navigation tier for the Origin System, Railjack Proximas, and the
+Sanctuary / Dark Refractory / Duviri spaces. Höllvania is presented alongside
+Origin System planets because its node graph has the same interaction model.
+Every location
 shows node, live-window, open-task, repeatable-reward and unowned-reward totals.
 Selecting a planet changes the shareable `planet=` query state and opens its
 mission graph and node list. Active cited `connects-to` relations drive both the
@@ -61,11 +65,14 @@ choices change the amount of visible detail without removing planets or nodes
 from navigation.
 
 An optional versioned layout file at `data/manual/star-chart-layout.json` can
-override planet circles, junction arcs, mission-node positions and planet-view
-junction positions with normalized screenshot coordinates. The browser-only
-tool at `/star-chart/layout` accepts an overview or planet screenshot, lets an
-operator trace those shapes and points, and imports or exports the JSON. The
-screenshot never leaves the browser and is not stored in the exported file.
+override planet circles, junction arcs, mission-node positions, node/junction
+radii, planet-view junction positions, and presentation-only manual node edges
+with normalized screenshot coordinates. The browser-only tool at
+`/star-chart/layout` accepts an overview or planet screenshot, loads fixed
+planet and node choices from the active catalog, and lets an operator trace and
+resize those shapes and points before importing or exporting the JSON. The
+screenshot is displayed at its real full-width aspect ratio, never leaves the
+browser, and is not stored in the exported file.
 Missing annotations fall back independently to deterministic derived geometry,
 so a partial trace remains usable.
 

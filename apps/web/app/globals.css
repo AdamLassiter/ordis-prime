@@ -318,6 +318,35 @@ h2 {
   gap: 1rem;
   margin: 1rem 0;
 }
+.view-tabs {
+  display: flex;
+  min-height: auto;
+  gap: 0.35rem;
+  margin: 1.25rem 0;
+  border-bottom: 1px solid var(--line);
+}
+.view-tabs a {
+  padding: 0.7rem 1rem;
+  border: 1px solid transparent;
+  border-bottom: 3px solid transparent;
+  color: var(--muted);
+}
+.view-tabs a:hover,
+.view-tabs a:focus {
+  color: var(--text);
+  background: rgb(108 231 239 / 5%);
+}
+.view-tabs a.active,
+.view-tabs a[aria-current="page"] {
+  border-bottom-color: var(--gold);
+  color: var(--text);
+  background: rgb(108 231 239 / 8%);
+}
+.view-tabs a span {
+  margin-left: 0.35rem;
+  color: var(--cyan);
+  font-size: 0.75rem;
+}
 .system-overview-card {
   overflow-x: auto;
   border: 1px solid var(--line);
@@ -379,22 +408,22 @@ h2 {
 .layout-annotator {
   position: relative;
   width: 100%;
-  min-height: 32rem;
   margin: 1rem 0;
   overflow: hidden;
-  border: 1px solid var(--cyan);
+  outline: 1px solid var(--cyan);
   border-radius: 12px;
   background-color: #050a12;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: contain;
   cursor: crosshair;
+}
+.layout-annotator > img {
+  display: block;
+  width: 100%;
+  height: auto;
+  user-select: none;
 }
 .layout-marker {
   position: absolute;
   z-index: 1;
-  min-width: 0.9rem;
-  min-height: 0.9rem;
   translate: -50% -50%;
   display: grid;
   place-items: center;
@@ -407,13 +436,30 @@ h2 {
   pointer-events: none;
 }
 .layout-marker-junction,
-.layout-marker-arc-control {
+.layout-marker-arc-control,
+.layout-marker-edge-control {
   border-color: var(--gold);
   border-radius: 0;
+}
+.layout-marker-arc-control,
+.layout-marker-edge-control {
+  width: 0.9rem;
+  min-height: 0.9rem;
 }
 .layout-json-preview {
   max-height: 24rem;
   overflow: auto;
+}
+.marker-radius-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: 1rem;
+  color: var(--muted);
+}
+.marker-radius-control input {
+  width: 10rem;
+  padding: 0;
 }
 .planet-orb {
   fill: #132c3d;

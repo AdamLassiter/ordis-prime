@@ -10,7 +10,7 @@ These TODO items should be fixed, with written commits as progress is made:
   - User-defined fields such as the build title and category should be editable in-line
 - [x] Some layout doesn't take advantage of removing the max-1280px main width and could be reorganised
   - Lots of things are just grid rows stretching vertically downwards, not making efficient use of horizontal space
-- [ ] Editing the star chart layout should more easily allow rescaling the circles for planets and nodes
+- [x] Editing the star chart layout should more easily allow rescaling the circles for planets and nodes
   - Picking the 'exact catalog label or slug' should be from a fixed list of known entities in this part of the star chart
   - Imported screenshots should be shown at full-width, the math is off for circle radii with regards to padding around the image
   - The star chart will actually need one level of heirarchy higher than zoomed-out-planet, but would be fine to implement as just various tabs
