@@ -16,12 +16,15 @@ import { WarframeWikiFocusAdapter } from "./adapters/warframe-wiki-focus.ts";
 import { WarframeWikiQuestsAdapter } from "./adapters/warframe-wiki-quests.ts";
 import { WarframeWikiEnemiesAdapter } from "./adapters/warframe-wiki-enemies.ts";
 import { WarframeWikiVendorsAdapter } from "./adapters/warframe-wiki-vendors.ts";
+import { WarframeWikiCircuitAdapter } from "./adapters/warframe-wiki-circuit.ts";
+import { WarframeMarketItemsAdapter } from "./adapters/warframe-market-items.ts";
 import { refreshWorldState, WfcdWorldStateAdapter } from "./world-state.ts";
 import type { SourceAdapter } from "./adapter.ts";
 import type { AutomaticCatalogSourceId } from "./automatic-sources.ts";
 
 const adapters = {
   "wfcd-items": () => new WfcdItemsAdapter(),
+  "warframe-market-items": () => new WarframeMarketItemsAdapter(),
   "wfcd-drops": () => new WfcdDropsAdapter(),
   "warframe-wiki-weapons": () => new WarframeWikiWeaponsAdapter(),
   "warframe-wiki-warframes": () => new WarframeWikiWarframesAdapter(),
@@ -32,6 +35,7 @@ const adapters = {
   "warframe-wiki-quests": () => new WarframeWikiQuestsAdapter(),
   "warframe-wiki-enemies": () => new WarframeWikiEnemiesAdapter(),
   "warframe-wiki-vendors": () => new WarframeWikiVendorsAdapter(),
+  "warframe-wiki-circuit": () => new WarframeWikiCircuitAdapter(),
 } as const satisfies Record<AutomaticCatalogSourceId, () => SourceAdapter>;
 
 async function main(): Promise<void> {

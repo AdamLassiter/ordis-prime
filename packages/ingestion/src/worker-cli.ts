@@ -15,6 +15,8 @@ import { WarframeWikiFocusAdapter } from "./adapters/warframe-wiki-focus.ts";
 import { WarframeWikiQuestsAdapter } from "./adapters/warframe-wiki-quests.ts";
 import { WarframeWikiEnemiesAdapter } from "./adapters/warframe-wiki-enemies.ts";
 import { WarframeWikiVendorsAdapter } from "./adapters/warframe-wiki-vendors.ts";
+import { WarframeWikiCircuitAdapter } from "./adapters/warframe-wiki-circuit.ts";
+import { WarframeMarketItemsAdapter } from "./adapters/warframe-market-items.ts";
 
 const dataDirectory =
   process.env.ORDIS_DATA_DIR ??
@@ -78,6 +80,7 @@ const snapshotStore = new SnapshotStore(path.join(dataDirectory, "sources"));
 const adapter = new WfcdWorldStateAdapter();
 const catalogAdapters = [
   new WfcdItemsAdapter(),
+  new WarframeMarketItemsAdapter(),
   new WfcdDropsAdapter(),
   new WarframeWikiWeaponsAdapter(),
   new WarframeWikiWarframesAdapter(),
@@ -88,6 +91,7 @@ const catalogAdapters = [
   new WarframeWikiQuestsAdapter(),
   new WarframeWikiEnemiesAdapter(),
   new WarframeWikiVendorsAdapter(),
+  new WarframeWikiCircuitAdapter(),
 ];
 process.stdout.write(
   `${JSON.stringify({ event: "worker-started", owner, databasePath, refreshInterval, catalogRefreshInterval, jobHistoryLimit, worldStateSnapshotHistoryLimit, notificationRetentionMilliseconds, catalogReleaseHistoryLimit, sourceRefreshHistoryLimit, snapshotPruneGraceMilliseconds })}\n`,

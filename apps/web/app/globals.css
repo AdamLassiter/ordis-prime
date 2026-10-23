@@ -933,6 +933,34 @@ textarea:focus {
   gap: 2.5rem;
   margin-top: 2rem;
 }
+.circuit-schedules {
+  margin: 2rem 0;
+}
+.circuit-current-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 28rem), 1fr));
+}
+.circuit-choice-list {
+  padding-left: 1.2rem;
+}
+.circuit-choice-list li + li {
+  margin-top: 0.35rem;
+}
+.circuit-next {
+  border-top: 1px solid var(--line);
+  margin-top: 1rem;
+  padding-top: 1rem;
+}
+.circuit-full-schedule {
+  margin-top: 1rem;
+}
+.circuit-full-schedule summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+.circuit-phase-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+  margin-top: 1rem;
+}
 .world-state-section h2 {
   margin-bottom: 1rem;
 }

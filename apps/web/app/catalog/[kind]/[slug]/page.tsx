@@ -17,6 +17,7 @@ import { InventoryForm } from "./inventory-form";
 import { GoalForm } from "@/app/planner/goal-form";
 import { DiscoveryProgressForm } from "@/app/discovery/progress-form";
 import { addCatalogTodo, addCatalogWatch } from "@/app/todos/actions";
+import { MarketOrders } from "./market-orders";
 
 export default async function ItemPage({
   params,
@@ -60,6 +61,14 @@ export default async function ItemPage({
       <h1>{item.name}</h1>
       {item.description && <p className="lede">{item.description}</p>}
       <dl className="facts">
+        {item.market && (
+          <>
+            <dt>Marketplace</dt>
+            <dd>
+              <MarketOrders slug={item.market.slug} />
+            </dd>
+          </>
+        )}
         {item.attributes.map((attribute) => (
           <Fragment key={attribute.key}>
             <dt>{attribute.label}</dt>
@@ -219,6 +228,26 @@ export default async function ItemPage({
               ))
             : "No node drop recorded"}
         </dd>
+        {item.cyclicRewards.length > 0 && (
+          <>
+            <dt>Rotating acquisition</dt>
+            <dd>
+              {item.cyclicRewards.map((reward) => (
+                <div
+                  key={`${reward.scheduleKey}:${reward.phaseIndex}:${reward.acquisitionMode}`}
+                >
+                  <Link href="/world-state">{reward.scheduleLabel}</Link> ·{" "}
+                  {reward.phaseLabel}
+                  {reward.current
+                    ? " · available now"
+                    : reward.next
+                      ? " · available next"
+                      : ""}
+                </div>
+              ))}
+            </dd>
+          </>
+        )}
         {item.junctionRewards.length > 0 && (
           <>
             <dt>One-time Junction rewards</dt>

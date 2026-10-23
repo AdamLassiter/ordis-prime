@@ -319,6 +319,36 @@ export interface RankingObservation {
   evidence: Evidence;
 }
 
+export interface CyclicRewardScheduleObservation {
+  type: "cyclic-reward-schedule";
+  key: string;
+  label: string;
+  epoch: string;
+  intervalSeconds: number;
+  phaseCount: number;
+  choicesPerPhase: number;
+  selectionsAllowed: number;
+  instructions: string;
+  evidence: Evidence;
+}
+
+export interface CyclicRewardSubject {
+  label: string;
+  externalIds?: ExternalIdentifier[];
+}
+
+export interface CyclicRewardChoiceObservation {
+  type: "cyclic-reward-choice";
+  scheduleKey: string;
+  phaseIndex: number;
+  phaseLabel: string;
+  position: number;
+  primary: CyclicRewardSubject;
+  acquisitionMode: "item" | "path";
+  includedRewards?: Array<CyclicRewardSubject & { tier?: number }>;
+  evidence: Evidence;
+}
+
 export type Observation =
   | EntityObservation
   | DropObservation
@@ -332,7 +362,9 @@ export type Observation =
   | EnhancementOptionObservation
   | EquipmentPolaritySetObservation
   | RankingSetObservation
-  | RankingObservation;
+  | RankingObservation
+  | CyclicRewardScheduleObservation
+  | CyclicRewardChoiceObservation;
 
 export interface InventoryEntry {
   entityId: EntityId;

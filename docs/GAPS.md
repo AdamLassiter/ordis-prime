@@ -158,7 +158,8 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   discovery progress, static todos, watch rules and private build drafts.
   Generated alerts and published share snapshots are deliberately excluded.
   Live windows on reconciled recommended nodes surface as expiring acquisition
-  opportunities. Players can inspect and persist alternative recipe choices by
+  opportunities. Cited Circuit paths separately surface current, next and later
+  rotating options for missing linked rewards. Players can inspect and persist alternative recipe choices by
   stable source record identity. Profiles also carry the player's optional
   Mastery Rank, highest Railjack Intrinsic category rank and current
   none-or-kind adversary state as private progression inputs. A separate
@@ -169,15 +170,17 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   portable player ranks. Exact cited beacon, Judgement Point, Grendel Locator
   and Mutalist Alad V key gates compose with owned plus built inventory. Exact
   adversary confrontation gates compose with the portable private adversary
-  setting, but other conditional gates, markets, relic refinement, and mission
+  setting. Linked catalog pages show cached public Warframe.market top orders,
+  but the planner does not compare platinum against farm routes or manage a
+  player's listings. Other conditional gates, relic refinement, and mission
   duration are not yet modeled.
 - Authenticated players can keep private static todos with optional notes and due
   dates. Source-neutral world-state watches match current window fields and
   create deduplicated private in-app alerts. Detail pages can create todos and
   world-state watches linked to one canonical item, discovery topic or node.
   Node and item watches match exact reconciled canonical identity. World-state
-  subjects currently cover WFCD alert rewards, event names/rewards, and trader
-  inventory; unexposed or ambiguous subjects remain unmatched. Todos
+  subjects currently cover WFCD alert rewards, event names/rewards, trader
+  inventory, and derived Circuit rotation rewards; unexposed or ambiguous subjects remain unmatched. Todos
   support fixed-day, weekly, monthly-date, monthly-weekday and yearly calendar
   recurrence while remaining date-only; there are no web-push or webhook delivery channels. Watches
   can be edited, paused and resumed without losing generated alerts.
@@ -211,7 +214,8 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   planner does not yet use build capacity to optimize alternative mod ranks or
   configuration-specific requirements. Warframes expose sourced base stats,
   passives and ordered abilities, with one validated subsumable Helminth
-  replacement and five shard slots. The combined Operator panel stores one of
+  replacement, its sourced Helminth-specific description where the Wiki declares
+  a change, and five shard slots. The combined Operator panel stores one of
   five Focus schools and the Amp, but does not model individual Way ranks.
   Mod effects are not yet parsed into derived item stats, and deeper Helminth
   incompatibilities beyond explicit eligibility remain advisory gaps.
@@ -220,13 +224,13 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   scales and disagreement. An opt-in derived ordinal summary exposes its exact
   scale-position median and range method beside the raw tiers. It deliberately
   does not model source authority, recency, scope alignment or patch relevance.
-  Six bundled Overframe community sets provide a dated starter comparison for
+  Seven bundled Overframe community sets provide a dated starter comparison for
   Warframes, primary, secondary and melee weapons, Archwing equipment, and
-  companions. They are manually transcribed snapshots with captured vote counts
+  companions and Helminth abilities. They are manually transcribed snapshots with captured vote counts
   and are never refreshed automatically, so their staleness is visible and
-  intentional. Creator transcript conversions add seven independently cited
-  sets and a hash-based conversion index; one mislabeled duplicate transcript is
-  explicitly recorded without becoming a second opinion. Rankings can be
+  intentional. Creator transcript conversions add nine independently cited
+  sets and a hash-based conversion index, including KnightmareFrame's separate
+  average- and high-investment contexts. Rankings can be
   ordered by tier and a single source opens as a tier-grouped isolated list.
 - Structured MediaWiki pages now have a durable, timestamped 30-day cache and
   can be reprocessed offline. Weapon records expose public equipment fields and
@@ -280,6 +284,13 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   vendor records are not promoted until an independently cited canonical node
   mapping is reviewed; bounty rotations and random reward chances are not yet
   modeled as vendor facts.
+- Warframe.market's public v2 item manifest bridges tradable slugs through game
+  references. Catalog pages load the current top online buy and sell offers on
+  demand with a one-minute server cache and a direct listings link. Orders are
+  volatile display data, not catalog facts, inventory evidence, or planner
+  scoring. Authentication, listing management, trade automation, price history,
+  platform selection, subtype/rank controls, and offline-order browsing remain
+  out of scope while public OAuth client registration is unavailable.
 - Acquisition recommendations compose active `requires` and `unlocks` relations
   with private discovery completion and sourced node Mastery Rank or Railjack
   Intrinsics requirements and allow-listed item quantities to show cited

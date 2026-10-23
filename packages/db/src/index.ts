@@ -16,4 +16,5 @@ export * from "./schema.ts";
 export * from "./source-operations.ts";
 export * from "./todos.ts";
 export * from "./world-state.ts";
+export * from "./cyclic-rewards.ts";
 export * from "./world-state-watches.ts";

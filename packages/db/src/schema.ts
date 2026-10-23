@@ -62,7 +62,7 @@ export const worldStateWindows = sqliteTable(
       .references(() => worldStateSnapshots.id, { onDelete: "cascade" }),
     externalId: text("external_id").notNull(),
     kind: text({
-      enum: ["cycle", "alert", "fissure", "event", "trader"],
+      enum: ["cycle", "alert", "fissure", "event", "trader", "rotation"],
     }).notNull(),
     label: text().notNull(),
     activation: integer({ mode: "timestamp_ms" }),
@@ -103,6 +103,61 @@ export const sourceRefreshes = sqliteTable(
       table.sourceId,
       table.startedAt,
     ),
+  ],
+);
+export const cyclicRewardSchedules = sqliteTable(
+  "cyclic_reward_schedules",
+  {
+    id: text().primaryKey(),
+    key: text().notNull(),
+    label: text().notNull(),
+    epoch: integer({ mode: "timestamp_ms" }).notNull(),
+    intervalSeconds: integer("interval_seconds").notNull(),
+    phaseCount: integer("phase_count").notNull(),
+    choicesPerPhase: integer("choices_per_phase").notNull(),
+    selectionsAllowed: integer("selections_allowed").notNull(),
+    instructions: text().notNull(),
+    sourceRunId: text("source_run_id")
+      .notNull()
+      .references(() => sourceRuns.id),
+    sourceRecordKey: text("source_record_key").notNull(),
+    citationUrl: text("citation_url"),
+    sourcePath: text("source_path"),
+  },
+  (table) => [
+    uniqueIndex("cyclic_reward_schedule_run_key").on(
+      table.sourceRunId,
+      table.key,
+    ),
+  ],
+);
+export const cyclicRewardChoices = sqliteTable(
+  "cyclic_reward_choices",
+  {
+    id: text().primaryKey(),
+    scheduleId: text("schedule_id")
+      .notNull()
+      .references(() => cyclicRewardSchedules.id, { onDelete: "cascade" }),
+    phaseIndex: integer("phase_index").notNull(),
+    phaseLabel: text("phase_label").notNull(),
+    position: integer().notNull(),
+    primaryEntityId: text("primary_entity_id").references(() => entities.id),
+    primaryLabel: text("primary_label").notNull(),
+    acquisitionMode: text("acquisition_mode", {
+      enum: ["item", "path"],
+    }).notNull(),
+    includedRewardsJson: text("included_rewards_json").notNull().default("[]"),
+    sourceRecordKey: text("source_record_key").notNull(),
+    citationUrl: text("citation_url"),
+    sourcePath: text("source_path"),
+  },
+  (table) => [
+    uniqueIndex("cyclic_reward_choice_phase_position").on(
+      table.scheduleId,
+      table.phaseIndex,
+      table.position,
+    ),
+    index("cyclic_reward_choice_entity").on(table.primaryEntityId),
   ],
 );
 export const catalogReleases = sqliteTable("catalog_releases", {
@@ -830,7 +885,7 @@ export const worldStateWatches = sqliteTable(
       .references(() => users.id, { onDelete: "cascade" }),
     entityId: text("entity_id").references(() => entities.id),
     kind: text({
-      enum: ["cycle", "alert", "fissure", "event", "trader"],
+      enum: ["cycle", "alert", "fissure", "event", "trader", "rotation"],
     }).notNull(),
     labelContains: text("label_contains"),
     stateEquals: text("state_equals"),

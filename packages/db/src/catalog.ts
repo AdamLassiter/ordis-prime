@@ -7,6 +7,7 @@ import type {
   WeaponClass,
 } from "@ordis-prime/domain";
 import type Database from "better-sqlite3";
+import { listEntityCyclicRewards } from "./cyclic-rewards.ts";
 
 export interface CatalogSummary {
   kind: string;
@@ -45,6 +46,8 @@ export interface DiscoveryCatalogEntry extends CatalogSummary {
 }
 
 export interface CatalogItem extends CatalogSummary {
+  market?: { itemId: string; slug: string };
+  cyclicRewards: ReturnType<typeof listEntityCyclicRewards>;
   attributes: Array<{
     key: string;
     label: string;
@@ -439,6 +442,24 @@ export function findCatalogItem(
     sqlite,
     item.id,
   );
+  const cyclicRewards = listEntityCyclicRewards(sqlite, item.id);
+  const marketIds = sqlite
+    .prepare(
+      `select namespace, value from external_ids
+       where entity_id = ? and source_id = 'warframe-market-items'
+         and namespace in ('item-id', 'item-slug')`,
+    )
+    .all(item.id) as Array<{ namespace: string; value: string }>;
+  const marketItemId = marketIds.find(
+    ({ namespace }) => namespace === "item-id",
+  )?.value;
+  const marketSlug = marketIds.find(
+    ({ namespace }) => namespace === "item-slug",
+  )?.value;
+  const market =
+    marketItemId && marketSlug
+      ? { itemId: marketItemId, slug: marketSlug }
+      : undefined;
   const attributes = sqlite
     .prepare(
       `with ranked as (
@@ -802,6 +823,8 @@ export function findCatalogItem(
     ...(modPolarity ? { modPolarity } : {}),
     attributes,
     factoryPolaritySets,
+    cyclicRewards,
+    ...(market ? { market } : {}),
     components,
     usedInRecipes,
     drops,

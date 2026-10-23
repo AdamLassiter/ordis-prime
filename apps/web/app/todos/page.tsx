@@ -136,6 +136,7 @@ function WatchFields({ watch }: { watch?: WorldStateWatch }) {
           <option value="alert">Alert</option>
           <option value="fissure">Void Fissure</option>
           <option value="trader">Trader</option>
+          <option value="rotation">Reward rotation</option>
         </select>
       </label>
       <label>

@@ -27,6 +27,12 @@ trigger and known grant quantity. It does not enter repeatable node scoring,
 chance summaries or live-window intersections, because a one-time grant is not
 a farmable drop.
 
+Canonically resolved Circuit choices are a separate rotating acquisition
+section. A missing Warframe or augment can match a Normal reward path; a missing
+Incarnon Genesis can match its Steel Path choice. Current and next phases carry
+absolute start times, while later phases retain their sourced phase label. This
+does not treat a selectable path as a random drop or mix it into node scoring.
+
 For a canonical node, the planner also composes active cited access relations.
 Both `node requires prerequisite` and `prerequisite unlocks node` express a
 requirement. A player has satisfied that requirement only when the related
@@ -72,7 +78,7 @@ relations; structured quest, node-completion, Railjack Intrinsics, active
 adversary and Warframe-rank Wiki requirements; sourced numeric Mastery Rank
 gates; allow-listed exact item quantity gates; and current Junction objectives
 composed with private per-objective completion. Other compound conditions,
-market acquisition, relic refinement and
+other market acquisition, relic refinement and
 rotation-specific mission duration are not yet modeled.
 Those inputs should extend the planning read model rather than becoming UI-only
 heuristics.

@@ -26,6 +26,17 @@ is the conservative fallback. Every raw subject label remains on the snapshot
 even when it cannot be reconciled. Resolved subjects link from timer cards and
 let item-linked watches match canonical identity rather than substrings.
 
+Weekly Circuit rewards are static cyclic source facts rather than polled live
+state. The selected `The Circuit` Wiki revision supplies two independently
+anchored schedules: 11 Normal phases with three Warframe paths and nine Steel
+Path phases with five Incarnon Genesis choices. Each row retains the phase index
+used by the Wiki expression; displayed week order is not assumed to equal the
+epoch's zero phase when Digital Extremes inserts a new rotation. The read model
+derives current and next absolute windows from the stored epoch and interval.
+Those derived windows use the `rotation` kind, participate in the same private
+watch/notification engine, and expose resolved reward subjects without copying
+them into dynamic snapshot tables.
+
 ## Persistence and promotion
 
 Dynamic snapshots have a separate lifecycle from static catalog source runs.
@@ -78,6 +89,9 @@ shows per-source observation time and current/total window counts. A source olde
 than 15 minutes is visibly stale (configurable with
 `ORDIS_WORLD_STATE_STALE_MS`); stale data remains available rather than silently
 disappearing.
+It also shows current, next, and expandable complete Circuit schedules. Their
+freshness follows the daily static Wiki adapter rather than the 15-minute live
+world-state warning.
 
 ## Current limits
 

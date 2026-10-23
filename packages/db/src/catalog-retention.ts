@@ -48,6 +48,12 @@ export function pruneInactiveCatalogHistory(
       .all() as Array<{ id: string }>;
     const statements = [
       sqlite.prepare(
+        "delete from cyclic_reward_choices where schedule_id in (select id from cyclic_reward_schedules where source_run_id = ?)",
+      ),
+      sqlite.prepare(
+        "delete from cyclic_reward_schedules where source_run_id = ?",
+      ),
+      sqlite.prepare(
         "delete from editorial_rankings where set_id in (select id from ranking_sets where source_run_id = ?)",
       ),
       sqlite.prepare("delete from ranking_sets where source_run_id = ?"),

@@ -11,6 +11,7 @@ import {
   type Recipe,
 } from "@ordis-prime/domain";
 import { listCurrentWorldState } from "./world-state.ts";
+import { listCyclicRewardSchedules } from "./cyclic-rewards.ts";
 import { getPlayerSettings } from "./player.ts";
 
 export interface PlayerGoal {
@@ -44,6 +45,21 @@ export interface AcquisitionPlan {
     nodeSlug: string;
     nodeName: string;
     source: { name: string; citationUrl?: string };
+  }>;
+  rotatingRewards: Array<{
+    scheduleKey: string;
+    scheduleLabel: string;
+    phaseLabel: string;
+    status: "active" | "upcoming" | "later";
+    startsAt?: number;
+    endsAt?: number;
+    reward: {
+      entityId: string;
+      kind: string;
+      slug: string;
+      name: string;
+      quantity: number;
+    };
   }>;
   recommendations: Array<{
     nodeId?: string;
@@ -601,12 +617,50 @@ export function buildAcquisitionPlan(
         })),
       })),
     }));
+  const missingDetailsById = new Map(
+    missing.map((entry) => [entry.entityId, entry]),
+  );
+  const rotatingRewards = listCyclicRewardSchedules(sqlite).flatMap(
+    (schedule) =>
+      schedule.choices.flatMap((choice) => {
+        const entityIds = [
+          choice.primary.entity?.id,
+          ...choice.includedRewards.map((reward) => reward.entity?.id),
+        ].filter((id): id is string => Boolean(id));
+        return entityIds.flatMap((entityId) => {
+          const needed = missingDetailsById.get(entityId as EntityId);
+          if (!needed) return [];
+          const active = choice.phaseIndex === schedule.currentPhaseIndex;
+          const upcoming = choice.phaseIndex === schedule.nextPhaseIndex;
+          return [
+            {
+              scheduleKey: schedule.key,
+              scheduleLabel: schedule.label,
+              phaseLabel: choice.phaseLabel,
+              status: active
+                ? ("active" as const)
+                : upcoming
+                  ? ("upcoming" as const)
+                  : ("later" as const),
+              startsAt: active
+                ? schedule.currentStartsAt
+                : upcoming
+                  ? schedule.currentEndsAt
+                  : undefined,
+              endsAt: active ? schedule.currentEndsAt : undefined,
+              reward: needed,
+            },
+          ];
+        });
+      }),
+  );
   return {
     playerMasteryRank,
     playerRailjackIntrinsicRank,
     goals,
     missing,
     oneTimeGrants,
+    rotatingRewards,
     recommendations,
     recipeChoices,
   };

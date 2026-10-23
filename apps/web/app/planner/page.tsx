@@ -83,6 +83,43 @@ export default async function Planner() {
         </section>
       )}
 
+      {plan.rotatingRewards.length > 0 && (
+        <section className="planner-section">
+          <h2>Circuit acquisition windows</h2>
+          <p className="muted">
+            Weekly reward paths that can satisfy something this plan still
+            needs.
+          </p>
+          <div className="grid">
+            {plan.rotatingRewards.map((entry) => (
+              <article
+                className="card"
+                key={`${entry.scheduleKey}:${entry.phaseLabel}:${entry.reward.entityId}`}
+              >
+                <span className="tag">{entry.status}</span>
+                <h3>
+                  <Link
+                    href={`/catalog/${entry.reward.kind}/${entry.reward.slug}`}
+                  >
+                    {entry.reward.name} × {entry.reward.quantity}
+                  </Link>
+                </h3>
+                <p>
+                  <Link href="/world-state">{entry.scheduleLabel}</Link> ·{" "}
+                  {entry.phaseLabel}
+                </p>
+                {entry.startsAt && (
+                  <p className="muted">
+                    {entry.status === "active" ? "Started" : "Starts"}{" "}
+                    {formatInstant(entry.startsAt)}
+                  </p>
+                )}
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
+
       <section className="planner-section">
         <h2>Goals</h2>
         {plan.goals.length ? (

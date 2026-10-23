@@ -2008,7 +2008,14 @@ function parsePortableEntity(
   };
 }
 
-const WATCH_KINDS = ["cycle", "alert", "fissure", "event", "trader"] as const;
+const WATCH_KINDS = [
+  "cycle",
+  "alert",
+  "fissure",
+  "event",
+  "trader",
+  "rotation",
+] as const;
 const WATCH_TRIGGERS = ["active", "starting", "ending"] as const;
 
 function optionalText(

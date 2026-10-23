@@ -13,6 +13,8 @@ export * from "./adapters/warframe-wiki-focus.ts";
 export * from "./adapters/warframe-wiki-quests.ts";
 export * from "./adapters/warframe-wiki-enemies.ts";
 export * from "./adapters/warframe-wiki-vendors.ts";
+export * from "./adapters/warframe-wiki-circuit.ts";
+export * from "./adapters/warframe-market-items.ts";
 export * from "./adapters/manual-ranking.ts";
 export * from "./adapters/manual-discovery.ts";
 export * from "./adapters/manual-facts.ts";

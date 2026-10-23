@@ -5,6 +5,8 @@
 - As a guest, I can search for an item and follow its recipe to every required
   component and documented acquisition source.
 - As a guest, I can open a node and see every linked reward, chance and rotation.
+- As a guest, I can open a tradable item and see current top online buy and sell
+  offers without giving Ordis Prime marketplace credentials.
 - As a player, I can record quantities, built and wanted copies, and optional
   mastered or subsumed state.
 - As a player, I can merge a raw inventory snapshot from my own game session

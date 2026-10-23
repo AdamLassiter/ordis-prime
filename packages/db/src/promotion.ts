@@ -54,6 +54,8 @@ export interface PromotionResult {
   equipmentPolaritySetsCreated: number;
   rankingSetsCreated: number;
   rankingsCreated: number;
+  cyclicRewardSchedulesCreated: number;
+  cyclicRewardChoicesCreated: number;
   conflictsCreated: number;
 }
 
@@ -126,6 +128,8 @@ function promoteInTransaction(
         equipmentPolaritySetsCreated: 0,
         rankingSetsCreated: 0,
         rankingsCreated: 0,
+        cyclicRewardSchedulesCreated: 0,
+        cyclicRewardChoicesCreated: 0,
         conflictsCreated: 0,
       };
     }
@@ -209,6 +213,8 @@ function promoteInTransaction(
     equipmentPolaritySetsCreated: 0,
     rankingSetsCreated: 0,
     rankingsCreated: 0,
+    cyclicRewardSchedulesCreated: 0,
+    cyclicRewardChoicesCreated: 0,
     conflictsCreated: 0,
   };
 
@@ -226,6 +232,82 @@ function promoteInTransaction(
   }
 
   const rankingSets = new Map<string, { id: string; scale: Set<string> }>();
+  const cyclicRewardSchedules = new Map<
+    string,
+    { id: string; phaseCount: number }
+  >();
+  for (const observation of input.observations) {
+    if (observation.type !== "cyclic-reward-schedule") continue;
+    const id = randomUUID();
+    sqlite
+      .prepare(
+        `insert into cyclic_reward_schedules
+          (id, key, label, epoch, interval_seconds, phase_count, choices_per_phase,
+           selections_allowed, instructions, source_run_id, source_record_key,
+           citation_url, source_path)
+         values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      )
+      .run(
+        id,
+        observation.key,
+        observation.label,
+        Date.parse(observation.epoch),
+        observation.intervalSeconds,
+        observation.phaseCount,
+        observation.choicesPerPhase,
+        observation.selectionsAllowed,
+        observation.instructions,
+        sourceRunId,
+        observation.evidence.sourceRecordKey,
+        observation.evidence.citationUrl ?? null,
+        observation.evidence.path ?? null,
+      );
+    cyclicRewardSchedules.set(observation.key, {
+      id,
+      phaseCount: observation.phaseCount,
+    });
+    counts.cyclicRewardSchedulesCreated += 1;
+  }
+  for (const observation of input.observations) {
+    if (observation.type !== "cyclic-reward-choice") continue;
+    const schedule = cyclicRewardSchedules.get(observation.scheduleKey);
+    if (!schedule) continue;
+    const primaryEntityId = resolveCyclicRewardSubject(
+      sqlite,
+      state,
+      observation.primary,
+    );
+    const includedRewards = (observation.includedRewards ?? []).map(
+      (reward) => ({
+        label: reward.label,
+        tier: reward.tier,
+        entityId: resolveCyclicRewardSubject(sqlite, state, reward),
+      }),
+    );
+    sqlite
+      .prepare(
+        `insert into cyclic_reward_choices
+          (id, schedule_id, phase_index, phase_label, position, primary_entity_id,
+           primary_label, acquisition_mode, included_rewards_json,
+           source_record_key, citation_url, source_path)
+         values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      )
+      .run(
+        randomUUID(),
+        schedule.id,
+        observation.phaseIndex,
+        observation.phaseLabel,
+        observation.position,
+        primaryEntityId ?? null,
+        observation.primary.label,
+        observation.acquisitionMode,
+        JSON.stringify(includedRewards),
+        observation.evidence.sourceRecordKey,
+        observation.evidence.citationUrl ?? null,
+        observation.evidence.path ?? null,
+      );
+    counts.cyclicRewardChoicesCreated += 1;
+  }
   for (const observation of input.observations) {
     if (observation.type !== "ranking-set") continue;
     const id = randomUUID();
@@ -2019,6 +2101,10 @@ function validateCandidateSet(observations: Observation[]): void {
     Extract<Observation, { type: "ranking-set" }>
   >();
   const uniqueFacts = new Map<string, Observation>();
+  const cyclicSchedules = new Map<
+    string,
+    Extract<Observation, { type: "cyclic-reward-schedule" }>
+  >();
 
   for (const observation of observations) {
     if (observation.type === "entity") {
@@ -2057,6 +2143,31 @@ function validateCandidateSet(observations: Observation[]): void {
       rankingSets.set(observation.key, observation);
       continue;
     }
+    if (observation.type === "cyclic-reward-schedule") {
+      if (cyclicSchedules.has(observation.key))
+        throw new Error(
+          `Candidate cyclic reward schedule ${observation.key} is declared more than once`,
+        );
+      if (
+        !observation.key ||
+        !observation.label ||
+        !Number.isFinite(Date.parse(observation.epoch)) ||
+        !Number.isSafeInteger(observation.intervalSeconds) ||
+        observation.intervalSeconds < 1 ||
+        !Number.isSafeInteger(observation.phaseCount) ||
+        observation.phaseCount < 1 ||
+        !Number.isSafeInteger(observation.choicesPerPhase) ||
+        observation.choicesPerPhase < 1 ||
+        !Number.isSafeInteger(observation.selectionsAllowed) ||
+        observation.selectionsAllowed < 1 ||
+        observation.selectionsAllowed > observation.choicesPerPhase
+      )
+        throw new Error(
+          `Candidate cyclic reward schedule ${observation.key} is invalid`,
+        );
+      cyclicSchedules.set(observation.key, observation);
+      continue;
+    }
     let factKey: string | undefined;
     if (observation.type === "node-detail")
       factKey = `node-detail:${externalKey(observation.nodeExternalId)}`;
@@ -2083,6 +2194,30 @@ function validateCandidateSet(observations: Observation[]): void {
   }
 
   for (const observation of observations) {
+    if (observation.type === "cyclic-reward-choice") {
+      const schedule = cyclicSchedules.get(observation.scheduleKey);
+      if (
+        !schedule ||
+        !Number.isSafeInteger(observation.phaseIndex) ||
+        observation.phaseIndex < 0 ||
+        observation.phaseIndex >= schedule.phaseCount ||
+        !Number.isSafeInteger(observation.position) ||
+        observation.position < 0 ||
+        observation.position >= schedule.choicesPerPhase ||
+        !observation.phaseLabel ||
+        !observation.primary.label
+      )
+        throw new Error(
+          `Candidate cyclic reward choice ${observation.evidence.sourceRecordKey} is invalid`,
+        );
+      const factKey = `cyclic-reward-choice:${observation.scheduleKey}:${observation.phaseIndex}:${observation.position}`;
+      if (uniqueFacts.has(factKey))
+        throw new Error(
+          `Candidate cyclic reward choice ${factKey} is declared more than once`,
+        );
+      uniqueFacts.set(factKey, observation);
+      continue;
+    }
     if (observation.type !== "ranking") continue;
     const set = rankingSets.get(observation.setKey);
     if (!set)
@@ -2101,6 +2236,35 @@ function validateCandidateSet(observations: Observation[]): void {
       );
     uniqueFacts.set(factKey, observation);
   }
+}
+
+function resolveCyclicRewardSubject(
+  sqlite: Database.Database,
+  state: ResolutionState,
+  subject: { label: string; externalIds?: ExternalIdentifier[] },
+): EntityId | undefined {
+  for (const externalId of subject.externalIds ?? []) {
+    const entityId = state.externalIds.get(externalKey(externalId));
+    if (entityId) return entityId;
+  }
+  const exact = sqlite
+    .prepare(
+      `select id from entities
+       where retired = 0 and name = ? collate nocase`,
+    )
+    .all(subject.label) as Array<{ id: EntityId }>;
+  if (exact.length === 1) return exact[0]!.id;
+  const matches = sqlite
+    .prepare(
+      `select distinct entity.id from entities entity
+       left join entity_aliases alias on alias.entity_id = entity.id
+       where entity.retired = 0
+         and alias.normalized = ?`,
+    )
+    .all(normalizedAlias(subject.label)) as Array<{
+    id: EntityId;
+  }>;
+  return matches.length === 1 ? matches[0]!.id : undefined;
 }
 
 function incompatibleEntityDeclarations(

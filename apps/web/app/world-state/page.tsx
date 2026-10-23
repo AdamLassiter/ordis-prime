@@ -1,16 +1,20 @@
 import {
   listCurrentWorldState,
+  listCyclicRewardSchedules,
   listWorldStateSourceStatuses,
 } from "@ordis-prime/db";
 import { getDatabase } from "@/lib/database";
 import { WorldStateBoard } from "./world-state-board";
+import { CircuitSchedules } from "./circuit-schedules";
 
 export const dynamic = "force-dynamic";
 
 export default function WorldStatePage() {
   const now = Date.now();
-  const windows = listCurrentWorldState(getDatabase(), now);
-  const sources = listWorldStateSourceStatuses(getDatabase(), now);
+  const database = getDatabase();
+  const windows = listCurrentWorldState(database, now);
+  const schedules = listCyclicRewardSchedules(database, now);
+  const sources = listWorldStateSourceStatuses(database, now);
   const staleAfter = positiveInteger(
     process.env.ORDIS_WORLD_STATE_STALE_MS,
     15 * 60_000,
@@ -23,8 +27,10 @@ export default function WorldStatePage() {
       <p className="eyebrow">Public · live sourced data</p>
       <h1>Current and upcoming activity</h1>
       <p className="lede">
-        Check cycles, events, alerts, fissures, and trader availability.
+        Check Circuit rewards, cycles, events, alerts, fissures, and trader
+        availability.
       </p>
+      <CircuitSchedules schedules={schedules} />
       {sources.length > 0 && (
         <div
           className={`freshness-panel${staleSources.length ? " stale" : ""}`}

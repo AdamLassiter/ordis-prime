@@ -57,7 +57,9 @@ during import, the player-authored rule is retained without the link and the
 unresolved reference is reported. Recurring occurrence chains
 use array-index predecessor references so completed history and an existing next
 occurrence cannot generate duplicates after restoration. Generated notifications are
-not portable. Private build drafts include their details,
+not portable. The portable watch kind includes static reward rotations; their
+generated occurrences remain derived from the destination installation's
+current cited schedule rather than being embedded in the profile. Private build drafts include their details,
 equipment, configurations, current equipment ranks, positioned mods, mod-slot
 roles and polarities independently of installed mods, selected modular Kitgun
 or Zaw components, plus typed arcane/shard

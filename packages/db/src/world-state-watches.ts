@@ -412,9 +412,9 @@ function normalizeFilter(
 
 function validateWatchInput(input: WorldStateWatchInput): WorldStateWatchInput {
   if (
-    !(["cycle", "alert", "fissure", "event", "trader"] as string[]).includes(
-      input.kind,
-    )
+    !(
+      ["cycle", "alert", "fissure", "event", "trader", "rotation"] as string[]
+    ).includes(input.kind)
   )
     throw new Error("Watch kind is invalid");
   if (!(["active", "starting", "ending"] as string[]).includes(input.trigger))

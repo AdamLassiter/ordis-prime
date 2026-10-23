@@ -1,5 +1,5 @@
 export type WorldStateWindowKind =
-  "cycle" | "alert" | "fissure" | "event" | "trader";
+  "cycle" | "alert" | "fissure" | "event" | "trader" | "rotation";
 
 export interface WorldStateSubjectObservation {
   label: string;

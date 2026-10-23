@@ -21,8 +21,10 @@ names; per-planet node labels are normalized to catalog slugs.
 
 ## Editorial ranking format
 
-Version 1 YAML contains source metadata, an ordered tier scale, and entries
-linked by WFCD `uniqueName`. The required source fields are ID, title, author,
+Version 2 YAML contains source metadata, an ordered tier scale, an explicit
+subject source/namespace, and entries linked by values in that namespace. This
+lets the same format rank WFCD equipment, Wiki abilities, or later canonical
+subjects without overloading one identifier field. The required source fields are ID, title, author,
 URL, publication date, scope, and a licence/citation note. An entry contains an
 external ID and tier; position, video timestamp, and notes are optional. See
 `data/manual/editorial.example.yaml` for the complete shape.
@@ -49,8 +51,8 @@ independently queryable rather than being collapsed into a consensus score.
 
 ### Overframe starter sets
 
-Six checked-in ranking files cover Warframes, primary weapons, secondary
-weapons, melee weapons, Archwing equipment, and companions. Import all of them
+Seven checked-in ranking files cover Warframes, primary weapons, secondary
+weapons, melee weapons, Archwing equipment, companions, and Helminth abilities. Import all of them
 after `wfcd-items`:
 
 ```sh
@@ -61,8 +63,9 @@ These are manually curated snapshots, not an Overframe integration. Each file
 cites an immutable archived response, keeps only entries that had at least 40
 votes (the public list's ranked threshold at capture time), records the vote
 count in the entry note, and assigns the tier with the largest vote count.
-Equal vote counts resolve in displayed scale order, from S through D. Subjects
-are exact WFCD `uniqueName` identifiers.
+Equal vote counts resolve in displayed scale order, from S through D. Equipment
+subjects use exact WFCD `uniqueName` identifiers; Helminth subjects use exact
+WARFRAME Wiki ability-record identifiers.
 
 Snapshot dates differ because the latest preserved response differed by list.
 The application does not fetch, schedule, or refresh Overframe data. A future
@@ -79,8 +82,9 @@ tier-grouped view, including lists such as Overframe melee that exceed 200 items
 
 ### Creator transcript sets
 
-Seven checked-in ranking files transcribe the unique creator videos represented
-under `data/unstructured`: Brozime's 2026 Warframe roster review and Salt Prime's
+Nine checked-in ranking files transcribe the creator videos represented under
+`data/unstructured`: Brozime's 2026 Warframe roster review, KnightmareFrame's
+separate average-investment and high-investment Warframe lists, and Salt Prime's
 Coda, Kuva, Tenet, primary Prime, secondary Prime and melee Prime lists. Import
 them after `wfcd-items`:
 
@@ -89,10 +93,7 @@ pnpm data:rankings:creators
 ```
 
 `data/manual/transcript-conversion-index.yaml` records every input transcript,
-its hash and its output. The file labelled `knightmareframe-warframes.txt` has
-the same video URL and a byte-identical body to the Brozime transcript after the
-first line, so it is recorded as a duplicate and does not create a false second
-ranking source. Names are reviewed against WFCD identities; qualifications such
+its hash and every reviewed output. Names are reviewed against WFCD identities; qualifications such
 as Incarnon form, firing mode, platform, speculative placement and conditional
 S tier remain in entry notes.
 
@@ -107,12 +108,12 @@ than mistaken for source truth.
 
 ## Editorial compromise
 
-The editorial v1 format handles tier sets only. The bundled Overframe sets are
+The editorial v2 format handles tier sets only. The bundled Overframe sets are
 dated community popularity evidence, not objective power rankings, and become
 stale as votes and game balance change. Its derived view is an ordinal
 comparison, not a claim that unlike verbal tiers have shared cardinal meaning.
 It does not weight source expertise, recency, patch relevance, scope, or
-coverage. Before stable release, `schemaVersion: 1` may be replaced rather than
+coverage. Before stable release, `schemaVersion: 2` may be replaced rather than
 migrated; there is no pre-release compatibility promise.
 
 ## Discovery format

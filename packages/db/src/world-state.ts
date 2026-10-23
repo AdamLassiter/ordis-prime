@@ -6,6 +6,7 @@ import {
   type WorldStateWindowObservation,
 } from "@ordis-prime/domain";
 import type { PromotionSource } from "./promotion.ts";
+import { listCyclicRewardSchedules } from "./cyclic-rewards.ts";
 
 export interface PromoteWorldStateInput {
   source: PromotionSource;
@@ -284,7 +285,7 @@ export function listCurrentWorldState(
     });
     subjects.set(key, entries);
   }
-  return rows.map(
+  const liveWindows = rows.map(
     ({
       snapshotId,
       activation,
@@ -311,6 +312,51 @@ export function listCurrentWorldState(
       sourcePath: sourcePath ?? undefined,
     }),
   );
+  const rotationWindows = listCyclicRewardSchedules(sqlite, now).flatMap(
+    (schedule) =>
+      [schedule.currentPhaseIndex, schedule.nextPhaseIndex].map(
+        (phaseIndex, offset): CurrentWorldStateWindow => {
+          const choices = schedule.choices.filter(
+            (choice) => choice.phaseIndex === phaseIndex,
+          );
+          const activation =
+            schedule.currentStartsAt +
+            offset * schedule.intervalSeconds * 1_000;
+          const subjects = choices.flatMap((choice) => [
+            ...(choice.primary.entity ? [choice.primary.entity] : []),
+            ...choice.includedRewards.flatMap((reward) =>
+              reward.entity ? [reward.entity] : [],
+            ),
+          ]);
+          const phaseLabel =
+            choices[0]?.phaseLabel ?? `Phase ${phaseIndex + 1}`;
+          return {
+            externalId: `${schedule.key}:${activation}`,
+            kind: "rotation",
+            label: `${schedule.label}: ${phaseLabel}`,
+            activation,
+            expiry: activation + schedule.intervalSeconds * 1_000,
+            state: choices.map((choice) => choice.primary.label).join(", "),
+            subjectLabels: choices.map((choice) => choice.primary.label),
+            subjects: [
+              ...new Map(
+                subjects.map((subject) => [
+                  `${subject.kind}:${subject.slug}`,
+                  subject,
+                ]),
+              ).values(),
+            ],
+            metadata: { scheduleKey: schedule.key, phaseIndex },
+            sourceId: schedule.sourceId,
+            sourceName: schedule.source.name,
+            snapshotVersion: schedule.snapshotVersion,
+            observedAt: schedule.observedAt,
+            sourceRecordKey: `${schedule.key}:${phaseIndex}`,
+          };
+        },
+      ),
+  );
+  return [...rotationWindows, ...liveWindows];
 }
 
 function resolveWorldStateSubject(

@@ -8,6 +8,8 @@ the compromises between that target and the current implementation.
 - [Sources](SOURCES.md) records provider and licence policy.
 - [Manual data](MANUAL_DATA.md) defines cited editorial, discovery, factual overlay, and enhancement-option import formats.
 - [Profile data](PROFILE_DATA.md) defines portable player-state identity and import behavior.
+- [Account synchronization](ACCOUNT_SYNC.md) records the safe automatic-sync boundary and evidence needed to expand it.
+- [Marketplace](MARKETPLACE.md) defines the anonymous Warframe.market identity and live-order boundary.
 - [Acquisition planner](ACQUISITION_PLANNER.md) defines goal and recommendation semantics.
 - [World state](WORLD_STATE.md) defines dynamic availability and snapshot semantics.
 - [Todos and dynamic watches](TODOS.md) defines private tasks and alert intent.
