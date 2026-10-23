@@ -12,3 +12,10 @@ test("a section link remains active on its detail pages", () => {
   assert.equal(isNavigationActive("/builds/123", "/builds"), true);
   assert.equal(isNavigationActive("/buildsmith", "/builds"), false);
 });
+
+test("account and administrator navigation match their nested routes", () => {
+  assert.equal(isNavigationActive("/account", "/account"), true);
+  assert.equal(isNavigationActive("/admin/accounts", "/admin"), true);
+  assert.equal(isNavigationActive("/accounting", "/account"), false);
+  assert.equal(isNavigationActive("/administration", "/admin"), false);
+});

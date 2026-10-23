@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
-import { SignOutButton } from "./sign-out-button";
 import { PrimaryNavigation } from "./primary-navigation";
+import { SessionNavigation } from "./session-navigation";
 import "./globals.css";
 export const metadata: Metadata = {
   title: {
@@ -32,23 +32,11 @@ export default async function Layout({
               </span>
             </Link>
             <PrimaryNavigation signedIn={Boolean(session)} />
-            <div className="nav-session">
-              {session?.user.role === "admin" && (
-                <Link href="/admin/accounts">Crew</Link>
-              )}
-              {session ? (
-                <>
-                  <Link href="/account" title={session.user.name}>
-                    Operator
-                  </Link>
-                  <SignOutButton />
-                </>
-              ) : (
-                <Link className="nav-connect" href="/sign-in">
-                  Connect
-                </Link>
-              )}
-            </div>
+            <SessionNavigation
+              name={session?.user.name}
+              role={session?.user.role}
+              signedIn={Boolean(session)}
+            />
           </nav>
         </header>
         <main>{children}</main>

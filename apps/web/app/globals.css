@@ -149,7 +149,9 @@ nav {
   background: rgb(108 231 239 / 4%);
 }
 .nav-links a.active,
-.nav-links a[aria-current="page"] {
+.nav-links a[aria-current="page"],
+.nav-session a.active,
+.nav-session a[aria-current="page"] {
   color: var(--text);
   border-color: var(--gold);
   background: rgb(239 200 110 / 8%);
