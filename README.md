@@ -70,7 +70,7 @@ durable volume.
 tier snapshots. It never fetches Overframe; refreshing those files is a manual
 editorial task.
 
-`data:rankings:creators` imports the seven reviewed ranking snapshots converted
+`data:rankings:creators` imports the nine reviewed ranking snapshots converted
 from the supplied creator transcripts. Their conversion index records all eight
 inputs, including one duplicate transcript that deliberately does not become a
 second opinion.
