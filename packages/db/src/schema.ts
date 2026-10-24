@@ -779,6 +779,34 @@ export const playerProfiles = sqliteTable("player_profiles", {
   }),
   updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
 });
+export const playerImportPairings = sqliteTable(
+  "player_import_pairings",
+  {
+    id: text().primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    provider: text({ enum: ["warframe-api-helper"] }).notNull(),
+    tokenHash: text("token_hash"),
+    status: text({
+      enum: ["pending", "running", "succeeded", "failed", "cancelled"],
+    }).notNull(),
+    expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
+    resultJson: text("result_json"),
+    error: text(),
+    createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+    startedAt: integer("started_at", { mode: "timestamp_ms" }),
+    finishedAt: integer("finished_at", { mode: "timestamp_ms" }),
+  },
+  (table) => [
+    uniqueIndex("player_import_pairings_token_hash_unique").on(table.tokenHash),
+    index("player_import_pairings_user_created").on(
+      table.userId,
+      table.createdAt,
+    ),
+    index("player_import_pairings_expiry").on(table.expiresAt),
+  ],
+);
 export const sessions = sqliteTable(
   "sessions",
   {

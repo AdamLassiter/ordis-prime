@@ -104,6 +104,9 @@ export interface AlecaFrameImportResult extends AlecaFrameImportPreview {
   buildId?: string;
 }
 
+export type PlayerDataImportPreview = AlecaFrameImportPreview;
+export type PlayerDataImportResult = AlecaFrameImportResult;
+
 interface ParsedSnapshot {
   raw: Record<string, unknown>;
   parsedRecords: number;
@@ -226,6 +229,19 @@ export function decryptAlecaFrameSnapshot(bytes: Uint8Array): unknown {
   return normalized;
 }
 
+export function decodeWarframeInventoryJson(bytes: Uint8Array): unknown {
+  if (!bytes.byteLength) throw new Error("Warframe inventory is empty");
+  let raw: unknown;
+  try {
+    raw = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+  } catch {
+    throw new Error("Warframe inventory did not contain valid UTF-8 JSON");
+  }
+  if (!isRecord(raw))
+    throw new Error("Warframe inventory must contain a JSON object");
+  return raw;
+}
+
 export function previewAlecaFrameImport(
   sqlite: Database.Database,
   userId: string,
@@ -235,7 +251,8 @@ export function previewAlecaFrameImport(
   validateOptions(options);
   const hash = createHash("sha256").update(bytes).digest("hex");
   const parsed = parseSnapshot(decryptAlecaFrameSnapshot(bytes));
-  return buildPreview(sqlite, userId, hash, parsed, options).preview;
+  return buildPreview(sqlite, userId, hash, parsed, options, "AlecaFrame")
+    .preview;
 }
 
 export function applyAlecaFrameImport(
@@ -250,7 +267,14 @@ export function applyAlecaFrameImport(
   if (!/^[a-f0-9]{64}$/.test(expectedHash) || hash !== expectedHash)
     throw new Error("AlecaFrame snapshot changed after preview");
   const parsed = parseSnapshot(decryptAlecaFrameSnapshot(bytes));
-  const built = buildPreview(sqlite, userId, hash, parsed, options);
+  const built = buildPreview(
+    sqlite,
+    userId,
+    hash,
+    parsed,
+    options,
+    "AlecaFrame",
+  );
   let buildId: string | undefined;
   sqlite.transaction(() => {
     if (options.includeInventory)
@@ -270,6 +294,35 @@ export function applyAlecaFrameImport(
     }
   })();
   return { ...built.preview, applied: true, ...(buildId ? { buildId } : {}) };
+}
+
+export function applyWarframeApiHelperImport(
+  sqlite: Database.Database,
+  userId: string,
+  bytes: Uint8Array,
+): PlayerDataImportResult {
+  const options: AlecaFrameImportOptions = {
+    mode: "merge",
+    includeInventory: true,
+    includeProgression: true,
+    createBuild: false,
+  };
+  const hash = createHash("sha256").update(bytes).digest("hex");
+  const parsed = parseSnapshot(decodeWarframeInventoryJson(bytes));
+  const built = buildPreview(
+    sqlite,
+    userId,
+    hash,
+    parsed,
+    options,
+    "Warframe API helper",
+  );
+  sqlite.transaction(() => {
+    applyInventory(sqlite, userId, built.assertions, "merge");
+    if (built.nextSettings)
+      setPlayerProgression(sqlite, userId, built.nextSettings);
+  })();
+  return { ...built.preview, applied: true };
 }
 
 function parseSnapshot(raw: unknown): ParsedSnapshot {
@@ -378,6 +431,7 @@ function buildPreview(
   hash: string,
   parsed: ParsedSnapshot,
   options: AlecaFrameImportOptions,
+  sourceLabel: string,
 ): {
   preview: AlecaFrameImportPreview;
   assertions: Map<string, ResolvedAssertion>;
@@ -488,7 +542,7 @@ function buildPreview(
   const warnings = [...loadout.warnings];
   if (!parsed.sourceTimestamp)
     warnings.push(
-      "AlecaFrame did not provide a valid LastInventorySync timestamp.",
+      `${sourceLabel} did not provide a valid LastInventorySync timestamp.`,
     );
   warnings.push(
     "Catalyst, Reactor, adapter, partial equipment-rank, Archon Shard, and Helminth configuration state are not inferred.",

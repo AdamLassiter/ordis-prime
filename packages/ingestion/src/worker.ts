@@ -11,6 +11,7 @@ import {
   pruneFinishedSourceRefreshes,
   pruneInactiveCatalogHistory,
   pruneInactiveWorldStateSnapshots,
+  prunePlayerImportPairings,
   pruneReadExpiredPlayerNotifications,
   recoverAbandonedSourceRefreshes,
   WORLD_STATE_REFRESH_JOB,
@@ -112,6 +113,7 @@ export async function runWorkerCycle(options: {
   });
   pruneFinishedJobs(options.database, jobHistoryLimit);
   pruneFinishedSourceRefreshes(options.database, sourceRefreshHistoryLimit);
+  prunePlayerImportPairings(options.database, now);
   try {
     await options.snapshotStore.pruneUnreferenced(
       listReferencedSnapshotPaths(options.database),

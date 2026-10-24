@@ -1,0 +1,56 @@
+name: Windows updater
+
+on:
+  push:
+    branches: [main]
+    tags: ["updater-v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+      - name: Configure
+        run: cmake -S tools/ordis-prime-updater -B build/updater -A x64
+      - name: Build
+        run: cmake --build build/updater --config Release --parallel
+      - name: Test
+        run: ctest --test-dir build/updater -C Release --output-on-failure
+      - name: Package
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force dist/updater | Out-Null
+          Copy-Item build/updater/Release/ordis-prime-updater.exe dist/updater/ordis-prime-updater-windows-x64.exe
+          Copy-Item tools/ordis-prime-updater/THIRD_PARTY_NOTICES.md dist/updater/THIRD_PARTY_NOTICES.md
+          Copy-Item tools/ordis-prime-updater/licenses/warframe-api-helper-LICENSE dist/updater/warframe-api-helper-LICENSE
+          $hash = (Get-FileHash dist/updater/ordis-prime-updater-windows-x64.exe -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  ordis-prime-updater-windows-x64.exe" | Set-Content -NoNewline dist/updater/ordis-prime-updater-windows-x64.exe.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ordis-prime-updater-windows-x64
+          path: dist/updater/*
+          if-no-files-found: error
+
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/updater-v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v5
+        with:
+          name: ordis-prime-updater-windows-x64
+          path: dist/updater
+      - name: Publish updater release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 || gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --title "Ordis Prime Updater ${GITHUB_REF_NAME#updater-v}" --generate-notes
+          gh release upload "$GITHUB_REF_NAME" dist/updater/* --repo "$GITHUB_REPOSITORY" --clobber

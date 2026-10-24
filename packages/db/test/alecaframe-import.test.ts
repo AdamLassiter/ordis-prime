@@ -5,15 +5,21 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import {
+  applyPairedWarframeApiHelperImport,
   applyAlecaFrameImport,
+  applyWarframeApiHelperImport,
+  cancelPlayerImportPairing,
+  createPlayerImportPairing,
   createLocalUser,
   decryptAlecaFrameSnapshot,
   findPlayerInventoryEntry,
   getPlayerBuild,
+  getPlayerImportPairing,
   getPlayerSettings,
   migrateDatabase,
   openSqliteDatabase,
   previewAlecaFrameImport,
+  prunePlayerImportPairings,
   setInventoryEntry,
 } from "../src/index.ts";
 
@@ -254,6 +260,187 @@ test("AlecaFrame apply rolls every player-state change back when build validatio
       .prepare("select count(*) as count from player_builds where user_id = ?")
       .get(fixture.userId),
     { count: 0 },
+  );
+});
+
+test("Warframe API helper JSON applies only a monotonic inventory and progression merge", async (context) => {
+  const fixture = await createFixture(context);
+  const bytes = new TextEncoder().encode(JSON.stringify(snapshotDocument()));
+
+  const result = applyWarframeApiHelperImport(
+    fixture.database,
+    fixture.userId,
+    bytes,
+  );
+
+  assert.equal(result.applied, true);
+  assert.equal(result.buildId, undefined);
+  assert.equal(
+    findPlayerInventoryEntry(
+      fixture.database,
+      fixture.userId,
+      "resource",
+      "ferrite",
+    )?.ownedCount,
+    200,
+    "live synchronization must not lower a manual count",
+  );
+  assert.equal(
+    findPlayerInventoryEntry(
+      fixture.database,
+      fixture.userId,
+      "warframe",
+      "excalibur",
+    )?.mastered,
+    true,
+  );
+  assert.equal(
+    getPlayerSettings(fixture.database, fixture.userId).masteryRank,
+    25,
+  );
+  assert.deepEqual(
+    fixture.database
+      .prepare("select count(*) as count from player_builds where user_id = ?")
+      .get(fixture.userId),
+    { count: 0 },
+  );
+});
+
+test("updater pairings store only token hashes and are single-use", async (context) => {
+  const fixture = await createFixture(context);
+  const now = 1_800_000_000_000;
+  const pairing = createPlayerImportPairing(
+    fixture.database,
+    fixture.userId,
+    "https://ordis.example.test/path",
+    now,
+  );
+  const token = pairing.pairingCode.split(":").at(-1)!;
+  const stored = fixture.database
+    .prepare(
+      "select token_hash as tokenHash, status from player_import_pairings where id = ?",
+    )
+    .get(pairing.id) as { tokenHash: string; status: string };
+  assert.notEqual(stored.tokenHash, token);
+  assert.equal(stored.tokenHash.length, 64);
+  assert.equal(stored.status, "pending");
+
+  const imported = applyPairedWarframeApiHelperImport(
+    fixture.database,
+    token,
+    new TextEncoder().encode(JSON.stringify(snapshotDocument())),
+    now + 1,
+  );
+  assert.equal(imported.pairingId, pairing.id);
+  assert.equal(
+    getPlayerImportPairing(
+      fixture.database,
+      fixture.userId,
+      pairing.id,
+      now + 2,
+    )?.status,
+    "succeeded",
+  );
+  assert.throws(
+    () =>
+      applyPairedWarframeApiHelperImport(
+        fixture.database,
+        token,
+        new TextEncoder().encode(JSON.stringify(snapshotDocument())),
+        now + 2,
+      ),
+    /expired or already used/,
+  );
+});
+
+test("expired and cancelled updater pairings cannot import", async (context) => {
+  const fixture = await createFixture(context);
+  const now = 1_800_000_000_000;
+  const expired = createPlayerImportPairing(
+    fixture.database,
+    fixture.userId,
+    "https://ordis.example.test",
+    now,
+  );
+  const expiredToken = expired.pairingCode.split(":").at(-1)!;
+  assert.throws(
+    () =>
+      applyPairedWarframeApiHelperImport(
+        fixture.database,
+        expiredToken,
+        new Uint8Array([123, 125]),
+        expired.expiresAt,
+      ),
+    /expired or already used/,
+  );
+
+  const cancelled = createPlayerImportPairing(
+    fixture.database,
+    fixture.userId,
+    "https://ordis.example.test",
+    now,
+  );
+  assert.equal(
+    cancelPlayerImportPairing(
+      fixture.database,
+      fixture.userId,
+      cancelled.id,
+      now + 1,
+    ),
+    true,
+  );
+  assert.equal(
+    getPlayerImportPairing(
+      fixture.database,
+      fixture.userId,
+      cancelled.id,
+      now + 2,
+    )?.status,
+    "cancelled",
+  );
+  assert.equal(
+    prunePlayerImportPairings(fixture.database, now + 24 * 60 * 60_000 + 2),
+    2,
+  );
+});
+
+test("invalid updater payloads fail closed and consume their pairing", async (context) => {
+  const fixture = await createFixture(context);
+  const now = 1_800_000_000_000;
+  const pairing = createPlayerImportPairing(
+    fixture.database,
+    fixture.userId,
+    "https://ordis.example.test",
+    now,
+  );
+  const token = pairing.pairingCode.split(":").at(-1)!;
+  assert.throws(
+    () =>
+      applyPairedWarframeApiHelperImport(
+        fixture.database,
+        token,
+        new TextEncoder().encode("{not json"),
+        now + 1,
+      ),
+    /valid UTF-8 JSON/,
+  );
+  const failed = getPlayerImportPairing(
+    fixture.database,
+    fixture.userId,
+    pairing.id,
+    now + 2,
+  );
+  assert.equal(failed?.status, "failed");
+  assert.match(failed?.error ?? "", /valid UTF-8 JSON/);
+  assert.throws(
+    () =>
+      applyPairedWarframeApiHelperImport(
+        fixture.database,
+        token,
+        new TextEncoder().encode(JSON.stringify(snapshotDocument())),
+        now + 2,
+      ),
+    /expired or already used/,
   );
 });
 

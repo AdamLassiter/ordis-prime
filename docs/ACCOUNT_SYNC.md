@@ -1,9 +1,9 @@
 # Player account synchronization
 
-Ordis Prime should reduce manual ownership work, but it must not ask for a
-Warframe password, two-factor code, launcher token, mobile-app session, or game
-process access. Account convenience does not justify making the companion app a
-credential broker or relying on an unsupported private protocol.
+Ordis Prime should reduce manual ownership work, but the hosted application
+must not ask for a Warframe password, two-factor code, launcher token or
+mobile-app session. Account convenience does not justify making the web service
+a credential broker.
 
 As reviewed on 2026-10-23, Digital Extremes exposes public catalog exports,
 drop tables, world state, and an opt-in Twitch Arsenal endpoint for a current
@@ -11,12 +11,12 @@ loadout. None is a documented, revocable OAuth-style API for a player's complete
 inventory, mastery, quest, Star Chart, Foundry, or Helminth state. The official
 Companion application's authenticated protocol is not treated as public API.
 
-The implemented boundary is therefore an explicit upload of AlecaFrame's local
+One implemented boundary is an explicit upload of AlecaFrame's local
 `lastData.dat` snapshot. Ordis Prime reimplements the documented AES-128-CBC
 container decoding in TypeScript, unwraps `InventoryJson`, allow-lists the
 player fields it understands, and discards the encrypted and decrypted bytes
 after the request. It never reads AlecaFrame's directory itself and does not use
-`deltas.dat`, an Aleca API, process access, credentials or background polling.
+`deltas.dat`, an Aleca API, credentials or background polling.
 
 Every snapshot must be previewed before it is applied. Merge mode raises known
 counts and positive mastered or subsumed assertions without lowering manual
@@ -34,7 +34,23 @@ partial ranks, capacity upgrades, adapters, Focus progress, Archon Shards and
 ambiguous identifiers remain visible omissions rather than inferred values.
 This is still import, not continuous sync.
 
-Automatic account sync becomes eligible only if Digital Extremes publishes a
+The second boundary is the optional, one-shot Windows updater. It derives its
+credential discovery from `warframe-api-helper`: while Warframe is running, the
+local executable reads the short-lived account identifier and nonce from game
+memory, fetches `inventory.php`, and sends only the returned inventory JSON to
+Ordis Prime. It never prints or writes the credentials or inventory. Because
+this is undocumented game and service behavior, breakage fails closed and does
+not weaken the AlecaFrame path.
+
+The Operator page creates a random ten-minute pairing code. SQLite retains only
+its SHA-256 hash; the code is consumed atomically on the first upload. Live
+updater imports are deliberately narrower than snapshot imports: they always
+merge inventory and verified progression monotonically, never reduce state,
+never create builds, and need no destructive confirmation. Raw API bytes are
+discarded after the request. A capped result remains for 24 hours so the page
+can report what happened; the worker removes old pairings.
+
+Persistent or unattended account sync becomes eligible only if Digital Extremes publishes a
 supported authorization contract with all of the following:
 
 - delegated read-only scopes and a consent screen;

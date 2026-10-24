@@ -156,8 +156,14 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   NORMAL/SENTINEL loadout slots can be applied; loadouts become new drafts only
   on request. Other presets, partial equipment ranks, Focus progress,
   Catalyst/Reactor state, adapters, Archon Shards and star-chart completion are
-  not inferred. The app does not acquire session credentials, poll a player
-  account, or retain a synchronization audit. Authenticated goals feed a planner that
+  not inferred. A separate unsigned Windows x64 updater can perform a one-shot
+  live import through a hashed, ten-minute pairing code. It reads temporary
+  game credentials locally, uploads only inventory JSON, and is restricted to
+  an automatic monotonic inventory/progression merge. It has no Linux/Proton
+  build, background mode, `getShip` support, build creation, replacement mode,
+  code signature, or stable provider contract. The app does not retain game
+  credentials, raw inventory, or a long-term synchronization audit.
+  Authenticated goals feed a planner that
   subtracts inventory, expands active recipes, lists missing requirements, and
   links to candidate nodes with visible reasons. Profiles include inventory, goals,
   discovery progress, static todos, watch rules and private build drafts.

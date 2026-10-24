@@ -56,6 +56,14 @@ runtime validation. Authentication and player authorization are checked in the
 server data-access layer, not just in UI or route redirects. Catalog pages are
 public; inventory, goals and progress are private to their owning account.
 
+The optional Windows updater is outside the durable web trust boundary. An
+authenticated player creates a ten-minute, upload-only pairing code whose
+secret is stored only as a hash. The updater obtains temporary credentials from
+the running game locally, fetches the inventory itself, and sends only that
+inventory over HTTPS. The web process consumes the code once, performs a
+monotonic merge, retains a bounded result summary, and never stores the raw
+inventory or game credentials.
+
 There is no pre-release backwards-compatibility requirement. Before the first
 stable release, schemas, routes and stored data may be replaced outright when a
 better model is found. Migration policy will be introduced only for released,
