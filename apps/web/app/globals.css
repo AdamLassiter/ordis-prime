@@ -1066,6 +1066,8 @@ textarea:focus {
   *,
   *::before,
   *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
   }
@@ -1721,6 +1723,22 @@ textarea:focus {
 .index-table th {
   min-width: 10rem;
 }
+.index-sort {
+  align-items: center;
+  color: inherit;
+  display: inline-flex;
+  gap: 0.45rem;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.index-sort span {
+  color: var(--muted);
+  font-size: 0.85em;
+}
+.index-sort.active span,
+.index-sort:hover span {
+  color: var(--cyan);
+}
 .index-table small {
   display: block;
   margin-top: 0.25rem;
@@ -1745,6 +1763,29 @@ textarea:focus {
 
 .index-pagination > :last-child {
   justify-self: end;
+}
+.index-loading {
+  align-items: center;
+  display: flex;
+  gap: 1.25rem;
+  justify-content: center;
+  min-height: 42vh;
+}
+.index-loading p {
+  margin: 0.2rem 0;
+}
+.index-spinner {
+  animation: index-spin 0.8s linear infinite;
+  border: 3px solid var(--line);
+  border-radius: 50%;
+  border-top-color: var(--cyan);
+  height: 2.5rem;
+  width: 2.5rem;
+}
+@keyframes index-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 .index-section .tag + .tag {
   margin-left: 0.25rem;
