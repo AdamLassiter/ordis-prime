@@ -55,6 +55,12 @@
   acquisition goals without overwriting larger plans.
 - As a guest, I can compare independently cited tier lists without hidden scale
   conversion or a synthetic consensus.
+- As a guest, I can compare selling a relic unopened with its solo or
+  four-player opening EV at each refinement without confusing bids and asks.
+- As a guest, I can rank core or all Standing-faction mods by platinum per
+  1,000 Standing and see the vendor and rank requirement behind the cost.
+- As a guest, I can compare rank-zero and maximum-rank Arcane values and see
+  Standing acquisition context where the Wiki supplies it.
 
 ## Later consumers of the same graph
 

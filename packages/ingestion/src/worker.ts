@@ -1,6 +1,8 @@
 import {
   CATALOG_SOURCE_REFRESH_JOB,
+  MARKET_PRICE_REFRESH_JOB,
   claimDueJob,
+  continueLeasedJob,
   ensurePendingJob,
   evaluateWorldStateWatches,
   finishAndRescheduleJob,
@@ -17,6 +19,10 @@ import { SnapshotStore } from "./snapshot-store.ts";
 import { refreshWorldState, type WorldStateAdapter } from "./world-state.ts";
 import { refreshSource } from "./refresh.ts";
 import type { SourceAdapter } from "./adapter.ts";
+import {
+  pruneMarketPriceHistory,
+  refreshMarketPriceBatch,
+} from "./market-prices.ts";
 
 type WorkerDatabase = Parameters<typeof ensurePendingJob>[0];
 
@@ -38,6 +44,9 @@ export async function runWorkerCycle(options: {
   catalogReleaseHistoryLimit?: number;
   sourceRefreshHistoryLimit?: number;
   snapshotPruneGraceMilliseconds?: number;
+  marketPriceRefreshIntervalMilliseconds?: number;
+  marketPriceBatchSize?: number;
+  marketPriceRequestDelayMilliseconds?: number;
 }): Promise<{
   status: "idle" | "succeeded" | "failed";
   sourceId?: string;
@@ -61,6 +70,11 @@ export async function runWorkerCycle(options: {
   const sourceRefreshHistoryLimit = options.sourceRefreshHistoryLimit ?? 1_000;
   const snapshotPruneGraceMilliseconds =
     options.snapshotPruneGraceMilliseconds ?? 60 * 60_000;
+  const marketPriceRefreshInterval =
+    options.marketPriceRefreshIntervalMilliseconds ?? 24 * 60 * 60_000;
+  const marketPriceBatchSize = options.marketPriceBatchSize ?? 60;
+  const marketPriceRequestDelayMilliseconds =
+    options.marketPriceRequestDelayMilliseconds ?? 500;
   const leaseMilliseconds = Math.max(
     2 * catalogRequestTimeout,
     2 * requestTimeout,
@@ -76,6 +90,20 @@ export async function runWorkerCycle(options: {
     ensurePendingJob(options.database, {
       kind: CATALOG_SOURCE_REFRESH_JOB,
       payload: { source: adapter.source.id },
+      runAfter: now,
+    });
+  const marketTarget = options.database
+    .prepare(
+      `select 1 from external_ids identifier join entities entity on entity.id = identifier.entity_id
+       where identifier.source_id = 'warframe-market-items'
+         and identifier.namespace = 'item-slug'
+         and entity.kind in ('relic', 'arcane') limit 1`,
+    )
+    .get();
+  if (marketTarget)
+    ensurePendingJob(options.database, {
+      kind: MARKET_PRICE_REFRESH_JOB,
+      payload: { source: "warframe-market-prices" },
       runAfter: now,
     });
   recoverAbandonedSourceRefreshes(options.database, {
@@ -99,7 +127,11 @@ export async function runWorkerCycle(options: {
     owner: options.owner,
     now,
     leaseMilliseconds,
-    kinds: [WORLD_STATE_REFRESH_JOB, CATALOG_SOURCE_REFRESH_JOB],
+    kinds: [
+      WORLD_STATE_REFRESH_JOB,
+      CATALOG_SOURCE_REFRESH_JOB,
+      MARKET_PRICE_REFRESH_JOB,
+    ],
   });
   if (!job) return { status: "idle" };
   const sourceId =
@@ -138,6 +170,33 @@ export async function runWorkerCycle(options: {
         nextRunAfter: now + refreshInterval,
       });
       return { status: "succeeded", sourceId, notificationsCreated };
+    }
+    if (job.kind === MARKET_PRICE_REFRESH_JOB) {
+      const result = await refreshMarketPriceBatch({
+        database: options.database,
+        now,
+        batchSize: marketPriceBatchSize,
+        requestDelayMilliseconds: marketPriceRequestDelayMilliseconds,
+        signal: AbortSignal.timeout(catalogRequestTimeout),
+      });
+      if (!result.complete)
+        continueLeasedJob(options.database, {
+          id: job.id,
+          owner: options.owner,
+          runAfter: now,
+        });
+      else {
+        pruneMarketPriceHistory(options.database, 30);
+        finishAndRescheduleJob(options.database, {
+          id: job.id,
+          owner: options.owner,
+          succeeded: true,
+          kind: job.kind,
+          payload: job.payload,
+          nextRunAfter: now + marketPriceRefreshInterval,
+        });
+      }
+      return { status: "succeeded", sourceId };
     }
     const adapter = options.catalogAdapters?.find(
       (candidate) => candidate.source.id === sourceId,

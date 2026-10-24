@@ -36,21 +36,35 @@ test("Warframe.market items bridge market slugs to game references", async () =>
     new WarframeMarketItemsAdapter(),
     snapshot(data),
   );
-  assert.equal(observations.length, 1_000);
+  assert.equal(
+    observations.filter((observation) => observation.type === "entity").length,
+    1_000,
+  );
+  assert.equal(
+    observations.filter(
+      (observation) =>
+        observation.type === "entity-attribute" &&
+        observation.key === "market-tags",
+    ).length,
+    1_000,
+  );
   assert.deepEqual(
-    observations.slice(0, 4).map((observation) =>
-      observation.type === "entity"
-        ? {
-            kind: observation.kind,
-            slug: observation.externalIds.find(
-              ({ namespace }) => namespace === "item-slug",
-            )?.value,
-            gameRef: observation.externalIds.find(
-              ({ sourceId }) => sourceId === "wfcd-items",
-            )?.value,
-          }
-        : undefined,
-    ),
+    observations
+      .filter((observation) => observation.type === "entity")
+      .slice(0, 4)
+      .map((observation) =>
+        observation.type === "entity"
+          ? {
+              kind: observation.kind,
+              slug: observation.externalIds.find(
+                ({ namespace }) => namespace === "item-slug",
+              )?.value,
+              gameRef: observation.externalIds.find(
+                ({ sourceId }) => sourceId === "wfcd-items",
+              )?.value,
+            }
+          : undefined,
+      ),
     [
       {
         kind: "unknown",
@@ -75,6 +89,38 @@ test("Warframe.market items bridge market slugs to game references", async () =>
       },
     ],
   );
+});
+
+test("Warframe.market keeps a set distinct from an item sharing its game reference", async () => {
+  const gameRef =
+    "/Lotus/Types/Sentinels/SentinelPowersuits/PrismaShadePowerSuit";
+  const data = [
+    item("prisma_shade", gameRef, ["sentinel"]),
+    item("prisma_shade_set", gameRef, ["sentinel", "set"]),
+    ...[...Array(999).keys()].map((index) =>
+      item(`other_${index}`, `/Lotus/Other/${index}`, ["misc"]),
+    ),
+  ];
+  const observations = await collect(
+    new WarframeMarketItemsAdapter(),
+    snapshot(data),
+  );
+  const entities = observations.filter(
+    (observation) => observation.type === "entity",
+  );
+  const shade = entities.find((observation) =>
+    observation.externalIds.some(({ value }) => value === "prisma_shade"),
+  );
+  const set = entities.find((observation) =>
+    observation.externalIds.some(({ value }) => value === "prisma_shade_set"),
+  );
+  assert.ok(
+    shade?.externalIds.some(({ sourceId }) => sourceId === "wfcd-items"),
+  );
+  assert.ok(
+    !set?.externalIds.some(({ sourceId }) => sourceId === "wfcd-items"),
+  );
+  assert.notEqual(shade?.fields.slug, set?.fields.slug);
 });
 
 function item(slug: string, gameRef: string, tags: string[]) {

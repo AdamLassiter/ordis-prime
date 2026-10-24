@@ -16,10 +16,15 @@ import { getWorkerQueueHealth, summarizeWorkerTasks } from "./worker-health";
 
 export const dynamic = "force-dynamic";
 
-const JOB_KINDS = ["refresh-world-state", "refresh-catalog-source"] as const;
+const JOB_KINDS = [
+  "refresh-world-state",
+  "refresh-catalog-source",
+  "refresh-market-prices",
+] as const;
 const AUTOMATIC_SOURCES = [
   ...AUTOMATIC_CATALOG_SOURCE_IDS,
   "wfcd-worldstate",
+  "warframe-market-prices",
 ] as const;
 
 export default async function Sources({
@@ -134,6 +139,9 @@ export default async function Sources({
                 ["warframe-wiki-abilities", "Wiki abilities"],
                 ["warframe-wiki-quests", "Wiki quests"],
                 ["warframe-wiki-enemies", "Wiki enemies and bosses"],
+                ["warframe-wiki-vendors", "Wiki Standing vendors"],
+                ["warframe-market-items", "Warframe.market items"],
+                ["warframe-market-prices", "Warframe.market prices"],
                 ["wfcd-worldstate", "World state"],
               ].map(([id, label]) => (
                 <form action={queueSourceRefresh.bind(null, id!)} key={id}>

@@ -349,6 +349,37 @@ export interface CyclicRewardChoiceObservation {
   evidence: Evidence;
 }
 
+export const RELIC_REFINEMENTS = [
+  "intact",
+  "exceptional",
+  "flawless",
+  "radiant",
+] as const;
+export type RelicRefinement = (typeof RELIC_REFINEMENTS)[number];
+
+export interface RelicRewardObservation {
+  type: "relic-reward";
+  relicExternalId: ExternalIdentifier;
+  rewardExternalId: ExternalIdentifier;
+  refinement: RelicRefinement;
+  rarity: "common" | "uncommon" | "rare";
+  chance: number;
+  evidence: Evidence;
+}
+
+export interface VendorOfferingObservation {
+  type: "vendor-offering";
+  vendorExternalId: ExternalIdentifier;
+  itemExternalId: ExternalIdentifier;
+  faction: string;
+  currency: string;
+  cost: number;
+  quantity: number;
+  prerequisiteRank?: number;
+  prerequisiteLabel?: string;
+  evidence: Evidence;
+}
+
 export type Observation =
   | EntityObservation
   | DropObservation
@@ -364,7 +395,9 @@ export type Observation =
   | RankingSetObservation
   | RankingObservation
   | CyclicRewardScheduleObservation
-  | CyclicRewardChoiceObservation;
+  | CyclicRewardChoiceObservation
+  | RelicRewardObservation
+  | VendorOfferingObservation;
 
 export interface InventoryEntry {
   entityId: EntityId;

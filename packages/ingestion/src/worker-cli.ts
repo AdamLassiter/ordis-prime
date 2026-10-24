@@ -69,6 +69,18 @@ const snapshotPruneGraceMilliseconds = nonNegativeDuration(
   process.env.ORDIS_SNAPSHOT_PRUNE_GRACE_MS,
   60 * 60_000,
 );
+const marketPriceRefreshInterval = positiveInteger(
+  process.env.ORDIS_MARKET_PRICE_INTERVAL_MS,
+  24 * 60 * 60_000,
+);
+const marketPriceBatchSize = positiveInteger(
+  process.env.ORDIS_MARKET_PRICE_BATCH_SIZE,
+  60,
+);
+const marketPriceRequestDelayMilliseconds = positiveInteger(
+  process.env.ORDIS_MARKET_PRICE_REQUEST_DELAY_MS,
+  500,
+);
 const owner = `${hostname()}:${process.pid}`;
 const abortController = new AbortController();
 for (const signal of ["SIGINT", "SIGTERM"] as const)
@@ -116,6 +128,9 @@ try {
       catalogReleaseHistoryLimit,
       sourceRefreshHistoryLimit,
       snapshotPruneGraceMilliseconds,
+      marketPriceRefreshIntervalMilliseconds: marketPriceRefreshInterval,
+      marketPriceBatchSize,
+      marketPriceRequestDelayMilliseconds,
     });
     if (result.status !== "idle")
       process.stdout.write(

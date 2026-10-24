@@ -170,10 +170,15 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   portable player ranks. Exact cited beacon, Judgement Point, Grendel Locator
   and Mutalist Alad V key gates compose with owned plus built inventory. Exact
   adversary confrontation gates compose with the portable private adversary
-  setting. Linked catalog pages show cached public Warframe.market top orders,
-  but the planner does not compare platinum against farm routes or manage a
-  player's listings. Other conditional gates, relic refinement, and mission
-  duration are not yet modeled.
+  setting. Linked catalog pages show cached public Warframe.market top orders.
+  The public Index additionally stores bounded daily aggregates for relics,
+  their rewards, Standing mods and all tradeable Arcanes. It models explicit
+  relic refinement, solo EV, four-player same-relic best-choice EV, direct relic
+  prices, ducat EV, trace efficiency, and rank-zero/maximum-rank Arcane prices.
+  These are visible-order signals, not completed-sale history; taxes, trade
+  limits, reputation gain, daily Standing caps, mission duration and time-to-farm
+  are not modeled. The planner does not compare platinum against farm routes or
+  manage a player's listings. Other conditional gates remain incomplete.
 - Authenticated players can keep private static todos with optional notes and due
   dates. Source-neutral world-state watches match current window fields and
   create deduplicated private in-app alerts. Detail pages can create todos and

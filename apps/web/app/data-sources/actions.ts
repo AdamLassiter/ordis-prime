@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import {
   CATALOG_SOURCE_REFRESH_JOB,
   enqueueJobNow,
+  MARKET_PRICE_REFRESH_JOB,
   previewSourcePromotion,
   WORLD_STATE_REFRESH_JOB,
 } from "@ordis-prime/db";
@@ -36,10 +37,15 @@ export async function queueSourceRefresh(sourceId: string) {
   const isCatalog = (
     AUTOMATIC_CATALOG_SOURCE_IDS as readonly string[]
   ).includes(sourceId);
-  if (!isCatalog && sourceId !== "wfcd-worldstate")
+  const isMarketPrices = sourceId === "warframe-market-prices";
+  if (!isCatalog && sourceId !== "wfcd-worldstate" && !isMarketPrices)
     throw new Error("Source cannot be refreshed by the automatic worker");
   enqueueJobNow(getDatabase(), {
-    kind: isCatalog ? CATALOG_SOURCE_REFRESH_JOB : WORLD_STATE_REFRESH_JOB,
+    kind: isCatalog
+      ? CATALOG_SOURCE_REFRESH_JOB
+      : isMarketPrices
+        ? MARKET_PRICE_REFRESH_JOB
+        : WORLD_STATE_REFRESH_JOB,
     payload: { source: sourceId },
   });
   revalidatePath("/data-sources");

@@ -17,6 +17,7 @@ from.
 - live world-state timers with database-leased automatic polling
 - private todos, dynamic watches, and deduplicated in-app alerts
 - editable loadouts, immutable share links, and cited tier-list comparison
+- public relic, syndicate-mod, and Arcane market analysis in The Index
 - composed node metadata and an inventory-aware star-chart index
 - portable profile export and merge/replace import
 - two-service Docker Compose deployment over one durable data volume
@@ -46,6 +47,7 @@ pnpm data:refresh wfcd-items wfcd-drops warframe-wiki-weapons warframe-wiki-warf
 pnpm data:refresh manual-ranking:data/manual/editorial.example.yaml
 pnpm data:rankings:overframe
 pnpm data:rankings:creators
+pnpm data:prices
 pnpm data:refresh manual-discovery:data/manual/discovery.example.yaml
 pnpm data:refresh manual-facts:data/manual/facts.example.yaml
 pnpm dev

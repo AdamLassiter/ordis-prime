@@ -10,6 +10,7 @@ const PUBLIC_LINKS = [
   ["/star-chart", "Star chart"],
   ["/world-state", "Cycles"],
   ["/rankings", "Consensus"],
+  ["/index", "The Index"],
 ] as const;
 const PRIVATE_LINKS = [
   ["/planner", "Foundry plan"],

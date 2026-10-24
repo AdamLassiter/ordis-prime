@@ -21,7 +21,7 @@ import {
   wikiSlug,
 } from "./mediawiki-lua.ts";
 
-const PARSER_VERSION = "warframe-wiki-vendors-v4";
+const PARSER_VERSION = "warframe-wiki-vendors-v5";
 const VENDOR_MODULE = "Module:Vendors/data";
 const NIGHTCAP_PAGE = "Nightcap";
 
@@ -31,6 +31,8 @@ interface Offering {
   cost: string;
   quantity: number;
   prerequisite?: string;
+  numericCost?: number;
+  prerequisiteRank?: number;
   line?: number;
 }
 
@@ -81,14 +83,15 @@ export class WarframeWikiVendorsAdapter implements SourceAdapter {
         continue;
       const key = luaFieldKey(field);
       if (!key) continue;
-      // The vendor module deliberately omits locations. Only promote vendors
-      // for which this adapter has an independently cited node mapping.
-      if (key !== "Nightcap") continue;
       const name =
         luaStringValue(luaLiteralField(field.value, "Name"))?.trim() || key;
       const currency = luaStringValue(
         luaLiteralField(field.value, "Currency"),
       )?.trim();
+      // Standing offerings are useful without claiming a physical location.
+      // Other vendors remain excluded unless an independently cited location
+      // is available.
+      if (key !== "Nightcap" && currency !== "Standing") continue;
       const offerings = parseOfferings(field.value, name, currency);
       const vendorId = vendorExternalId(key);
       vendorCount += 1;
@@ -161,6 +164,25 @@ export class WarframeWikiVendorsAdapter implements SourceAdapter {
             offering.line,
           ),
         };
+        if (currency === "Standing" && offering.numericCost !== undefined)
+          yield {
+            type: "vendor-offering",
+            vendorExternalId: vendorId,
+            itemExternalId: offeringId,
+            faction: standingFaction(key, name),
+            currency,
+            cost: offering.numericCost,
+            quantity: offering.quantity,
+            prerequisiteRank: offering.prerequisiteRank,
+            prerequisiteLabel: offering.prerequisite,
+            evidence: evidence(
+              snapshot,
+              modulePage!.title,
+              modulePage!.revisionId,
+              `Vendors:${key}:offering:${index}:structured`,
+              offering.line,
+            ),
+          };
       }
     }
     if (!vendorCount || !offeringCount)
@@ -211,8 +233,12 @@ function parseOfferings(
     const name = luaStringValue(positional[0]?.value)?.trim();
     const rawKind = luaStringValue(positional[1]?.value)?.trim();
     const cost = formatCost(positional[2]?.value, currency);
+    const numericCost = numberValue(positional[2]?.value);
     const quantity = numberValue(positional[3]?.value) ?? 1;
     const prerequisite = formatPrerequisite(
+      luaLiteralField(field.value, "Prereq"),
+    );
+    const prerequisiteRank = numberValue(
       luaLiteralField(field.value, "Prereq"),
     );
     if (!name || !rawKind || cost === undefined || quantity <= 0)
@@ -226,10 +252,41 @@ function parseOfferings(
         cost,
         quantity,
         prerequisite,
+        numericCost,
+        prerequisiteRank,
         line: field.loc?.start.line,
       },
     ];
   });
+}
+
+const STANDING_FACTIONS: Record<string, string> = {
+  "Arbiters of Hexis": "Arbiters of Hexis",
+  "Cephalon Suda": "Cephalon Suda",
+  "New Loka": "New Loka",
+  "Red Veil": "Red Veil",
+  "Steel Meridian": "Steel Meridian",
+  "The Perrin Sequence": "The Perrin Sequence",
+  "Bird 3": "Cavia",
+  Cavalero: "The Holdfasts",
+  "Cephalon Simaris": "Cephalon Simaris",
+  Chipper: "Kahl's Garrison",
+  Father: "Entrati",
+  Hok: "Ostron",
+  "Little Duck": "Vox Solaris",
+  Loid: "Necraloid",
+  Onkko: "The Quills",
+  Otak: "Entrati",
+  Roky: "Ventkids",
+  "Rude Zuud": "Solaris United",
+  Son: "Entrati",
+  Suumbaat: "Ostron",
+  Teshin: "Conclave",
+  "The Business": "Solaris United",
+};
+
+function standingFaction(key: string, name: string): string {
+  return STANDING_FACTIONS[key] ?? STANDING_FACTIONS[name] ?? name;
 }
 
 function formatCost(

@@ -1748,6 +1748,189 @@ test("WFCD identity repair splits incompatible provider IDs merged by a legacy a
   );
 });
 
+test("Warframe.market refresh splits a legacy item and set grouping", async (context) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-market-split-"));
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const databasePath = path.join(root, "catalog.sqlite");
+  migrateDatabase(databasePath);
+  const sqlite = new Database(databasePath);
+  sqlite.pragma("foreign_keys = ON");
+  context.after(() => sqlite.close());
+  const marketInput = (version: string, observations: Observation[]) => ({
+    source: {
+      id: "warframe-market-items",
+      name: "Market fixture",
+      homepage: "https://example.test/market",
+      priority: 20,
+    },
+    version,
+    contentHash: `sha256:${`market-${version}`.padEnd(64, "0")}`,
+    retrievedAt: "2026-10-13T12:00:00.000Z",
+    observations,
+  });
+  const marketEntity = (
+    id: string,
+    slug: string,
+    name: string,
+    kind: "companion" | "unknown",
+    version: string,
+    extraIds: Array<{ namespace: string; value: string }> = [],
+  ): Observation => ({
+    type: "entity",
+    kind,
+    externalIds: [
+      { sourceId: "warframe-market-items", namespace: "item-id", value: id },
+      {
+        sourceId: "warframe-market-items",
+        namespace: "item-slug",
+        value: slug,
+      },
+      ...extraIds.map(({ namespace, value }) => ({
+        sourceId: "warframe-market-items",
+        namespace,
+        value,
+      })),
+    ],
+    fields: { name, slug },
+    evidence: {
+      ...evidence(version, "warframe-market-items"),
+      sourceRecordKey: id,
+    },
+  });
+
+  promoteSource(
+    sqlite,
+    marketInput("v1", [
+      marketEntity("item", "prisma_shade", "Prisma Shade", "companion", "v1", [
+        { namespace: "item-id", value: "set" },
+        { namespace: "item-slug", value: "prisma_shade_set" },
+      ]),
+    ]),
+  );
+  promoteSource(
+    sqlite,
+    marketInput("v2", [
+      marketEntity("item", "prisma_shade", "Prisma Shade", "companion", "v2"),
+      marketEntity(
+        "set",
+        "prisma_shade_set",
+        "Prisma Shade Set",
+        "unknown",
+        "v2",
+      ),
+    ]),
+  );
+
+  assert.deepEqual(
+    sqlite
+      .prepare(
+        `select x.value, e.name from external_ids x join entities e on e.id = x.entity_id
+         where x.source_id = 'warframe-market-items' and x.namespace = 'item-id'
+         order by x.value`,
+      )
+      .all(),
+    [
+      { value: "item", name: "Prisma Shade" },
+      { value: "set", name: "Prisma Shade Set" },
+    ],
+  );
+});
+
+test("WFCD refresh folds legacy refinement entities into a market-linked base relic", async (context) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-relic-fold-"));
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const databasePath = path.join(root, "catalog.sqlite");
+  migrateDatabase(databasePath);
+  const sqlite = new Database(databasePath);
+  sqlite.pragma("foreign_keys = ON");
+  context.after(() => sqlite.close());
+  const oldRelic = (
+    id: string,
+    name: string,
+    version: string,
+    ids = [id],
+  ): Observation => ({
+    type: "entity",
+    kind: "relic",
+    externalIds: ids.map((value) => ({
+      sourceId: "wfcd-items",
+      namespace: "uniqueName",
+      value,
+    })),
+    fields: { name, slug: name.toLowerCase().replaceAll(" ", "-") },
+    evidence: {
+      ...evidence(version, "wfcd-items"),
+      sourceRecordKey: id,
+    },
+  });
+  promoteSource(
+    sqlite,
+    wfcdInput("v1", [
+      oldRelic("/RelicBronze", "Lith T1 Intact", "v1"),
+      oldRelic("/RelicPlatinum", "Lith T1 Radiant", "v1"),
+    ]),
+  );
+  promoteSource(sqlite, {
+    source: {
+      id: "warframe-market-items",
+      name: "Market fixture",
+      homepage: "https://example.test/market",
+      priority: 20,
+    },
+    version: "market-v1",
+    contentHash: `sha256:${"market-relic".padEnd(64, "0")}`,
+    retrievedAt: "2026-10-13T12:00:00.000Z",
+    observations: [
+      {
+        type: "entity",
+        kind: "relic",
+        externalIds: [
+          {
+            sourceId: "warframe-market-items",
+            namespace: "item-id",
+            value: "market-relic",
+          },
+          {
+            sourceId: "wfcd-items",
+            namespace: "uniqueName",
+            value: "/Relic",
+          },
+        ],
+        fields: { name: "Lith T1 Relic", slug: "lith-t1-relic" },
+        evidence: {
+          ...evidence("market-v1", "warframe-market-items"),
+          sourceRecordKey: "market-relic",
+        },
+      },
+    ],
+  });
+  promoteSource(
+    sqlite,
+    wfcdInput("v2", [
+      oldRelic("/RelicBronze", "Lith T1 Relic", "v2", [
+        "/RelicBronze",
+        "/Relic",
+      ]),
+      oldRelic("/RelicPlatinum", "Lith T1 Relic", "v2", [
+        "/RelicPlatinum",
+        "/Relic",
+      ]),
+    ]),
+  );
+
+  assert.equal(
+    (
+      sqlite
+        .prepare(
+          `select count(distinct entity_id) as count from external_ids
+           where source_id = 'wfcd-items' and value in ('/Relic', '/RelicBronze', '/RelicPlatinum')`,
+        )
+        .get() as { count: number }
+    ).count,
+    1,
+  );
+});
+
 test("WFCD identity repair does not reclassify a cross-source same-name entity", async (context) => {
   const root = await fs.mkdtemp(
     path.join(os.tmpdir(), "ordis-wfcd-cross-source-split-"),

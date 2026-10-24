@@ -8,7 +8,7 @@ import {
 
 export const DEFAULT_WARFRAME_MARKET_ITEMS_URL =
   "https://api.warframe.market/v2/items";
-const PARSER_VERSION = "warframe-market-items-v1";
+const PARSER_VERSION = "warframe-market-items-v2";
 
 interface MarketItem {
   id?: unknown;
@@ -16,6 +16,11 @@ interface MarketItem {
   gameRef?: unknown;
   tags?: unknown;
   i18n?: unknown;
+  ducats?: unknown;
+  maxRank?: unknown;
+  subtypes?: unknown;
+  vaulted?: unknown;
+  bulkTradable?: unknown;
 }
 
 interface MarketPayload {
@@ -75,6 +80,11 @@ export class WarframeMarketItemsAdapter implements SourceAdapter {
         tags: string[];
         name: string;
         index: number;
+        ducats?: number;
+        maxRank?: number;
+        subtypes: string[];
+        vaulted?: boolean;
+        bulkTradable?: boolean;
       }>
     >();
     for (const [index, raw] of payload.data.entries()) {
@@ -86,49 +96,128 @@ export class WarframeMarketItemsAdapter implements SourceAdapter {
       const gameRef = optionalString(item.gameRef);
       const tags = stringArray(item.tags, `item ${index} tags`);
       const name = englishName(item.i18n);
+      const ducats = optionalNonNegativeInteger(item.ducats);
+      const maxRank = optionalNonNegativeInteger(item.maxRank);
+      const subtypes =
+        item.subtypes === undefined
+          ? []
+          : stringArray(item.subtypes, `item ${index} subtypes`);
+      const vaulted = optionalBoolean(item.vaulted, `item ${index} vaulted`);
+      const bulkTradable = optionalBoolean(
+        item.bulkTradable,
+        `item ${index} bulkTradable`,
+      );
       if (!gameRef || !name) continue;
       const group = byGameRef.get(gameRef) ?? [];
-      group.push({ id, slug, gameRef, tags, name, index });
+      group.push({
+        id,
+        slug,
+        gameRef,
+        tags,
+        name,
+        index,
+        ducats,
+        maxRank,
+        subtypes,
+        vaulted,
+        bulkTradable,
+      });
       byGameRef.set(gameRef, group);
     }
     for (const [gameRef, group] of byGameRef) {
       const preferred =
         group.find(({ tags }) => !tags.includes("set")) ?? group[0]!;
-      yield {
-        type: "entity",
-        kind: preferredKind(
-          group.map(({ tags, gameRef }) => marketKind(tags, gameRef)),
-        ),
-        externalIds: [
-          ...group.flatMap(({ id, slug }) => [
-            { sourceId: this.source.id, namespace: "item-id", value: id },
-            { sourceId: this.source.id, namespace: "item-slug", value: slug },
-          ]),
-          { sourceId: "wfcd-items", namespace: "uniqueName", value: gameRef },
-        ],
-        fields: { name: preferred.name, slug: preferred.slug },
-        evidence: {
+      for (const item of group) {
+        yield {
+          type: "entity",
+          kind: marketKind(item.tags, item.gameRef),
+          externalIds: [
+            { sourceId: this.source.id, namespace: "item-id", value: item.id },
+            {
+              sourceId: this.source.id,
+              namespace: "item-slug",
+              value: item.slug,
+            },
+            ...(item === preferred
+              ? [
+                  {
+                    sourceId: "wfcd-items",
+                    namespace: "uniqueName",
+                    value: gameRef,
+                  },
+                ]
+              : []),
+          ],
+          fields: { name: item.name, slug: item.slug },
+          evidence: {
+            sourceId: this.source.id,
+            sourceRecordKey: item.id,
+            snapshotVersion: snapshot.version,
+            retrievedAt: snapshot.retrievedAt,
+            citationUrl: `https://warframe.market/items/${encodeURIComponent(item.slug)}`,
+            path: `data[${item.index}]`,
+          },
+        };
+        const subjectExternalId = {
           sourceId: this.source.id,
-          sourceRecordKey: group
-            .map(({ id }) => id)
-            .sort()
-            .join(","),
-          snapshotVersion: snapshot.version,
-          retrievedAt: snapshot.retrievedAt,
-          citationUrl: `https://warframe.market/items/${encodeURIComponent(preferred.slug)}`,
-          path: group.map(({ index }) => `data[${index}]`).join(","),
-        },
-      };
+          namespace: "item-id",
+          value: item.id,
+        };
+        const attributes: Array<[string, string, string | undefined]> = [
+          ["market-tags", "Warframe.market tags", JSON.stringify(item.tags)],
+          [
+            "market-subtypes",
+            "Market subtypes",
+            item.subtypes.length ? JSON.stringify(item.subtypes) : undefined,
+          ],
+          [
+            "ducats",
+            "Ducats",
+            item.ducats === undefined ? undefined : String(item.ducats),
+          ],
+          [
+            "market-max-rank",
+            "Market maximum rank",
+            item.maxRank === undefined ? undefined : String(item.maxRank),
+          ],
+          [
+            "vaulted",
+            "Vaulted",
+            item.vaulted === undefined ? undefined : String(item.vaulted),
+          ],
+          [
+            "bulk-tradable",
+            "Bulk tradable",
+            item.bulkTradable === undefined
+              ? undefined
+              : String(item.bulkTradable),
+          ],
+        ];
+        for (const [key, label, value] of attributes) {
+          if (value === undefined) continue;
+          yield {
+            type: "entity-attribute",
+            subjectExternalId,
+            key,
+            label,
+            value,
+            evidence: {
+              sourceId: this.source.id,
+              sourceRecordKey: `${item.id}:${key}`,
+              snapshotVersion: snapshot.version,
+              retrievedAt: snapshot.retrievedAt,
+              citationUrl: `https://warframe.market/items/${encodeURIComponent(item.slug)}`,
+              path: `data[${item.index}].${key}`,
+            },
+          };
+        }
+      }
     }
     if (byGameRef.size < 1_000)
       throw new Error(
         `Warframe.market items payload retained only ${byGameRef.size} usable item identities`,
       );
   }
-}
-
-function preferredKind(kinds: EntityKind[]): EntityKind {
-  return kinds.find((kind) => kind !== "unknown") ?? "unknown";
 }
 
 function parsePayload(bytes: Uint8Array): MarketPayload {
@@ -192,4 +281,18 @@ function requiredString(value: unknown, label: string): string {
 
 function optionalString(value: unknown): string | undefined {
   return typeof value === "string" && value.trim() ? value.trim() : undefined;
+}
+
+function optionalNonNegativeInteger(value: unknown): number | undefined {
+  if (value === undefined) return undefined;
+  if (!Number.isSafeInteger(value) || (value as number) < 0)
+    throw new Error("Warframe.market numeric item field is invalid");
+  return value as number;
+}
+
+function optionalBoolean(value: unknown, label: string): boolean | undefined {
+  if (value === undefined) return undefined;
+  if (typeof value !== "boolean")
+    throw new Error(`Warframe.market ${label} is invalid`);
+  return value;
 }

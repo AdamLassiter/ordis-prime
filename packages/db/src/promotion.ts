@@ -56,6 +56,8 @@ export interface PromotionResult {
   rankingsCreated: number;
   cyclicRewardSchedulesCreated: number;
   cyclicRewardChoicesCreated: number;
+  relicRewardsCreated: number;
+  vendorOfferingsCreated: number;
   conflictsCreated: number;
 }
 
@@ -130,6 +132,8 @@ function promoteInTransaction(
         rankingsCreated: 0,
         cyclicRewardSchedulesCreated: 0,
         cyclicRewardChoicesCreated: 0,
+        relicRewardsCreated: 0,
+        vendorOfferingsCreated: 0,
         conflictsCreated: 0,
       };
     }
@@ -215,6 +219,8 @@ function promoteInTransaction(
     rankingsCreated: 0,
     cyclicRewardSchedulesCreated: 0,
     cyclicRewardChoicesCreated: 0,
+    relicRewardsCreated: 0,
+    vendorOfferingsCreated: 0,
     conflictsCreated: 0,
   };
 
@@ -335,6 +341,108 @@ function promoteInTransaction(
       );
     rankingSets.set(observation.key, { id, scale: new Set(observation.scale) });
     counts.rankingSetsCreated += 1;
+  }
+
+  for (const observation of input.observations) {
+    if (observation.type === "relic-reward") {
+      if (
+        !Number.isFinite(observation.chance) ||
+        observation.chance <= 0 ||
+        observation.chance > 1
+      )
+        throw new Error(
+          "Relic reward chance must be greater than zero and at most one",
+        );
+      const relicId = state.externalIds.get(
+        externalKey(observation.relicExternalId),
+      );
+      const rewardId = state.externalIds.get(
+        externalKey(observation.rewardExternalId),
+      );
+      if (!relicId || !rewardId) {
+        writeConflict(
+          sqlite,
+          sourceRunId,
+          observation.evidence.sourceRecordKey,
+          "Relic reward refers to an unresolved entity",
+          [relicId, rewardId].filter((id): id is EntityId => Boolean(id)),
+          counts,
+        );
+        continue;
+      }
+      sqlite
+        .prepare(
+          `insert into relic_rewards
+            (id, relic_id, reward_id, refinement, rarity, chance, source_run_id,
+             source_record_key, citation_url, source_path)
+           values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        )
+        .run(
+          randomUUID(),
+          relicId,
+          rewardId,
+          observation.refinement,
+          observation.rarity,
+          observation.chance,
+          sourceRunId,
+          observation.evidence.sourceRecordKey,
+          observation.evidence.citationUrl ?? null,
+          observation.evidence.path ?? null,
+        );
+      counts.relicRewardsCreated += 1;
+    }
+    if (observation.type === "vendor-offering") {
+      if (
+        !Number.isSafeInteger(observation.cost) ||
+        observation.cost < 1 ||
+        !Number.isSafeInteger(observation.quantity) ||
+        observation.quantity < 1
+      )
+        throw new Error(
+          "Vendor offering cost and quantity must be positive integers",
+        );
+      const vendorId = state.externalIds.get(
+        externalKey(observation.vendorExternalId),
+      );
+      const itemId = state.externalIds.get(
+        externalKey(observation.itemExternalId),
+      );
+      if (!vendorId || !itemId) {
+        writeConflict(
+          sqlite,
+          sourceRunId,
+          observation.evidence.sourceRecordKey,
+          "Vendor offering refers to an unresolved entity",
+          [vendorId, itemId].filter((id): id is EntityId => Boolean(id)),
+          counts,
+        );
+        continue;
+      }
+      sqlite
+        .prepare(
+          `insert into vendor_offerings
+            (id, vendor_id, item_id, faction, currency, cost, quantity,
+             prerequisite_rank, prerequisite_label, source_run_id,
+             source_record_key, citation_url, source_path)
+           values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        )
+        .run(
+          randomUUID(),
+          vendorId,
+          itemId,
+          observation.faction,
+          observation.currency,
+          observation.cost,
+          observation.quantity,
+          observation.prerequisiteRank ?? null,
+          observation.prerequisiteLabel ?? null,
+          sourceRunId,
+          observation.evidence.sourceRecordKey,
+          observation.evidence.citationUrl ?? null,
+          observation.evidence.path ?? null,
+        );
+      counts.vendorOfferingsCreated += 1;
+    }
   }
 
   for (const observation of input.observations) {
@@ -623,13 +731,13 @@ function promoteInTransaction(
         );
         continue;
       }
-      sqlite
-        .prepare(
-          `insert into entity_attributes
+      const insertAttribute = sqlite.prepare(
+        `insert into entity_attributes
             (id, entity_id, key, label, value, source_run_id, source_record_key, citation_url, source_path)
            values (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        )
-        .run(
+      );
+      try {
+        insertAttribute.run(
           randomUUID(),
           entityId,
           observation.key,
@@ -640,6 +748,12 @@ function promoteInTransaction(
           observation.evidence.citationUrl ?? null,
           observation.evidence.path ?? null,
         );
+      } catch (error) {
+        throw new Error(
+          `Could not store ${observation.key} for ${observation.evidence.sourceRecordKey} on entity ${entityId}`,
+          { cause: error },
+        );
+      }
     }
     if (observation.type === "node-detail") {
       const nodeId = state.externalIds.get(
@@ -1440,6 +1554,13 @@ function repairExplicitProviderBridge(
   observation: EntityObservation,
   candidateIds: EntityId[],
 ): ReturnType<typeof resolveEntity> {
+  const relicRepair = repairLegacyRelicRefinementBridge(
+    sqlite,
+    state,
+    observation,
+    candidateIds,
+  );
+  if (relicRepair) return relicRepair;
   const itemIdentifiers = observation.externalIds.filter(
     ({ sourceId, namespace }) =>
       sourceId === "wfcd-items" && namespace === "uniqueName",
@@ -1508,6 +1629,70 @@ function repairExplicitProviderBridge(
   return { status: "matched", entityId: targetId, by: "external-id" };
 }
 
+function repairLegacyRelicRefinementBridge(
+  sqlite: Database.Database,
+  state: ResolutionState,
+  observation: EntityObservation,
+  candidateIds: EntityId[],
+): ReturnType<typeof resolveEntity> | undefined {
+  if (
+    observation.evidence.sourceId !== "wfcd-items" ||
+    observation.kind !== "relic"
+  )
+    return;
+  const identifiers = observation.externalIds.filter(
+    ({ sourceId, namespace }) =>
+      sourceId === "wfcd-items" && namespace === "uniqueName",
+  );
+  const base = identifiers.find(
+    ({ value }) => !/(Bronze|Silver|Gold|Platinum)$/.test(value),
+  );
+  const refinement = identifiers.find(({ value }) =>
+    /(Bronze|Silver|Gold|Platinum)$/.test(value),
+  );
+  if (!base || !refinement) return;
+  const targetId = state.externalIds.get(externalKey(base));
+  const legacyId = state.externalIds.get(externalKey(refinement));
+  if (
+    !targetId ||
+    !legacyId ||
+    targetId === legacyId ||
+    !candidateIds.includes(targetId) ||
+    !candidateIds.includes(legacyId) ||
+    state.entities.get(targetId)?.kind !== "relic" ||
+    state.entities.get(legacyId)?.kind !== "relic"
+  )
+    return;
+
+  sqlite
+    .prepare(
+      `update external_ids set entity_id = ?
+       where source_id = ? and namespace = ? and value = ? and entity_id = ?`,
+    )
+    .run(
+      targetId,
+      refinement.sourceId,
+      refinement.namespace,
+      refinement.value,
+      legacyId,
+    );
+  state.externalIds.set(externalKey(refinement), targetId);
+  migratePrivateEntityReferences(sqlite, legacyId, targetId);
+  const remaining = (
+    sqlite
+      .prepare("select count(*) as count from external_ids where entity_id = ?")
+      .get(legacyId) as { count: number }
+  ).count;
+  if (remaining === 0) {
+    sqlite
+      .prepare("update entities set retired = 1, updated_at = ? where id = ?")
+      .run(Date.now(), legacyId);
+    const legacy = state.entities.get(legacyId);
+    if (legacy) state.entities.set(legacyId, { ...legacy, retired: true });
+  }
+  return { status: "matched", entityId: targetId, by: "external-id" };
+}
+
 function repairExactProviderIdentity(
   sqlite: Database.Database,
   state: ResolutionState,
@@ -1515,6 +1700,54 @@ function repairExactProviderIdentity(
   matchedEntityId: EntityId,
 ): ReturnType<typeof resolveEntity> {
   const entity = state.entities.get(matchedEntityId)!;
+  const matchedExternalIds = observation.externalIds.filter(
+    (externalId) =>
+      externalId.sourceId === observation.evidence.sourceId &&
+      state.externalIds.get(externalKey(externalId)) === matchedEntityId,
+  );
+  const legacyMarketGrouping =
+    observation.evidence.sourceId === "warframe-market-items" &&
+    observation.fields.name !== undefined &&
+    normalizedAlias(observation.fields.name) !== normalizedAlias(entity.name) &&
+    (
+      sqlite
+        .prepare(
+          `select count(*) as count from external_ids
+           where entity_id = ? and source_id = 'warframe-market-items'
+             and namespace = 'item-id'`,
+        )
+        .get(matchedEntityId) as { count: number }
+    ).count >
+      matchedExternalIds.filter(({ namespace }) => namespace === "item-id")
+        .length;
+  if (legacyMarketGrouping && matchedExternalIds.length) {
+    for (const externalId of matchedExternalIds)
+      state.externalIds.delete(externalKey(externalId));
+    const splitResolution = resolveEntity(observation, state);
+    if (
+      splitResolution.status === "conflict" ||
+      (splitResolution.status === "matched" &&
+        splitResolution.entityId === matchedEntityId)
+    ) {
+      for (const externalId of matchedExternalIds)
+        state.externalIds.set(externalKey(externalId), matchedEntityId);
+      return splitResolution.status === "conflict"
+        ? splitResolution
+        : { status: "matched", entityId: matchedEntityId, by: "external-id" };
+    }
+    for (const externalId of matchedExternalIds)
+      sqlite
+        .prepare(
+          "delete from external_ids where source_id = ? and namespace = ? and value = ? and entity_id = ?",
+        )
+        .run(
+          externalId.sourceId,
+          externalId.namespace,
+          externalId.value,
+          matchedEntityId,
+        );
+    return splitResolution;
+  }
   if (
     observation.kind === "unknown" ||
     (entity.kind !== "unknown" &&
@@ -1526,11 +1759,6 @@ function repairExactProviderIdentity(
       by: "external-id",
     };
 
-  const matchedExternalIds = observation.externalIds.filter(
-    (externalId) =>
-      externalId.sourceId === observation.evidence.sourceId &&
-      state.externalIds.get(externalKey(externalId)) === matchedEntityId,
-  );
   if (!matchedExternalIds.length)
     return {
       status: "matched",

@@ -10,6 +10,7 @@ the compromises between that target and the current implementation.
 - [Profile data](PROFILE_DATA.md) defines portable player-state identity and import behavior.
 - [Account synchronization](ACCOUNT_SYNC.md) records the safe automatic-sync boundary and evidence needed to expand it.
 - [Marketplace](MARKETPLACE.md) defines the anonymous Warframe.market identity and live-order boundary.
+- [The Index](INDEX.md) defines relic, syndicate-mod, and Arcane valuation semantics.
 - [Acquisition planner](ACQUISITION_PLANNER.md) defines goal and recommendation semantics.
 - [World state](WORLD_STATE.md) defines dynamic availability and snapshot semantics.
 - [Todos and dynamic watches](TODOS.md) defines private tasks and alert intent.

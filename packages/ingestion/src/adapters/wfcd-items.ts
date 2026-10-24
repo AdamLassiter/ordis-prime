@@ -38,6 +38,9 @@ interface WfcdItem extends WfcdItemIdentity {
   polarity?: string;
   polarities?: unknown;
   drops?: WfcdDrop[];
+  rewards?: WfcdRelicReward[];
+  vaulted?: boolean;
+  tradable?: boolean;
 }
 interface WfcdComponent extends WfcdItemIdentity {
   itemCount?: number;
@@ -47,6 +50,15 @@ interface WfcdDrop {
   location?: string;
   chance?: number;
   rotation?: string;
+}
+interface WfcdRelicReward {
+  chance?: number;
+  rarity?: string;
+  item?: {
+    name?: string;
+    uniqueName?: string;
+    warframeMarket?: { id?: string; urlName?: string };
+  };
 }
 const categories: Record<string, EntityKind> = {
   Warframes: "warframe",
@@ -76,7 +88,7 @@ const categories: Record<string, EntityKind> = {
   Skins: "cosmetic",
 };
 export const DEFAULT_WFCD_ITEMS_URL = "https://api.warframestat.us/items";
-const PARSER_VERSION = "wfcd-items-v14";
+const PARSER_VERSION = "wfcd-items-v17";
 const ARCHON_SHARD_PREFIX = "/Lotus/Types/Gameplay/NarmerSorties/ArchonCrystal";
 const resourceTypes = new Set([
   "Resource",
@@ -154,6 +166,7 @@ export class WfcdItemsAdapter implements SourceAdapter {
     );
     const canonicalNames = canonicalNamesForItems([...declaredItems.values()]);
     const componentOccurrences = new Map<string, number>();
+    const rewardIdentities = new Map<string, Set<string>>();
     for (const item of items)
       for (const component of item.components ?? []) {
         if (component.uniqueName)
@@ -162,6 +175,87 @@ export class WfcdItemsAdapter implements SourceAdapter {
             (componentOccurrences.get(component.uniqueName) ?? 0) + 1,
           );
       }
+    for (const item of items)
+      for (const reward of item.rewards ?? []) {
+        const rewardItem = reward.item;
+        if (!rewardItem?.uniqueName || !rewardItem.name) continue;
+        const identities =
+          rewardIdentities.get(rewardItem.uniqueName) ?? new Set();
+        identities.add(
+          rewardItem.warframeMarket?.id ??
+            rewardItem.warframeMarket?.urlName ??
+            rewardItem.name,
+        );
+        rewardIdentities.set(rewardItem.uniqueName, identities);
+      }
+    const ambiguousRewardUniqueNames = new Set(
+      [...rewardIdentities]
+        .filter(([, identities]) => identities.size > 1)
+        .map(([uniqueName]) => uniqueName),
+    );
+    const canonicalRelicBaseIds = new Map<string, string>();
+    for (const item of items) {
+      if (!item.uniqueName || !item.name || !relicRefinement(item.name))
+        continue;
+      const key = normalizedAlias(
+        item.name.replace(/ (Intact|Exceptional|Flawless|Radiant)$/, ""),
+      );
+      const baseId = item.uniqueName.replace(
+        /(Bronze|Silver|Gold|Platinum)$/,
+        "",
+      );
+      const current = canonicalRelicBaseIds.get(key);
+      if (!current || baseId.localeCompare(current) < 0)
+        canonicalRelicBaseIds.set(key, baseId);
+    }
+    const declaredKinds = new Map<string, EntityKind>();
+    const declaredFields = new Map<string, EntityObservation["fields"]>();
+    for (const item of items)
+      if (item.uniqueName && item.name) {
+        const kind = kindFor(item);
+        const name =
+          kind === "relic" && relicRefinement(item.name)
+            ? item.name.replace(
+                / (Intact|Exceptional|Flawless|Radiant)$/,
+                " Relic",
+              )
+            : (canonicalNames.get(item.uniqueName) ?? cleanName(item.name));
+        declaredKinds.set(item.uniqueName, kind);
+        declaredFields.set(item.uniqueName, {
+          name,
+          slug: slugify(name),
+          description: item.description,
+        });
+      }
+    for (const item of items)
+      for (const component of item.components ?? []) {
+        if (
+          !component.uniqueName ||
+          !component.name ||
+          declaredKinds.has(component.uniqueName)
+        )
+          continue;
+        const shared =
+          (componentOccurrences.get(component.uniqueName) ?? 0) > 1;
+        const kind =
+          shared && component.category === "Misc"
+            ? "resource"
+            : kindFor(component, "component");
+        const name =
+          kind === "component"
+            ? shared
+              ? sharedComponentName(component)
+              : `${item.name} ${component.name}`
+            : component.name;
+        declaredKinds.set(component.uniqueName, kind);
+        declaredFields.set(component.uniqueName, {
+          name,
+          slug: slugify(name),
+          description: component.description,
+        });
+      }
+    const emittedVaultedRelics = new Set<string>();
+    const emittedRelicSchedules = new Set<string>();
     for (const [index, item] of items.entries()) {
       if (!item.uniqueName || !item.name) continue;
       const kind = kindFor(item);
@@ -174,7 +268,24 @@ export class WfcdItemsAdapter implements SourceAdapter {
         license: this.source.license,
         path: `[${index}]`,
       };
-      const name = canonicalNames.get(item.uniqueName) ?? cleanName(item.name);
+      const name =
+        kind === "relic" && relicRefinement(item.name)
+          ? item.name.replace(
+              / (Intact|Exceptional|Flawless|Radiant)$/,
+              " Relic",
+            )
+          : (canonicalNames.get(item.uniqueName) ?? cleanName(item.name));
+      const relicBaseUniqueName =
+        kind === "relic" && relicRefinement(item.name)
+          ? item.uniqueName.replace(/(Bronze|Silver|Gold|Platinum)$/, "")
+          : undefined;
+      const canonicalRelicBaseUniqueName = relicBaseUniqueName
+        ? canonicalRelicBaseIds.get(
+            normalizedAlias(
+              item.name.replace(/ (Intact|Exceptional|Flawless|Radiant)$/, ""),
+            ),
+          )
+        : undefined;
       yield {
         type: "entity",
         kind,
@@ -184,6 +295,25 @@ export class WfcdItemsAdapter implements SourceAdapter {
             namespace: "uniqueName",
             value: item.uniqueName,
           },
+          ...(canonicalRelicBaseUniqueName
+            ? [
+                {
+                  sourceId: this.source.id,
+                  namespace: "uniqueName",
+                  value: canonicalRelicBaseUniqueName,
+                },
+              ]
+            : []),
+          ...(relicBaseUniqueName &&
+          relicBaseUniqueName !== canonicalRelicBaseUniqueName
+            ? [
+                {
+                  sourceId: this.source.id,
+                  namespace: "uniqueName",
+                  value: relicBaseUniqueName,
+                },
+              ]
+            : []),
         ],
         fields: {
           name,
@@ -215,6 +345,40 @@ export class WfcdItemsAdapter implements SourceAdapter {
         evidence,
       };
       yield* dropObservations(item, item.uniqueName, evidence, `[${index}]`);
+      if (kind === "relic") {
+        if (
+          typeof item.vaulted === "boolean" &&
+          canonicalRelicBaseUniqueName &&
+          !emittedVaultedRelics.has(normalizedAlias(name))
+        ) {
+          emittedVaultedRelics.add(normalizedAlias(name));
+          yield {
+            type: "entity-attribute",
+            subjectExternalId: {
+              sourceId: this.source.id,
+              namespace: "uniqueName",
+              value: canonicalRelicBaseUniqueName,
+            },
+            key: "vaulted",
+            label: "Vaulted",
+            value: String(item.vaulted),
+            evidence: {
+              ...evidence,
+              sourceRecordKey: `${item.uniqueName}:vaulted`,
+            },
+          };
+        }
+        yield* relicRewardObservations(
+          item,
+          evidence,
+          `[${index}]`,
+          ambiguousRewardUniqueNames,
+          declaredKinds,
+          declaredFields,
+          emittedRelicSchedules,
+          canonicalRelicBaseUniqueName,
+        );
+      }
       const companionPolarities =
         kind === "companion"
           ? parseCompanionPolarities(item.polarities, name)
@@ -316,6 +480,136 @@ export class WfcdItemsAdapter implements SourceAdapter {
         };
     }
   }
+}
+
+function* relicRewardObservations(
+  item: WfcdItem,
+  evidence: EntityObservation["evidence"],
+  path: string,
+  ambiguousRewardUniqueNames: ReadonlySet<string>,
+  declaredKinds: ReadonlyMap<string, EntityKind>,
+  declaredFields: ReadonlyMap<string, EntityObservation["fields"]>,
+  emittedRelicSchedules: Set<string>,
+  canonicalRelicBaseUniqueName?: string,
+): Generator<Observation> {
+  if (!item.uniqueName || !item.name || !item.rewards?.length) return;
+  const refinement = relicRefinement(item.name);
+  if (!refinement) return;
+  const scheduleKey = `${normalizedAlias(item.name.replace(/ (Intact|Exceptional|Flawless|Radiant)$/, ""))}:${refinement}`;
+  if (emittedRelicSchedules.has(scheduleKey)) return;
+  emittedRelicSchedules.add(scheduleKey);
+  if (item.rewards.length !== 6)
+    throw new Error(
+      `WFCD relic ${item.name} has ${item.rewards.length} rewards`,
+    );
+  const total = item.rewards.reduce(
+    (sum, reward) =>
+      sum + (typeof reward.chance === "number" ? reward.chance : 0),
+    0,
+  );
+  if (Math.abs(total - 100) > 0.1)
+    throw new Error(`WFCD relic ${item.name} reward chances total ${total}`);
+  const baseUniqueName =
+    canonicalRelicBaseUniqueName ??
+    item.uniqueName.replace(/(Bronze|Silver|Gold|Platinum)$/, "");
+  for (const [rewardIndex, reward] of item.rewards.entries()) {
+    const rewardItem = reward.item;
+    if (
+      !rewardItem?.name ||
+      !rewardItem.uniqueName ||
+      typeof reward.chance !== "number"
+    )
+      throw new Error(
+        `WFCD relic ${item.name} reward ${rewardIndex} is incomplete`,
+      );
+    const rarity = relicRarity(reward.rarity);
+    if (!rarity)
+      throw new Error(
+        `WFCD relic ${item.name} reward ${rewardIndex} has invalid rarity`,
+      );
+    const externalIds = [
+      ...(!ambiguousRewardUniqueNames.has(rewardItem.uniqueName)
+        ? [
+            {
+              sourceId: "wfcd-items",
+              namespace: "uniqueName",
+              value: rewardItem.uniqueName,
+            },
+          ]
+        : []),
+      ...(ambiguousRewardUniqueNames.has(rewardItem.uniqueName) &&
+      !rewardItem.warframeMarket?.id
+        ? [
+            {
+              sourceId: "wfcd-items",
+              namespace: "relicReward",
+              value: `${rewardItem.uniqueName}:${normalizedAlias(rewardItem.name)}`,
+            },
+          ]
+        : []),
+    ];
+    if (!externalIds.length)
+      throw new Error(
+        `WFCD relic reward ${rewardItem.name} has no unambiguous identity`,
+      );
+    const declaredKind = !ambiguousRewardUniqueNames.has(rewardItem.uniqueName)
+      ? declaredKinds.get(rewardItem.uniqueName)
+      : undefined;
+    const declaredEntityFields = declaredKind
+      ? declaredFields.get(rewardItem.uniqueName)
+      : undefined;
+    yield {
+      type: "entity",
+      // WFCD exposes Prime blueprints through the parent item's component list,
+      // where this project already models them as components. Keep the reward
+      // declaration compatible with that canonical identity; the name still
+      // preserves that the rewarded object is a blueprint.
+      kind: declaredKind ?? "component",
+      externalIds,
+      fields: declaredEntityFields ?? {
+        name: rewardItem.name,
+        slug: slugify(rewardItem.name),
+      },
+      evidence: {
+        ...evidence,
+        sourceRecordKey: rewardItem.uniqueName,
+        path: `${path}.rewards[${rewardIndex}].item`,
+      },
+    };
+    yield {
+      type: "relic-reward",
+      relicExternalId: {
+        sourceId: "wfcd-items",
+        namespace: "uniqueName",
+        value: baseUniqueName,
+      },
+      rewardExternalId: externalIds[0]!,
+      refinement,
+      rarity,
+      chance: reward.chance / 100,
+      evidence: {
+        ...evidence,
+        sourceRecordKey: `${item.uniqueName}:reward:${rewardIndex}:${rewardItem.uniqueName}`,
+        path: `${path}.rewards[${rewardIndex}]`,
+      },
+    };
+  }
+}
+
+function relicRefinement(name: string) {
+  if (/ Intact$/.test(name)) return "intact" as const;
+  if (/ Exceptional$/.test(name)) return "exceptional" as const;
+  if (/ Flawless$/.test(name)) return "flawless" as const;
+  if (/ Radiant$/.test(name)) return "radiant" as const;
+}
+
+function relicRarity(value: string | undefined) {
+  const normalized = value?.toLocaleLowerCase("en");
+  return normalized === "common" ||
+    normalized === "uncommon" ||
+    normalized === "rare"
+    ? normalized
+    : undefined;
 }
 
 function parseCompanionPolarities(

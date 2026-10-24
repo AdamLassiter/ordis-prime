@@ -62,6 +62,8 @@ export function pruneInactiveCatalogHistory(
       ),
       sqlite.prepare("delete from recipes where source_run_id = ?"),
       sqlite.prepare("delete from drops where source_run_id = ?"),
+      sqlite.prepare("delete from relic_rewards where source_run_id = ?"),
+      sqlite.prepare("delete from vendor_offerings where source_run_id = ?"),
       sqlite.prepare("delete from node_details where source_run_id = ?"),
       sqlite.prepare(
         "delete from node_item_requirements where source_run_id = ?",
@@ -69,6 +71,7 @@ export function pruneInactiveCatalogHistory(
       sqlite.prepare("delete from node_objectives where source_run_id = ?"),
       sqlite.prepare("delete from node_rewards where source_run_id = ?"),
       sqlite.prepare("delete from entity_relations where source_run_id = ?"),
+      sqlite.prepare("delete from entity_attributes where source_run_id = ?"),
       sqlite.prepare(
         "delete from entity_enhancement_options where source_run_id = ?",
       ),

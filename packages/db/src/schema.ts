@@ -160,6 +160,137 @@ export const cyclicRewardChoices = sqliteTable(
     index("cyclic_reward_choice_entity").on(table.primaryEntityId),
   ],
 );
+
+export const relicRewards = sqliteTable(
+  "relic_rewards",
+  {
+    id: text().primaryKey(),
+    relicId: text("relic_id")
+      .notNull()
+      .references(() => entities.id),
+    rewardId: text("reward_id")
+      .notNull()
+      .references(() => entities.id),
+    refinement: text({
+      enum: ["intact", "exceptional", "flawless", "radiant"],
+    }).notNull(),
+    rarity: text({ enum: ["common", "uncommon", "rare"] }).notNull(),
+    chance: real().notNull(),
+    sourceRunId: text("source_run_id")
+      .notNull()
+      .references(() => sourceRuns.id),
+    sourceRecordKey: text("source_record_key").notNull(),
+    citationUrl: text("citation_url"),
+    sourcePath: text("source_path"),
+  },
+  (table) => [
+    uniqueIndex("relic_reward_run_record").on(
+      table.sourceRunId,
+      table.sourceRecordKey,
+    ),
+    index("relic_reward_relic").on(table.relicId, table.refinement),
+    index("relic_reward_reward").on(table.rewardId),
+  ],
+);
+
+export const vendorOfferings = sqliteTable(
+  "vendor_offerings",
+  {
+    id: text().primaryKey(),
+    vendorId: text("vendor_id")
+      .notNull()
+      .references(() => entities.id),
+    itemId: text("item_id")
+      .notNull()
+      .references(() => entities.id),
+    faction: text().notNull(),
+    currency: text().notNull(),
+    cost: integer().notNull(),
+    quantity: integer().notNull(),
+    prerequisiteRank: integer("prerequisite_rank"),
+    prerequisiteLabel: text("prerequisite_label"),
+    sourceRunId: text("source_run_id")
+      .notNull()
+      .references(() => sourceRuns.id),
+    sourceRecordKey: text("source_record_key").notNull(),
+    citationUrl: text("citation_url"),
+    sourcePath: text("source_path"),
+  },
+  (table) => [
+    uniqueIndex("vendor_offering_run_record").on(
+      table.sourceRunId,
+      table.sourceRecordKey,
+    ),
+    index("vendor_offering_vendor").on(table.vendorId),
+    index("vendor_offering_item").on(table.itemId),
+  ],
+);
+
+export const marketPriceRuns = sqliteTable("market_price_runs", {
+  id: text().primaryKey(),
+  status: text({
+    enum: ["running", "succeeded", "partial", "failed"],
+  }).notNull(),
+  startedAt: integer("started_at", { mode: "timestamp_ms" }).notNull(),
+  finishedAt: integer("finished_at", { mode: "timestamp_ms" }),
+  targetCount: integer("target_count").notNull(),
+  completedCount: integer("completed_count").notNull().default(0),
+  failedCount: integer("failed_count").notNull().default(0),
+  error: text(),
+});
+
+export const marketPriceTargets = sqliteTable(
+  "market_price_targets",
+  {
+    runId: text("run_id")
+      .notNull()
+      .references(() => marketPriceRuns.id),
+    entityId: text("entity_id")
+      .notNull()
+      .references(() => entities.id),
+    itemId: text("item_id").notNull(),
+    slug: text().notNull(),
+    status: text({ enum: ["pending", "succeeded", "failed"] }).notNull(),
+    error: text(),
+  },
+  (table) => [primaryKey({ columns: [table.runId, table.entityId] })],
+);
+
+export const marketPriceSnapshots = sqliteTable(
+  "market_price_snapshots",
+  {
+    id: text().primaryKey(),
+    runId: text("run_id")
+      .notNull()
+      .references(() => marketPriceRuns.id),
+    entityId: text("entity_id")
+      .notNull()
+      .references(() => entities.id),
+    itemId: text("item_id").notNull(),
+    slug: text().notNull(),
+    subtype: text(),
+    rank: integer(),
+    observedAt: integer("observed_at", { mode: "timestamp_ms" }).notNull(),
+    listingPrice: real("listing_price"),
+    quickSalePrice: real("quick_sale_price"),
+    sellOrderCount: integer("sell_order_count").notNull(),
+    buyOrderCount: integer("buy_order_count").notNull(),
+  },
+  (table) => [
+    uniqueIndex("market_price_snapshot_variant").on(
+      table.runId,
+      table.entityId,
+      table.subtype,
+      table.rank,
+    ),
+    index("market_price_snapshot_latest").on(
+      table.entityId,
+      table.subtype,
+      table.rank,
+      table.observedAt,
+    ),
+  ],
+);
 export const catalogReleases = sqliteTable("catalog_releases", {
   id: text().primaryKey(),
   createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),

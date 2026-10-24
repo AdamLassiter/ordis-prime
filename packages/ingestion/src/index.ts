@@ -15,6 +15,7 @@ export * from "./adapters/warframe-wiki-enemies.ts";
 export * from "./adapters/warframe-wiki-vendors.ts";
 export * from "./adapters/warframe-wiki-circuit.ts";
 export * from "./adapters/warframe-market-items.ts";
+export * from "./market-prices.ts";
 export * from "./adapters/manual-ranking.ts";
 export * from "./adapters/manual-discovery.ts";
 export * from "./adapters/manual-facts.ts";

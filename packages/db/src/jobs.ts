@@ -3,6 +3,7 @@ import type Database from "better-sqlite3";
 
 export const WORLD_STATE_REFRESH_JOB = "refresh-world-state";
 export const CATALOG_SOURCE_REFRESH_JOB = "refresh-catalog-source";
+export const MARKET_PRICE_REFRESH_JOB = "refresh-market-prices";
 
 export interface ClaimedJob {
   id: string;
@@ -111,7 +112,12 @@ export function claimDueJob(
       select id, kind, payload_json as payloadJson, run_after as runAfter
       from jobs
       where status = 'queued' and run_after <= ? and kind in (${placeholders})
-      order by run_after, case kind when 'refresh-world-state' then 0 else 1 end, id limit 1
+      order by case kind
+        when 'refresh-world-state' then 0
+        when 'refresh-catalog-source' then 1
+        when 'refresh-market-prices' then 2
+        else 3 end,
+        run_after, id limit 1
     `,
         )
         .get(input.now, ...input.kinds) as
@@ -176,6 +182,21 @@ export function finishAndRescheduleJob(
       return nextId;
     })
     .immediate();
+}
+
+export function continueLeasedJob(
+  sqlite: Database.Database,
+  input: { id: string; owner: string; runAfter: number },
+): void {
+  const result = sqlite
+    .prepare(
+      `update jobs set status = 'queued', run_after = ?, lease_owner = null,
+        lease_until = null, error = null
+       where id = ? and status = 'running' and lease_owner = ?`,
+    )
+    .run(input.runAfter, input.id, input.owner);
+  if (result.changes !== 1)
+    throw new Error(`Job ${input.id} is not leased by ${input.owner}`);
 }
 
 export function pruneFinishedJobs(
