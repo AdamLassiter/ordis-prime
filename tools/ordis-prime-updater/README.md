@@ -22,6 +22,10 @@ The GitHub `Windows updater` workflow performs the same build. An
 `updater-v*` tag publishes the executable, SHA-256 checksum and third-party
 notices to a GitHub Release.
 
+The production web container also cross-compiles a static executable and serves
+it from `/downloads/ordis-prime-updater-windows-x64.exe`, alongside its checksum
+and redistribution notices. The Operator page uses this instance-local copy.
+
 ## Security and compatibility
 
 Release builds require HTTPS, except that `http://localhost` is accepted for

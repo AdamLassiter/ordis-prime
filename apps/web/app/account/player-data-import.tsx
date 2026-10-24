@@ -329,15 +329,19 @@ export function PlayerDataImport() {
             <p>
               <a
                 className="nav-button"
-                href="https://github.com/AdamLassiter/ordis-prime/releases/latest/download/ordis-prime-updater-windows-x64.exe"
+                href="/downloads/ordis-prime-updater-windows-x64.exe"
               >
                 Download Windows updater
               </a>
             </p>
             <p className="muted">
               The first release is unsigned and Windows may show a SmartScreen
-              warning. Review the source and published checksum before running
-              it. Start Warframe and log in before launching the updater.
+              warning. Review the source and its{" "}
+              <a href="/downloads/ordis-prime-updater-windows-x64.exe.sha256">
+                SHA-256 checksum
+              </a>{" "}
+              before running it. Start Warframe and log in before launching the
+              updater.
             </p>
             {!pairing ? (
               <button className="button" disabled={pairingPending}>

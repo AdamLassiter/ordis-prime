@@ -50,6 +50,12 @@ never create builds, and need no destructive confirmation. Raw API bytes are
 discarded after the request. A capped result remains for 24 hours so the page
 can report what happened; the worker removes old pairings.
 
+The production web container cross-compiles the updater as a static Windows x64
+executable and serves it, its checksum, and its redistribution notices from the
+same Ordis Prime instance. This keeps a self-hosted deployment independent of a
+GitHub Release. Tagged releases remain a second distribution channel and are
+built by the native Windows workflow.
+
 Persistent or unattended account sync becomes eligible only if Digital Extremes publishes a
 supported authorization contract with all of the following:
 

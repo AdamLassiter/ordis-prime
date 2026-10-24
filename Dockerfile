@@ -1,3 +1,19 @@
+FROM debian:bookworm-slim AS updater-build
+WORKDIR /src
+RUN apt-get update \
+  && apt-get install --yes --no-install-recommends g++-mingw-w64-x86-64-posix \
+  && rm -rf /var/lib/apt/lists/*
+COPY tools/ordis-prime-updater ./tools/ordis-prime-updater
+RUN mkdir -p /dist \
+  && x86_64-w64-mingw32-g++-posix -std=c++20 -O2 -static -static-libgcc -static-libstdc++ \
+    -DUNICODE -D_UNICODE -DWIN32_LEAN_AND_MEAN -DNOMINMAX \
+    tools/ordis-prime-updater/src/main.cpp \
+    tools/ordis-prime-updater/src/pairing.cpp \
+    -lwinhttp -o /dist/ordis-prime-updater-windows-x64.exe \
+  && sha256sum /dist/ordis-prime-updater-windows-x64.exe \
+    | sed 's|  /dist/|  |' \
+    > /dist/ordis-prime-updater-windows-x64.exe.sha256
+
 FROM node:24-bookworm-slim AS build
 WORKDIR /app
 RUN apt-get update \
@@ -22,6 +38,10 @@ RUN useradd --system --uid 10001 ordis && mkdir -p /data && chown ordis:ordis /d
 COPY --from=build --chown=ordis:ordis /app/apps/web/.next/standalone ./
 COPY --from=build --chown=ordis:ordis /app/apps/web/.next/static ./apps/web/.next/static
 COPY --from=build --chown=ordis:ordis /app/apps/web/public ./apps/web/public
+COPY --from=updater-build --chown=ordis:ordis /dist/ordis-prime-updater-windows-x64.exe ./apps/web/public/downloads/ordis-prime-updater-windows-x64.exe
+COPY --from=updater-build --chown=ordis:ordis /dist/ordis-prime-updater-windows-x64.exe.sha256 ./apps/web/public/downloads/ordis-prime-updater-windows-x64.exe.sha256
+COPY --from=updater-build --chown=ordis:ordis /src/tools/ordis-prime-updater/THIRD_PARTY_NOTICES.md ./apps/web/public/downloads/THIRD_PARTY_NOTICES.md
+COPY --from=updater-build --chown=ordis:ordis /src/tools/ordis-prime-updater/licenses/warframe-api-helper-LICENSE ./apps/web/public/downloads/warframe-api-helper-LICENSE
 COPY --from=build --chown=ordis:ordis /app/packages/db/migrations ./migrations
 USER ordis
 VOLUME ["/data"]

@@ -157,7 +157,10 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   on request. Other presets, partial equipment ranks, Focus progress,
   Catalyst/Reactor state, adapters, Archon Shards and star-chart completion are
   not inferred. A separate unsigned Windows x64 updater can perform a one-shot
-  live import through a hashed, ten-minute pairing code. It reads temporary
+  live import through a hashed, ten-minute pairing code. The production web
+  image contains a statically cross-compiled copy plus its checksum and licence
+  notices, so the Operator page downloads it from the current instance rather
+  than depending on GitHub Releases. It reads temporary
   game credentials locally, uploads only inventory JSON, and is restricted to
   an automatic monotonic inventory/progression merge. It has no Linux/Proton
   build, background mode, `getShip` support, build creation, replacement mode,

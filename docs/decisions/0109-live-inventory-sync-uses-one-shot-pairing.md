@@ -25,6 +25,11 @@ reviewed helper algorithm. It obtains and uses Warframe credentials entirely on
 the player's machine, writes no inventory file, and uploads only the JSON
 response over HTTPS.
 
+Cross-compile a static executable while building the production web image, and
+serve it with its checksum and redistribution notices from that instance. Keep
+the native Windows tagged-release build as an additional distribution and
+verification path, not as a runtime dependency of a self-hosted deployment.
+
 The authenticated Operator page issues a random ten-minute pairing code that
 contains the instance origin and a 256-bit secret. Store only the secret's
 SHA-256 hash. Consume it atomically on the first upload, bind it to one player,
@@ -46,3 +51,5 @@ explicit replacement workflow.
   release; it cannot corrupt the catalog or lower player state.
 - The first binary is unsigned, Windows-only, non-commercially distributed,
   and published with source attribution and a SHA-256 checksum.
+- Runtime images are larger and slower to build because they contain a MinGW
+  build stage, while worker images do not copy the resulting executable.
