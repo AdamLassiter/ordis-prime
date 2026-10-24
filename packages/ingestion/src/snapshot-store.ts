@@ -167,7 +167,11 @@ function validateSnapshot(snapshot: Snapshot): void {
 }
 
 function isAlreadyExists(error: unknown): boolean {
-  return error instanceof Error && "code" in error && error.code === "EEXIST";
+  return (
+    error instanceof Error &&
+    "code" in error &&
+    (error.code === "EEXIST" || error.code === "ENOTEMPTY")
+  );
 }
 
 function isMissing(error: unknown): boolean {
