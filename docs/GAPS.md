@@ -147,12 +147,17 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   phrase. Password recovery is not implemented yet.
 - Validated inventory persistence, authenticated catalog editing, an inventory
   summary, node reward ownership filtering, and portable profile import/export
-  with transfer UI exist. Players can also upload a bounded raw Warframe
-  inventory response: allow-listed `ItemType` paths resolve exactly through
-  WFCD identifiers, raw bytes and account fields are not retained, and counts
-  plus Helminth subsumes merge monotonically. The app does not acquire session
-  credentials, poll a player account, lower stale counts, infer mastery, or
-  retain a synchronization audit. Authenticated goals feed a planner that
+  with transfer UI exist. The Operator page accepts a bounded AlecaFrame
+  `lastData.dat` snapshot through a native TypeScript decoder. Preview and apply
+  are hash-bound; allow-listed `ItemType` paths resolve exactly through WFCD
+  identifiers, raw bytes and account fields are not retained, and players choose
+  monotonic merge or explicitly confirmed replacement. Exact Mastery Rank,
+  conservative mastered/rank-30 evidence, Helminth subsumes and verified
+  NORMAL/SENTINEL loadout slots can be applied; loadouts become new drafts only
+  on request. Other presets, partial equipment ranks, Focus progress,
+  Catalyst/Reactor state, adapters, Archon Shards and star-chart completion are
+  not inferred. The app does not acquire session credentials, poll a player
+  account, or retain a synchronization audit. Authenticated goals feed a planner that
   subtracts inventory, expands active recipes, lists missing requirements, and
   links to candidate nodes with visible reasons. Profiles include inventory, goals,
   discovery progress, static todos, watch rules and private build drafts.

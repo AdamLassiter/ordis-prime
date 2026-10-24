@@ -11,12 +11,28 @@ loadout. None is a documented, revocable OAuth-style API for a player's complete
 inventory, mastery, quest, Star Chart, Foundry, or Helminth state. The official
 Companion application's authenticated protocol is not treated as public API.
 
-The implemented boundary is therefore an explicit local upload of a raw
-inventory response the player obtained through a tool they already trust. The
-parser allow-lists inventory arrays and `ItemType` identifiers, discards account
-fields and raw bytes, and only raises known counts or records confirmed Helminth
-subsumes. It cannot silently erase manual state. This is import, not continuous
-sync.
+The implemented boundary is therefore an explicit upload of AlecaFrame's local
+`lastData.dat` snapshot. Ordis Prime reimplements the documented AES-128-CBC
+container decoding in TypeScript, unwraps `InventoryJson`, allow-lists the
+player fields it understands, and discards the encrypted and decrypted bytes
+after the request. It never reads AlecaFrame's directory itself and does not use
+`deltas.dat`, an Aleca API, process access, credentials or background polling.
+
+Every snapshot must be previewed before it is applied. Merge mode raises known
+counts and positive mastered or subsumed assertions without lowering manual
+state. Replace mode is an explicit destructive choice: the preview enumerates
+decreases, the player confirms them, and supported WFCD-addressable collection
+fields are reset before the snapshot is applied. Wanted counts and notes remain
+player-authored in either mode. A SHA-256 digest binds confirmation to the file
+that was previewed; the server reparses it inside the apply transaction and
+does not retain the digest as account identity.
+
+The importer also accepts directly evidenced `PlayerLevel`, conservative
+rank-30 XP assertions, and the verified NORMAL/SENTINEL current-loadout shape.
+Loadout import creates a new draft only on request. Unsupported preset types,
+partial ranks, capacity upgrades, adapters, Focus progress, Archon Shards and
+ambiguous identifiers remain visible omissions rather than inferred values.
+This is still import, not continuous sync.
 
 Automatic account sync becomes eligible only if Digital Extremes publishes a
 supported authorization contract with all of the following:
@@ -29,9 +45,8 @@ supported authorization contract with all of the following:
   partial or stale response for authoritative absence.
 
 If that contract appears, the first slice should be a user-triggered read-only
-sync with an audit preview. It should map provider IDs through the same canonical
-resolver, show additions/decreases before applying them, retain the last
-successful sync timestamp and source version, and keep manual overrides distinct
+sync using the same preview and canonical resolver. It should retain the last
+successful sync timestamp and source version and keep manual overrides distinct
 from provider assertions. Background polling, write actions, Foundry control,
 and trading are separate decisions, not implied by read access.
 

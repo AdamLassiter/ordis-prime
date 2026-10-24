@@ -68,6 +68,12 @@ key; import requires that effect to be active for the resolved shard, otherwise 
 reported unresolved. Every catalog member uses the same portable reference. Published share snapshots are intentionally
 excluded because they are server-hosted immutable artifacts and capability URLs.
 
+AlecaFrame snapshot import is a separate account-local ingestion path rather
+than another portable profile format. Its applied inventory, progression and
+optional new build draft become ordinary profile state and therefore appear in
+later exports, but the encrypted source, decrypted document, preview hash and
+unresolved records are not retained.
+
 Imports resolve external identifiers first and only fall back to the kind/slug
 pair when no identifier is present in the destination catalog. Ambiguous or
 missing entries are reported rather than guessed. Merge mode is the default;

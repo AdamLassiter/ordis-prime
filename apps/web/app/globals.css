@@ -554,6 +554,17 @@ h2 {
   filter: brightness(1.12);
   transform: translateY(-1px);
 }
+.button.danger-button {
+  border-color: #fca5a5;
+  color: #fff1f2;
+  background: linear-gradient(135deg, #7f1d1d, #4c1017);
+  box-shadow: 0 0 22px rgb(252 165 165 / 12%);
+}
+.button.danger-button:hover,
+.button.danger-button:focus-visible {
+  border-color: #fecdd3;
+  color: #fff;
+}
 .button:disabled,
 .nav-button:disabled {
   cursor: wait;
@@ -1579,6 +1590,41 @@ textarea:focus {
 }
 .compact-form textarea {
   width: 100%;
+}
+.player-data-import {
+  max-width: 58rem;
+  margin-top: 2rem;
+}
+.player-data-import > .form-stack,
+.import-preview {
+  max-width: none;
+}
+.form-stack label.checkbox-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+}
+.checkbox-label input[type="checkbox"] {
+  width: auto;
+  margin-top: 0.2rem;
+  flex: 0 0 auto;
+}
+.import-preview {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+.import-preview h3 {
+  margin: 0.45rem 0;
+}
+.compact-list {
+  margin: 0.75rem 0 0;
+  padding-left: 1.25rem;
+}
+.compact-list li {
+  margin: 0.35rem 0;
 }
 .mod-list {
   padding-left: 1.2rem;

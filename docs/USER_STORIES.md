@@ -9,9 +9,11 @@
   offers without giving Ordis Prime marketplace credentials.
 - As a player, I can record quantities, built and wanted copies, and optional
   mastered or subsumed state.
-- As a player, I can merge a raw inventory snapshot from my own game session
-  by stable item identity without storing its account or session fields or
-  erasing larger manual counts.
+- As a player, I can preview an AlecaFrame snapshot, merge it without lowering
+  manual collection values or explicitly replace supported collection state,
+  without storing its account fields or raw bytes.
+- As a player, I can import verified Mastery Rank and current NORMAL/SENTINEL
+  loadout data from that snapshot, while unsupported fields remain explicit.
 - As a player, I can filter a node to rewards I still need.
 - As a player, I can record completion for a filtered group of star-chart nodes
   without changing nodes hidden by those filters.

@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getCurrentSession } from "@/lib/session";
 import { deleteOwnAccount } from "./actions";
+import { PlayerDataImport } from "./player-data-import";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +17,7 @@ export default async function AccountPage() {
         <p>{session.user.email}</p>
         <span className="tag">{session.user.role}</span>
       </section>
+      <PlayerDataImport />
       <section className="card build-details">
         <h2>Delete account</h2>
         <p className="muted">
@@ -50,7 +52,7 @@ export default async function AccountPage() {
               autoComplete="off"
             />
           </label>
-          <button className="button danger-text">Delete my account</button>
+          <button className="button danger-button">Delete my account</button>
         </form>
       </section>
     </>

@@ -70,6 +70,14 @@ enhancements also survive private cloning and portable profile export/import.
 Published capability URLs are installation-local and are not included in the
 portable profile.
 
+An explicitly confirmed AlecaFrame preview may create a new private draft from
+the snapshot's current NORMAL and SENTINEL presets. Equipment, the active config,
+verified mod positions and ranks, supported final polarities, Forma counts and
+compatible Arcanes are copied through the normal build validators. Existing
+drafts are never updated. Unknown Catalyst/Reactor and adapter state defaults to
+off with an import note; uncertain companion mod placement and other preset
+families are reported instead of guessed.
+
 ## Current compromises
 
 - Weapon base-stat coverage remains incomplete. Missing structured values are

@@ -31,4 +31,50 @@ jobs:
         env:
           ORDIS_DATABASE_URL: ${{ runner.temp }}/ordis-prime-ci.sqlite
       - name: Build production container
-        run: docker build --tag ordis-prime:ci .
+        run: |
+          docker build --target runtime --tag ordis-prime:ci .
+          docker build --target worker --tag ordis-prime-worker:ci .
+
+  publish:
+    name: Publish ${{ matrix.target }} image
+    needs: validate
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        include:
+          - target: runtime
+            suffix: ""
+          - target: worker
+            suffix: -worker
+    steps:
+      - uses: actions/checkout@v6
+      - uses: docker/setup-buildx-action@v4
+      - name: Log in to the GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Generate image metadata
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ghcr.io/${{ github.repository }}${{ matrix.suffix }}
+          tags: |
+            type=raw,value=latest
+            type=sha,format=long
+      - name: Build and publish image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          target: ${{ matrix.target }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=${{ matrix.target }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.target }}
