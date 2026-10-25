@@ -1,16 +1,18 @@
 # Ordis Prime Updater
 
 This optional Windows x64 utility performs live inventory imports. For initial
-pairing, run it while Warframe is open and paste the ten-minute code shown on
-Ordis Prime's Operator page. It registers a named, revocable updater device and
-stores its inventory-sync-only credential in Windows Credential Manager.
+pairing, paste the ten-minute code shown on Ordis Prime's Operator page. It
+immediately registers a named, revocable updater device, stores its
+inventory-sync-only credential in Windows Credential Manager, and moves into
+the system tray. Warframe does not need to be running during pairing.
 
-After a successful sync, the updater offers an optional system-tray mode and a
-separate opt-in to launch at Windows sign-in. The tray checks hourly while the
-game is absent, synchronizes when it first detects a new running session, and
+The tray checks once per minute while the game is absent, synchronizes when it
+first detects a new running session, and
 synchronizes at most hourly while that session remains open. Its menu exposes
 Sync now, launch-at-sign-in, status, last success, the latest bounded error, and
-Exit. Transient failures leave the tray process ready to retry.
+Exit. Closing or not yet running Warframe is a normal waiting state, not an
+error. Transient failures leave the tray process ready to retry. Launch at
+Windows sign-in remains a separate opt-in in the tray menu.
 
 The updater never writes Warframe credentials or inventory to disk. Ordis Prime
 does not retain the raw inventory and restricts this path to a monotonic

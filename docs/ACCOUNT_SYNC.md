@@ -55,11 +55,14 @@ can report what happened; the worker removes old pairings. Device status and
 audit metadata are bounded, while account deletion cascades through every
 device and event.
 
-Tray mode and launch at sign-in are separate explicit choices. The tray probes
-hourly while the game is absent, synchronizes when a running session is first
-detected, and then no more than hourly until it exits. Manual sync, visible
-status, last success, the latest bounded error and clean exit remain available.
-Transient failures do not terminate the process. Each successful request
+Pairing persists the device before any inventory read and then enters tray
+mode, so Warframe does not need to be running at setup time. Launch at sign-in
+is a separate explicit choice. The tray probes once per minute while the game
+is absent, synchronizes when a running session is first detected, and then no
+more than hourly until it exits. An absent or closed game returns to a normal
+waiting state. Manual sync, visible status, last success, the latest bounded
+error and clean exit remain available. Transient failures do not terminate the
+process. Each successful request
 rotates to a client-generated replacement credential; a short exact-request
 grace recovers a lost response without reapplying the import.
 

@@ -32,14 +32,16 @@ The Operator page lists devices and can revoke each one. Revocation replaces
 stored hashes and is checked on the next request. Account deletion cascades to
 pairings, devices, and their audit events.
 
-Tray mode is explicitly enabled after pairing. Launch at sign-in is a separate
+Pairing registers and persists the device before attempting to discover
+Warframe, then the updater enters tray mode. Launch at sign-in is a separate
 opt-in stored in the current user's Windows Run key. While Warframe is absent,
-the schedule probes once per hour. It synchronizes immediately on the first
+the schedule probes once per minute. It synchronizes immediately on the first
 detection of a running session and no more than hourly while the game remains
-running. It probes a known-running session once per minute to notice exit,
-returns to the hourly waiting state afterward, and keeps running after transient
-errors. The tray menu exposes status, last success, bounded error, Sync now,
-startup choice, and Exit.
+running. It also probes a known-running session once per minute to notice exit,
+returns to the waiting state afterward, and keeps running after transient
+errors. Warframe being absent, including during a manual sync race, is not
+reported as an updater failure. The tray menu exposes status, last success,
+bounded error, Sync now, startup choice, and Exit.
 
 ## Consequences
 

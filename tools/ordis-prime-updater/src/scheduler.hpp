@@ -13,7 +13,7 @@ class SyncSchedule {
   bool game_running() const;
 
  private:
-  static constexpr auto absent_interval = std::chrono::hours(1);
+  static constexpr auto absent_interval = std::chrono::minutes(1);
   static constexpr auto present_interval = std::chrono::minutes(1);
   static constexpr auto sync_interval = std::chrono::hours(1);
   Clock::time_point next_probe_;

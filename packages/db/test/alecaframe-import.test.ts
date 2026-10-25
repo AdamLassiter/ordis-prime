@@ -21,6 +21,7 @@ import {
   openSqliteDatabase,
   previewAlecaFrameImport,
   prunePlayerImportPairings,
+  registerWarframeUpdaterDevice,
   revokePlayerImportDevice,
   setInventoryEntry,
 } from "../src/index.ts";
@@ -469,6 +470,55 @@ test("updater pairing exchanges for a hashed rotating device credential", async 
       }),
     /revoked or unknown/,
   );
+});
+
+test("updater registration does not require Warframe inventory", async (context) => {
+  const fixture = await createFixture(context);
+  const now = 1_800_000_000_000;
+  const pairing = createPlayerImportPairing(
+    fixture.database,
+    fixture.userId,
+    "https://ordis.example.test",
+    now,
+  );
+  const token = pairing.pairingCode.split(":").at(-1)!;
+  const deviceToken = "R".repeat(43);
+  const registered = registerWarframeUpdaterDevice(fixture.database, {
+    token,
+    deviceToken,
+    deviceName: "Waiting PC",
+    now: now + 1,
+  });
+
+  assert.equal(
+    getPlayerImportPairing(
+      fixture.database,
+      fixture.userId,
+      pairing.id,
+      now + 2,
+    )?.status,
+    "succeeded",
+  );
+  assert.deepEqual(listPlayerImportDevices(fixture.database, fixture.userId), [
+    {
+      id: registered.deviceId,
+      name: "Waiting PC",
+      status: "active",
+      createdAt: now + 1,
+    },
+  ]);
+
+  const nextToken = "S".repeat(43);
+  const synced = applyWarframeUpdaterImport(fixture.database, {
+    token: deviceToken,
+    nextToken,
+    requestId: "77777777-7777-4777-8777-777777777777",
+    deviceId: registered.deviceId,
+    bytes: new TextEncoder().encode(JSON.stringify(snapshotDocument())),
+    now: now + 60_000,
+  });
+  assert.equal(synced.paired, false);
+  assert.equal(synced.result.applied, true);
 });
 
 test("expired and cancelled updater pairings cannot create devices", async (context) => {

@@ -182,9 +182,11 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   Catalyst/Reactor state, adapters, Archon Shards and star-chart completion are
   not inferred. A separate unsigned Windows x64 updater exchanges a hashed,
   ten-minute pairing code for a named revocable device credential whose secret
-  stays in Windows Credential Manager. Optional tray mode detects Warframe,
-  syncs immediately and then at most hourly, survives transient errors, and
-  offers manual sync, status, explicit sign-in startup and clean exit. The production web
+  stays in Windows Credential Manager. Pairing completes before Warframe is
+  needed and the updater then waits in the tray, checking once per minute while
+  the game is absent. It syncs immediately on detection and then at most hourly,
+  survives transient errors, and offers manual sync, status, explicit sign-in
+  startup and clean exit. The production web
   image contains a statically cross-compiled copy plus its checksum and licence
   notices, so the Operator page downloads it from the current instance rather
   than depending on GitHub Releases. It reads temporary

@@ -51,6 +51,17 @@ export interface WarframeUpdaterSyncRequest {
   now?: number;
 }
 
+export interface WarframeUpdaterRegistrationRequest {
+  token: string;
+  deviceToken: string;
+  deviceName: string;
+  now?: number;
+}
+
+export interface WarframeUpdaterRegistrationResult {
+  deviceId: string;
+}
+
 export interface WarframeUpdaterSyncResult {
   deviceId: string;
   paired: boolean;
@@ -160,6 +171,81 @@ export function applyWarframeUpdaterImport(
   return request.deviceId
     ? applyDeviceSync(sqlite, request, now)
     : exchangePairing(sqlite, request, now);
+}
+
+export function registerWarframeUpdaterDevice(
+  sqlite: Database.Database,
+  request: WarframeUpdaterRegistrationRequest,
+): WarframeUpdaterRegistrationResult {
+  const now = request.now ?? Date.now();
+  validateToken(request.token, "Pairing code");
+  validateToken(request.deviceToken, "Device credential");
+  const deviceName = normalizeDeviceName(request.deviceName);
+  const pairing = sqlite.transaction(() => {
+    const candidate = sqlite
+      .prepare(
+        `select id, user_id as userId from player_import_pairings
+         where token_hash = ? and status = 'pending' and expires_at > ?`,
+      )
+      .get(hashToken(request.token), now) as
+      { id: string; userId: string } | undefined;
+    if (!candidate) return undefined;
+    const claimed = sqlite
+      .prepare(
+        `update player_import_pairings
+         set status = 'running', token_hash = null, started_at = ?
+         where id = ? and status = 'pending'`,
+      )
+      .run(now, candidate.id).changes;
+    return claimed === 1 ? candidate : undefined;
+  })();
+  if (!pairing)
+    throw new PairingImportError(
+      "Pairing code is expired or already used",
+      401,
+    );
+
+  try {
+    return sqlite.transaction(() => {
+      const deviceId = randomUUID();
+      sqlite
+        .prepare(
+          `insert into player_import_devices
+            (id, user_id, provider, name, token_hash, status, created_at,
+             rate_window_started_at, rate_window_request_count)
+           values (?, ?, 'warframe-api-helper', ?, ?, 'active', ?, ?, 0)`,
+        )
+        .run(
+          deviceId,
+          pairing.userId,
+          deviceName,
+          hashToken(request.deviceToken),
+          now,
+          now,
+        );
+      const completed = sqlite
+        .prepare(
+          `update player_import_pairings
+           set status = 'succeeded', finished_at = ?
+           where id = ? and status = 'running'`,
+        )
+        .run(now, pairing.id).changes;
+      if (completed !== 1)
+        throw new Error("Pairing state changed during registration");
+      return { deviceId };
+    })();
+  } catch (error) {
+    if (error instanceof PairingImportError) throw error;
+    const message = safeError(error);
+    sqlite
+      .prepare(
+        `update player_import_pairings
+         set status = 'failed', error = ?, finished_at = ?
+         where id = ? and status = 'running'`,
+      )
+      .run(message, now, pairing.id);
+    throw new PairingImportError(message, 400);
+  }
 }
 
 function exchangePairing(

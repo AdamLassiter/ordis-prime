@@ -120,10 +120,23 @@ std::optional<DWORD> locate_warframe_process() {
   return std::nullopt;
 }
 
+class WarframeNotRunning : public std::runtime_error {
+ public:
+  WarframeNotRunning() : std::runtime_error("Warframe is not running") {}
+};
+
 DWORD find_warframe_process() {
   const auto process = locate_warframe_process();
-  if (!process) throw std::runtime_error("Warframe is not running");
+  if (!process) throw WarframeNotRunning();
   return *process;
+}
+
+Handle open_warframe_process() {
+  Handle process(OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ,
+                             FALSE, find_warframe_process()));
+  if (process) return process;
+  if (!locate_warframe_process()) throw WarframeNotRunning();
+  throw std::runtime_error("Could not open the Warframe process");
 }
 
 bool readable(DWORD protection) {
@@ -208,6 +221,15 @@ std::string find_credentials(HANDLE process) {
   }
   throw std::runtime_error(
       "Could not find live credentials. Log in or pass through a loading screen and retry");
+}
+
+std::string find_live_credentials(HANDLE process) {
+  try {
+    return find_credentials(process);
+  } catch (const std::runtime_error&) {
+    if (!locate_warframe_process()) throw WarframeNotRunning();
+    throw;
+  }
 }
 
 HttpResponse http_request(const std::string& method, const std::string& url,
@@ -424,10 +446,8 @@ SyncOutcome synchronize(DeviceCredential& device) {
     device.pending_request_id = random_request_id();
     save_credential(device);
   }
-  Handle process(OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ,
-                             FALSE, find_warframe_process()));
-  if (!process) throw std::runtime_error("Could not open the Warframe process");
-  SensitiveString game_credentials(find_credentials(process.value));
+  auto process = open_warframe_process();
+  SensitiveString game_credentials(find_live_credentials(process.value));
   auto inventory_response = http_request(
       "GET", "https://mobile.warframe.com/api/inventory.php" +
                  game_credentials.value);
@@ -470,33 +490,20 @@ SyncOutcome synchronize(DeviceCredential& device) {
           device.last_success};
 }
 
-std::pair<DeviceCredential, SyncOutcome> pair_and_synchronize(
-    const Pairing& pairing, const std::string& device_name) {
+DeviceCredential pair_device(const Pairing& pairing,
+                             const std::string& device_name) {
   if (device_name.empty() || device_name.size() > 80 ||
       device_name.find_first_of("\r\n") != std::string::npos)
     throw std::runtime_error("Device name must be 1 to 80 characters");
-  Handle process(OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ,
-                             FALSE, find_warframe_process()));
-  if (!process) throw std::runtime_error("Could not open the Warframe process");
-  SensitiveString game_credentials(find_credentials(process.value));
-  auto inventory_response = http_request(
-      "GET", "https://mobile.warframe.com/api/inventory.php" +
-                 game_credentials.value);
-  if (inventory_response.status != 200)
-    throw std::runtime_error("Warframe inventory request was rejected");
-  auto next_token = random_base64url_token();
-  const auto request_id = random_request_id();
+  auto device_token = random_base64url_token();
   const auto headers =
-      L"Content-Type: application/json\r\nAuthorization: Bearer " +
-      widen(pairing.token) + L"\r\nX-Ordis-Next-Token: " +
-      widen(next_token) + L"\r\nX-Ordis-Request-Id: " + widen(request_id) +
+      L"Authorization: Bearer " + widen(pairing.token) +
+      L"\r\nX-Ordis-Device-Token: " + widen(device_token) +
       L"\r\nX-Ordis-Device-Name: " + widen(device_name) + L"\r\n";
   const auto result = http_request(
       "POST",
-      pairing.origin + "/api/account/import/warframe-api-helper/sync",
-      headers, inventory_response.body);
-  SecureZeroMemory(inventory_response.body.data(),
-                   inventory_response.body.size());
+      pairing.origin + "/api/account/import/warframe-api-helper/register",
+      headers);
   const auto message = json_message(result.body);
   if (result.status < 200 || result.status >= 300)
     throw std::runtime_error(message.empty() ? "Ordis Prime rejected the pairing"
@@ -504,13 +511,10 @@ std::pair<DeviceCredential, SyncOutcome> pair_and_synchronize(
   const auto device_id = json_string(result.body, "deviceId");
   if (device_id.empty())
     throw std::runtime_error("Ordis Prime returned an invalid device record");
-  DeviceCredential device{pairing.origin, device_id, std::move(next_token),
+  DeviceCredential device{pairing.origin, device_id, std::move(device_token),
                           {}, {}, 0};
-  device.last_success = static_cast<std::int64_t>(std::time(nullptr));
   save_credential(device);
-  return {std::move(device),
-          {message.empty() ? "Synchronization complete." : message,
-           static_cast<std::int64_t>(std::time(nullptr))}};
+  return device;
 }
 
 std::wstring executable_path() {
@@ -706,6 +710,21 @@ class TrayApp {
   void start_sync() {
     if (busy_.exchange(true)) return;
     if (worker_.joinable()) worker_.join();
+    try {
+      if (!locate_warframe_process()) {
+        static_cast<void>(
+            schedule_.observe_process(false, SyncSchedule::Clock::now()));
+        busy_ = false;
+        state_ = "Waiting for Warframe";
+        error_.clear();
+        update_tooltip();
+        return;
+      }
+    } catch (const std::exception& exception) {
+      busy_ = false;
+      set_error(exception.what());
+      return;
+    }
     schedule_.mark_sync_attempt(SyncSchedule::Clock::now());
     state_ = "Synchronizing inventory";
     error_.clear();
@@ -720,6 +739,10 @@ class TrayApp {
         std::lock_guard lock(result_mutex_);
         last_success_ = result.succeeded_at;
         state_ = "Last synchronization succeeded";
+        error_.clear();
+      } catch (const WarframeNotRunning&) {
+        std::lock_guard lock(result_mutex_);
+        state_ = "Waiting for Warframe";
         error_.clear();
       } catch (const std::exception& exception) {
         std::lock_guard lock(result_mutex_);
@@ -783,9 +806,6 @@ class TrayApp {
   }
 };
 
-bool affirmative(const std::string& value) {
-  return !value.empty() && (value[0] == 'y' || value[0] == 'Y');
-}
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -812,10 +832,8 @@ int main(int argc, char** argv) {
     }
     std::cout << "Ordis Prime Updater\n";
     auto device = load_credential();
-    SyncOutcome outcome;
     if (device) {
       std::cout << "Using the device credential stored in Windows Credential Manager.\n";
-      outcome = synchronize(*device);
     } else {
       std::cout << "Paste the one-time pairing code from your Operator page:\n> ";
       std::string code;
@@ -826,20 +844,11 @@ int main(int argc, char** argv) {
       std::string device_name;
       std::getline(std::cin, device_name);
       if (device_name.empty()) device_name = suggested_name;
-      std::cout << "Locating Warframe and synchronizing inventory...\n";
-      auto paired = pair_and_synchronize(pairing, device_name);
-      device = std::move(paired.first);
-      outcome = std::move(paired.second);
+      std::cout << "Pairing this updater with Ordis Prime...\n";
+      static_cast<void>(pair_device(pairing, device_name));
+      std::cout << "Device paired successfully.\n";
     }
-    std::cout << outcome.message
-              << "\nKeep the updater running in the system tray? [y/N]\n> ";
-    std::string tray;
-    std::getline(std::cin, tray);
-    if (!affirmative(tray)) return 0;
-    std::cout << "Launch the tray updater when you sign in to Windows? [y/N]\n> ";
-    std::string startup;
-    std::getline(std::cin, startup);
-    set_startup_enabled(affirmative(startup));
+    std::cout << "Waiting for Warframe in the system tray.\n";
     ShowWindow(GetConsoleWindow(), SW_HIDE);
     return TrayApp{}.run();
   } catch (const std::exception& error) {

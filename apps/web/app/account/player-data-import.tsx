@@ -99,6 +99,11 @@ export function PlayerDataImport() {
         );
         router.refresh();
         void loadDevices();
+      } else if (next.status === "succeeded") {
+        setMessage(
+          "Updater device paired. It will synchronize when Warframe is next running.",
+        );
+        void loadDevices();
       } else if (next.status === "failed" || next.status === "cancelled") {
         setMessage(next.error ?? "Updater pairing ended without an import.");
       }
@@ -379,8 +384,8 @@ export function PlayerDataImport() {
               <a href="/downloads/ordis-prime-updater-windows-x64.exe.sha256">
                 SHA-256 checksum
               </a>{" "}
-              before running it. Start Warframe and log in before launching the
-              updater.
+              before running it. After pairing, the updater waits in the system
+              tray and detects Warframe whenever you next run it.
             </p>
             {!pairing ? (
               <button className="button" disabled={pairingPending}>
