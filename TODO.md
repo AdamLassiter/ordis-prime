@@ -161,4 +161,5 @@ architecture or gap documentation updates are complete.
   every supported page, survives a new session and profile transfer, and never
   makes collection state dependent on colour alone.
 
-- [ ] Remove all the <h1/> headers from pages, the highlighted tab and eyebrows/ledes should have sufficient context
+- [x] Remove all the `<h1 />` headers from pages; highlighted tabs and
+      eyebrows/ledes now retain sufficient static and dynamic page context.

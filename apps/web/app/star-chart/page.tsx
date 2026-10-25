@@ -133,8 +133,10 @@ export default async function StarChartPage({
 
   return (
     <>
-      <p className="eyebrow">Public · sourced map · private progress overlay</p>
-      <h1>{selectedPlanet ? `${selectedPlanet} mission map` : "Star Chart"}</h1>
+      <p className="eyebrow">
+        {selectedPlanet ? `${selectedPlanet} · ` : "Star Chart · "}
+        Public sourced map · private progress overlay
+      </p>
       <p className="lede">
         {selectedPlanet
           ? "Inspect mission routes, rewards, access requirements, and your selected private overlays."

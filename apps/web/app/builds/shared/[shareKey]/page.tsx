@@ -28,9 +28,8 @@ export default async function SharedBuildPage({
   return (
     <>
       <p className="eyebrow">
-        Shared immutable build · Revision {build.revision}
+        {build.title} · Shared immutable build · Revision {build.revision}
       </p>
-      <h1>{build.title}</h1>
       {build.category && <span className="tag">{build.category}</span>}
       {build.notes && <p className="lede build-notes">{build.notes}</p>}
       <p className="muted">

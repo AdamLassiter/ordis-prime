@@ -98,8 +98,9 @@ export default async function Sources({
       : undefined;
   return (
     <>
-      <p className="eyebrow">Public provenance · administrator controls</p>
-      <h1>Data sources and operations</h1>
+      <p className="eyebrow">
+        Provenance · public evidence · administrator controls
+      </p>
       <p className="lede">
         Inspect active source versions, retrieval times, queued work, and
         unresolved identity conflicts.

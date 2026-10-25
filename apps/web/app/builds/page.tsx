@@ -13,8 +13,7 @@ export default async function BuildsPage() {
   const builds = listPlayerBuilds(getDatabase(), session.user.id);
   return (
     <>
-      <p className="eyebrow">Private player data</p>
-      <h1>Arsenal builds</h1>
+      <p className="eyebrow">Arsenal · private player data</p>
       <p className="lede">
         Configure complete loadouts with mods and enhancements, then publish an
         immutable snapshot when a build is ready to share.

@@ -61,8 +61,7 @@ export default async function Home({
     <>
       <section className="command-hero">
         <div className="hero-copy">
-          <p className="eyebrow">Public · sourced catalog</p>
-          <h1>Search the Warframe catalog.</h1>
+          <p className="eyebrow">Catalog · public sourced data</p>
           <p className="lede">
             Find equipment and resources, follow their acquisition paths, and
             open the tools that use the same linked data.

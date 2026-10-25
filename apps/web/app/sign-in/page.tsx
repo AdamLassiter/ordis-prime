@@ -9,8 +9,7 @@ export default function SignInPage() {
     .get() as { count: number };
   return (
     <>
-      <p className="eyebrow">Secure account access</p>
-      <h1>Sign in.</h1>
+      <p className="eyebrow">Sign in · secure account access</p>
       <p className="lede">
         Access your private inventory, tasks, builds, and acquisition plan.
       </p>

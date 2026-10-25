@@ -13,8 +13,7 @@ export default async function AccountsPage() {
   const adminCount = accounts.filter(({ role }) => role === "admin").length;
   return (
     <>
-      <p className="eyebrow">Administrator access</p>
-      <h1>Local accounts</h1>
+      <p className="eyebrow">Accounts · administrator access</p>
       <p className="lede">
         Change local user roles. Role changes end the affected user&apos;s
         active sessions.

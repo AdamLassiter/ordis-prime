@@ -31,8 +31,9 @@ export default async function IndexPage({
   const status = getMarketIndexStatus(database);
   return (
     <>
-      <p className="eyebrow">Public · Warframe.market offer intelligence</p>
-      <h1>The Index</h1>
+      <p className="eyebrow">
+        The Index · public Warframe.market offer intelligence
+      </p>
       <p className="lede">
         Compare unopened relics with their reward tables, find high-return
         Syndicate mods, and inspect Arcane set economics. Values are visible

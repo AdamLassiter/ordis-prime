@@ -35,8 +35,7 @@ export default async function SourceOperationsPage({
   const overrides = listIdentityOverrides(database, id);
   return (
     <>
-      <p className="eyebrow">Administrator access · source operations</p>
-      <h1>{source.name}</h1>
+      <p className="eyebrow">{source.name} · Administrator source operations</p>
       <p className="lede">
         Review refresh attempts, retained snapshots, and identity conflicts for
         this source.

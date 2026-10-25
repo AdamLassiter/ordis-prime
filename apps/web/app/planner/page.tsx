@@ -35,8 +35,9 @@ export default async function Planner() {
   } catch (error) {
     return (
       <>
-        <p className="eyebrow">Private player data · sourced recipes</p>
-        <h1>Acquisition plan</h1>
+        <p className="eyebrow">
+          Acquisition plan · private player data · sourced recipes
+        </p>
         <p className="error">
           The plan could not be expanded:{" "}
           {error instanceof Error ? error.message : "unknown catalog error"}
@@ -47,8 +48,9 @@ export default async function Planner() {
   }
   return (
     <>
-      <p className="eyebrow">Private player data · sourced recipes</p>
-      <h1>Acquisition plan</h1>
+      <p className="eyebrow">
+        Acquisition plan · private player data · sourced recipes
+      </p>
       <p className="lede">
         Expand item goals into required materials and identify missions that
         provide what your inventory still lacks.

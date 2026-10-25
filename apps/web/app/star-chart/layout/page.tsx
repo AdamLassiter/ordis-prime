@@ -75,8 +75,7 @@ export default function StarChartLayoutPage() {
 
   return (
     <>
-      <p className="eyebrow">Local administrator tool</p>
-      <h1>Trace a Star Chart layout</h1>
+      <p className="eyebrow">Star Chart layout · local administrator tool</p>
       <p className="lede">
         Load a screenshot, select catalog entities, and mark their centers and
         sizes. The screenshot stays in this browser.

@@ -59,8 +59,9 @@ export default async function ItemPage({
       : undefined;
   return (
     <>
-      <p className="eyebrow">Public · sourced record · {item.kind}</p>
-      <h1>{item.name}</h1>
+      <p className="eyebrow">
+        {item.name} · Public sourced record · {item.kind}
+      </p>
       {item.description && <p className="lede">{item.description}</p>}
       <dl className="facts">
         {item.market && (

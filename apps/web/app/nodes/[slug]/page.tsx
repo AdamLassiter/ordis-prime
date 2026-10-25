@@ -70,9 +70,8 @@ export default async function NodePage({
   return (
     <>
       <p className="eyebrow">
-        Public · sourced node · private progress overlay
+        {node.name} · Public sourced node · private progress overlay
       </p>
-      <h1>{node.name}</h1>
       {node.description && <p className="lede">{node.description}</p>}
       {session && node.completionState && (
         <section className="card goal-editor">

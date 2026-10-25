@@ -30,8 +30,7 @@ export default async function WorldStatePage() {
   );
   return (
     <>
-      <p className="eyebrow">Public · live sourced data</p>
-      <h1>Current and upcoming activity</h1>
+      <p className="eyebrow">World state · public live sourced data</p>
       <p className="lede">
         Check Circuit rewards, cycles, events, alerts, fissures, and trader
         availability.

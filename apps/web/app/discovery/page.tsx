@@ -54,8 +54,7 @@ export default async function DiscoveryPage({
     : undefined;
   return (
     <>
-      <p className="eyebrow">Public · sourced discovery data</p>
-      <h1>Explore connected discoveries</h1>
+      <p className="eyebrow">Discovery · public sourced data</p>
       <p className="lede">
         Search quests, abilities, enemies, mechanics, and secrets, then follow
         their cited relationships.

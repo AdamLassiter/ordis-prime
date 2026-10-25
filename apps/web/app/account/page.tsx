@@ -13,8 +13,7 @@ export default async function AccountPage() {
   const preferences = getPlayerPreferences(getDatabase(), session.user.id);
   return (
     <>
-      <p className="eyebrow">Private account</p>
-      <h1>Account settings</h1>
+      <p className="eyebrow">Operator · private account</p>
       <section className="card build-details">
         <h2>{session.user.name}</h2>
         <p>{session.user.email}</p>

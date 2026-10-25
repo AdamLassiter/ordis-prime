@@ -25,8 +25,7 @@ export default async function TodosPage() {
   const notifications = listPlayerNotifications(getDatabase(), session.user.id);
   return (
     <>
-      <p className="eyebrow">Private player data</p>
-      <h1>Notifications and watches</h1>
+      <p className="eyebrow">Alerts · private player data</p>
       <p className="lede">
         Create alerts for cycles, fissures, traders, and events. Collection
         tasks remain in the acquisition plan.

@@ -11,8 +11,7 @@ export default function SetupPage() {
   if (result.count > 0)
     return (
       <>
-        <p className="eyebrow">Administrator setup · complete</p>
-        <h1>Setup is complete.</h1>
+        <p className="eyebrow">Setup · administrator bootstrap complete</p>
         <p className="lede">
           The bootstrap token cannot create additional administrators.
         </p>
@@ -23,8 +22,7 @@ export default function SetupPage() {
     );
   return (
     <>
-      <p className="eyebrow">Administrator setup · first run</p>
-      <h1>Create the first administrator.</h1>
+      <p className="eyebrow">Setup · administrator first run</p>
       <p className="lede">
         Use the configured bootstrap token. It is accepted only while no
         accounts exist.
