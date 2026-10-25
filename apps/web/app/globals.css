@@ -1086,18 +1086,6 @@ textarea:focus {
   width: 100%;
   max-width: none;
 }
-.requirement-list {
-  max-width: 42rem;
-  padding: 0;
-  list-style: none;
-}
-.requirement-list li {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 0.75rem 0;
-  border-bottom: 1px solid var(--line);
-}
 .planner-section h3 {
   font-size: 1.25rem;
 }

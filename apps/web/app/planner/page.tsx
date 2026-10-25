@@ -169,17 +169,37 @@ export default async function Planner() {
         <section className="planner-section">
           <h2>Still required</h2>
           {plan.missing.length ? (
-            <ul className="requirement-list">
-              {plan.missing.map((item) => (
-                <li key={item.entityId}>
-                  <Link href={`/catalog/${item.kind}/${item.slug}`}>
-                    {item.name}
-                  </Link>
-                  <strong>{item.quantity}</strong>
-                  <PlannerCollectionState item={item} inventory={inventory} />
-                </li>
-              ))}
-            </ul>
+            <div className="index-table-wrap">
+              <table className="index-table planner-requirements">
+                <thead>
+                  <tr>
+                    <th>Item</th>
+                    <th>Type</th>
+                    <th>Quantity required</th>
+                    <th>Collection state</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {plan.missing.map((item) => (
+                    <tr key={item.entityId}>
+                      <th scope="row">
+                        <Link href={`/catalog/${item.kind}/${item.slug}`}>
+                          {item.name}
+                        </Link>
+                      </th>
+                      <td>{item.kind}</td>
+                      <td>{item.quantity.toLocaleString()}</td>
+                      <td>
+                        <PlannerCollectionState
+                          item={item}
+                          inventory={inventory}
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           ) : (
             <p className="success">
               Your recorded inventory satisfies every goal.

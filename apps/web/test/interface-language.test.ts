@@ -60,3 +60,17 @@ test("Market freshness is quiet explanatory copy", async () => {
   );
   assert.doesNotMatch(market, /notice index-status/u);
 });
+
+test("Planner renders outstanding requirements as a semantic table", async () => {
+  const planner = await readFile(
+    new URL("../app/planner/page.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(
+    planner,
+    /<table className="index-table planner-requirements">/u,
+  );
+  assert.match(planner, /<th>Quantity required<\/th>/u);
+  assert.match(planner, /<th scope="row">/u);
+  assert.doesNotMatch(planner, /requirement-list/u);
+});

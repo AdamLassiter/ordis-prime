@@ -19,7 +19,7 @@ Once completed, git commits should be written for each todo item.
 - [x] Builds > Publish now redirects to the read-only version with explicit confirmation, and the public Builds workspace provides searchable, paginated browsing of every published version
 - [x] Market > Relics / Syndicate mods / Arcanes now reuses the Star Chart view-tab styling and accessible current-page state
 - [x] Market price coverage and refresh time now appear as one quiet explanatory sentence above the view tabs instead of a prominent status panel
-- [ ] Planner > Still required uses <li/> with indentation - it should be a proper table
+- [x] Planner > Still required is now a responsive semantic table with item, type, quantity, and collection-state columns
 - [ ] Planner > candidate nodes > 'Nokko: Corporate Restructuring Rewards, Rotation B' doesn't link to anything - this suggests either the links here are broken, or more likely that there's a number of map nodes such as those in the deepmines that are missing (these only really come from vendor quests, they don't explicitly appear on the star chart)
   - Codex > Nightcap (vendor) doesn't list any of the nokko bounties as linked
 - [ ] Codex > Daughter (or any other vendor) should show their location more obviously, rather than just an 'orccurs at' related discovery
