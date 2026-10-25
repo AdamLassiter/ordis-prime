@@ -306,6 +306,54 @@ test("Warframe API helper JSON applies only a monotonic inventory and progressio
   );
 });
 
+test("Warframe API helper accepts legitimate resource counts above one million", async (context) => {
+  const fixture = await createFixture(context);
+  const count = 1_371_338;
+  const result = applyWarframeApiHelperImport(
+    fixture.database,
+    fixture.userId,
+    new TextEncoder().encode(
+      JSON.stringify({
+        MiscItems: [
+          {
+            ItemType: "/Lotus/Types/Items/MiscItems/Ferrite",
+            ItemCount: count,
+          },
+        ],
+      }),
+    ),
+  );
+
+  assert.equal(result.inventory.changedItems, 1);
+  assert.equal(
+    findPlayerInventoryEntry(
+      fixture.database,
+      fixture.userId,
+      "resource",
+      "ferrite",
+    )?.ownedCount,
+    count,
+  );
+  assert.throws(
+    () =>
+      applyWarframeApiHelperImport(
+        fixture.database,
+        fixture.userId,
+        new TextEncoder().encode(
+          JSON.stringify({
+            MiscItems: [
+              {
+                ItemType: "/Lotus/Types/Items/MiscItems/Ferrite",
+                ItemCount: Number.MAX_SAFE_INTEGER + 1,
+              },
+            ],
+          }),
+        ),
+      ),
+    /Warframe API helper MiscItems\[0\]\.ItemCount is invalid/,
+  );
+});
+
 test("updater pairings store only token hashes and are single-use", async (context) => {
   const fixture = await createFixture(context);
   const now = 1_800_000_000_000;

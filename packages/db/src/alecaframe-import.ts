@@ -19,7 +19,6 @@ const ALECAFRAME_IV = Buffer.from([
   49, 50, 70, 71, 66, 51, 54, 45, 76, 69, 51, 45, 113, 61, 57, 0,
 ]);
 const MAX_RECORDS = 100_000;
-const MAX_ITEM_COUNT = 1_000_000;
 const RANK_30_XP = 900_000;
 const MAX_UNRESOLVED = 50;
 
@@ -250,7 +249,7 @@ export function previewAlecaFrameImport(
 ): AlecaFrameImportPreview {
   validateOptions(options);
   const hash = createHash("sha256").update(bytes).digest("hex");
-  const parsed = parseSnapshot(decryptAlecaFrameSnapshot(bytes));
+  const parsed = parseSnapshot(decryptAlecaFrameSnapshot(bytes), "AlecaFrame");
   return buildPreview(sqlite, userId, hash, parsed, options, "AlecaFrame")
     .preview;
 }
@@ -266,7 +265,7 @@ export function applyAlecaFrameImport(
   const hash = createHash("sha256").update(bytes).digest("hex");
   if (!/^[a-f0-9]{64}$/.test(expectedHash) || hash !== expectedHash)
     throw new Error("AlecaFrame snapshot changed after preview");
-  const parsed = parseSnapshot(decryptAlecaFrameSnapshot(bytes));
+  const parsed = parseSnapshot(decryptAlecaFrameSnapshot(bytes), "AlecaFrame");
   const built = buildPreview(
     sqlite,
     userId,
@@ -308,7 +307,10 @@ export function applyWarframeApiHelperImport(
     createBuild: false,
   };
   const hash = createHash("sha256").update(bytes).digest("hex");
-  const parsed = parseSnapshot(decodeWarframeInventoryJson(bytes));
+  const parsed = parseSnapshot(
+    decodeWarframeInventoryJson(bytes),
+    "Warframe API helper",
+  );
   const built = buildPreview(
     sqlite,
     userId,
@@ -325,8 +327,8 @@ export function applyWarframeApiHelperImport(
   return { ...built.preview, applied: true };
 }
 
-function parseSnapshot(raw: unknown): ParsedSnapshot {
-  if (!isRecord(raw)) throw new Error("AlecaFrame inventory must be an object");
+function parseSnapshot(raw: unknown, source: string): ParsedSnapshot {
+  if (!isRecord(raw)) throw new Error(`${source} inventory must be an object`);
   const assertions = new Map<string, InventoryAssertion>();
   let parsedRecords = 0;
   let presentGroups = 0;
@@ -335,10 +337,10 @@ function parseSnapshot(raw: unknown): ParsedSnapshot {
     if (value === undefined) continue;
     presentGroups += 1;
     if (!Array.isArray(value))
-      throw new Error(`AlecaFrame ${group} must be an array`);
+      throw new Error(`${source} ${group} must be an array`);
     for (const [index, entry] of value.entries()) {
-      parsedRecords = countRecord(parsedRecords);
-      const itemType = recordItemType(entry, group, index);
+      parsedRecords = countRecord(parsedRecords, source);
+      const itemType = recordItemType(entry, group, index, source);
       const assertion = assertionFor(assertions, itemType);
       assertion.built = safeAdd(assertion.built, 1);
     }
@@ -348,14 +350,15 @@ function parseSnapshot(raw: unknown): ParsedSnapshot {
     if (value === undefined) continue;
     presentGroups += 1;
     if (!Array.isArray(value))
-      throw new Error(`AlecaFrame ${group} must be an array`);
+      throw new Error(`${source} ${group} must be an array`);
     for (const [index, entry] of value.entries()) {
-      parsedRecords = countRecord(parsedRecords);
-      const itemType = recordItemType(entry, group, index);
+      parsedRecords = countRecord(parsedRecords, source);
+      const itemType = recordItemType(entry, group, index, source);
       const quantity = itemQuantity(
         (entry as Record<string, unknown>).ItemCount,
         group,
         index,
+        source,
       );
       if (!quantity) continue;
       const assertion = assertionFor(assertions, itemType);
@@ -364,19 +367,19 @@ function parseSnapshot(raw: unknown): ParsedSnapshot {
   }
   if (!presentGroups)
     throw new Error(
-      "AlecaFrame snapshot contains no supported inventory groups",
+      `${source} snapshot contains no supported inventory groups`,
     );
 
   const xp = new Map<string, number>();
   if (raw.XPInfo !== undefined) {
     if (!Array.isArray(raw.XPInfo))
-      throw new Error("AlecaFrame XPInfo must be an array");
+      throw new Error(`${source} XPInfo must be an array`);
     for (const [index, entry] of raw.XPInfo.entries()) {
-      parsedRecords = countRecord(parsedRecords);
-      const itemType = recordItemType(entry, "XPInfo", index);
+      parsedRecords = countRecord(parsedRecords, source);
+      const itemType = recordItemType(entry, "XPInfo", index, source);
       const value = (entry as Record<string, unknown>).XP;
       if (!Number.isSafeInteger(value) || (value as number) < 0)
-        throw new Error(`AlecaFrame XPInfo[${index}].XP is invalid`);
+        throw new Error(`${source} XPInfo[${index}].XP is invalid`);
       xp.set(itemType, value as number);
     }
   }
@@ -384,21 +387,27 @@ function parseSnapshot(raw: unknown): ParsedSnapshot {
   const foundry = raw.InfestedFoundry;
   if (foundry !== undefined) {
     if (!isRecord(foundry))
-      throw new Error("AlecaFrame InfestedFoundry is invalid");
+      throw new Error(`${source} InfestedFoundry is invalid`);
     const consumed = foundry.ConsumedSuits ?? [];
     if (!Array.isArray(consumed))
-      throw new Error("AlecaFrame InfestedFoundry.ConsumedSuits is invalid");
+      throw new Error(`${source} InfestedFoundry.ConsumedSuits is invalid`);
     for (const [index, entry] of consumed.entries()) {
-      parsedRecords = countRecord(parsedRecords);
+      parsedRecords = countRecord(parsedRecords, source);
       if (!isRecord(entry) || !isItemType(entry.s))
         throw new Error(
-          `AlecaFrame InfestedFoundry.ConsumedSuits[${index}] is invalid`,
+          `${source} InfestedFoundry.ConsumedSuits[${index}] is invalid`,
         );
       assertionFor(assertions, entry.s).subsumed = true;
     }
   }
 
-  const masteryRank = optionalInteger(raw.PlayerLevel, 0, 40, "PlayerLevel");
+  const masteryRank = optionalInteger(
+    raw.PlayerLevel,
+    0,
+    40,
+    "PlayerLevel",
+    source,
+  );
   const suits = raw.Suits as unknown[] | undefined;
   const suitXp = (suits ?? [])
     .filter(isRecord)
@@ -1173,34 +1182,40 @@ function assertionFor(map: Map<string, InventoryAssertion>, path: string) {
   return assertion;
 }
 
-function recordItemType(entry: unknown, group: string, index: number) {
+function recordItemType(
+  entry: unknown,
+  group: string,
+  index: number,
+  source: string,
+) {
   if (!isRecord(entry) || !isItemType(entry.ItemType))
-    throw new Error(`AlecaFrame ${group}[${index}] is invalid`);
+    throw new Error(`${source} ${group}[${index}] is invalid`);
   return entry.ItemType;
 }
 
-function itemQuantity(value: unknown, group: string, index: number) {
+function itemQuantity(
+  value: unknown,
+  group: string,
+  index: number,
+  source: string,
+) {
   if (value === undefined) return 1;
-  if (
-    !Number.isSafeInteger(value) ||
-    (value as number) < 0 ||
-    (value as number) > MAX_ITEM_COUNT
-  )
-    throw new Error(`AlecaFrame ${group}[${index}].ItemCount is invalid`);
+  if (!Number.isSafeInteger(value) || (value as number) < 0)
+    throw new Error(`${source} ${group}[${index}].ItemCount is invalid`);
   return value as number;
 }
 
-function countRecord(count: number) {
+function countRecord(count: number, source: string) {
   const next = count + 1;
   if (next > MAX_RECORDS)
-    throw new Error(`AlecaFrame snapshot exceeds ${MAX_RECORDS} records`);
+    throw new Error(`${source} snapshot exceeds ${MAX_RECORDS} records`);
   return next;
 }
 
 function safeAdd(left: number, right: number) {
   const total = left + right;
-  if (!Number.isSafeInteger(total) || total > MAX_ITEM_COUNT)
-    throw new Error(`AlecaFrame inventory quantity exceeds ${MAX_ITEM_COUNT}`);
+  if (!Number.isSafeInteger(total))
+    throw new Error("Inventory quantity exceeds the safe integer range");
   return total;
 }
 
@@ -1209,6 +1224,7 @@ function optionalInteger(
   minimum: number,
   maximum: number,
   label: string,
+  source: string,
 ) {
   if (value === undefined || value === null) return undefined;
   if (
@@ -1217,7 +1233,7 @@ function optionalInteger(
     (value as number) > maximum
   )
     throw new Error(
-      `AlecaFrame ${label} must be between ${minimum} and ${maximum}`,
+      `${source} ${label} must be between ${minimum} and ${maximum}`,
     );
   return value as number;
 }

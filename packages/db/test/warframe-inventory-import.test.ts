@@ -33,6 +33,12 @@ test("raw Warframe inventory parsing is bounded and fail-closed", () => {
       }),
     /ItemCount is invalid/,
   );
+  assert.equal(
+    parseWarframeInventory({
+      MiscItems: [{ ItemType: "/Lotus/Types/Items/Foo", ItemCount: 1_371_338 }],
+    }).counts.get("/Lotus/Types/Items/Foo"),
+    1_371_338,
+  );
   assert.deepEqual(parseWarframeInventory({ Suits: [], InfestedFoundry: {} }), {
     counts: new Map(),
     subsumed: new Set(),

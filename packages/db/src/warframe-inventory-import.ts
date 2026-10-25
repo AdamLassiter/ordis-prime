@@ -23,7 +23,6 @@ const OWNED_ITEM_GROUPS = [
 ] as const;
 
 const MAX_RECORDS = 100_000;
-const MAX_ITEM_COUNT = 1_000_000;
 
 export interface WarframeInventoryImportResult {
   parsedRecords: number;
@@ -60,9 +59,9 @@ export function parseWarframeInventory(raw: unknown): ParsedInventory {
       const quantity = itemQuantity(entry.ItemCount, group, index);
       if (quantity === 0) continue;
       counts.set(entry.ItemType, (counts.get(entry.ItemType) ?? 0) + quantity);
-      if (counts.get(entry.ItemType)! > MAX_ITEM_COUNT)
+      if (!Number.isSafeInteger(counts.get(entry.ItemType)))
         throw new Error(
-          `Warframe inventory quantity exceeds ${MAX_ITEM_COUNT}`,
+          "Warframe inventory quantity exceeds the safe integer range",
         );
     }
   }
@@ -158,11 +157,7 @@ export function importWarframeInventory(
 
 function itemQuantity(value: unknown, group: string, index: number): number {
   if (value === undefined) return 1;
-  if (
-    !Number.isSafeInteger(value) ||
-    (value as number) < 0 ||
-    (value as number) > MAX_ITEM_COUNT
-  )
+  if (!Number.isSafeInteger(value) || (value as number) < 0)
     throw new Error(
       `Warframe inventory ${group}[${index}].ItemCount is invalid`,
     );
