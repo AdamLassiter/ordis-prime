@@ -123,7 +123,9 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   snapshot/promotion pipeline. A dry run executes and rolls back the same
   resolver/promotion transaction before the separately confirmed import.
   Manual uploads still run synchronously in the web request.
-  Catalog search and node reward/discovery lists expose canonical-kind filters.
+  Catalog search exposes authoritative totals, bounded pagination, and
+  canonical-kind filters; node reward/discovery lists expose canonical-kind
+  filters.
   The current live catalog has no active `unknown` entities after the expanded
   WFCD taxonomy and typed drop/mod indexes are applied. New or changed provider
   categories can still fail closed or reintroduce unknowns until their semantics

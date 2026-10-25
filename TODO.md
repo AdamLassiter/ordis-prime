@@ -15,7 +15,7 @@ Once completed, git commits should be written for each todo item.
 - [x] Updated interface language to match current direct naming: Codex launch cards use Star Chart, Cycles, Builds, and Progression; Alerts uses Alarms; the Builds tab and page replace Arsenal; and the share action is simply Publish
 - [x] Progression > Removed the redundant Kind dropdown; the lozenges are the sole kind selector and search submissions preserve the selected lozenge
 - [x] Codex > Query the Codex now sits below the four launch cards and immediately above catalog filters and results
-- [ ] Catalog records incorrectly claims '100 records' for an empty search and has no paging controls
+- [x] Catalog records now reports the authoritative matching total and provides bounded Previous/Next paging that preserves the query and kind filter
 - [ ] Arsenal (or Builds) > <some build> > Publish doesn't give any confirmation or redirect to show it has been published
   - There's no way to browse all submitted builds, or search them etc.
 - [ ] star chart uses a tabs bar to switch between origin / railjack / sanctuary/duviri - this is nice and the same style should be used for Market > Relics / Syndicate mods / Arcanes

@@ -252,31 +252,51 @@ export interface SourceStatus {
   latestRefreshFinishedAt?: number;
 }
 
+export interface CatalogSearchPage {
+  entries: CatalogSummary[];
+  total: number;
+  page: number;
+  pageSize: number;
+  pageCount: number;
+}
+
 export function searchCatalog(
   sqlite: Database.Database,
-  query = "",
-  limit = 100,
-  kind?: string,
-): CatalogSummary[] {
-  const normalizedLimit = Math.max(1, Math.min(500, Math.trunc(limit)));
-  const pattern = `%${escapeLike(query.trim())}%`;
-  return sqlite
+  input: {
+    query?: string;
+    kind?: string;
+    page?: number;
+    pageSize?: number;
+  } = {},
+): CatalogSearchPage {
+  const query = input.query?.trim() ?? "";
+  const pageSize = Math.max(1, Math.min(100, Math.trunc(input.pageSize ?? 48)));
+  const requestedPage = Math.max(1, Math.trunc(input.page ?? 1));
+  const pattern = `%${escapeLike(query)}%`;
+  const where = `retired = 0 and name like ? escape '\\' and (? is null or kind = ?)`;
+  const bindings = [pattern, input.kind ?? null, input.kind ?? null] as const;
+  const { total } = sqlite
+    .prepare(`select count(*) as total from entities where ${where}`)
+    .get(...bindings) as { total: number };
+  const pageCount = Math.ceil(total / pageSize);
+  const page = pageCount > 0 ? Math.min(requestedPage, pageCount) : 1;
+  const entries = sqlite
     .prepare(
       `
     select kind, slug, name, description
     from entities
-    where retired = 0 and name like ? escape '\\' and (? is null or kind = ?)
+    where ${where}
     order by case when lower(name) = lower(?) then 0 else 1 end, name collate nocase, kind
-    limit ?
+    limit ? offset ?
   `,
     )
     .all(
-      pattern,
-      kind ?? null,
-      kind ?? null,
-      query.trim(),
-      normalizedLimit,
+      ...bindings,
+      query,
+      pageSize,
+      (page - 1) * pageSize,
     ) as CatalogSummary[];
+  return { entries, total, page, pageSize, pageCount };
 }
 
 export function listCatalogKinds(

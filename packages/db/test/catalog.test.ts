@@ -260,14 +260,34 @@ test("catalog read models join active recipes, drops, provenance, and rankings",
   });
 
   assert.deepEqual(
-    searchCatalog(sqlite, "brat").map(({ name }) => name),
+    searchCatalog(sqlite, { query: "brat" }).entries.map(({ name }) => name),
     ["Braton"],
   );
-  assert.deepEqual(searchCatalog(sqlite, "%"), []);
+  assert.deepEqual(searchCatalog(sqlite, { query: "%" }).entries, []);
   assert.deepEqual(
-    searchCatalog(sqlite, "", 100, "weapon").map(({ name }) => name),
+    searchCatalog(sqlite, { kind: "weapon" }).entries.map(({ name }) => name),
     ["Braton"],
   );
+  assert.deepEqual(searchCatalog(sqlite, { page: 2, pageSize: 2 }), {
+    entries: [
+      {
+        kind: "weapon",
+        slug: "braton",
+        name: "Braton",
+        description: "A balanced rifle.",
+      },
+      {
+        kind: "node",
+        slug: "mercury-caloris",
+        name: "Caloris",
+        description: "Rescue on Mercury",
+      },
+    ],
+    total: 5,
+    page: 2,
+    pageSize: 2,
+    pageCount: 3,
+  });
   assert.deepEqual(listCatalogKinds(sqlite, "brat"), [
     { kind: "weapon", count: 1 },
   ]);

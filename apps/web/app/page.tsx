@@ -40,17 +40,21 @@ const launchCards = [
 export default async function Home({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; kind?: string }>;
+  searchParams: Promise<{ q?: string; kind?: string; page?: string }>;
 }) {
-  const { q = "", kind = "" } = await searchParams;
-  const [allKinds, resultKinds] = await Promise.all([
-    catalogKinds(),
-    catalogKinds(q),
-  ]);
+  const { q = "", kind = "", page: pageParam } = await searchParams;
+  const allKinds = await catalogKinds();
   const selectedKind = allKinds.some((entry) => entry.kind === kind)
     ? kind
     : undefined;
-  const items = await searchCatalog(q, selectedKind);
+  const [catalog, resultKinds] = await Promise.all([
+    searchCatalog({
+      query: q,
+      kind: selectedKind,
+      page: positiveInteger(pageParam),
+    }),
+    catalogKinds(q),
+  ]);
   const session = await getCurrentSession();
   const inventory = new Map(
     (session ? listPlayerInventory(getDatabase(), session.user.id) : []).map(
@@ -70,7 +74,7 @@ export default async function Home({
         </div>
         <CephalonBriefing message={briefing} />
       </section>
-      {!q && (
+      {!q && catalog.page === 1 && (
         <section className="launch-grid" aria-label="Orbiter consoles">
           {launchCards.map((card) => (
             <Link className="launch-card" href={card.href} key={card.href}>
@@ -120,7 +124,7 @@ export default async function Home({
           </Link>
         ))}
       </nav>
-      {items.length ? (
+      {catalog.entries.length ? (
         <section className="search-results">
           <div className="section-heading">
             <div>
@@ -130,10 +134,10 @@ export default async function Home({
                 {selectedKind ? ` · ${selectedKind}` : ""}
               </h2>
             </div>
-            <span>{items.length} records</span>
+            <span>{catalog.total.toLocaleString()} records</span>
           </div>
           <div className="grid preference-collection">
-            {items.map((item) => {
+            {catalog.entries.map((item) => {
               const recorded = inventory.get(`${item.kind}:${item.slug}`);
               const values = recorded ?? {
                 kind: item.kind,
@@ -166,6 +170,7 @@ export default async function Home({
               );
             })}
           </div>
+          <CatalogPagination catalog={catalog} query={q} kind={selectedKind} />
         </section>
       ) : (
         <p className="notice search-empty">
@@ -178,10 +183,59 @@ export default async function Home({
   );
 }
 
-function codexHref(query: string, kind?: string): string {
+function CatalogPagination({
+  catalog,
+  query,
+  kind,
+}: {
+  catalog: Awaited<ReturnType<typeof searchCatalog>>;
+  query: string;
+  kind?: string;
+}) {
+  if (catalog.pageCount <= 1) return null;
+  const first = (catalog.page - 1) * catalog.pageSize + 1;
+  const last = first + catalog.entries.length - 1;
+  return (
+    <nav className="index-pagination" aria-label="Catalog result pages">
+      {catalog.page > 1 ? (
+        <Link
+          className="button secondary"
+          href={codexHref(query, kind, catalog.page - 1)}
+        >
+          ← Previous
+        </Link>
+      ) : (
+        <span />
+      )}
+      <span>
+        {first.toLocaleString()}–{last.toLocaleString()} of{" "}
+        {catalog.total.toLocaleString()} · Page {catalog.page} of{" "}
+        {catalog.pageCount}
+      </span>
+      {catalog.page < catalog.pageCount ? (
+        <Link
+          className="button secondary"
+          href={codexHref(query, kind, catalog.page + 1)}
+        >
+          Next →
+        </Link>
+      ) : (
+        <span />
+      )}
+    </nav>
+  );
+}
+
+function codexHref(query: string, kind?: string, page?: number): string {
   const params = new URLSearchParams();
   if (query) params.set("q", query);
   if (kind) params.set("kind", kind);
+  if (page && page > 1) params.set("page", String(page));
   const suffix = params.toString();
   return suffix ? `/?${suffix}` : "/";
+}
+
+function positiveInteger(value?: string) {
+  const parsed = Number(value);
+  return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : 1;
 }

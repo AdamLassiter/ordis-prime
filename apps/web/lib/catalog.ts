@@ -7,8 +7,13 @@ import {
 } from "@ordis-prime/db";
 import { getDatabase } from "./database";
 
-export async function searchCatalog(query = "", kind?: string) {
-  return searchDatabaseCatalog(getDatabase(), query, 100, kind);
+export async function searchCatalog(input: {
+  query?: string;
+  kind?: string;
+  page?: number;
+  pageSize?: number;
+}) {
+  return searchDatabaseCatalog(getDatabase(), input);
 }
 
 export async function catalogKinds(query = "") {
