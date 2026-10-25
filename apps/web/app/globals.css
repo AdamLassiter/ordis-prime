@@ -126,6 +126,17 @@ nav {
 }
 .nav-links {
   flex: 1;
+  gap: 0.55rem;
+}
+.nav-group {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  min-width: max-content;
+}
+.nav-group + .nav-group {
+  padding-left: 0.55rem;
+  border-left: 1px solid var(--line);
 }
 .nav-links a,
 .nav-session a,

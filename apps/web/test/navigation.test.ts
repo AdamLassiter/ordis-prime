@@ -1,6 +1,20 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { isNavigationActive } from "../lib/navigation.ts";
+import {
+  isNavigationActive,
+  PRIMARY_NAVIGATION_GROUPS,
+} from "../lib/navigation.ts";
+
+test("primary destinations are ordered in task-oriented groups", () => {
+  assert.deepEqual(
+    PRIMARY_NAVIGATION_GROUPS.map((group) => group.map(([, label]) => label)),
+    [
+      ["Codex", "Progression", "Star Chart", "Cycles", "Alerts"],
+      ["Arsenal", "Tier Lists", "Market"],
+      ["Planner", "Inventory"],
+    ],
+  );
+});
 
 test("the catalog link is active only on the catalog root", () => {
   assert.equal(isNavigationActive("/", "/"), true);

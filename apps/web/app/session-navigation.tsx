@@ -15,11 +15,19 @@ export function SessionNavigation({
   signedIn: boolean;
 }) {
   const pathname = usePathname();
+  const provenanceActive = isNavigationActive(pathname, "/data-sources");
 
   if (!signedIn) {
     const active = isNavigationActive(pathname, "/sign-in");
     return (
-      <div className="nav-session">
+      <div className="nav-session" aria-label="Account and operations">
+        <Link
+          aria-current={provenanceActive ? "page" : undefined}
+          className={provenanceActive ? "active" : undefined}
+          href="/data-sources"
+        >
+          Provenance
+        </Link>
         <Link
           aria-current={active ? "page" : undefined}
           className="nav-connect"
@@ -35,7 +43,14 @@ export function SessionNavigation({
   const operatorActive = isNavigationActive(pathname, "/account");
 
   return (
-    <div className="nav-session">
+    <div className="nav-session" aria-label="Account and operations">
+      <Link
+        aria-current={provenanceActive ? "page" : undefined}
+        className={provenanceActive ? "active" : undefined}
+        href="/data-sources"
+      >
+        Provenance
+      </Link>
       {role === "admin" && (
         <Link
           aria-current={crewActive ? "page" : undefined}

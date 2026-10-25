@@ -1,7 +1,7 @@
-# Discovery atlas
+# Progression
 
-The discovery atlas is intended to answer “what systems have I not even heard
-of?” without creating a second encyclopedia detached from acquisition and
+The Progression workspace is intended to answer “what systems have I not even
+heard of?” without creating a second encyclopedia detached from acquisition and
 player progress. Quests, abilities, mechanics, secrets, enemies and bosses are
 canonical entity kinds, so future prerequisites and node links can join the
 same identities used by inventory, builds and drops.
@@ -15,7 +15,7 @@ is superseded. Catalog pages show incoming and outgoing links with attribution.
 The structured Wiki ability adapter adds current abilities and their in-game
 descriptions, then links each ability to a typed Warframe or Archwing identity
 validated against the paired Wiki powersuit module. Archived abilities stay
-out of the current atlas. Abilities owned by unsupported equipment families
+out of the current progression catalog. Abilities owned by unsupported equipment families
 remain searchable but deliberately unlinked rather than inventing a kind.
 The Wiki quest adapter adds current main and optional quests with their in-game
 descriptions. Its `PreviousQuest` field becomes a sequence-only `follows` link;
@@ -37,8 +37,8 @@ merged or given an invented suffix.
 
 Signed-in players can independently mark a topic unseen, discovered or
 completed. The absence of a row means unseen, keeping default state compact.
-The atlas can filter by this private state, while guests see the same public
-catalog without progress controls. Each atlas card counts active cited
+Progression can filter by this private state, while guests see the same public
+catalog without progress controls. Each progression card counts active cited
 relationships and previews up to three neighbors with the relationship, source,
 and in-app destination. The canonical entry remains the place to inspect every
 relationship and its evidence.

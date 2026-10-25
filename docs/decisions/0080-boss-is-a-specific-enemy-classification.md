@@ -31,7 +31,7 @@ URL.
 
 - Existing WFCD descriptions, aliases, inventory references and discovery
   progress remain attached when stronger boss evidence arrives.
-- The atlas and node graph gain reciprocal, source-attributed boss navigation.
+- Progression and the node graph gain reciprocal, source-attributed boss navigation.
 - Composite source labels such as a two-boss encounter remain one source-owned
   identity until a source provides a safe decomposition.
 - Bosses absent from structured mission records are not guessed and remain a

@@ -36,7 +36,7 @@ export default async function RankingsPage({
       : undefined;
   return (
     <>
-      <p className="eyebrow">Consensus · public cited editorial data</p>
+      <p className="eyebrow">Tier Lists · public cited editorial data</p>
       <p className="lede">
         Compare tier lists side by side without flattening away their different
         scales, scopes or source notes.

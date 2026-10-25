@@ -54,11 +54,11 @@ node graph as an interactive star chart. The map is a view over established IDs
 and relations, not a second data model.
 
 Composed node metadata, a planet-grouped chart with inventory-aware filtering,
-a searchable canonical discovery atlas, and cited typed discovery relations are
+a searchable canonical progression workspace, and cited typed discovery relations are
 implemented. Private discovery progress and filtering are also implemented.
 Current Wiki abilities are searchable discovery topics linked to their
 Warframes or Archwings.
-Atlas entries with cited relations open a shareable, filter-preserving one-hop
+Progression entries with cited relations open a shareable, filter-preserving one-hop
 graph. Its deterministic ring layout is presentation state over canonical
 entities and typed relations, not a second coordinate model.
 Structured Wiki quest records contribute cited descriptions and explicit

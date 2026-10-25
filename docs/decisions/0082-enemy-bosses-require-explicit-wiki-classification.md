@@ -30,7 +30,7 @@ a canonical Star Chart node.
 
 ## Consequences
 
-- Open-world, quest and special-mode bosses can enter the discovery atlas even
+- Open-world, quest and special-mode bosses can enter Progression even
   when they have no ordinary mission-node `Boss` field.
 - Boss classification is cited and source-owned rather than inferred from
   internal paths or curated name lists.

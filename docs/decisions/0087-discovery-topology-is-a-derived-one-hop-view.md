@@ -4,7 +4,7 @@ Status: accepted
 
 ## Context
 
-The discovery atlas already joins quests, abilities, enemies, bosses, mechanics,
+Progression already joins quests, abilities, enemies, bosses, mechanics,
 secrets, equipment and nodes through canonical typed relations. A spatial view
 can make those links easier to explore, but no current source asserts global
 coordinates or meaningful distance between these concepts. Persisting layout
@@ -18,9 +18,9 @@ cited relations. Place the focus at the center and unique direct neighbors on a
 deterministic ring sorted by name and identity. Treat coordinates as transient
 presentation state.
 
-Encode the focus as `kind:slug` in the atlas query string and preserve current
+Encode the focus as `kind:slug` in the Progression query string and preserve current
 search, kind and progress filters during traversal. Selecting another discovery
-kind refocuses the graph. Selecting a node, equipment item or other non-atlas
+kind refocuses the graph. Selecting a node, equipment item or other non-Progression
 entity opens its existing canonical detail route.
 
 Keep a textual direct-link list beside the diagram with relation direction and

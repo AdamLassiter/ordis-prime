@@ -1,4 +1,4 @@
-# 0107: The Index uses bounded aggregate market snapshots
+# 0107: Market uses bounded aggregate snapshots
 
 ## Status
 
@@ -8,7 +8,7 @@ analysis; item detail pages may still use their short-lived on-demand cache.
 ## Decision
 
 Fetch public Warframe.market order books once daily for the bounded set consumed
-by The Index: relics, their rewards, Standing-offered mods, and Arcanes. Persist
+by Market: relics, their rewards, Standing-offered mods, and Arcanes. Persist
 only two aggregates per explicit subtype or rank: the median of the five cheapest
 online sells and the best online buy, plus sample counts and freshness metadata.
 

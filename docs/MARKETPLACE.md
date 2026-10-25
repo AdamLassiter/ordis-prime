@@ -12,15 +12,15 @@ server identifies the application, requests PC cross-play English results, and
 caches the response for one minute. A provider failure leaves the catalog page
 usable and offers a direct Warframe.market link.
 
-The Index is the one bounded exception to purely on-demand order fetching. Its
+Market is the one bounded exception to purely on-demand order fetching. Its
 daily job visits only relics, relic rewards, Standing-offered mods, and Arcanes,
 then stores aggregate listing and quick-sale prices without user or order data.
 The exact valuation rules, retention, and freshness limits are in
-[The Index](INDEX.md).
+[Market](MARKET.md).
 
 The displayed platinum values are offers, not completed-sale valuations or
 guaranteed prices. They do not mutate inventory, enter acquisition scoring, or
-claim that an item is currently tradeable on the player's platform. The Index
+claim that an item is currently tradeable on the player's platform. Market
 explicitly distinguishes relic subtypes and Arcane ranks. Remaining charges,
 Ayatan stars, offline orders, and completed-sale history are not modeled.
 

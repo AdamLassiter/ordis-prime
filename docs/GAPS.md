@@ -302,7 +302,7 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   label-only because the current WFCD component identities are conflated.
   Linked grants compose with private inventory and the chart's unowned filter,
   but completing a task does not automatically mutate inventory or quest state.
-- A public discovery atlas searches canonical quest, ability, enemy, boss,
+- A public Progression workspace searches canonical quest, ability, enemy, boss,
   mechanic and secret kinds. WFCD currently populates quests and enemies;
   structured Wiki data populates current abilities, descriptions, exact augment
   mod links and typed Warframe/Archwing links, current quests and their
@@ -313,10 +313,10 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   variants when the Wiki repeats a display name. Cited discovery YAML can add
   curated entities and typed links to nodes, rewards, or other topics. Players
   can privately mark topics unseen, discovered, or completed and filter the
-  atlas by that state. Boss region/location normalization, quest-step progress,
+  Progression workspace by that state. Boss region/location normalization, quest-step progress,
   broader quest requirements, unsupported
   Necramech/Helminth ability-owner kinds and conditional
-  relations remain. Atlas cards preview up to three cited neighbors, and a
+  relations remain. Progression cards preview up to three cited neighbors, and a
   shareable focused graph renders every unique direct neighbor from the active
   cited relations. The graph uses transient deterministic ring positions; a
   global or multi-hop spatial layout remains.

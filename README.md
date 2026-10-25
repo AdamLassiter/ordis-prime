@@ -17,7 +17,7 @@ from.
 - live world-state timers with database-leased automatic polling
 - private todos, dynamic watches, and deduplicated in-app alerts
 - editable loadouts, immutable share links, and cited tier-list comparison
-- public relic, syndicate-mod, and Arcane market analysis in The Index
+- public relic, syndicate-mod, and Arcane analysis in the Market workspace
 - composed node metadata and an inventory-aware star-chart index
 - portable profile export and merge/replace import
 - two-service Docker Compose deployment over one durable data volume

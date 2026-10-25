@@ -54,10 +54,10 @@ export default async function DiscoveryPage({
     : undefined;
   return (
     <>
-      <p className="eyebrow">Discovery · public sourced data</p>
+      <p className="eyebrow">Progression · public sourced data</p>
       <p className="lede">
-        Search quests, abilities, enemies, mechanics, and secrets, then follow
-        their cited relationships.
+        Track the quests, abilities, enemies, mechanics, and secrets you have
+        discovered, then follow their cited relationships.
       </p>
       <form className="inline-form">
         <label>

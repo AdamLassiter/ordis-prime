@@ -53,6 +53,10 @@ context that a first-time visitor does not need to understand the metaphor.
 - The current primary destination and the current local tab use visible active
   styling and `aria-current="page"`. Colour or heading emphasis must not be the
   only indication of location.
+- Primary destinations are grouped by player purpose: game progress and world
+  state; equipment evaluation; private planning and inventory; then evidence
+  and account operations. Account-only links disappear without reordering the
+  destinations that remain.
 - Game terminology remains appropriate where it is the clearest label. Product
   and data-pipeline terminology is explained or confined to provenance and
   administration views.

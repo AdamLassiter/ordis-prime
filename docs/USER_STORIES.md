@@ -76,7 +76,7 @@
 - As a guest, I can search the star chart by a linked boss or discovery name to
   find the relevant node directly.
 - As a guest, I can focus any linked discovery topic in a one-hop graph and
-  traverse its cited neighbors without losing my active atlas filters.
+  traverse its cited neighbors without losing my active Progression filters.
 - As a guest, I can scan a focused node and its direct cited neighbors as a
   linked topology map without mistaking derived positions for game coordinates.
 - As a player, I can traverse that topology without losing my active star-chart

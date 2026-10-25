@@ -32,7 +32,7 @@ export default async function IndexPage({
   return (
     <>
       <p className="eyebrow">
-        The Index · public Warframe.market offer intelligence
+        Market · public Warframe.market offer intelligence
       </p>
       <p className="lede">
         Compare unopened relics with their reward tables, find high-return
@@ -49,7 +49,7 @@ export default async function IndexPage({
           {status.failedCount ? ` · ${status.failedCount} unavailable` : ""}
         </span>
       </section>
-      <nav className="section-tabs" aria-label="Index views">
+      <nav className="section-tabs" aria-label="Market views">
         {[
           ["relics", "Relics"],
           ["mods", "Syndicate mods"],

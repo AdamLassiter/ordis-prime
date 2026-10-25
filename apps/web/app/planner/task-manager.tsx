@@ -10,7 +10,7 @@ export function TaskManager({ todos }: { todos: PlayerTodo[] }) {
       <h2>Foundry tasks</h2>
       <p className="muted">
         Keep farming notes and recurring collection work beside the acquisition
-        plan. Time-sensitive world-state alarms remain under Directives.
+        plan. Time-sensitive world-state alarms remain under Alerts.
       </p>
       <form className="card form-stack todo-create" action={addTodo}>
         <h3>Add a task</h3>

@@ -22,7 +22,7 @@ explicit operator imports and are never scheduled or refreshed automatically.
 
 ## Consequences
 
-- Consensus can compare creator opinions with community snapshots without
+- Tier Lists can compare creator opinions with community snapshots without
   conflating their provenance.
 - Transcript errors cannot create identities through fuzzy name matching.
 - Updating a creator snapshot is a deliberate human review task.

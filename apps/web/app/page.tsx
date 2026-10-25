@@ -33,7 +33,7 @@ const launchCards = [
     href: "/discovery",
     code: "ARCHIVES",
     title: "Find what you missed",
-    body: "Follow quests, systems, bosses, abilities and secrets through a connected atlas.",
+    body: "Track quests, systems, bosses, abilities and secrets through a connected progression map.",
   },
 ];
 

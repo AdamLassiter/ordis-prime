@@ -1,6 +1,6 @@
-# The Index
+# Market
 
-The Index is a public market-analysis surface built from the canonical catalog,
+Market is a public analysis workspace built from the canonical catalog,
 not a listing manager. It answers three recurring questions:
 
 - Which relics are worth opening, selling unopened, or refining?

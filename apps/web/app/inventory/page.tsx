@@ -39,7 +39,7 @@ export default async function InventoryPage({
   const settings = getPlayerSettings(database, session.user.id);
   return (
     <>
-      <p className="eyebrow">Collection · private player data</p>
+      <p className="eyebrow">Inventory · private player data</p>
       <p className="lede">
         Browse both recorded and missing catalog items. Mastery suggestions are
         derived and never alter your explicit wanted count.

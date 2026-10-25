@@ -3,7 +3,7 @@
 ## Status
 
 Superseded in part by ADR 0107. The on-demand boundary remains accepted for
-individual catalog detail pages; The Index uses bounded daily aggregates.
+individual catalog detail pages; Market uses bounded daily aggregates.
 
 ## Decision
 

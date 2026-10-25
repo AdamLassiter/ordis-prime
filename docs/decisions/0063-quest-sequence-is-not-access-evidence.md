@@ -4,7 +4,7 @@ Status: accepted
 
 ## Context
 
-The discovery atlas contains quest identities from WFCD, but it lacks a
+Progression contains quest identities from WFCD, but it lacks a
 source-owned quest sequence and does not consistently have the Codex
 description. The WARFRAME Wiki's versioned
 [`Module:Keys/data`](https://wiki.warframe.com/w/Module:Keys/data) distinguishes
@@ -31,7 +31,7 @@ fact with separate consequences.
 
 ## Consequences
 
-- Quest pages and atlas cards can traverse the cited narrative sequence in both
+- Quest pages and Progression cards can traverse the cited narrative sequence in both
   directions without affecting node-access calculations.
 - The adoption-time live import composed 44 quest entities and 30 sequence
   links with WFCD without resolver conflicts.

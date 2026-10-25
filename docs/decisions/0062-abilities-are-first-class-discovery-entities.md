@@ -4,7 +4,7 @@ Status: accepted
 
 ## Context
 
-The discovery atlas should reveal systems a player did not know existed, but
+Progression should reveal systems a player did not know existed, but
 abilities were only implicit in Warframe names and external Wiki links. The
 official Wiki's versioned
 [`Module:Ability/data`](https://wiki.warframe.com/w/Module:Ability/data)
@@ -32,7 +32,7 @@ standard automatic-source shrinkage guard and daily independent schedule.
 
 ## Consequences
 
-- Abilities are searchable, linkable atlas topics with private discovery
+- Abilities are searchable, linkable Progression topics with private discovery
   progress and exact revision citations.
 - Warframe and Archwing catalog pages expose their ability neighbors through
   the existing relation read model; no build-specific copy is introduced.

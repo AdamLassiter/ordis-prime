@@ -4,7 +4,7 @@ Ordis Prime aims to combine ordinary player-authored tasks with dynamic tasks
 and alerts derived from current game state. Both are private player state and
 must never be embedded in catalog or provider records.
 
-## Foundry tasks
+## Planner tasks
 
 Authenticated players can create, complete, reopen and delete todos with an
 optional note and calendar due date. Due dates are date-only values represented
@@ -14,9 +14,9 @@ or modify it. Item, discovery-topic, and node detail pages can create a task
 linked to that canonical entity. The task renders an in-app link and carries a
 portable entity reference in profile exports.
 
-The task manager lives in the Foundry plan beside acquisition goals, missing
+The task manager lives in Planner beside acquisition goals, missing
 ingredients and mission recommendations. Entity shortcuts return there through
-`/planner#tasks`. The Directives screen intentionally contains only automated
+`/planner#tasks`. Alerts intentionally contains only automated
 world-state watches and the alerts they produce, so player-authored work and
 time-sensitive signals no longer compete in one queue.
 

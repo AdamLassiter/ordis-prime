@@ -36,7 +36,7 @@ export default async function Planner() {
     return (
       <>
         <p className="eyebrow">
-          Acquisition plan · private player data · sourced recipes
+          Planner · private player data · sourced recipes
         </p>
         <p className="error">
           The plan could not be expanded:{" "}
@@ -48,9 +48,7 @@ export default async function Planner() {
   }
   return (
     <>
-      <p className="eyebrow">
-        Acquisition plan · private player data · sourced recipes
-      </p>
+      <p className="eyebrow">Planner · private player data · sourced recipes</p>
       <p className="lede">
         Expand item goals into required materials and identify missions that
         provide what your inventory still lacks.
