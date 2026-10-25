@@ -48,8 +48,8 @@ context that a first-time visitor does not need to understand the metaphor.
 - The eyebrow above a page title states the scope of the data or access on that
   page: public sourced data, live data, private player data, shared snapshots or
   administrator access. It is not decorative flavour text.
-- The `h1` names the page or current record without highlighted fragments. A
-  short lede describes the page's primary use in plain language.
+- The active navigation state and scope eyebrow name the page or current
+  record. A short lede describes the page's primary use in plain language.
 - The current primary destination and the current local tab use visible active
   styling and `aria-current="page"`. Colour or heading emphasis must not be the
   only indication of location.
@@ -62,8 +62,10 @@ context that a first-time visitor does not need to understand the metaphor.
 
 ## Current compromise
 
-The shared shell and application pages now use the scope, title and lede
+The shared shell and application pages now use navigation, scope and lede
 hierarchy consistently. Detail-heavy evidence views and administration screens
-intentionally remain more technical. Visual refinements are still largely
-CSS-native: there is no bespoke illustration or motion system, which keeps the
-first pass fast and accessible but limits its cinematic quality.
+intentionally remain more technical. The landing-page briefing is a timed
+overlay whose reading window scales with the message and whose motion respects
+the operating-system preference. Visual refinements are still largely
+CSS-native: there is no bespoke illustration or broader motion system, which
+keeps the interface fast and accessible but limits its cinematic quality.

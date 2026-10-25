@@ -139,6 +139,9 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   pending accessibility testing. Evidence and administration language
   deliberately remains more technical than player-facing guidance. The design
   remains CSS-native without bespoke illustration or a richer motion system.
+  The landing-page Cephalon briefing is an eight-to-sixteen-second overlay with
+  a synchronized countdown and reduced-motion fallback; it has no manual
+  reopen or dismiss control.
 - Local email/password accounts, persisted sessions, closed registration, and
   first-administrator bootstrap enforcement are wired at the authentication
   API, with first-run, sign-in, and sign-out UI. Player-state reads and mutations

@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import test from "node:test";
 import {
   ORDIS_VOICE_LINES,
+  ordisBriefingDurationMs,
   randomOrdisVoiceLine,
 } from "../lib/ordis-voice-lines.ts";
 
@@ -25,4 +26,10 @@ test("the original Ordis message set remains intact", () => {
       .digest("hex"),
     "2048705b0b4bf6fe7220f4208a1808414c73d92a3a9f4101e8cb528cf4e4bc04",
   );
+});
+
+test("briefing display time allows for reading without lingering indefinitely", () => {
+  assert.equal(ordisBriefingDurationMs("Maintain the habitat."), 8_000);
+  assert.equal(ordisBriefingDurationMs("word ".repeat(20)), 8_800);
+  assert.equal(ordisBriefingDurationMs("word ".repeat(100)), 16_000);
 });

@@ -6,6 +6,7 @@ import { getDatabase } from "@/lib/database";
 import { listPlayerInventory } from "@ordis-prime/db";
 import { deriveCollectionState } from "@ordis-prime/domain";
 import { CollectionStateIndicators } from "@/app/collection-state-indicators";
+import { CephalonBriefing } from "@/app/cephalon-briefing";
 
 export const dynamic = "force-dynamic";
 
@@ -67,11 +68,7 @@ export default async function Home({
             open the tools that use the same linked data.
           </p>
         </div>
-        <aside className="cephalon-briefing">
-          <span className="briefing-speaker">ORDIS // PRIORITY MESSAGE</span>
-          <p>{briefing}</p>
-          <span className="signal-line" aria-hidden="true" />
-        </aside>
+        <CephalonBriefing message={briefing} />
         <form className="search-console">
           <label htmlFor="codex-query">Query the Codex</label>
           <div>

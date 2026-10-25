@@ -42,3 +42,8 @@ export function randomOrdisVoiceLine(random: () => number = Math.random) {
   const index = Math.floor(random() * ORDIS_VOICE_LINES.length);
   return ORDIS_VOICE_LINES[index] ?? ORDIS_VOICE_LINES[0];
 }
+
+export function ordisBriefingDurationMs(message: string) {
+  const wordCount = message.trim().split(/\s+/u).filter(Boolean).length;
+  return Math.min(16_000, Math.max(8_000, 4_000 + wordCount * 240));
+}
