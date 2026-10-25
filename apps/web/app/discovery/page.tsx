@@ -60,18 +60,12 @@ export default async function DiscoveryPage({
         discovered, then follow their cited relationships.
       </p>
       <form className="inline-form search-filter-form">
+        {selectedKind && (
+          <input name="kind" type="hidden" value={selectedKind} />
+        )}
         <label className="search-field">
           Search
           <input name="q" defaultValue={q} placeholder="Search discoveries…" />
-        </label>
-        <label>
-          Kind
-          <select name="kind" defaultValue={selectedKind ?? ""}>
-            <option value="">All discovery kinds</option>
-            {DISCOVERY_KINDS.map((entry) => (
-              <option key={entry}>{entry}</option>
-            ))}
-          </select>
         </label>
         {session && (
           <label>

@@ -13,7 +13,7 @@ Once completed, git commits should be written for each todo item.
 - [x] Codex > Repeated card grids, including Catalog records, Progression, and Star Chart nodes, now use at most four responsive columns instead of producing seven narrow cards
 - [x] Search fields now expand through available filter width in Progression, Inventory, Tier Lists, and Market, matching the full-width Codex search behavior
 - [x] Updated interface language to match current direct naming: Codex launch cards use Star Chart, Cycles, Builds, and Progression; Alerts uses Alarms; the Builds tab and page replace Arsenal; and the share action is simply Publish
-- [ ] Progression > Kind dropdown for search is redundant given the lozenges below it to filter for discovery kind
+- [x] Progression > Removed the redundant Kind dropdown; the lozenges are the sole kind selector and search submissions preserve the selected lozenge
 - [ ] Codex > query the codex (search) should be below the four cards, above the catalog records results
 - [ ] Catalog records incorrectly claims '100 records' for an empty search and has no paging controls
 - [ ] Arsenal (or Builds) > <some build> > Publish doesn't give any confirmation or redirect to show it has been published

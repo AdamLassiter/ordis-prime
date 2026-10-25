@@ -20,3 +20,17 @@ test("primary feature labels use direct current terminology", async () => {
   assert.match(build, /<button className="button">Publish<\/button>/u);
   assert.doesNotMatch(build, /Publish immutable snapshot/u);
 });
+
+test("Progression uses lozenges as its only kind picker", async () => {
+  const progression = await readFile(
+    new URL("../app/discovery/page.tsx", import.meta.url),
+    "utf8",
+  );
+
+  assert.doesNotMatch(progression, /<select name="kind"/u);
+  assert.match(
+    progression,
+    /<input name="kind" type="hidden" value=\{selectedKind\}/u,
+  );
+  assert.match(progression, /aria-current=\{selectedKind === entry/u);
+});
