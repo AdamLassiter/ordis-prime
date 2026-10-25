@@ -199,7 +199,10 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   world-state watches linked to one canonical item, discovery topic or node.
   Node and item watches match exact reconciled canonical identity. World-state
   subjects currently cover WFCD alert rewards, event names/rewards, trader
-  inventory, and derived Circuit rotation rewards; unexposed or ambiguous subjects remain unmatched. Todos
+  inventory, and derived Circuit rotation rewards. Circuit subjects now carry
+  source-established kind context, repairing same-name Warframe links such as
+  Chroma and Titania while leaving genuinely ambiguous untyped subjects
+  unmatched and reviewable. Other unexposed subjects remain unmatched. Todos
   support fixed-day, weekly, monthly-date, monthly-weekday and yearly calendar
   recurrence while remaining date-only; there are no web-push or webhook delivery channels. Watches
   can be edited, paused and resumed without losing generated alerts.

@@ -48,14 +48,16 @@ test("Circuit adapter imports complete normal and Steel Path weekly schedules", 
     phaseIndex: 1,
     phaseLabel: "Week 1",
     position: 0,
-    primary: { label: "Frame 1-1" },
+    primary: { label: "Frame 1-1", expectedKind: "warframe" },
     acquisitionMode: "path",
-    includedRewards: [{ label: "Augment 1-1", tier: 7 }],
+    includedRewards: [{ label: "Augment 1-1", expectedKind: "mod", tier: 7 }],
     evidence: choices[0]!.evidence,
   });
   assert.equal(choices.at(-1)?.type, "cyclic-reward-choice");
-  if (choices.at(-1)?.type === "cyclic-reward-choice")
+  if (choices.at(-1)?.type === "cyclic-reward-choice") {
     assert.equal(choices.at(-1)?.primary.label, "Genesis 9-5");
+    assert.equal(choices.at(-1)?.primary.expectedKind, "resource");
+  }
 });
 
 function circuitSnapshot(): Snapshot {

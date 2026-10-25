@@ -12,7 +12,7 @@ import {
 } from "./mediawiki-lua.ts";
 
 const PAGE = "The Circuit";
-const PARSER_VERSION = "warframe-wiki-circuit-v1";
+const PARSER_VERSION = "warframe-wiki-circuit-v2";
 const WEEK_SECONDS = 604_800;
 
 export class WarframeWikiCircuitAdapter implements SourceAdapter {
@@ -97,9 +97,9 @@ function parseNormalSchedule(source: string, evidence: EvidenceFactory) {
         phaseIndex,
         phaseLabel: `Week ${week}`,
         position,
-        primary: { label: warframe },
+        primary: { label: warframe, expectedKind: "warframe" },
         acquisitionMode: "path",
-        includedRewards: [{ label: augment, tier: 7 }],
+        includedRewards: [{ label: augment, expectedKind: "mod", tier: 7 }],
         evidence: evidence(
           `normal:week-${week}:${position + 1}`,
           lineAt(source, row.index!),
@@ -158,7 +158,10 @@ function parseSteelSchedule(source: string, evidence: EvidenceFactory) {
         phaseIndex,
         phaseLabel: `Week ${week} (${rotation})`,
         position,
-        primary: { label: reward[1]!.trim() },
+        primary: {
+          label: reward[1]!.trim(),
+          expectedKind: "resource",
+        },
         acquisitionMode: "item",
         evidence: evidence(
           `steel-path:week-${week}:${position + 1}`,

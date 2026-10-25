@@ -334,6 +334,7 @@ export interface CyclicRewardScheduleObservation {
 
 export interface CyclicRewardSubject {
   label: string;
+  expectedKind?: EntityKind;
   externalIds?: ExternalIdentifier[];
 }
 

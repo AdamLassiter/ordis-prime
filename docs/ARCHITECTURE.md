@@ -21,6 +21,9 @@ in `GAPS.md`; decisions and their reasoning live in `decisions/`.
 Names and URL slugs are never persistence keys. Query-critical relationships
 such as recipes and drops use typed tables; a generic relation is reserved for
 discovery links that do not require domain-specific attributes.
+Label-only cyclic reward subjects carry a source-established expected kind when
+available, so legitimate same-name entities remain distinct and ambiguous
+untyped subjects become reviewable conflicts rather than guessed links.
 
 Every promoted catalog release records the exact active run for every static
 source. Source-run `active` flags remain the efficient read selector, while the

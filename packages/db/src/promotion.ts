@@ -14,6 +14,7 @@ import {
   resolveEntity,
   type CanonicalEntity,
   type EntityId,
+  type EntityKind,
   type EntityObservation,
   type ExternalIdentifier,
   type Observation,
@@ -278,17 +279,38 @@ function promoteInTransaction(
     if (observation.type !== "cyclic-reward-choice") continue;
     const schedule = cyclicRewardSchedules.get(observation.scheduleKey);
     if (!schedule) continue;
-    const primaryEntityId = resolveCyclicRewardSubject(
+    const primaryResolution = resolveCyclicRewardSubject(
       sqlite,
       state,
       observation.primary,
     );
+    if (!primaryResolution.entityId && primaryResolution.candidates.length)
+      writeCyclicRewardConflict(
+        sqlite,
+        sourceRunId,
+        observation.evidence.sourceRecordKey,
+        observation.primary,
+        primaryResolution.candidates,
+        counts,
+      );
     const includedRewards = (observation.includedRewards ?? []).map(
-      (reward) => ({
-        label: reward.label,
-        tier: reward.tier,
-        entityId: resolveCyclicRewardSubject(sqlite, state, reward),
-      }),
+      (reward) => {
+        const resolution = resolveCyclicRewardSubject(sqlite, state, reward);
+        if (!resolution.entityId && resolution.candidates.length)
+          writeCyclicRewardConflict(
+            sqlite,
+            sourceRunId,
+            observation.evidence.sourceRecordKey,
+            reward,
+            resolution.candidates,
+            counts,
+          );
+        return {
+          label: reward.label,
+          tier: reward.tier,
+          entityId: resolution.entityId,
+        };
+      },
     );
     sqlite
       .prepare(
@@ -304,7 +326,7 @@ function promoteInTransaction(
         observation.phaseIndex,
         observation.phaseLabel,
         observation.position,
-        primaryEntityId ?? null,
+        primaryResolution.entityId ?? null,
         observation.primary.label,
         observation.acquisitionMode,
         JSON.stringify(includedRewards),
@@ -2469,30 +2491,92 @@ function validateCandidateSet(observations: Observation[]): void {
 function resolveCyclicRewardSubject(
   sqlite: Database.Database,
   state: ResolutionState,
-  subject: { label: string; externalIds?: ExternalIdentifier[] },
-): EntityId | undefined {
+  subject: {
+    label: string;
+    expectedKind?: EntityKind;
+    externalIds?: ExternalIdentifier[];
+  },
+): { entityId?: EntityId; candidates: EntityId[] } {
   for (const externalId of subject.externalIds ?? []) {
     const entityId = state.externalIds.get(externalKey(externalId));
-    if (entityId) return entityId;
+    const entity = entityId ? state.entities.get(entityId) : undefined;
+    if (
+      entityId &&
+      entity &&
+      !entity.retired &&
+      (!subject.expectedKind || entity.kind === subject.expectedKind)
+    )
+      return { entityId, candidates: [entityId] };
+    if (entityId) return { candidates: [entityId] };
   }
+  const kindWhere = subject.expectedKind ? "and kind = ?" : "";
+  const parameters = subject.expectedKind
+    ? [subject.label, subject.expectedKind]
+    : [subject.label];
   const exact = sqlite
     .prepare(
       `select id from entities
-       where retired = 0 and name = ? collate nocase`,
+       where retired = 0 and name = ? collate nocase ${kindWhere}`,
     )
-    .all(subject.label) as Array<{ id: EntityId }>;
-  if (exact.length === 1) return exact[0]!.id;
+    .all(...parameters) as Array<{ id: EntityId }>;
+  if (exact.length === 1)
+    return { entityId: exact[0]!.id, candidates: [exact[0]!.id] };
+  if (exact.length > 1) return { candidates: exact.map(({ id }) => id) };
+  const aliasKindWhere = subject.expectedKind ? "and entity.kind = ?" : "";
+  const aliasParameters = subject.expectedKind
+    ? [normalizedAlias(subject.label), subject.expectedKind]
+    : [normalizedAlias(subject.label)];
   const matches = sqlite
     .prepare(
       `select distinct entity.id from entities entity
        left join entity_aliases alias on alias.entity_id = entity.id
        where entity.retired = 0
-         and alias.normalized = ?`,
+         and alias.normalized = ? ${aliasKindWhere}`,
     )
-    .all(normalizedAlias(subject.label)) as Array<{
+    .all(...aliasParameters) as Array<{
     id: EntityId;
   }>;
-  return matches.length === 1 ? matches[0]!.id : undefined;
+  if (matches.length === 1)
+    return { entityId: matches[0]!.id, candidates: [matches[0]!.id] };
+  if (matches.length > 1) return { candidates: matches.map(({ id }) => id) };
+  if (!subject.expectedKind) return { candidates: [] };
+  const mismatched = sqlite
+    .prepare(
+      `select distinct entity.id from entities entity
+       left join entity_aliases alias on alias.entity_id = entity.id
+       where entity.retired = 0 and
+         (entity.name = ? collate nocase or alias.normalized = ?)`,
+    )
+    .all(subject.label, normalizedAlias(subject.label)) as Array<{
+    id: EntityId;
+  }>;
+  return { candidates: mismatched.map(({ id }) => id) };
+}
+
+function writeCyclicRewardConflict(
+  sqlite: Database.Database,
+  sourceRunId: string,
+  recordKey: string,
+  subject: {
+    label: string;
+    expectedKind?: EntityKind;
+    externalIds?: ExternalIdentifier[];
+  },
+  candidates: EntityId[],
+  counts: { conflictsCreated: number },
+) {
+  const expectation = subject.expectedKind
+    ? ` expected as ${subject.expectedKind}`
+    : "";
+  writeConflict(
+    sqlite,
+    sourceRunId,
+    recordKey,
+    `Cyclic reward subject ${subject.label}${expectation} could not be resolved uniquely`,
+    candidates,
+    counts,
+    subject.externalIds,
+  );
 }
 
 function incompatibleEntityDeclarations(

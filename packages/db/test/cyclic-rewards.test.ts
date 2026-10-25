@@ -68,9 +68,11 @@ test("cyclic rewards drive schedule, catalog, world-state, and watch read models
       phaseIndex: 0,
       phaseLabel: "Week 1",
       position: 0,
-      primary: { label: "Ash" },
+      primary: { label: "Ash", expectedKind: "warframe" },
       acquisitionMode: "path",
-      includedRewards: [{ label: "Seeking Shuriken", tier: 7 }],
+      includedRewards: [
+        { label: "Seeking Shuriken", expectedKind: "mod", tier: 7 },
+      ],
       evidence: evidence("week-1"),
     },
     {
@@ -79,7 +81,7 @@ test("cyclic rewards drive schedule, catalog, world-state, and watch read models
       phaseIndex: 1,
       phaseLabel: "Week 2",
       position: 0,
-      primary: { label: "Ember" },
+      primary: { label: "Ember", expectedKind: "warframe" },
       acquisitionMode: "path",
       evidence: evidence("week-2"),
     },
@@ -153,4 +155,99 @@ test("cyclic rewards drive schedule, catalog, world-state, and watch read models
     })),
   });
   assert.equal(pruneInactiveCatalogHistory(sqlite, 0).sourceRunsDeleted, 1);
+});
+
+test("typed cyclic rewards resolve same-name entities without guessing untyped subjects", async (context) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-cyclic-typed-"));
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const databasePath = path.join(root, "catalog.sqlite");
+  migrateDatabase(databasePath);
+  const sqlite = openSqliteDatabase(databasePath);
+  context.after(() => sqlite.close());
+  const retrievedAt = "2026-10-19T00:00:00.000Z";
+  const evidence = (key: string) => ({
+    sourceId: "schedule",
+    sourceRecordKey: key,
+    snapshotVersion: "v1",
+    retrievedAt,
+  });
+  const result = promoteSource(sqlite, {
+    source: {
+      id: "schedule",
+      name: "Schedule fixture",
+      homepage: "https://example.test",
+      priority: 10,
+    },
+    version: "v1",
+    contentHash: `sha256:${"typed-circuit".padEnd(64, "0")}`,
+    retrievedAt,
+    observations: [
+      {
+        type: "entity",
+        kind: "warframe",
+        externalIds: [
+          { sourceId: "schedule", namespace: "id", value: "chroma-frame" },
+        ],
+        fields: { name: "Chroma", slug: "chroma" },
+        evidence: evidence("chroma-frame"),
+      },
+      {
+        type: "entity",
+        kind: "enemy",
+        externalIds: [
+          { sourceId: "schedule", namespace: "id", value: "chroma-enemy" },
+        ],
+        fields: { name: "Chroma", slug: "chroma" },
+        evidence: evidence("chroma-enemy"),
+      },
+      {
+        type: "cyclic-reward-schedule",
+        key: "circuit-normal",
+        label: "Normal Circuit",
+        epoch: retrievedAt,
+        intervalSeconds: 604_800,
+        phaseCount: 2,
+        choicesPerPhase: 1,
+        selectionsAllowed: 1,
+        instructions: "Choose one path.",
+        evidence: evidence("schedule"),
+      },
+      {
+        type: "cyclic-reward-choice",
+        scheduleKey: "circuit-normal",
+        phaseIndex: 0,
+        phaseLabel: "Week 1",
+        position: 0,
+        primary: { label: "Chroma", expectedKind: "warframe" },
+        acquisitionMode: "path",
+        evidence: evidence("typed-chroma"),
+      },
+      {
+        type: "cyclic-reward-choice",
+        scheduleKey: "circuit-normal",
+        phaseIndex: 1,
+        phaseLabel: "Week 2",
+        position: 0,
+        primary: { label: "Chroma" },
+        acquisitionMode: "path",
+        evidence: evidence("untyped-chroma"),
+      },
+    ],
+  });
+
+  assert.equal(result.conflictsCreated, 1);
+  const schedule = listCyclicRewardSchedules(
+    sqlite,
+    Date.parse(retrievedAt),
+  )[0];
+  assert.equal(schedule?.choices[0]?.primary.entity?.kind, "warframe");
+  assert.equal(schedule?.choices[0]?.primary.entity?.slug, "chroma");
+  assert.equal(schedule?.choices[1]?.primary.entity, undefined);
+  const conflict = sqlite
+    .prepare(
+      "select record_key as recordKey, candidates_json as candidatesJson from ingestion_conflicts",
+    )
+    .get() as { recordKey: string; candidatesJson: string };
+  assert.equal(conflict.recordKey, "untyped-chroma");
+  assert.equal((JSON.parse(conflict.candidatesJson) as string[]).length, 2);
 });
