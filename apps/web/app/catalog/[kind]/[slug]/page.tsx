@@ -57,6 +57,15 @@ export default async function ItemPage({
     session && isDiscovery
       ? getDiscoveryProgress(database, session.user.id, { kind, slug })
       : undefined;
+  const locations = item.relations.filter(
+    (relation) =>
+      relation.direction === "outgoing" &&
+      relation.kind === "occurs-at" &&
+      relation.subject.kind === "node",
+  );
+  const relatedDiscoveries = item.relations.filter(
+    (relation) => !locations.includes(relation),
+  );
   return (
     <>
       <p className="eyebrow">
@@ -64,6 +73,30 @@ export default async function ItemPage({
       </p>
       {item.description && <p className="lede">{item.description}</p>}
       <dl className="facts">
+        {locations.length > 0 && (
+          <>
+            <dt>{locations.length === 1 ? "Location" : "Locations"}</dt>
+            <dd className="catalog-locations">
+              {locations.map((location) => (
+                <div key={`${location.subject.slug}:${location.sourceName}`}>
+                  <Link href={`/nodes/${location.subject.slug}`}>
+                    {location.subject.name}
+                  </Link>
+                  {location.notes ? ` — ${location.notes}` : ""}{" "}
+                  <span className="muted">
+                    (
+                    {location.citationUrl ? (
+                      <a href={location.citationUrl}>{location.sourceName}</a>
+                    ) : (
+                      location.sourceName
+                    )}
+                    )
+                  </span>
+                </div>
+              ))}
+            </dd>
+          </>
+        )}
         {item.market && (
           <>
             <dt>Marketplace</dt>
@@ -349,8 +382,8 @@ export default async function ItemPage({
         )}
         <dt>Related discoveries</dt>
         <dd>
-          {item.relations.length
-            ? item.relations.map((relation, index) => (
+          {relatedDiscoveries.length
+            ? relatedDiscoveries.map((relation, index) => (
                 <div
                   key={`${relation.direction}:${relation.kind}:${relation.subject.kind}:${relation.subject.slug}:${index}`}
                 >

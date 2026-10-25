@@ -31,7 +31,10 @@ test("account navigation ends with the requested operations group", async () => 
   let previousPosition = -1;
   for (const label of labels) {
     const position = sessionNavigation.indexOf(label);
-    assert.ok(position > previousPosition, `${label} should follow the prior tab`);
+    assert.ok(
+      position > previousPosition,
+      `${label} should follow the prior tab`,
+    );
     previousPosition = position;
   }
   assert.match(signOutButton, /"Sign Out"/u);
@@ -89,4 +92,19 @@ test("Planner renders outstanding requirements as a semantic table", async () =>
   assert.match(planner, /<th>Quantity required<\/th>/u);
   assert.match(planner, /<th scope="row">/u);
   assert.doesNotMatch(planner, /requirement-list/u);
+});
+
+test("catalog locations are promoted above generic related discoveries", async () => {
+  const catalog = await readFile(
+    new URL("../app/catalog/[kind]/[slug]/page.tsx", import.meta.url),
+    "utf8",
+  );
+  const locations = catalog.indexOf('className="catalog-locations"');
+  const relations = catalog.indexOf("<dt>Related discoveries</dt>");
+
+  assert.ok(locations >= 0);
+  assert.ok(relations > locations);
+  assert.match(catalog, /relation\.kind === "occurs-at"/u);
+  assert.match(catalog, /relation\.subject\.kind === "node"/u);
+  assert.match(catalog, /relatedDiscoveries\.map/u);
 });

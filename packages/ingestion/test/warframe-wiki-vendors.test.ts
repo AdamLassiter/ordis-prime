@@ -28,6 +28,13 @@ test("wiki vendor adapter imports priced offerings and a cited node link", async
               { "Melee Influence", "Arcane", 7500, 1, Prereq = 4 },
             },
           },
+          Daughter = {
+            Name = "Daughter",
+            Currency = "Standing",
+            Offerings = {
+              { "Spari Spear", "Gear", 500, 1, Prereq = 0 },
+            },
+          },
         },
       }
     `),
@@ -39,6 +46,16 @@ test("wiki vendor adapter imports priced offerings and a cited node link", async
         observation.type === "entity" &&
         observation.kind === "vendor" &&
         observation.fields.name === "Nightcap",
+    ),
+    true,
+  );
+  assert.equal(
+    observations.some(
+      (observation) =>
+        observation.type === "entity-relation" &&
+        observation.kind === "occurs-at" &&
+        observation.fromExternalId.value === "Daughter" &&
+        observation.toExternalId.value === "Necralisk",
     ),
     true,
   );
@@ -170,6 +187,17 @@ function wikiSnapshot(moduleContent: string): Snapshot {
 ==Other Bounties==
 `,
                   },
+                },
+              },
+            ],
+          },
+          {
+            title: "Daughter",
+            revisions: [
+              {
+                revid: 790,
+                slots: {
+                  main: { content: "Daughter operates from the Necralisk." },
                 },
               },
             ],

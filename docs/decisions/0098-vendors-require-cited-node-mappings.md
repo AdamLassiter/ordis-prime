@@ -12,8 +12,9 @@ create false navigation relationships.
 
 Promote a vendor and `occurs-at` relation only when a separately captured Wiki
 page establishes its canonical location. Offerings remain typed canonical
-entities with cost notes and `offers` relations. Start with Nightcap at Fortuna;
-do not infer locations for the remaining vendor module entries.
+entities with cost notes and `offers` relations. Start with Nightcap at Fortuna
+and Daughter at the Necralisk; do not infer locations for the remaining vendor
+module entries.
 
 ## Consequences
 

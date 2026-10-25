@@ -245,11 +245,12 @@ from a shared Warframe owner.
 
 The vendor adapter reads structured vendor data, but a vendor is promoted onto
 the Star Chart only when a separately cited page establishes its canonical
-location. Nightcap is currently the supported mapping: the adapter imports the
-vendor, its Fortuna location, Fergolyte-priced offerings, and the Bounty page's
-three named Deepmines activities. Embedded WFCD Nokko reward rows resolve to
-the canonical Deepmines node while retaining their exact bounty and rotation
-labels. Structured offerings do not by themselves prove a node.
+location. Nightcap and Daughter are currently supported: the adapter imports
+their cited Fortuna and Necralisk locations. Nightcap also retains its
+Fergolyte-priced offerings and the Bounty page's three named Deepmines
+activities. Embedded WFCD Nokko reward rows resolve to the canonical Deepmines
+node while retaining their exact bounty and rotation labels. Structured
+offerings do not by themselves prove a node.
 
 The leased worker schedules `wfcd-items`, `wfcd-drops`,
 `warframe-wiki-weapons`, `warframe-wiki-warframes`,

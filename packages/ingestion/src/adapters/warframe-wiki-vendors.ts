@@ -21,10 +21,11 @@ import {
   wikiSlug,
 } from "./mediawiki-lua.ts";
 
-const PARSER_VERSION = "warframe-wiki-vendors-v6";
+const PARSER_VERSION = "warframe-wiki-vendors-v7";
 const VENDOR_MODULE = "Module:Vendors/data";
 const NIGHTCAP_PAGE = "Nightcap";
 const BOUNTY_PAGE = "Bounty";
+const DAUGHTER_PAGE = "Daughter";
 
 interface Offering {
   name: string;
@@ -55,7 +56,7 @@ export class WarframeWikiVendorsAdapter implements SourceAdapter {
   async fetch(context: FetchContext): Promise<Snapshot> {
     return fetchMediaWikiPagesSnapshot({
       apiUrl: this.apiUrl,
-      pageTitles: [VENDOR_MODULE, NIGHTCAP_PAGE, BOUNTY_PAGE],
+      pageTitles: [VENDOR_MODULE, NIGHTCAP_PAGE, BOUNTY_PAGE, DAUGHTER_PAGE],
       sourceId: this.source.id,
       parserVersion: PARSER_VERSION,
       signal: context.signal,
@@ -65,10 +66,13 @@ export class WarframeWikiVendorsAdapter implements SourceAdapter {
   }
 
   async *parse(snapshot: Snapshot): AsyncIterable<Observation> {
-    const [modulePage, nightcapPage, bountyPage] = readMediaWikiPages(
-      snapshot.bytes,
-      [VENDOR_MODULE, NIGHTCAP_PAGE, BOUNTY_PAGE],
-    );
+    const [modulePage, nightcapPage, bountyPage, daughterPage] =
+      readMediaWikiPages(snapshot.bytes, [
+        VENDOR_MODULE,
+        NIGHTCAP_PAGE,
+        BOUNTY_PAGE,
+        DAUGHTER_PAGE,
+      ]);
     const root = parseLuaReturnTable(modulePage!.content, modulePage!.title);
     const vendors = luaLiteralField(root, "Vendors");
     if (vendors?.type !== "TableConstructorExpression")
@@ -206,6 +210,23 @@ export class WarframeWikiVendorsAdapter implements SourceAdapter {
         nightcapPage!.title,
         nightcapPage!.revisionId,
         "Nightcap:location",
+      ),
+    };
+    yield {
+      type: "entity-relation",
+      kind: "occurs-at",
+      fromExternalId: vendorExternalId("Daughter"),
+      toExternalId: {
+        sourceId: "warframe-wiki-missions",
+        namespace: "mission-name",
+        value: "Necralisk",
+      },
+      notes: "Daughter operates from the Necralisk on Deimos.",
+      evidence: evidence(
+        snapshot,
+        daughterPage!.title,
+        daughterPage!.revisionId,
+        "Daughter:location",
       ),
     };
 
