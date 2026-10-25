@@ -9,7 +9,7 @@ Complete each top-level item through cohesive, described commits. Check an item
 off only after its acceptance criteria, relevant automated tests, and any
 architecture or gap documentation updates are complete.
 
-- [ ] **Add an optional persistent system-tray mode to `ordis-prime-updater`.**
+- [x] **Add an optional persistent system-tray mode to `ordis-prime-updater`.**
 
   The current updater performs one paired synchronization and exits. Add an
   explicitly enabled Windows tray mode that can wait for Warframe, synchronize
@@ -160,3 +160,5 @@ architecture or gap documentation updates are complete.
   **Acceptance:** changing a preference on the Operator page is reflected on
   every supported page, survives a new session and profile transfer, and never
   makes collection state dependent on colour alone.
+
+- [ ] Remove all the <h1/> headers from pages, the highlighted tab and eyebrows/ledes should have sufficient context

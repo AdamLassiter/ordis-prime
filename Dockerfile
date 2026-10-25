@@ -9,7 +9,9 @@ RUN mkdir -p /dist \
     -DUNICODE -D_UNICODE -DWIN32_LEAN_AND_MEAN -DNOMINMAX \
     tools/ordis-prime-updater/src/main.cpp \
     tools/ordis-prime-updater/src/pairing.cpp \
-    -lwinhttp -o /dist/ordis-prime-updater-windows-x64.exe \
+    tools/ordis-prime-updater/src/scheduler.cpp \
+    -lwinhttp -ladvapi32 -lbcrypt -lshell32 \
+    -o /dist/ordis-prime-updater-windows-x64.exe \
   && sha256sum /dist/ordis-prime-updater-windows-x64.exe \
     | sed 's|  /dist/|  |' \
     > /dist/ordis-prime-updater-windows-x64.exe.sha256

@@ -2,10 +2,17 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useState,
+  type ChangeEvent,
+  type FormEvent,
+} from "react";
 import type {
   AlecaFrameImportPreview,
   PlayerImportPairingStatus,
+  PlayerImportDevice,
 } from "@ordis-prime/db";
 
 const providers = [
@@ -52,6 +59,21 @@ export function PlayerDataImport() {
   const [pending, setPending] = useState<"preview" | "apply">();
   const [pairing, setPairing] = useState<Pairing>();
   const [pairingPending, setPairingPending] = useState(false);
+  const [devices, setDevices] = useState<PlayerImportDevice[]>([]);
+
+  const loadDevices = useCallback(async () => {
+    const response = await fetch(
+      "/api/account/import/warframe-api-helper/devices",
+      { cache: "no-store" },
+    );
+    if (!response.ok) return;
+    const body = (await response.json()) as { devices: PlayerImportDevice[] };
+    setDevices(body.devices);
+  }, []);
+
+  useEffect(() => {
+    if (provider === "warframe-api-helper") void loadDevices();
+  }, [provider, loadDevices]);
 
   useEffect(() => {
     if (!pairing || !["pending", "running"].includes(pairing.status)) return;
@@ -76,6 +98,7 @@ export function PlayerDataImport() {
           `Imported ${next.result.inventory.changedItems} collection changes.`,
         );
         router.refresh();
+        void loadDevices();
       } else if (next.status === "failed" || next.status === "cancelled") {
         setMessage(next.error ?? "Updater pairing ended without an import.");
       }
@@ -86,7 +109,19 @@ export function PlayerDataImport() {
       disposed = true;
       window.clearInterval(timer);
     };
-  }, [pairing?.id, pairing?.status, router]);
+  }, [pairing?.id, pairing?.status, router, loadDevices]);
+
+  async function revokeDevice(id: string) {
+    const response = await fetch(
+      `/api/account/import/warframe-api-helper/devices/${id}`,
+      { method: "DELETE" },
+    );
+    if (!response.ok) {
+      setMessage("The updater device could not be revoked.");
+      return;
+    }
+    await loadDevices();
+  }
 
   function invalidate() {
     setPreview(undefined);
@@ -325,6 +360,10 @@ export function PlayerDataImport() {
                 Imports only increase supported inventory and progression. They
                 never remove data or create a build.
               </p>
+              <p>
+                After pairing, you can optionally keep the updater in the system
+                tray and choose whether it launches at Windows sign-in.
+              </p>
             </div>
             <p>
               <a
@@ -358,7 +397,7 @@ export function PlayerDataImport() {
                     <p className="muted">
                       Paste this code into the updater before{" "}
                       {new Date(pairing.expiresAt).toLocaleTimeString()}. It can
-                      be used once.
+                      be used once to register this Windows device.
                     </p>
                   </>
                 )}
@@ -376,6 +415,47 @@ export function PlayerDataImport() {
                 )}
               </div>
             )}
+            <section
+              className="updater-devices"
+              aria-labelledby="updater-devices-title"
+            >
+              <h3 id="updater-devices-title">Paired updater devices</h3>
+              {devices.length ? (
+                <ul className="plain-list">
+                  {devices.map((device) => (
+                    <li className="notice" key={device.id}>
+                      <strong>{device.name}</strong>{" "}
+                      <span className="tag">{device.status}</span>
+                      <span className="muted">
+                        Created {new Date(device.createdAt).toLocaleString()}
+                        {device.lastUsedAt
+                          ? ` · last used ${new Date(device.lastUsedAt).toLocaleString()}`
+                          : " · never used"}
+                        {device.lastSuccessAt
+                          ? ` · last success ${new Date(device.lastSuccessAt).toLocaleString()}`
+                          : ""}
+                      </span>
+                      {device.lastError && (
+                        <span className="error">
+                          Last error: {device.lastError}
+                        </span>
+                      )}
+                      {device.status === "active" && (
+                        <button
+                          type="button"
+                          className="nav-button"
+                          onClick={() => void revokeDevice(device.id)}
+                        >
+                          Revoke device
+                        </button>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="muted">No updater devices are paired.</p>
+              )}
+            </section>
           </>
         )}
       </form>

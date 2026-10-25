@@ -822,6 +822,65 @@ export const playerImportPairings = sqliteTable(
     index("player_import_pairings_expiry").on(table.expiresAt),
   ],
 );
+export const playerImportDevices = sqliteTable(
+  "player_import_devices",
+  {
+    id: text().primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    provider: text({ enum: ["warframe-api-helper"] }).notNull(),
+    name: text().notNull(),
+    tokenHash: text("token_hash").notNull(),
+    previousTokenHash: text("previous_token_hash"),
+    previousValidUntil: integer("previous_valid_until", {
+      mode: "timestamp_ms",
+    }),
+    status: text({ enum: ["active", "revoked"] }).notNull(),
+    createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+    lastUsedAt: integer("last_used_at", { mode: "timestamp_ms" }),
+    lastSuccessAt: integer("last_success_at", { mode: "timestamp_ms" }),
+    lastError: text("last_error"),
+    revokedAt: integer("revoked_at", { mode: "timestamp_ms" }),
+    rateWindowStartedAt: integer("rate_window_started_at", {
+      mode: "timestamp_ms",
+    }).notNull(),
+    rateWindowRequestCount: integer("rate_window_request_count")
+      .notNull()
+      .default(0),
+    lastRequestId: text("last_request_id"),
+    lastRequestNextTokenHash: text("last_request_next_token_hash"),
+    lastResponseJson: text("last_response_json"),
+  },
+  (table) => [
+    uniqueIndex("player_import_devices_token_hash_unique").on(table.tokenHash),
+    index("player_import_devices_user_created").on(
+      table.userId,
+      table.createdAt,
+    ),
+  ],
+);
+export const playerImportDeviceEvents = sqliteTable(
+  "player_import_device_events",
+  {
+    id: text().primaryKey(),
+    deviceId: text("device_id")
+      .notNull()
+      .references(() => playerImportDevices.id, { onDelete: "cascade" }),
+    occurredAt: integer("occurred_at", { mode: "timestamp_ms" }).notNull(),
+    outcome: text({
+      enum: ["succeeded", "failed", "replayed", "revoked"],
+    }).notNull(),
+    requestId: text("request_id"),
+    error: text(),
+  },
+  (table) => [
+    index("player_import_device_events_device_occurred").on(
+      table.deviceId,
+      table.occurredAt,
+    ),
+  ],
+);
 export const sessions = sqliteTable(
   "sessions",
   {

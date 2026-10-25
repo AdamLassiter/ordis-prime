@@ -79,6 +79,11 @@ optional new build draft become ordinary profile state and therefore appear in
 later exports, but the encrypted source, decrypted document, preview hash and
 unresolved records are not retained.
 
+Updater device registrations and credentials are also excluded from portable
+profiles. They are security capabilities bound to one server account and one
+Windows Credential Manager, not player progress; pair each device again after
+moving to another Ordis Prime instance.
+
 Imports resolve external identifiers first and only fall back to the kind/slug
 pair when no identifier is present in the destination catalog. Ambiguous or
 missing entries are reported rather than guessed. Merge mode is the default;

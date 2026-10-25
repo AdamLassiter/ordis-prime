@@ -1,5 +1,5 @@
 import {
-  applyPairedWarframeApiHelperImport,
+  applyWarframeUpdaterImport,
   PairingImportError,
 } from "@ordis-prime/db";
 import { getDatabase } from "@/lib/database";
@@ -14,14 +14,22 @@ export async function POST(request: Request) {
     if (!contentType.toLowerCase().startsWith("application/json"))
       throw new PairingImportError("Inventory must be JSON", 415);
     const bytes = await readBoundedBody(request, MAXIMUM_INVENTORY_BYTES);
-    const { pairingId, result } = applyPairedWarframeApiHelperImport(
+    const { deviceId, paired, replayed, result } = applyWarframeUpdaterImport(
       getDatabase(),
-      token,
-      bytes,
+      {
+        token,
+        nextToken: requiredHeader(request, "x-ordis-next-token"),
+        requestId: requiredHeader(request, "x-ordis-request-id"),
+        deviceId: optionalHeader(request, "x-ordis-device-id"),
+        deviceName: optionalHeader(request, "x-ordis-device-name"),
+        bytes,
+      },
     );
     return Response.json(
       {
-        pairingId,
+        deviceId,
+        paired,
+        replayed,
         applied: true,
         changedItems: result.inventory.changedItems,
         resolvedItems: result.inventory.resolvedItems,
@@ -41,6 +49,17 @@ export async function POST(request: Request) {
       { status, headers: { "cache-control": "no-store" } },
     );
   }
+}
+
+function requiredHeader(request: Request, name: string) {
+  const value = optionalHeader(request, name);
+  if (!value) throw new PairingImportError(`${name} is required`, 400);
+  return value;
+}
+
+function optionalHeader(request: Request, name: string) {
+  const value = request.headers.get(name)?.trim();
+  return value || undefined;
 }
 
 function bearerToken(header: string | null) {

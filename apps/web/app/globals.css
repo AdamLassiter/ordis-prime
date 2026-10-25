@@ -356,6 +356,24 @@ h2 {
 .inventory-secondary-controls {
   margin-top: 2rem;
 }
+.updater-devices {
+  border-top: 1px solid var(--line);
+  margin-top: 1rem;
+  padding-top: 1rem;
+}
+.updater-devices .plain-list {
+  display: grid;
+  gap: 0.65rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.updater-devices li {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
 .card:hover {
   border-color: var(--line-hot);
   transform: translateY(-2px);

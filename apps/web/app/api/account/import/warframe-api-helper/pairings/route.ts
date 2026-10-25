@@ -1,4 +1,4 @@
-import { createPlayerImportPairing } from "@ordis-prime/db";
+import { createPlayerImportPairing, PairingImportError } from "@ordis-prime/db";
 import { auth } from "@/lib/auth";
 import { getDatabase } from "@/lib/database";
 
@@ -18,7 +18,7 @@ export async function POST(request: Request) {
   } catch (error) {
     return Response.json(
       { message: error instanceof Error ? error.message : "Pairing failed" },
-      { status: 400 },
+      { status: error instanceof PairingImportError ? error.status : 400 },
     );
   }
 }

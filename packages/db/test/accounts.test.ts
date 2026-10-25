@@ -159,6 +159,21 @@ test("account deletion removes private state and shares while retaining attribut
     note: "Reviewed before departure",
     now,
   });
+  database
+    .prepare(
+      `insert into player_import_devices
+        (id, user_id, provider, name, token_hash, status, created_at,
+         rate_window_started_at, rate_window_request_count)
+       values ('device', ?, 'warframe-api-helper', 'Leaving PC', ?, 'active', ?, ?, 0)`,
+    )
+    .run(deletingAdmin, "a".repeat(64), now, now);
+  database
+    .prepare(
+      `insert into player_import_device_events
+        (id, device_id, occurred_at, outcome)
+       values ('device-event', 'device', ?, 'succeeded')`,
+    )
+    .run(now);
 
   deleteLocalAccount(database, deletingAdmin);
 
@@ -187,6 +202,14 @@ test("account deletion removes private state and shares while retaining attribut
     0,
   );
   assert.equal(findSharedBuild(database, shareKey), undefined);
+  assert.deepEqual(
+    database
+      .prepare(
+        "select (select count(*) from player_import_devices) as devices, (select count(*) from player_import_device_events) as events",
+      )
+      .get(),
+    { devices: 0, events: 0 },
+  );
   assert.deepEqual(
     listSourceConflicts(database, "fixture")[0]?.reviewEvents.map(
       ({ actor, note }) => ({ actor, note }),

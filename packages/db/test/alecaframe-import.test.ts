@@ -5,7 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import {
-  applyPairedWarframeApiHelperImport,
+  applyWarframeUpdaterImport,
   applyAlecaFrameImport,
   applyWarframeApiHelperImport,
   cancelPlayerImportPairing,
@@ -16,10 +16,12 @@ import {
   getPlayerBuild,
   getPlayerImportPairing,
   getPlayerSettings,
+  listPlayerImportDevices,
   migrateDatabase,
   openSqliteDatabase,
   previewAlecaFrameImport,
   prunePlayerImportPairings,
+  revokePlayerImportDevice,
   setInventoryEntry,
 } from "../src/index.ts";
 
@@ -354,7 +356,7 @@ test("Warframe API helper accepts legitimate resource counts above one million",
   );
 });
 
-test("updater pairings store only token hashes and are single-use", async (context) => {
+test("updater pairing exchanges for a hashed rotating device credential", async (context) => {
   const fixture = await createFixture(context);
   const now = 1_800_000_000_000;
   const pairing = createPlayerImportPairing(
@@ -371,15 +373,18 @@ test("updater pairings store only token hashes and are single-use", async (conte
     .get(pairing.id) as { tokenHash: string; status: string };
   assert.notEqual(stored.tokenHash, token);
   assert.equal(stored.tokenHash.length, 64);
-  assert.equal(stored.status, "pending");
-
-  const imported = applyPairedWarframeApiHelperImport(
-    fixture.database,
+  const nextToken = "B".repeat(43);
+  const requestId = "11111111-1111-4111-8111-111111111111";
+  const bytes = new TextEncoder().encode(JSON.stringify(snapshotDocument()));
+  const imported = applyWarframeUpdaterImport(fixture.database, {
     token,
-    new TextEncoder().encode(JSON.stringify(snapshotDocument())),
-    now + 1,
-  );
-  assert.equal(imported.pairingId, pairing.id);
+    nextToken,
+    requestId,
+    deviceName: "Gaming PC",
+    bytes,
+    now: now + 1,
+  });
+  assert.equal(imported.paired, true);
   assert.equal(
     getPlayerImportPairing(
       fixture.database,
@@ -391,17 +396,82 @@ test("updater pairings store only token hashes and are single-use", async (conte
   );
   assert.throws(
     () =>
-      applyPairedWarframeApiHelperImport(
-        fixture.database,
+      applyWarframeUpdaterImport(fixture.database, {
         token,
-        new TextEncoder().encode(JSON.stringify(snapshotDocument())),
-        now + 2,
-      ),
+        nextToken: "C".repeat(43),
+        requestId: "22222222-2222-4222-8222-222222222222",
+        deviceName: "Replay",
+        bytes,
+        now: now + 2,
+      }),
     /expired or already used/,
+  );
+  const [device] = listPlayerImportDevices(fixture.database, fixture.userId);
+  assert.equal(device?.name, "Gaming PC");
+  const storedDevice = fixture.database
+    .prepare(
+      "select token_hash as tokenHash from player_import_devices where id = ?",
+    )
+    .get(imported.deviceId) as { tokenHash: string };
+  assert.notEqual(storedDevice.tokenHash, nextToken);
+  assert.equal(storedDevice.tokenHash.length, 64);
+
+  const rotatedToken = "C".repeat(43);
+  const rotationRequestId = "33333333-3333-4333-8333-333333333333";
+  assert.equal(
+    applyWarframeUpdaterImport(fixture.database, {
+      token: nextToken,
+      nextToken: rotatedToken,
+      requestId: rotationRequestId,
+      deviceId: imported.deviceId,
+      bytes,
+      now: now + 2,
+    }).replayed,
+    false,
+  );
+  assert.equal(
+    applyWarframeUpdaterImport(fixture.database, {
+      token: nextToken,
+      nextToken: rotatedToken,
+      requestId: rotationRequestId,
+      deviceId: imported.deviceId,
+      bytes,
+      now: now + 3,
+    }).replayed,
+    true,
+  );
+  assert.deepEqual(
+    fixture.database
+      .prepare(
+        "select count(*) as count from player_import_device_events where device_id = ?",
+      )
+      .get(imported.deviceId),
+    { count: 3 },
+  );
+  assert.equal(
+    revokePlayerImportDevice(
+      fixture.database,
+      fixture.userId,
+      imported.deviceId,
+      now + 4,
+    ),
+    true,
+  );
+  assert.throws(
+    () =>
+      applyWarframeUpdaterImport(fixture.database, {
+        token: rotatedToken,
+        nextToken: "D".repeat(43),
+        requestId: "44444444-4444-4444-8444-444444444444",
+        deviceId: imported.deviceId,
+        bytes,
+        now: now + 5,
+      }),
+    /revoked or unknown/,
   );
 });
 
-test("expired and cancelled updater pairings cannot import", async (context) => {
+test("expired and cancelled updater pairings cannot create devices", async (context) => {
   const fixture = await createFixture(context);
   const now = 1_800_000_000_000;
   const expired = createPlayerImportPairing(
@@ -413,15 +483,16 @@ test("expired and cancelled updater pairings cannot import", async (context) => 
   const expiredToken = expired.pairingCode.split(":").at(-1)!;
   assert.throws(
     () =>
-      applyPairedWarframeApiHelperImport(
-        fixture.database,
-        expiredToken,
-        new Uint8Array([123, 125]),
-        expired.expiresAt,
-      ),
+      applyWarframeUpdaterImport(fixture.database, {
+        token: expiredToken,
+        nextToken: "E".repeat(43),
+        requestId: "55555555-5555-4555-8555-555555555555",
+        deviceName: "Expired",
+        bytes: new Uint8Array([123, 125]),
+        now: expired.expiresAt,
+      }),
     /expired or already used/,
   );
-
   const cancelled = createPlayerImportPairing(
     fixture.database,
     fixture.userId,
@@ -462,14 +533,16 @@ test("invalid updater payloads fail closed and consume their pairing", async (co
     now,
   );
   const token = pairing.pairingCode.split(":").at(-1)!;
+  const request = {
+    token,
+    nextToken: "F".repeat(43),
+    requestId: "66666666-6666-4666-8666-666666666666",
+    deviceName: "Invalid payload",
+    bytes: new TextEncoder().encode("{not json"),
+    now: now + 1,
+  };
   assert.throws(
-    () =>
-      applyPairedWarframeApiHelperImport(
-        fixture.database,
-        token,
-        new TextEncoder().encode("{not json"),
-        now + 1,
-      ),
+    () => applyWarframeUpdaterImport(fixture.database, request),
     /valid UTF-8 JSON/,
   );
   const failed = getPlayerImportPairing(
@@ -482,15 +555,117 @@ test("invalid updater payloads fail closed and consume their pairing", async (co
   assert.match(failed?.error ?? "", /valid UTF-8 JSON/);
   assert.throws(
     () =>
-      applyPairedWarframeApiHelperImport(
-        fixture.database,
-        token,
-        new TextEncoder().encode(JSON.stringify(snapshotDocument())),
-        now + 2,
-      ),
+      applyWarframeUpdaterImport(fixture.database, {
+        ...request,
+        bytes: new TextEncoder().encode(JSON.stringify(snapshotDocument())),
+        now: now + 2,
+      }),
     /expired or already used/,
   );
 });
+
+test("updater devices enforce request limits and cap audit history", async (context) => {
+  const fixture = await createFixture(context);
+  const now = 1_800_000_000_000;
+  const pairing = createPlayerImportPairing(
+    fixture.database,
+    fixture.userId,
+    "https://ordis.example.test",
+    now,
+  );
+  const pairingToken = pairing.pairingCode.split(":").at(-1)!;
+  const bytes = new TextEncoder().encode(JSON.stringify(snapshotDocument()));
+  let currentToken = updaterToken(0);
+  const paired = applyWarframeUpdaterImport(fixture.database, {
+    token: pairingToken,
+    nextToken: currentToken,
+    requestId: updaterRequestId(0),
+    deviceName: "Rate limited PC",
+    bytes,
+    now: now + 1,
+  });
+  for (let index = 1; index < 12; index += 1) {
+    const nextToken = updaterToken(index);
+    applyWarframeUpdaterImport(fixture.database, {
+      token: currentToken,
+      nextToken,
+      requestId: updaterRequestId(index),
+      deviceId: paired.deviceId,
+      bytes,
+      now: now + index + 1,
+    });
+    currentToken = nextToken;
+  }
+  assert.throws(
+    () =>
+      applyWarframeUpdaterImport(fixture.database, {
+        token: currentToken,
+        nextToken: updaterToken(12),
+        requestId: updaterRequestId(12),
+        deviceId: paired.deviceId,
+        bytes,
+        now: now + 20,
+      }),
+    /rate limit/,
+  );
+  assert.match(
+    listPlayerImportDevices(fixture.database, fixture.userId)[0]?.lastError ??
+      "",
+    /rate limit/,
+  );
+  for (let index = 13; index < 114; index += 1) {
+    const nextToken = updaterToken(index);
+    applyWarframeUpdaterImport(fixture.database, {
+      token: currentToken,
+      nextToken,
+      requestId: updaterRequestId(index),
+      deviceId: paired.deviceId,
+      bytes,
+      now: now + index * 60 * 60_000,
+    });
+    currentToken = nextToken;
+  }
+  assert.deepEqual(
+    fixture.database
+      .prepare(
+        "select count(*) as count from player_import_device_events where device_id = ?",
+      )
+      .get(paired.deviceId),
+    { count: 100 },
+  );
+  assert.equal(
+    listPlayerImportDevices(fixture.database, fixture.userId)[0]?.lastError,
+    undefined,
+  );
+
+  for (let index = 0; index < 4; index += 1)
+    createPlayerImportPairing(
+      fixture.database,
+      fixture.userId,
+      "https://ordis.example.test",
+      now + 100 + index,
+    );
+  assert.throws(
+    () =>
+      createPlayerImportPairing(
+        fixture.database,
+        fixture.userId,
+        "https://ordis.example.test",
+        now + 200,
+      ),
+    /Too many updater pairings/,
+  );
+});
+
+function updaterToken(index: number): string {
+  return index.toString(36).padStart(3, "0") + "A".repeat(40);
+}
+
+function updaterRequestId(index: number): string {
+  return `${index.toString(16).padStart(8, "0")}-1234-4234-8234-${index
+    .toString(16)
+    .padStart(12, "0")}`;
+}
 
 async function createFixture(context: test.TestContext) {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "ordis-alecaframe-"));
