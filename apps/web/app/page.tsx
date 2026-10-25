@@ -13,27 +13,27 @@ export const dynamic = "force-dynamic";
 const launchCards = [
   {
     href: "/star-chart",
-    code: "NAVIGATION",
-    title: "Plot the next run",
-    body: "See what each node offers, what remains unowned, and what stands between you and launch.",
+    code: "STAR CHART",
+    title: "Explore mission routes",
+    body: "See each node, its rewards, and the requirements between you and your next destination.",
   },
   {
     href: "/world-state",
-    code: "SYSTEM PULSE",
-    title: "Catch the right window",
-    body: "Track fissures, traders, alerts and cycles without keeping another clock open.",
+    code: "CYCLES",
+    title: "Track live activity",
+    body: "Check fissures, traders, events, and changing cycles without keeping another clock open.",
   },
   {
     href: "/builds",
-    code: "ARSENAL",
-    title: "Keep the whole loadout",
-    body: "Save equipment, modular parts, mods and enhancements as one shareable configuration.",
+    code: "BUILDS",
+    title: "Configure a loadout",
+    body: "Save equipment, modular parts, mods, and enhancements as one shareable build.",
   },
   {
     href: "/discovery",
-    code: "ARCHIVES",
-    title: "Find what you missed",
-    body: "Track quests, systems, bosses, abilities and secrets through a connected progression map.",
+    code: "PROGRESSION",
+    title: "Discover more systems",
+    body: "Track quests, mechanics, bosses, abilities, and secrets through their sourced connections.",
   },
 ];
 

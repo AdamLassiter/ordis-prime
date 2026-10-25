@@ -28,12 +28,12 @@ export default async function SharedBuildPage({
   return (
     <>
       <p className="eyebrow">
-        {build.title} · Shared immutable build · Revision {build.revision}
+        {build.title} · Shared build · Revision {build.revision}
       </p>
       {build.category && <span className="tag">{build.category}</span>}
       {build.notes && <p className="lede build-notes">{build.notes}</p>}
       <p className="muted">
-        Immutable snapshot published {formatInstant(build.sharedAt)}
+        Read-only version published {formatInstant(build.sharedAt)}
       </p>
       {session ? (
         <form action={cloneSharedBuildToDraft.bind(null, shareKey)}>

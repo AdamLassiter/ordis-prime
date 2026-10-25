@@ -10,7 +10,7 @@ test("primary destinations are ordered in task-oriented groups", () => {
     PRIMARY_NAVIGATION_GROUPS.map((group) => group.map(([, label]) => label)),
     [
       ["Codex", "Progression", "Star Chart", "Cycles", "Alerts"],
-      ["Arsenal", "Tier Lists", "Market"],
+      ["Builds", "Tier Lists", "Market"],
       ["Planner", "Inventory"],
     ],
   );

@@ -170,12 +170,12 @@ export default async function BuildEditor({
             ))}
           </div>
         ) : (
-          <p className="notice">No published snapshots yet.</p>
+          <p className="notice">No published versions yet.</p>
         )}
       </section>
       <section className="build-publish">
         <form action={shareBuild.bind(null, id)}>
-          <button className="button">Publish immutable snapshot</button>
+          <button className="button">Publish</button>
         </form>
         <form action={cloneBuild.bind(null, id)}>
           <button className="nav-button">Clone draft</button>

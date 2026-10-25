@@ -14,7 +14,7 @@ export const PRIMARY_NAVIGATION_GROUPS: readonly (readonly NavigationEntry[])[] 
       ["/todos", "Alerts", true],
     ],
     [
-      ["/builds", "Arsenal", true],
+      ["/builds", "Builds", true],
       ["/rankings", "Tier Lists"],
       ["/index", "Market"],
     ],

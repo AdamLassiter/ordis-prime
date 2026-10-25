@@ -19,7 +19,7 @@ or action they provide:
 
 1. Codex, Progression, Star Chart, Cycles, and Alerts cover game knowledge,
    progress, locations, and changing world state.
-2. Arsenal, Tier Lists, and Market cover loadouts and equipment evaluation.
+2. Builds, Tier Lists, and Market cover loadouts and equipment evaluation.
 3. Planner and Inventory cover the player's acquisition intent and possessions.
 4. Provenance, Crew, Operator, and Sign Out cover evidence and account
    operations.

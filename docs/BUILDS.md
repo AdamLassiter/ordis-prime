@@ -2,7 +2,7 @@
 
 Builds are private, revisioned drafts composed from canonical catalog entities.
 They may contain any subset of the supported loadout. The editor and immutable
-share route use the same focused Arsenal presentation: a ten-card rail selects
+share route use the same focused in-game-style presentation: a ten-card rail selects
 Warframe, Primary, Secondary, Melee, Companion, Companion Weapon, Archwing,
 Archgun, Archwing Melee, or a combined Operator/Amp panel. The selected item
 alone supplies the stats, configuration and applicable arcanes; build metadata,

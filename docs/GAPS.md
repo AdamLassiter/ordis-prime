@@ -232,7 +232,7 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   Read, expired alerts have configurable time-based retention; unread and
   non-expiring alert history is deliberately not pruned automatically.
 - Private, revisioned build persistence supports partial equipment loadouts in
-  a focused Arsenal rail, positioned mods, reduced mod ranks, configuration labels, Forma counts,
+  a focused build rail, positioned mods, reduced mod ranks, configuration labels, Forma counts,
   capacity-upgrade flags, notes and immutable unlisted share snapshots.
   Authenticated editor and public snapshot routes use canonical catalog links. Sourced mod
   maximum-rank, base-drain and polarity facts validate selected ranks and expose

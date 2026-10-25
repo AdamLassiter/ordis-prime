@@ -1,4 +1,4 @@
-# Todos and dynamic watches
+# Todos, alarms, and alerts
 
 Ordis Prime aims to combine ordinary player-authored tasks with dynamic tasks
 and alerts derived from current game state. Both are private player state and
@@ -30,9 +30,9 @@ Completing an occurrence preserves it as history and creates the next open task
 from the previous due date. A unique predecessor key makes repeated completion
 requests—and reopening then re-completing an old occurrence—idempotent.
 
-## Dynamic watches and alerts
+## Dynamic alarms and alerts
 
-World-state watches are rules over normalized window kind, label, state and node
+World-state alarms are stored as watch rules over normalized window kind, label, state and node
 fields, not raw WFCD JSON. A watch triggers when a matching window is active,
 approaching activation, or approaching expiry. Lead time is configurable from
 zero to seven days.

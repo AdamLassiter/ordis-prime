@@ -13,10 +13,10 @@ export default async function BuildsPage() {
   const builds = listPlayerBuilds(getDatabase(), session.user.id);
   return (
     <>
-      <p className="eyebrow">Arsenal · private player data</p>
+      <p className="eyebrow">Builds · private player data</p>
       <p className="lede">
         Configure complete loadouts with mods and enhancements, then publish an
-        immutable snapshot when a build is ready to share.
+        read-only version when a build is ready to share.
       </p>
       <div className="page-workspace">
         <form className="card form-stack build-create" action={addBuild}>

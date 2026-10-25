@@ -27,22 +27,22 @@ export default async function TodosPage() {
     <>
       <p className="eyebrow">Alerts · private player data</p>
       <p className="lede">
-        Create alerts for cycles, fissures, traders, and events. Collection
-        tasks remain in the acquisition plan.
+        Set alarms for cycles, fissures, traders, and events. Collection tasks
+        remain in the acquisition plan.
       </p>
       <div className="dashboard-columns">
         {notifications.length > 0 && (
           <NotificationSection notifications={notifications} />
         )}
         <section className="planner-section">
-          <h2>Signal watches</h2>
+          <h2>Alarms</h2>
           <form className="card form-stack todo-create" action={addWatch}>
             <p className="muted">
               Filters are case-insensitive. Leave text filters blank to watch
               every window of that kind.
             </p>
             <WatchFields />
-            <button className="button">Add watch</button>
+            <button className="button">Add alarm</button>
           </form>
           {watches.length > 0 && (
             <div className="watch-list preference-collection">
@@ -97,18 +97,18 @@ export default async function TodosPage() {
                     </form>
                     <form action={removeWatch.bind(null, watch.id)}>
                       <button className="nav-button danger-text">
-                        Delete watch and its alerts
+                        Delete alarm and its alerts
                       </button>
                     </form>
                   </div>
                   <details>
-                    <summary>Edit watch</summary>
+                    <summary>Edit alarm</summary>
                     <form
                       className="form-stack compact-form"
                       action={editWatch.bind(null, watch.id)}
                     >
                       <WatchFields watch={watch} />
-                      <button className="nav-button">Save watch</button>
+                      <button className="nav-button">Save alarm</button>
                     </form>
                   </details>
                 </article>

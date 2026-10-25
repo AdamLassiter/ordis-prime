@@ -82,7 +82,7 @@ export default function StarChartLayoutPage() {
       </p>
       <p>
         <Link className="nav-button" href="/star-chart">
-          ← Return to Navigation
+          ← Return to Star Chart
         </Link>
       </p>
       <section className="card form-stack">
@@ -348,7 +348,7 @@ export default function StarChartLayoutPage() {
         <h2>Import or export layout data</h2>
         <p className="muted">
           Save the exported file as{" "}
-          <code>data/manual/star-chart-layout.json</code>. Navigation reads that
+          <code>data/manual/star-chart-layout.json</code>. Star Chart reads that
           file on its next request and falls back to a derived layout for
           anything not yet traced.
         </p>

@@ -1,4 +1,4 @@
-# 0100: Builds use focused Arsenal panels
+# 0100: Builds use focused equipment panels
 
 Status: accepted
 
