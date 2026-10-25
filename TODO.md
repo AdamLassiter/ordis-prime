@@ -11,7 +11,7 @@ Once completed, git commits should be written for each todo item.
 - [x] Operator > Saving interface preferences now reloads the persisted values and confirms the save instead of restoring stale dropdown defaults
 - [x] Codex > Lede now uses the same shared typography as other page ledes
 - [x] Codex > Repeated card grids, including Catalog records, Progression, and Star Chart nodes, now use at most four responsive columns instead of producing seven narrow cards
-- [ ] Codex > Search correctly stretches the input box across the full width of the screen, but Progression > Search does not (as well as a few others, e.g. Inventory search box)
+- [x] Search fields now expand through available filter width in Progression, Inventory, Tier Lists, and Market, matching the full-width Codex search behavior
 - [ ] Lots of text and language could be revised to better fit amongst more recent language changes
   - Navigation / System Pulse / Arsenal / Archives cards on Codex should be updated
   - Alerts > Signal watches could probably just be 'Alarms'

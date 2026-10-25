@@ -1074,6 +1074,18 @@ textarea:focus {
 .inline-form input {
   width: 8rem;
 }
+.search-filter-form {
+  width: 100%;
+  max-width: none;
+}
+.search-filter-form .search-field {
+  flex: 1 1 24rem;
+  max-width: none;
+}
+.search-filter-form .search-field input {
+  width: 100%;
+  max-width: none;
+}
 .requirement-list {
   max-width: 42rem;
   padding: 0;

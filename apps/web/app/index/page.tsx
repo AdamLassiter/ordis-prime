@@ -752,11 +752,11 @@ function IndexFilters({
   children?: React.ReactNode;
 }) {
   return (
-    <form className="card index-filters">
+    <form className="card index-filters search-filter-form">
       <input type="hidden" name="section" value={section} />
       <input type="hidden" name="sort" value={sort.key} />
       <input type="hidden" name="dir" value={sort.direction} />
-      <label>
+      <label className="search-field">
         Search
         <input name="q" defaultValue={query} placeholder="Item name…" />
       </label>

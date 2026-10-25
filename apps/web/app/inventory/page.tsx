@@ -68,8 +68,8 @@ export default async function InventoryPage({
         Mastery totals count eligible catalog entries, not Mastery Rank XP: item
         XP values are not yet sourced consistently enough for an exact forecast.
       </p>
-      <form className="index-filters collection-filters">
-        <label>
+      <form className="index-filters collection-filters search-filter-form">
+        <label className="search-field">
           Search
           <input
             name="q"

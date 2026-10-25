@@ -41,8 +41,8 @@ export default async function RankingsPage({
         Compare tier lists side by side without flattening away their different
         scales, scopes or source notes.
       </p>
-      <form className="card form-stack ranking-filters">
-        <label>
+      <form className="card form-stack ranking-filters search-filter-form">
+        <label className="search-field">
           Item
           <input name="q" defaultValue={q} placeholder="Filter ranked items…" />
         </label>

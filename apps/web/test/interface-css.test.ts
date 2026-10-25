@@ -23,3 +23,21 @@ test("card collections render at no more than four columns", () => {
     /@media \(max-width: 600px\)[\s\S]*?\.layout-cards \.grid,[\s\S]*?grid-template-columns: minmax\(0, 1fr\)/u,
   );
 });
+
+test("page-level search fields consume the available filter width", async () => {
+  assert.match(
+    css,
+    /\.search-filter-form \.search-field input\s*\{[^}]*width: 100%;[^}]*max-width: none;/u,
+  );
+
+  for (const page of [
+    "../app/discovery/page.tsx",
+    "../app/inventory/page.tsx",
+    "../app/rankings/page.tsx",
+    "../app/index/page.tsx",
+  ]) {
+    const source = await readFile(new URL(page, import.meta.url), "utf8");
+    assert.match(source, /search-filter-form/u, page);
+    assert.match(source, /className="search-field"/u, page);
+  }
+});

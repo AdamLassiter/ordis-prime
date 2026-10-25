@@ -59,8 +59,8 @@ export default async function DiscoveryPage({
         Track the quests, abilities, enemies, mechanics, and secrets you have
         discovered, then follow their cited relationships.
       </p>
-      <form className="inline-form">
-        <label>
+      <form className="inline-form search-filter-form">
+        <label className="search-field">
           Search
           <input name="q" defaultValue={q} placeholder="Search discoveries…" />
         </label>
