@@ -7,9 +7,14 @@ import { PlayerDataImport } from "./player-data-import";
 
 export const dynamic = "force-dynamic";
 
-export default async function AccountPage() {
+export default async function AccountPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ preferences?: string }>;
+}) {
   const session = await getCurrentSession();
   if (!session) redirect("/sign-in");
+  const query = await searchParams;
   const preferences = getPlayerPreferences(getDatabase(), session.user.id);
   return (
     <>
@@ -21,6 +26,11 @@ export default async function AccountPage() {
       </section>
       <section className="card build-details">
         <h2>Interface preferences</h2>
+        {query.preferences === "saved" && (
+          <p className="notice" role="status">
+            Interface preferences saved.
+          </p>
+        )}
         <p className="muted">
           These private preferences apply to supported collection views and are
           included in profile exports. Status remains labeled even when visual

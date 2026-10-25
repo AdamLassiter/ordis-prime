@@ -8,7 +8,7 @@ when the database was captured.
 Once completed, git commits should be written for each todo item.
 
 - [x] Operator > Collection layout now applies shared card or compact-row presentation to Codex, Progression, Star Chart, Cycles, Alerts, and Tier Lists, while purpose-built maps, forms, graphs, and semantic tables retain their native layouts
-- [ ] Operator > Save interface preferences resets the dropdowns to their old state not their new state, which is misleading
+- [x] Operator > Saving interface preferences now reloads the persisted values and confirms the save instead of restoring stale dropdown defaults
 - [ ] Codex > Lede has a larger font size than other ledes
 - [ ] Codex > Catalog records and Progression cards (possibly others?) have 7 cards per row - this is too narrow per card and should be more like 4 per row
 - [ ] Codex > Search correctly stretches the input box across the full width of the screen, but Progression > Search does not (as well as a few others, e.g. Inventory search box)

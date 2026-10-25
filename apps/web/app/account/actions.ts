@@ -41,4 +41,5 @@ export async function updateInterfacePreferences(form: FormData) {
     collectionHighlighting,
   } as PlayerPreferences);
   revalidatePath("/", "layout");
+  redirect("/account?preferences=saved");
 }

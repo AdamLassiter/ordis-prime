@@ -35,3 +35,18 @@ test("collection-heavy pages opt into the shared layout preference", async () =>
     assert.match(source, /preference-card/, page);
   }
 });
+
+test("saving preferences reloads the persisted values instead of stale defaults", async () => {
+  const action = await readFile(
+    new URL("../app/account/actions.ts", import.meta.url),
+    "utf8",
+  );
+  const page = await readFile(
+    new URL("../app/account/page.tsx", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(action, /redirect\("\/account\?preferences=saved"\)/);
+  assert.match(page, /preferences\.collectionLayout/);
+  assert.match(page, /Interface preferences saved\./);
+});
