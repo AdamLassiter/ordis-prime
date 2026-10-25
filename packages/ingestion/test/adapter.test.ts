@@ -482,6 +482,11 @@ test("WFCD adapter classifies provider taxonomy and retains embedded item drops"
   );
   assert.equal(drop?.chance, 0.1);
   assert.equal(drop?.rewardExternalId.value, "/nokko-neuroptics");
+  assert.deepEqual(drop?.nodeExternalId, {
+    sourceId: "warframe-wiki-missions",
+    namespace: "mission-name",
+    value: "Deepmines",
+  });
 });
 
 test("WFCD adapter maps arcane classes into source-neutral compatibility facts", async () => {
@@ -738,7 +743,7 @@ test("WFCD adapter defaults to the maintained aggregate endpoint", async () => {
     const adapter = new WfcdItemsAdapter();
     const fetched = await adapter.fetch({});
     assert.equal(requestedUrl, DEFAULT_WFCD_ITEMS_URL);
-    assert.equal(fetched.version, "fixture-etag|wfcd-items-v17");
+    assert.equal(fetched.version, "fixture-etag|wfcd-items-v18");
     assert.equal(adapter.minimumRetainedObservationRatio, 0.5);
   } finally {
     globalThis.fetch = originalFetch;

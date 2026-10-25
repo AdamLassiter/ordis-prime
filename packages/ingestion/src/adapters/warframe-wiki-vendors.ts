@@ -21,9 +21,10 @@ import {
   wikiSlug,
 } from "./mediawiki-lua.ts";
 
-const PARSER_VERSION = "warframe-wiki-vendors-v5";
+const PARSER_VERSION = "warframe-wiki-vendors-v6";
 const VENDOR_MODULE = "Module:Vendors/data";
 const NIGHTCAP_PAGE = "Nightcap";
+const BOUNTY_PAGE = "Bounty";
 
 interface Offering {
   name: string;
@@ -54,7 +55,7 @@ export class WarframeWikiVendorsAdapter implements SourceAdapter {
   async fetch(context: FetchContext): Promise<Snapshot> {
     return fetchMediaWikiPagesSnapshot({
       apiUrl: this.apiUrl,
-      pageTitles: [VENDOR_MODULE, NIGHTCAP_PAGE],
+      pageTitles: [VENDOR_MODULE, NIGHTCAP_PAGE, BOUNTY_PAGE],
       sourceId: this.source.id,
       parserVersion: PARSER_VERSION,
       signal: context.signal,
@@ -64,10 +65,10 @@ export class WarframeWikiVendorsAdapter implements SourceAdapter {
   }
 
   async *parse(snapshot: Snapshot): AsyncIterable<Observation> {
-    const [modulePage, nightcapPage] = readMediaWikiPages(snapshot.bytes, [
-      VENDOR_MODULE,
-      NIGHTCAP_PAGE,
-    ]);
+    const [modulePage, nightcapPage, bountyPage] = readMediaWikiPages(
+      snapshot.bytes,
+      [VENDOR_MODULE, NIGHTCAP_PAGE, BOUNTY_PAGE],
+    );
     const root = parseLuaReturnTable(modulePage!.content, modulePage!.title);
     const vendors = luaLiteralField(root, "Vendors");
     if (vendors?.type !== "TableConstructorExpression")
@@ -207,7 +208,55 @@ export class WarframeWikiVendorsAdapter implements SourceAdapter {
         "Nightcap:location",
       ),
     };
+
+    const bountyNames = deepminesBountyNames(bountyPage!.content);
+    yield {
+      type: "entity-attribute",
+      subjectExternalId: vendorExternalId("Nightcap"),
+      key: "deepmines-bounties",
+      label: "Deepmines bounties",
+      value: bountyNames.join(" · "),
+      evidence: evidence(
+        snapshot,
+        bountyPage!.title,
+        bountyPage!.revisionId,
+        "Bounty:Deepmines:mission-bounties",
+      ),
+    };
+    yield {
+      type: "entity-relation",
+      kind: "involves",
+      fromExternalId: vendorExternalId("Nightcap"),
+      toExternalId: {
+        sourceId: "warframe-wiki-missions",
+        namespace: "mission-name",
+        value: "Deepmines",
+      },
+      notes: `Bounty giver for ${bountyNames.join(", ")}.`,
+      evidence: evidence(
+        snapshot,
+        bountyPage!.title,
+        bountyPage!.revisionId,
+        "Bounty:Deepmines:mission-bounties",
+      ),
+    };
   }
+}
+
+function deepminesBountyNames(content: string): string[] {
+  const section = content.match(
+    /==Deepmines Bounties==(?<body>[\s\S]*?)(?=\n==[^=]|$)/u,
+  )?.groups?.body;
+  const names = section
+    ? [...section.matchAll(/^\| Tier [123] \(([^)]+)\) \|\|/gmu)].map((match) =>
+        match[1]!.trim(),
+      )
+    : [];
+  if (names.length !== 3)
+    throw new Error(
+      "WARFRAME Wiki Bounty has no three Deepmines mission bounties",
+    );
+  return names;
 }
 
 function parseOfferings(

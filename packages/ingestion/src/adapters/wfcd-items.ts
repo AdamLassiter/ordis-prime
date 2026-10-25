@@ -88,7 +88,7 @@ const categories: Record<string, EntityKind> = {
   Skins: "cosmetic",
 };
 export const DEFAULT_WFCD_ITEMS_URL = "https://api.warframestat.us/items";
-const PARSER_VERSION = "wfcd-items-v17";
+const PARSER_VERSION = "wfcd-items-v18";
 const ARCHON_SHARD_PREFIX = "/Lotus/Types/Gameplay/NarmerSorties/ArchonCrystal";
 const resourceTypes = new Set([
   "Resource",
@@ -783,6 +783,7 @@ function* dropObservations(
 ): Generator<Observation> {
   for (const [index, drop] of (item.drops ?? []).entries()) {
     if (!drop.location) continue;
+    const nodeExternalId = dropNodeExternalId(drop.location);
     yield {
       type: "drop",
       rewardExternalId: {
@@ -790,6 +791,7 @@ function* dropObservations(
         namespace: "uniqueName",
         value: rewardId,
       },
+      nodeExternalId,
       locationLabel: drop.location,
       chance: typeof drop.chance === "number" ? drop.chance / 100 : undefined,
       rotation: drop.rotation,
@@ -800,6 +802,20 @@ function* dropObservations(
       },
     };
   }
+}
+
+function dropNodeExternalId(location: string) {
+  if (
+    /^Nokko: .+(?:(?: Rewards)? \(Steel Path\)| Rewards), Rotation [ABC]$/u.test(
+      location,
+    )
+  )
+    return {
+      sourceId: "warframe-wiki-missions",
+      namespace: "mission-name",
+      value: "Deepmines",
+    } as const;
+  return undefined;
 }
 function weaponClassFor(
   item: Pick<WfcdItem, "category" | "type" | "productCategory">,

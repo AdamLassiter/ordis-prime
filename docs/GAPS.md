@@ -331,10 +331,11 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   cited relations. The graph uses transient deterministic ring positions; a
   global or multi-hop spatial layout remains.
 - Vendor discovery is intentionally narrow. Nightcap has a cited Fortuna
-  location, Fergolyte-priced offerings and Deepmines context. Other structured
-  vendor records are not promoted until an independently cited canonical node
-  mapping is reviewed; bounty rotations and random reward chances are not yet
-  modeled as vendor facts.
+  location, Fergolyte-priced offerings, a linked Deepmines activity, and the
+  three named Deepmines bounties. WFCD's Nokko reward rows link to Deepmines
+  while preserving exact rotation labels and chances. Other structured vendor
+  records are not promoted until an independently cited canonical node mapping
+  is reviewed; broader bounty schedules are not yet modeled as vendor facts.
 - Warframe.market's public v2 item manifest bridges tradable slugs through game
   references. Catalog pages load the current top online buy and sell offers on
   demand with a one-minute server cache and a direct listings link. Orders are

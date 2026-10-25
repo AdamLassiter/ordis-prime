@@ -18,5 +18,6 @@ do not infer locations for the remaining vendor module entries.
 ## Consequences
 
 Nightcap, Nokko parts and Fergolyte are discoverable together without weakening
-identity rules. Vendor coverage is intentionally incomplete, and Deepmines
-bounty rotations still need a dedicated typed model.
+identity rules. Vendor coverage is intentionally incomplete. ADR 0118 extends
+this decision with a separately cited Deepmines activity link and maps Nokko
+drop rows to Deepmines without inventing a node per reward rotation.

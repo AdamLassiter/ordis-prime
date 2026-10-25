@@ -104,6 +104,27 @@ test("wiki vendor adapter imports priced offerings and a cited node link", async
     ),
     true,
   );
+  assert.equal(
+    observations.some(
+      (observation) =>
+        observation.type === "entity-attribute" &&
+        observation.key === "deepmines-bounties" &&
+        observation.value ===
+          "Critter Liberation · Corporate Restructuring · Weed The Garden",
+    ),
+    true,
+  );
+  assert.equal(
+    observations.some(
+      (observation) =>
+        observation.type === "entity-relation" &&
+        observation.kind === "involves" &&
+        observation.fromExternalId.value === "Nightcap" &&
+        observation.toExternalId.value === "Deepmines" &&
+        observation.notes?.includes("Corporate Restructuring"),
+    ),
+    true,
+  );
 });
 
 function wikiSnapshot(moduleContent: string): Snapshot {
@@ -126,6 +147,30 @@ function wikiSnapshot(moduleContent: string): Snapshot {
               {
                 revid: 456,
                 slots: { main: { content: "Nightcap is in Fortuna." } },
+              },
+            ],
+          },
+          {
+            title: "Bounty",
+            revisions: [
+              {
+                revid: 789,
+                slots: {
+                  main: {
+                    content: `
+==Deepmines Bounties==
+===Mission Bounties===
+{| class="wikitable"
+| Tier 1 (Critter Liberation) || 30-40 || Entrance Caves & Corpus Labs
+|-
+| Tier 2 (Corporate Restructuring) || 30-40 || Entrance Caves & Forward Base
+|-
+| Tier 3 (Weed The Garden) || 30-40 || Entrance Caves & Nutrient Processing
+|}
+==Other Bounties==
+`,
+                  },
+                },
               },
             ],
           },

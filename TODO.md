@@ -20,8 +20,7 @@ Once completed, git commits should be written for each todo item.
 - [x] Market > Relics / Syndicate mods / Arcanes now reuses the Star Chart view-tab styling and accessible current-page state
 - [x] Market price coverage and refresh time now appear as one quiet explanatory sentence above the view tabs instead of a prominent status panel
 - [x] Planner > Still required is now a responsive semantic table with item, type, quantity, and collection-state columns
-- [ ] Planner > candidate nodes > 'Nokko: Corporate Restructuring Rewards, Rotation B' doesn't link to anything - this suggests either the links here are broken, or more likely that there's a number of map nodes such as those in the deepmines that are missing (these only really come from vendor quests, they don't explicitly appear on the star chart)
-  - Codex > Nightcap (vendor) doesn't list any of the nokko bounties as linked
+- [x] Planner > Nokko bounty candidates now retain their exact bounty/rotation labels while linking to the canonical Deepmines node; Nightcap names the three Deepmines bounties and links to the activity without creating synthetic Star Chart nodes for reward rotations
 - [ ] Codex > Daughter (or any other vendor) should show their location more obviously, rather than just an 'orccurs at' related discovery
 - [ ] For simplicity, there should be options for marking all progression complete, or at least a bulk multi-select in table view
   - There should simlilarly be bulk actions for marking the whole star chart as visited (in normal difficulty and steel path difficulty separately), as well as marking a whole planet/area as visited
