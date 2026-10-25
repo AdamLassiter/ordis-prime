@@ -48,3 +48,15 @@ test("Codex search follows its launch cards and precedes results", async () => {
   assert.ok(search > launch);
   assert.ok(results > search);
 });
+
+test("Market freshness is quiet explanatory copy", async () => {
+  const market = await readFile(
+    new URL("../app/index/page.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(
+    market,
+    /<p className="muted market-status">\{marketStatus\(status\)\}<\/p>/u,
+  );
+  assert.doesNotMatch(market, /notice index-status/u);
+});

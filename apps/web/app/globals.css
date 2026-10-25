@@ -1930,11 +1930,9 @@ textarea:focus {
   white-space: pre-wrap;
 }
 
-.index-status {
-  align-items: center;
-  display: flex;
-  gap: 1rem;
-  justify-content: space-between;
+.market-status {
+  max-width: none;
+  margin: 0.75rem 0 1rem;
 }
 
 .index-filters {
@@ -2037,10 +2035,6 @@ textarea:focus {
 }
 
 @media (max-width: 720px) {
-  .index-status {
-    align-items: flex-start;
-    flex-direction: column;
-  }
   .index-filters {
     align-items: stretch;
     flex-direction: column;

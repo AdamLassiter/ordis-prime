@@ -4,6 +4,7 @@ import {
   listArcaneMarketIndex,
   listRelicMarketIndex,
   listSyndicateModIndex,
+  type MarketIndexStatus,
   type MarketPriceBasis,
 } from "@ordis-prime/db";
 import type { RelicRefinement } from "@ordis-prime/domain";
@@ -39,16 +40,7 @@ export default async function IndexPage({
         Syndicate mods, and inspect Arcane set economics. Values are visible
         offers, not completed sales or guaranteed prices.
       </p>
-      <section className="notice index-status">
-        <strong>
-          {formatCoverage(status.completedCount, status.targetCount)}
-        </strong>
-        <span>
-          {status.status ?? "not refreshed"}
-          {status.finishedAt ? ` · ${formatDate(status.finishedAt)}` : ""}
-          {status.failedCount ? ` · ${status.failedCount} unavailable` : ""}
-        </span>
-      </section>
+      <p className="muted market-status">{marketStatus(status)}</p>
       <nav className="view-tabs" aria-label="Market views">
         {[
           ["relics", "Relics"],
@@ -839,10 +831,18 @@ function signedPlat(value?: number) {
 function percent(value: number) {
   return `${(value * 100).toFixed((value * 100) % 1 ? 2 : 0)}%`;
 }
-function formatCoverage(done: number, total: number) {
-  return total
-    ? `${done.toLocaleString()} / ${total.toLocaleString()} prices`
-    : "Price refresh pending";
+function marketStatus(status: MarketIndexStatus) {
+  if (!status.targetCount) return "Price data has not been refreshed yet.";
+  const coverage = `${status.completedCount.toLocaleString()} of ${status.targetCount.toLocaleString()} tracked items`;
+  const unavailable = status.failedCount
+    ? `; ${status.failedCount.toLocaleString()} unavailable`
+    : "";
+  const refreshed = status.finishedAt
+    ? ` Last refresh ${status.status ?? "completed"} ${formatDate(status.finishedAt)}.`
+    : status.startedAt
+      ? ` Refresh ${status.status ?? "running"} since ${formatDate(status.startedAt)}.`
+      : "";
+  return `Prices currently cover ${coverage}${unavailable}.${refreshed}`;
 }
 function formatDate(value: number) {
   return new Intl.DateTimeFormat("en-GB", {
