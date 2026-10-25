@@ -130,3 +130,31 @@ test("bulk progress controls distinguish chart completion modes", async () => {
   assert.match(nodeForm, /name="normalState"/u);
   assert.match(nodeForm, /name="steelPathState"/u);
 });
+
+test("detail-page account controls share a compact responsive grid", async () => {
+  const [catalog, node, inventoryForm, css] = await Promise.all([
+    readFile(
+      new URL("../app/catalog/[kind]/[slug]/page.tsx", import.meta.url),
+      "utf8",
+    ),
+    readFile(new URL("../app/nodes/[slug]/page.tsx", import.meta.url), "utf8"),
+    readFile(
+      new URL(
+        "../app/catalog/[kind]/[slug]/inventory-form.tsx",
+        import.meta.url,
+      ),
+      "utf8",
+    ),
+    readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+  ]);
+
+  assert.match(catalog, /className="detail-account-grid"/u);
+  assert.match(node, /className="detail-account-grid"/u);
+  assert.match(inventoryForm, /id="your-inventory"/u);
+  assert.match(inventoryForm, /<CollectionStateIndicators/u);
+  assert.match(
+    css,
+    /\.detail-account-grid \{[\s\S]*grid-template-columns: repeat\(auto-fit, minmax\(17rem, 1fr\)\)/u,
+  );
+  assert.match(css, /\.detail-account-grid > \.card \{[\s\S]*margin-top: 0/u);
+});

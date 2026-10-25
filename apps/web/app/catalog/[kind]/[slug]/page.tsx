@@ -18,8 +18,6 @@ import { GoalForm } from "@/app/planner/goal-form";
 import { DiscoveryProgressForm } from "@/app/discovery/progress-form";
 import { addCatalogTodo, addCatalogWatch } from "@/app/todos/actions";
 import { MarketOrders } from "./market-orders";
-import { CollectionStateIndicators } from "@/app/collection-state-indicators";
-import { deriveCollectionState } from "@ordis-prime/domain";
 
 export default async function ItemPage({
   params,
@@ -446,78 +444,73 @@ export default async function ItemPage({
             : "No active provenance recorded"}
         </dd>
       </dl>
-      {discoveryProgress && (
-        <section className="card">
-          <h2>Your discovery progress</h2>
-          <DiscoveryProgressForm
-            kind={kind}
-            slug={slug}
-            state={discoveryProgress}
-          />
-        </section>
-      )}
       {session && (
-        <section className="card goal-editor">
-          <h2>Todo</h2>
-          {openTodo ? (
-            <p>
-              <Link href="/planner#tasks">Open task: {openTodo.title}</Link>
-            </p>
-          ) : (
-            <form action={addCatalogTodo.bind(null, kind, slug)}>
-              <button className="nav-button">Add to my todos</button>
-            </form>
-          )}
+        <section className="detail-account-tools">
+          <h2>Your account</h2>
+          <div className="detail-account-grid">
+            {discoveryProgress && (
+              <section className="card goal-editor">
+                <h2>Discovery progress</h2>
+                <DiscoveryProgressForm
+                  kind={kind}
+                  slug={slug}
+                  state={discoveryProgress}
+                />
+              </section>
+            )}
+            <section className="card goal-editor">
+              <h2>Todo</h2>
+              {openTodo ? (
+                <p>
+                  <Link href="/planner#tasks">Open task: {openTodo.title}</Link>
+                </p>
+              ) : (
+                <form action={addCatalogTodo.bind(null, kind, slug)}>
+                  <button className="nav-button">Add to my todos</button>
+                </form>
+              )}
+            </section>
+            <section className="card goal-editor">
+              <h2>World-state watch</h2>
+              {linkedWatch ? (
+                <p>
+                  <Link href="/todos">
+                    Edit the linked {linkedWatch.kind} watch
+                  </Link>
+                </p>
+              ) : (
+                <>
+                  <p className="muted">
+                    Create an editable watch for live windows reconciled to this
+                    exact catalog entry.
+                  </p>
+                  <form action={addCatalogWatch.bind(null, kind, slug)}>
+                    <button className="nav-button">Watch for this item</button>
+                  </form>
+                </>
+              )}
+            </section>
+            {inventory && (
+              <>
+                <InventoryForm item={inventory} />
+                <section className="card goal-editor">
+                  <h2>Acquisition goal</h2>
+                  <p className="muted">
+                    Set the total number you want to own or build. The planner
+                    subtracts your recorded inventory.
+                  </p>
+                  <GoalForm
+                    kind={kind}
+                    slug={slug}
+                    targetQuantity={goal?.targetQuantity ?? 0}
+                  />
+                </section>
+              </>
+            )}
+          </div>
         </section>
       )}
-      {session && (
-        <section className="card goal-editor">
-          <h2>World-state watch</h2>
-          {linkedWatch ? (
-            <p>
-              <Link href="/todos">
-                Edit the linked {linkedWatch.kind} watch
-              </Link>
-            </p>
-          ) : (
-            <>
-              <p className="muted">
-                Create an editable watch for live windows reconciled to this
-                exact catalog entry.
-              </p>
-              <form action={addCatalogWatch.bind(null, kind, slug)}>
-                <button className="nav-button">Watch for this item</button>
-              </form>
-            </>
-          )}
-        </section>
-      )}
-      {inventory ? (
-        <>
-          <section id="your-inventory" className="collection-detail-state">
-            <CollectionStateIndicators
-              {...deriveCollectionState(inventory)}
-              mastered={inventory.mastered}
-              ownedCount={inventory.ownedCount}
-              builtCount={inventory.builtCount}
-              wantedCount={inventory.wantedCount}
-            />
-          </section>
-          <InventoryForm item={inventory} />
-          <section className="card goal-editor">
-            <h2>Acquisition goal</h2>
-            <p className="muted">
-              Set the total number you want to own or build. The planner
-              subtracts your recorded inventory.
-            </p>
-            <GoalForm
-              kind={kind}
-              slug={slug}
-              targetQuantity={goal?.targetQuantity ?? 0}
-            />
-          </section>
-        </>
-      ) : (
+      {!session && (
         <p className="notice">
           <Link href="/sign-in">Sign in</Link> to track ownership and add
           acquisition goals.

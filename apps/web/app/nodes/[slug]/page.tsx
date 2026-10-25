@@ -73,54 +73,57 @@ export default async function NodePage({
         {node.name} · Public sourced node · private progress overlay
       </p>
       {node.description && <p className="lede">{node.description}</p>}
-      {session && node.completionState && (
-        <section className="card goal-editor">
-          <h2>Node completion</h2>
-          <p className="muted">
-            Track whether you have cleared this node. This private state is
-            independent of catalog access evidence.
-          </p>
-          <NodeCompletionForm
-            normalState={node.completionState}
-            slug={slug}
-            steelPathState={node.steelPathCompletionState ?? "incomplete"}
-          />
-        </section>
-      )}
       {session && (
-        <section className="card goal-editor">
-          <h2>Todo</h2>
-          {openTodo ? (
-            <p>
-              <Link href="/planner#tasks">Open task: {openTodo.title}</Link>
-            </p>
-          ) : (
-            <form action={addCatalogTodo.bind(null, "node", slug)}>
-              <button className="nav-button">Add node to my todos</button>
-            </form>
-          )}
-        </section>
-      )}
-      {session && (
-        <section className="card goal-editor">
-          <h2>World-state watch</h2>
-          {linkedWatch ? (
-            <p>
-              <Link href="/todos">
-                Edit the linked {linkedWatch.kind} watch
-              </Link>
-            </p>
-          ) : (
-            <>
-              <p className="muted">
-                Create an editable watch for active Void Fissures reconciled to
-                this exact node.
-              </p>
-              <form action={addCatalogWatch.bind(null, "node", slug)}>
-                <button className="nav-button">Watch this node</button>
-              </form>
-            </>
-          )}
+        <section className="detail-account-tools">
+          <h2>Your account</h2>
+          <div className="detail-account-grid">
+            {node.completionState && (
+              <section className="card goal-editor">
+                <h2>Node completion</h2>
+                <p className="muted">
+                  Track normal and Steel Path clears independently of catalog
+                  access evidence.
+                </p>
+                <NodeCompletionForm
+                  normalState={node.completionState}
+                  slug={slug}
+                  steelPathState={node.steelPathCompletionState ?? "incomplete"}
+                />
+              </section>
+            )}
+            <section className="card goal-editor">
+              <h2>Todo</h2>
+              {openTodo ? (
+                <p>
+                  <Link href="/planner#tasks">Open task: {openTodo.title}</Link>
+                </p>
+              ) : (
+                <form action={addCatalogTodo.bind(null, "node", slug)}>
+                  <button className="nav-button">Add node to my todos</button>
+                </form>
+              )}
+            </section>
+            <section className="card goal-editor">
+              <h2>World-state watch</h2>
+              {linkedWatch ? (
+                <p>
+                  <Link href="/todos">
+                    Edit the linked {linkedWatch.kind} watch
+                  </Link>
+                </p>
+              ) : (
+                <>
+                  <p className="muted">
+                    Create an editable watch for active Void Fissures reconciled
+                    to this exact node.
+                  </p>
+                  <form action={addCatalogWatch.bind(null, "node", slug)}>
+                    <button className="nav-button">Watch this node</button>
+                  </form>
+                </>
+              )}
+            </section>
+          </div>
         </section>
       )}
       <dl className="facts">

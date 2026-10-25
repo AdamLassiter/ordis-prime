@@ -1,4 +1,6 @@
 import type { PlayerInventoryEntry } from "@ordis-prime/db";
+import { deriveCollectionState } from "@ordis-prime/domain";
+import { CollectionStateIndicators } from "@/app/collection-state-indicators";
 import { updateInventory } from "./inventory-action";
 
 export function InventoryForm({ item }: { item: PlayerInventoryEntry }) {
@@ -6,6 +8,15 @@ export function InventoryForm({ item }: { item: PlayerInventoryEntry }) {
   return (
     <section className="card inventory-editor">
       <h2>Your inventory</h2>
+      <div id="your-inventory">
+        <CollectionStateIndicators
+          {...deriveCollectionState(item)}
+          mastered={item.mastered}
+          ownedCount={item.ownedCount}
+          builtCount={item.builtCount}
+          wantedCount={item.wantedCount}
+        />
+      </div>
       <form className="form-stack" action={action}>
         <div className="count-grid">
           <label>
