@@ -33,7 +33,7 @@ export function WorldStateBoard({
         return (
           <section className="world-state-section" key={kind}>
             <h2>{title}</h2>
-            <div className="grid world-state-grid">
+            <div className="grid world-state-grid preference-collection">
               {entries.map((entry) => (
                 <WorldStateCard
                   key={`${entry.sourceId}:${entry.externalId}`}
@@ -60,7 +60,9 @@ function WorldStateCard({
   const expired = entry.expiry !== undefined && entry.expiry <= now;
   const boundary = upcoming ? entry.activation : entry.expiry;
   return (
-    <article className={`card world-state-card${expired ? " expired" : ""}`}>
+    <article
+      className={`card world-state-card preference-card${expired ? " expired" : ""}`}
+    >
       <div className="world-state-heading">
         <span className={`tag ${upcoming ? "upcoming" : "active"}`}>
           {expired ? "expired" : upcoming ? "upcoming" : "active"}

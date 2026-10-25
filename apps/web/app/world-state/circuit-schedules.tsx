@@ -19,9 +19,9 @@ export function CircuitSchedules({
     <section className="circuit-schedules">
       <p className="eyebrow">Static schedule · weekly reset</p>
       <h2>The Circuit</h2>
-      <div className="grid circuit-current-grid">
+      <div className="grid circuit-current-grid preference-collection">
         {schedules.map((schedule) => (
-          <article className="card" key={schedule.key}>
+          <article className="card preference-card" key={schedule.key}>
             <p className="eyebrow">
               Current · {phaseLabel(schedule, schedule.currentPhaseIndex)}
             </p>

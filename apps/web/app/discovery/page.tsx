@@ -244,10 +244,10 @@ export default async function DiscoveryPage({
         </section>
       )}
       {entries.length ? (
-        <section className="grid">
+        <section className="grid preference-collection">
           {entries.map((entry) => (
             <article
-              className="card discovery-card"
+              className="card discovery-card preference-card"
               key={`${entry.kind}:${entry.slug}`}
             >
               <span className="tag">{entry.kind}</span>

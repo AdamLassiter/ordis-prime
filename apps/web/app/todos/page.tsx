@@ -45,9 +45,12 @@ export default async function TodosPage() {
             <button className="button">Add watch</button>
           </form>
           {watches.length > 0 && (
-            <div className="watch-list">
+            <div className="watch-list preference-collection">
               {watches.map((watch) => (
-                <article className="card watch-card" key={watch.id}>
+                <article
+                  className="card watch-card preference-card"
+                  key={watch.id}
+                >
                   <div>
                     <span className="tag">{watch.kind}</span>
                     {!watch.enabled && <span className="tag">paused</span>}
@@ -197,10 +200,10 @@ function NotificationSection({
   return (
     <section className="planner-section">
       <h2>Alerts</h2>
-      <div className="notification-list">
+      <div className="notification-list preference-collection">
         {notifications.map((notification) => (
           <article
-            className={`card notification-card${notification.readAt === undefined ? " unread" : ""}`}
+            className={`card notification-card preference-card${notification.readAt === undefined ? " unread" : ""}`}
             key={notification.id}
           >
             <div>

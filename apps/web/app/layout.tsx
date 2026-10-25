@@ -6,6 +6,7 @@ import { getPlayerPreferences } from "@ordis-prime/db";
 import { getDatabase } from "@/lib/database";
 import { PrimaryNavigation } from "./primary-navigation";
 import { SessionNavigation } from "./session-navigation";
+import { interfacePreferenceClasses } from "@/lib/interface-preferences";
 import "./globals.css";
 export const metadata: Metadata = {
   title: {
@@ -22,9 +23,7 @@ export default async function Layout({
   const preferences = session
     ? getPlayerPreferences(getDatabase(), session.user.id)
     : undefined;
-  const preferenceClasses = preferences
-    ? `density-${preferences.displayDensity} highlighting-${preferences.collectionHighlighting}`
-    : "density-comfortable highlighting-badges";
+  const preferenceClasses = interfacePreferenceClasses(preferences);
   return (
     <html lang="en">
       <body className={preferenceClasses}>

@@ -82,9 +82,9 @@ export default async function RankingsPage({
       </form>
       {comparison.sets.length ? (
         <>
-          <div className="grid ranking-sources">
+          <div className="grid ranking-sources preference-collection">
             {comparison.sets.map((set) => (
-              <article className="card" key={set.id}>
+              <article className="card preference-card" key={set.id}>
                 <h2>
                   <Link
                     href={`/rankings?set=${encodeURIComponent(set.id)}&sort=tier`}
@@ -142,10 +142,10 @@ export default async function RankingsPage({
                 return tierRows.length ? (
                   <section className="ranking-tier" key={tier}>
                     <h3>{tier}</h3>
-                    <div className="grid">
+                    <div className="grid preference-collection">
                       {tierRows.map((row) => (
                         <Link
-                          className="card"
+                          className="card preference-card"
                           href={`/catalog/${row.entity.kind}/${row.entity.slug}`}
                           key={`${row.entity.kind}:${row.entity.slug}`}
                         >

@@ -215,6 +215,32 @@ h2 {
   gap: 1rem;
   margin-top: 2rem;
 }
+.layout-table .preference-collection {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.4rem;
+}
+.layout-table .preference-card {
+  display: grid;
+  grid-template-columns: minmax(11rem, 0.7fr) minmax(0, 1.3fr);
+  align-items: center;
+  gap: 0.35rem 1rem;
+  min-height: 0;
+  padding: 0.7rem 0.85rem;
+  border-radius: 4px;
+}
+.layout-table .preference-card > h2,
+.layout-table .preference-card > h3,
+.layout-table .preference-card > p {
+  margin-block: 0;
+}
+.layout-table .preference-card:hover {
+  transform: none;
+}
+@media (max-width: 700px) {
+  .layout-table .preference-card {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
 .compact-grid {
   grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
   margin-top: 1rem;

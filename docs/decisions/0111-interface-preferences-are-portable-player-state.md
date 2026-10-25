@@ -29,9 +29,11 @@ status labels remain unconditional and cannot be disabled by a preference.
   owning account.
 - Pages that do not have a meaningful tabular form may keep their purpose-built
   layout while inheriting density and highlighting.
-- The collection workspace is the initial view that supports both card and
-  table layouts. Catalog search, node rewards, the planner, Circuit schedules,
-  and Index tables keep their purpose-built layouts while applying global
-  density and shared state-highlighting preferences.
+- Inventory uses dedicated semantic card and table renderers. Repeated card
+  collections in Codex, Progression, Star Chart, Cycles, Alerts, and Tier Lists
+  use the same saved layout through shared page classes; table mode presents
+  those heterogeneous cards as compact scan-friendly rows. Maps, relationship
+  graphs, forms, and already-tabular comparisons keep their purpose-built
+  layouts while applying global density and state-highlighting preferences.
 - Adding another preference requires a bounded value set, a documented default,
   and a shared consumer rather than page-specific interpretation.

@@ -292,7 +292,7 @@ function SystemOverview({
           })}
         </svg>
       </section>
-      <section className="grid planet-summary-grid">
+      <section className="grid planet-summary-grid preference-collection">
         {planetNames.map((planet) => {
           const nodes = planets.get(planet)!;
           const connectedPlanets = new Set(
@@ -307,7 +307,7 @@ function SystemOverview({
           );
           return (
             <Link
-              className="card planet-summary-card"
+              className="card planet-summary-card preference-card"
               href={starChartHref({ planet, scope })}
               key={planet}
             >
@@ -568,9 +568,9 @@ function PlanetView({
           <button className="button">Save completion</button>
         </form>
       )}
-      <section className="node-grid">
+      <section className="node-grid preference-collection">
         {nodes.map((node) => (
-          <article className="star-node" key={node.slug}>
+          <article className="star-node preference-card" key={node.slug}>
             {session && (
               <input
                 form="star-chart-completion"

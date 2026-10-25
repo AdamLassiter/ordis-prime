@@ -132,7 +132,7 @@ export default async function Home({
             </div>
             <span>{items.length} records</span>
           </div>
-          <div className="grid">
+          <div className="grid preference-collection">
             {items.map((item) => {
               const recorded = inventory.get(`${item.kind}:${item.slug}`);
               const values = recorded ?? {
@@ -143,7 +143,7 @@ export default async function Home({
               };
               return (
                 <Link
-                  className="card"
+                  className="card preference-card"
                   href={`/catalog/${item.kind}/${item.slug}`}
                   key={`${item.kind}:${item.slug}`}
                 >

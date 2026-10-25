@@ -151,8 +151,12 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   build shares, with final-administrator protection and retained audit labels.
   Deletion requires the current local password and an exact confirmation
   phrase. Portable private interface preferences cover collection layout,
-  density and accessible status emphasis; purpose-built visualizations do not
-  gain artificial table variants. Password recovery is not implemented yet.
+  density and accessible status emphasis. Repeated card collections across
+  Codex, Progression, Star Chart, Cycles, Alerts, Tier Lists, and Inventory
+  honor the card/table choice; heterogeneous cards become compact visual rows
+  rather than pretending to share one semantic column schema. Purpose-built
+  maps, graphs, forms, and existing data tables retain their native structure.
+  Password recovery is not implemented yet.
 - Validated inventory persistence, authenticated catalog editing, and portable
   profile import/export with transfer UI exist. The collection workspace
   left-joins supported catalog kinds to private state, offers card/table
