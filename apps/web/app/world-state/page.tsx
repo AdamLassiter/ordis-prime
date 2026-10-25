@@ -2,18 +2,24 @@ import {
   listCurrentWorldState,
   listCyclicRewardSchedules,
   listWorldStateSourceStatuses,
+  listPlayerInventory,
 } from "@ordis-prime/db";
 import { getDatabase } from "@/lib/database";
 import { WorldStateBoard } from "./world-state-board";
 import { CircuitSchedules } from "./circuit-schedules";
+import { getCurrentSession } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
-export default function WorldStatePage() {
+export default async function WorldStatePage() {
   const now = Date.now();
   const database = getDatabase();
+  const session = await getCurrentSession();
   const windows = listCurrentWorldState(database, now);
   const schedules = listCyclicRewardSchedules(database, now);
+  const inventory = session
+    ? listPlayerInventory(database, session.user.id)
+    : undefined;
   const sources = listWorldStateSourceStatuses(database, now);
   const staleAfter = positiveInteger(
     process.env.ORDIS_WORLD_STATE_STALE_MS,
@@ -30,7 +36,7 @@ export default function WorldStatePage() {
         Check Circuit rewards, cycles, events, alerts, fissures, and trader
         availability.
       </p>
-      <CircuitSchedules schedules={schedules} />
+      <CircuitSchedules schedules={schedules} inventory={inventory} />
       {sources.length > 0 && (
         <div
           className={`freshness-panel${staleSources.length ? " stale" : ""}`}

@@ -43,7 +43,7 @@ architecture or gap documentation updates are complete.
   supports manual sync and clean exit, and stops synchronizing immediately
   after its device is revoked in the web UI.
 
-- [ ] **Make collection state immediately visible and consistent throughout the
+- [x] **Make collection state immediately visible and consistent throughout the
       application.**
 
   Players should be able to scan a list, card, reward, or acquisition option and
@@ -74,7 +74,7 @@ architecture or gap documentation updates are complete.
   every player-aware page; mastered-but-unowned equipment is not shown as
   wanted by default; and all states remain understandable without colour.
 
-- [ ] **Expand `/inventory` into a complete collection and mastery workspace.**
+- [x] **Expand `/inventory` into a complete collection and mastery workspace.**
 
   An inventory page already exists, but it currently lists only entities with a
   persisted `player_inventory` row. Expand it so players can browse recorded and
@@ -136,7 +136,7 @@ architecture or gap documentation updates are complete.
   ambiguous source contexts remain visibly unresolved instead of linking to an
   arbitrary match.
 
-- [ ] **Add portable player interface preferences to the Operator page.**
+- [x] **Add portable player interface preferences to the Operator page.**
 
   Start with a deliberately small preference set that controls repeated
   presentation choices without creating page-specific settings for every view.

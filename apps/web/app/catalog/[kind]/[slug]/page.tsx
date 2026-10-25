@@ -18,6 +18,8 @@ import { GoalForm } from "@/app/planner/goal-form";
 import { DiscoveryProgressForm } from "@/app/discovery/progress-form";
 import { addCatalogTodo, addCatalogWatch } from "@/app/todos/actions";
 import { MarketOrders } from "./market-orders";
+import { CollectionStateIndicators } from "@/app/collection-state-indicators";
+import { deriveCollectionState } from "@ordis-prime/domain";
 
 export default async function ItemPage({
   params,
@@ -458,6 +460,15 @@ export default async function ItemPage({
       )}
       {inventory ? (
         <>
+          <section id="your-inventory" className="collection-detail-state">
+            <CollectionStateIndicators
+              {...deriveCollectionState(inventory)}
+              mastered={inventory.mastered}
+              ownedCount={inventory.ownedCount}
+              builtCount={inventory.builtCount}
+              wantedCount={inventory.wantedCount}
+            />
+          </section>
           <InventoryForm item={inventory} />
           <section className="card goal-editor">
             <h2>Acquisition goal</h2>

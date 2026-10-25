@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
+import { getPlayerPreferences } from "@ordis-prime/db";
+import { getDatabase } from "@/lib/database";
 import { PrimaryNavigation } from "./primary-navigation";
 import { SessionNavigation } from "./session-navigation";
 import "./globals.css";
@@ -17,9 +19,15 @@ export default async function Layout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   const session = await auth.api.getSession({ headers: await headers() });
+  const preferences = session
+    ? getPlayerPreferences(getDatabase(), session.user.id)
+    : undefined;
+  const preferenceClasses = preferences
+    ? `density-${preferences.displayDensity} highlighting-${preferences.collectionHighlighting}`
+    : "density-comfortable highlighting-badges";
   return (
     <html lang="en">
-      <body>
+      <body className={preferenceClasses}>
         <header className="orbiter-header">
           <nav>
             <Link className="nav-brand" href="/" aria-label="Ordis Prime home">

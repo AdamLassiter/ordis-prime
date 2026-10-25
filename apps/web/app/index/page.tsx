@@ -9,6 +9,8 @@ import {
 import type { RelicRefinement } from "@ordis-prime/domain";
 import { getDatabase } from "@/lib/database";
 import { getCurrentSession } from "@/lib/session";
+import { CollectionStateIndicators } from "@/app/collection-state-indicators";
+import { deriveCollectionState } from "@ordis-prime/domain";
 
 export const dynamic = "force-dynamic";
 
@@ -211,6 +213,12 @@ function RelicsView({
                           {reward.ownedCount !== undefined
                             ? ` · owned ${reward.ownedCount}`
                             : ""}
+                          {userId && (
+                            <IndexCollectionState
+                              kind={reward.entity.kind}
+                              ownedCount={reward.ownedCount}
+                            />
+                          )}
                         </p>
                       ))}
                     </div>
@@ -220,6 +228,12 @@ function RelicsView({
                     {row.ownedCount !== undefined
                       ? ` · owned ${row.ownedCount}`
                       : ""}
+                    {userId && (
+                      <IndexCollectionState
+                        kind={row.entity.kind}
+                        ownedCount={row.ownedCount}
+                      />
+                    )}
                   </small>
                 </th>
                 <td>{plat(row.directValue)}</td>
@@ -350,8 +364,11 @@ function ModsView({
                   <Link href={`/catalog/${row.entity.kind}/${row.entity.slug}`}>
                     {row.entity.name}
                   </Link>
-                  {row.ownedCount !== undefined && (
-                    <small>Owned {row.ownedCount}</small>
+                  {userId && (
+                    <IndexCollectionState
+                      kind={row.entity.kind}
+                      ownedCount={row.ownedCount}
+                    />
                   )}
                 </th>
                 <td>
@@ -485,6 +502,12 @@ function ArcanesView({
                       ? ` · owned ${row.ownedCount}`
                       : ""}
                   </small>
+                  {userId && (
+                    <IndexCollectionState
+                      kind={row.entity.kind}
+                      ownedCount={row.ownedCount}
+                    />
+                  )}
                 </th>
                 <td>{plat(row.rankZeroValue)}</td>
                 <td>{plat(row.maxRankValue)}</td>
@@ -689,6 +712,29 @@ function indexQuery(params: Params, omitted: string[]): URLSearchParams {
     else query.set(key, value);
   }
   return query;
+}
+
+function IndexCollectionState({
+  kind,
+  ownedCount = 0,
+}: {
+  kind: string;
+  ownedCount?: number;
+}) {
+  return (
+    <span className="index-collection-state">
+      <CollectionStateIndicators
+        {...deriveCollectionState({
+          kind,
+          ownedCount,
+          builtCount: 0,
+          wantedCount: 0,
+        })}
+        ownedCount={ownedCount}
+        compact
+      />
+    </span>
+  );
 }
 
 function IndexFilters({

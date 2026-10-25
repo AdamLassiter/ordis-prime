@@ -1,6 +1,11 @@
 import Link from "next/link";
 import { catalogKinds, searchCatalog } from "@/lib/catalog";
 import { randomOrdisVoiceLine } from "@/lib/ordis-voice-lines";
+import { getCurrentSession } from "@/lib/session";
+import { getDatabase } from "@/lib/database";
+import { listPlayerInventory } from "@ordis-prime/db";
+import { deriveCollectionState } from "@ordis-prime/domain";
+import { CollectionStateIndicators } from "@/app/collection-state-indicators";
 
 export const dynamic = "force-dynamic";
 
@@ -45,6 +50,12 @@ export default async function Home({
     ? kind
     : undefined;
   const items = await searchCatalog(q, selectedKind);
+  const session = await getCurrentSession();
+  const inventory = new Map(
+    (session ? listPlayerInventory(getDatabase(), session.user.id) : []).map(
+      (entry) => [`${entry.kind}:${entry.slug}`, entry] as const,
+    ),
+  );
   const briefing = randomOrdisVoiceLine();
   return (
     <>
@@ -126,19 +137,38 @@ export default async function Home({
             <span>{items.length} records</span>
           </div>
           <div className="grid">
-            {items.map((item) => (
-              <Link
-                className="card"
-                href={`/catalog/${item.kind}/${item.slug}`}
-                key={`${item.kind}:${item.slug}`}
-              >
-                <span className="tag">{item.kind}</span>
-                <h2>{item.name}</h2>
-                {item.description && (
-                  <p className="muted">{item.description}</p>
-                )}
-              </Link>
-            ))}
+            {items.map((item) => {
+              const recorded = inventory.get(`${item.kind}:${item.slug}`);
+              const values = recorded ?? {
+                kind: item.kind,
+                ownedCount: 0,
+                builtCount: 0,
+                wantedCount: 0,
+              };
+              return (
+                <Link
+                  className="card"
+                  href={`/catalog/${item.kind}/${item.slug}`}
+                  key={`${item.kind}:${item.slug}`}
+                >
+                  <span className="tag">{item.kind}</span>
+                  <h2>{item.name}</h2>
+                  {session && (
+                    <CollectionStateIndicators
+                      {...deriveCollectionState(values)}
+                      mastered={recorded?.mastered}
+                      ownedCount={recorded?.ownedCount}
+                      builtCount={recorded?.builtCount}
+                      wantedCount={recorded?.wantedCount}
+                      compact
+                    />
+                  )}
+                  {item.description && (
+                    <p className="muted">{item.description}</p>
+                  )}
+                </Link>
+              );
+            })}
           </div>
         </section>
       ) : (

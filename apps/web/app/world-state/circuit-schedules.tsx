@@ -1,10 +1,18 @@
 import Link from "next/link";
-import type { CyclicRewardChoice, CyclicRewardSchedule } from "@ordis-prime/db";
+import type {
+  CyclicRewardChoice,
+  CyclicRewardSchedule,
+  PlayerInventoryEntry,
+} from "@ordis-prime/db";
+import { deriveCollectionState } from "@ordis-prime/domain";
+import { CollectionStateIndicators } from "@/app/collection-state-indicators";
 
 export function CircuitSchedules({
   schedules,
+  inventory,
 }: {
   schedules: CyclicRewardSchedule[];
+  inventory?: PlayerInventoryEntry[];
 }) {
   if (!schedules.length) return null;
   return (
@@ -20,6 +28,7 @@ export function CircuitSchedules({
             <h3>{schedule.label}</h3>
             <ChoiceList
               choices={phaseChoices(schedule, schedule.currentPhaseIndex)}
+              inventory={inventory}
             />
             <p>{schedule.instructions}</p>
             <p className="countdown">
@@ -31,6 +40,7 @@ export function CircuitSchedules({
               </strong>
               <ChoiceList
                 choices={phaseChoices(schedule, schedule.nextPhaseIndex)}
+                inventory={inventory}
               />
             </div>
           </article>
@@ -45,7 +55,10 @@ export function CircuitSchedules({
                 <h3>
                   {schedule.label} · {phaseLabel(schedule, phaseIndex)}
                 </h3>
-                <ChoiceList choices={phaseChoices(schedule, phaseIndex)} />
+                <ChoiceList
+                  choices={phaseChoices(schedule, phaseIndex)}
+                  inventory={inventory}
+                />
               </section>
             )),
           )}
@@ -55,16 +68,23 @@ export function CircuitSchedules({
   );
 }
 
-function ChoiceList({ choices }: { choices: CyclicRewardChoice[] }) {
+function ChoiceList({
+  choices,
+  inventory,
+}: {
+  choices: CyclicRewardChoice[];
+  inventory?: PlayerInventoryEntry[];
+}) {
   return (
     <ul className="circuit-choice-list">
       {choices.map((choice) => (
         <li key={`${choice.phaseIndex}:${choice.position}`}>
-          <EntityLink subject={choice.primary} />
+          <EntityLink subject={choice.primary} inventory={inventory} />
           {choice.includedRewards.map((reward) => (
             <span className="muted" key={`${reward.label}:${reward.tier}`}>
               {" "}
-              · tier {reward.tier}: <EntityLink subject={reward} />
+              · tier {reward.tier}:{" "}
+              <EntityLink subject={reward} inventory={inventory} />
             </span>
           ))}
         </li>
@@ -73,13 +93,39 @@ function ChoiceList({ choices }: { choices: CyclicRewardChoice[] }) {
   );
 }
 
-function EntityLink({ subject }: { subject: CyclicRewardChoice["primary"] }) {
-  return subject.entity ? (
-    <Link href={`/catalog/${subject.entity.kind}/${subject.entity.slug}`}>
-      {subject.label}
-    </Link>
-  ) : (
-    subject.label
+function EntityLink({
+  subject,
+  inventory,
+}: {
+  subject: CyclicRewardChoice["primary"];
+  inventory?: PlayerInventoryEntry[];
+}) {
+  if (!subject.entity) return subject.label;
+  const recorded = inventory?.find(
+    (entry) => entry.entityId === subject.entity?.id,
+  );
+  const values = recorded ?? {
+    kind: subject.entity.kind,
+    ownedCount: 0,
+    builtCount: 0,
+    wantedCount: 0,
+  };
+  return (
+    <>
+      <Link href={`/catalog/${subject.entity.kind}/${subject.entity.slug}`}>
+        {subject.label}
+      </Link>{" "}
+      {inventory && (
+        <CollectionStateIndicators
+          {...deriveCollectionState(values)}
+          mastered={recorded?.mastered}
+          ownedCount={recorded?.ownedCount}
+          builtCount={recorded?.builtCount}
+          wantedCount={recorded?.wantedCount}
+          compact
+        />
+      )}
+    </>
   );
 }
 

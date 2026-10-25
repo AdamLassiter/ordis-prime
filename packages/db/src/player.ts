@@ -65,9 +65,74 @@ export interface PlayerSettings {
   activeAdversary?: PlayerActiveAdversary;
 }
 
+export const COLLECTION_LAYOUTS = ["cards", "table"] as const;
+export const DISPLAY_DENSITIES = ["comfortable", "compact"] as const;
+export const COLLECTION_HIGHLIGHTING_MODES = [
+  "badges",
+  "emphasis",
+  "minimal",
+] as const;
+
+export interface PlayerPreferences {
+  collectionLayout: (typeof COLLECTION_LAYOUTS)[number];
+  displayDensity: (typeof DISPLAY_DENSITIES)[number];
+  collectionHighlighting: (typeof COLLECTION_HIGHLIGHTING_MODES)[number];
+}
+
+export const DEFAULT_PLAYER_PREFERENCES: PlayerPreferences = {
+  collectionLayout: "cards",
+  displayDensity: "comfortable",
+  collectionHighlighting: "badges",
+};
+
 export const MAX_COMBINED_MASTERY_RANK = 40;
 export const MAX_RAILJACK_INTRINSIC_RANK = 10;
 export const MAX_WARFRAME_RANK = 30;
+
+export function getPlayerPreferences(
+  sqlite: Database.Database,
+  userId: string,
+): PlayerPreferences {
+  assertUser(sqlite, userId);
+  const row = sqlite
+    .prepare(
+      `select collection_layout as collectionLayout,
+              display_density as displayDensity,
+              collection_highlighting as collectionHighlighting
+       from player_profiles where user_id = ?`,
+    )
+    .get(userId) as PlayerPreferences | undefined;
+  return row ?? { ...DEFAULT_PLAYER_PREFERENCES };
+}
+
+export function setPlayerPreferences(
+  sqlite: Database.Database,
+  userId: string,
+  preferences: PlayerPreferences,
+): void {
+  assertUser(sqlite, userId);
+  validatePlayerPreferences(preferences);
+  sqlite
+    .prepare(
+      `insert into player_profiles
+         (user_id, collection_layout, display_density,
+          collection_highlighting, updated_at)
+       values (?, ?, ?, ?, ?)
+       on conflict(user_id) do update set
+         collection_layout = excluded.collection_layout,
+         display_density = excluded.display_density,
+         collection_highlighting = excluded.collection_highlighting,
+         updated_at = excluded.updated_at`,
+    )
+    .run(
+      userId,
+      preferences.collectionLayout,
+      preferences.displayDensity,
+      preferences.collectionHighlighting,
+      Date.now(),
+    );
+  removeEmptyPlayerProfile(sqlite, userId);
+}
 
 export function getPlayerSettings(
   sqlite: Database.Database,
@@ -174,13 +239,34 @@ export function setPlayerProgression(
       settings.activeAdversary ?? null,
       Date.now(),
     );
+  removeEmptyPlayerProfile(sqlite, userId);
+}
+
+function validatePlayerPreferences(preferences: PlayerPreferences): void {
+  if (!COLLECTION_LAYOUTS.includes(preferences.collectionLayout))
+    throw new Error("Collection layout preference is invalid");
+  if (!DISPLAY_DENSITIES.includes(preferences.displayDensity))
+    throw new Error("Display density preference is invalid");
   if (
-    settings.masteryRank === undefined &&
-    settings.railjackIntrinsicRank === undefined &&
-    settings.highestWarframeRank === undefined &&
-    settings.activeAdversary === undefined
+    !COLLECTION_HIGHLIGHTING_MODES.includes(preferences.collectionHighlighting)
   )
-    sqlite.prepare("delete from player_profiles where user_id = ?").run(userId);
+    throw new Error("Collection highlighting preference is invalid");
+}
+
+function removeEmptyPlayerProfile(
+  sqlite: Database.Database,
+  userId: string,
+): void {
+  sqlite
+    .prepare(
+      `delete from player_profiles where user_id = ?
+       and mastery_rank is null and railjack_intrinsic_rank is null
+       and highest_warframe_rank is null and active_adversary is null
+       and collection_layout = 'cards'
+       and display_density = 'comfortable'
+       and collection_highlighting = 'badges'`,
+    )
+    .run(userId);
 }
 
 function validatePlayerSettings(settings: PlayerSettings): void {
@@ -282,9 +368,10 @@ export interface PortableEntityReference {
 }
 
 export interface ProfileExport {
-  schemaVersion: 21;
+  schemaVersion: 22;
   exportedAt: string;
   player: PlayerSettings;
+  preferences: PlayerPreferences;
   inventory: Array<InventoryValues & { entity: PortableEntityReference }>;
   goals: Array<{ entity: PortableEntityReference; targetQuantity: number }>;
   recipePreferences: Array<{
@@ -494,9 +581,10 @@ export function exportPlayerProfile(
              source_id, namespace, value
   `);
   return {
-    schemaVersion: 21,
+    schemaVersion: 22,
     exportedAt: new Date().toISOString(),
     player: getPlayerSettings(sqlite, userId),
+    preferences: getPlayerPreferences(sqlite, userId),
     inventory: inventory.map(({ entityId, kind, slug, name, ...values }) => ({
       entity: {
         externalIds: identifiers.all(
@@ -1267,6 +1355,7 @@ export function importPlayerProfile(
           ? {}
           : { activeAdversary: profile.player.activeAdversary }),
       });
+    setPlayerPreferences(sqlite, userId, profile.preferences);
     for (const entry of resolvedInventory)
       setInventoryEntry(sqlite, userId, entry.entityId, entry.values);
     const writeGoal = sqlite.prepare(`
@@ -1453,8 +1542,9 @@ export function importPlayerProfile(
 function parseProfile(value: unknown): ProfileExport {
   if (
     !isRecord(value) ||
-    value.schemaVersion !== 21 ||
+    value.schemaVersion !== 22 ||
     !isRecord(value.player) ||
+    !isRecord(value.preferences) ||
     !Array.isArray(value.inventory) ||
     !Array.isArray(value.goals) ||
     !Array.isArray(value.recipePreferences) ||
@@ -1466,7 +1556,7 @@ function parseProfile(value: unknown): ProfileExport {
     !Array.isArray(value.builds)
   )
     throw new Error(
-      "Profile must use schemaVersion 21 and contain player settings plus every portable state array",
+      "Profile must use schemaVersion 22 and contain player settings, preferences, plus every portable state array",
     );
   const masteryRank = value.player.masteryRank;
   if (
@@ -1504,6 +1594,12 @@ function parseProfile(value: unknown): ProfileExport {
     throw new Error(
       `Profile player highestWarframeRank must be an integer between 0 and ${MAX_WARFRAME_RANK}`,
     );
+  const preferences = {
+    collectionLayout: value.preferences.collectionLayout,
+    displayDensity: value.preferences.displayDensity,
+    collectionHighlighting: value.preferences.collectionHighlighting,
+  } as PlayerPreferences;
+  validatePlayerPreferences(preferences);
   const inventory = value.inventory.map((entry, index) => {
     if (!isRecord(entry))
       throw new Error(`Profile inventory entry ${index} is invalid`);
@@ -1645,7 +1741,7 @@ function parseProfile(value: unknown): ProfileExport {
     parsePortableBuild(entry, index),
   );
   return {
-    schemaVersion: 21,
+    schemaVersion: 22,
     exportedAt: typeof value.exportedAt === "string" ? value.exportedAt : "",
     player: {
       masteryRank: masteryRank as number | undefined,
@@ -1653,6 +1749,7 @@ function parseProfile(value: unknown): ProfileExport {
       highestWarframeRank: highestWarframeRank as number | undefined,
       activeAdversary: activeAdversary as PlayerActiveAdversary | undefined,
     },
+    preferences,
     inventory,
     goals,
     recipePreferences,

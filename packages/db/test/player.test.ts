@@ -16,6 +16,7 @@ import {
   getDiscoveryProgress,
   getNodeCompletion,
   getPlayerSettings,
+  getPlayerPreferences,
   importPlayerProfile,
   listPlayerBuilds,
   listPlayerGoals,
@@ -38,6 +39,7 @@ import {
   setPlayerActiveAdversary,
   setPlayerHighestWarframeRank,
   setPlayerMasteryRank,
+  setPlayerPreferences,
   setPlayerRailjackIntrinsicRank,
   setPlayerRecipePreference,
   setPlayerTodoStatus,
@@ -67,6 +69,11 @@ test("profiles resolve stable source IDs across installations with different can
   setPlayerRailjackIntrinsicRank(first.sqlite, firstUser, 7);
   setPlayerActiveAdversary(first.sqlite, firstUser, "kuva-lich");
   setPlayerHighestWarframeRank(first.sqlite, firstUser, 30);
+  setPlayerPreferences(first.sqlite, firstUser, {
+    collectionLayout: "table",
+    displayDensity: "compact",
+    collectionHighlighting: "emphasis",
+  });
   assert.throws(
     () => setPlayerActiveAdversary(first.sqlite, firstUser, "wolf" as never),
     /Active adversary is invalid/,
@@ -224,7 +231,12 @@ test("profiles resolve stable source IDs across installations with different can
     "ability-strength",
   );
   const profile = exportPlayerProfile(first.sqlite, firstUser);
-  assert.equal(profile.schemaVersion, 21);
+  assert.equal(profile.schemaVersion, 22);
+  assert.deepEqual(profile.preferences, {
+    collectionLayout: "table",
+    displayDensity: "compact",
+    collectionHighlighting: "emphasis",
+  });
   assert.equal(profile.nodeProgress[0]?.node.slug, "e-prime");
   assert.deepEqual(
     {
@@ -260,6 +272,11 @@ test("profiles resolve stable source IDs across installations with different can
     railjackIntrinsicRank: 7,
     highestWarframeRank: 30,
     activeAdversary: "kuva-lich",
+  });
+  assert.deepEqual(getPlayerPreferences(second.sqlite, secondUser), {
+    collectionLayout: "table",
+    displayDensity: "compact",
+    collectionHighlighting: "emphasis",
   });
   assert.deepEqual(listPlayerInventory(second.sqlite, secondUser), [
     {
@@ -467,9 +484,14 @@ test("profile replacement is transactional and reports missing entities", async 
     wantedCount: 0,
   });
   const missingProfile = {
-    schemaVersion: 21,
+    schemaVersion: 22,
     exportedAt: "2026-10-13T12:00:00.000Z",
     player: {},
+    preferences: {
+      collectionLayout: "cards",
+      displayDensity: "comfortable",
+      collectionHighlighting: "badges",
+    },
     inventory: [
       {
         entity: {
@@ -667,7 +689,7 @@ test("profile replacement is transactional and reports missing entities", async 
         ...missingProfile,
         schemaVersion: 10,
       }),
-    /schemaVersion 21/,
+    /schemaVersion 22/,
   );
   assert.throws(
     () =>

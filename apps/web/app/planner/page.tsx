@@ -1,11 +1,14 @@
 import Link from "next/link";
-import { ADVERSARY_LABELS } from "@ordis-prime/domain";
+import { ADVERSARY_LABELS, deriveCollectionState } from "@ordis-prime/domain";
 import { redirect } from "next/navigation";
 import {
   buildAcquisitionPlan,
   findLiveAcquisitionOpportunities,
   listPlayerTodos,
+  listPlayerInventory,
 } from "@ordis-prime/db";
+import type { PlayerInventoryEntry } from "@ordis-prime/db";
+import { CollectionStateIndicators } from "@/app/collection-state-indicators";
 import { getDatabase } from "@/lib/database";
 import { getCurrentSession } from "@/lib/session";
 import { GoalForm } from "./goal-form";
@@ -19,6 +22,11 @@ export default async function Planner() {
   if (!session) redirect("/sign-in");
   const database = getDatabase();
   const todos = listPlayerTodos(database, session.user.id);
+  const inventory = new Map(
+    listPlayerInventory(database, session.user.id).map(
+      (entry) => [entry.entityId, entry] as const,
+    ),
+  );
   let plan;
   let opportunities;
   try {
@@ -104,6 +112,10 @@ export default async function Planner() {
                     {entry.reward.name} × {entry.reward.quantity}
                   </Link>
                 </h3>
+                <PlannerCollectionState
+                  item={entry.reward}
+                  inventory={inventory}
+                />
                 <p>
                   <Link href="/world-state">{entry.scheduleLabel}</Link> ·{" "}
                   {entry.phaseLabel}
@@ -132,6 +144,10 @@ export default async function Planner() {
                     {goal.name}
                   </Link>
                 </h3>
+                <PlannerCollectionState
+                  item={{ ...goal, quantity: goal.targetQuantity }}
+                  inventory={inventory}
+                />
                 <GoalForm
                   kind={goal.kind}
                   slug={goal.slug}
@@ -160,6 +176,7 @@ export default async function Planner() {
                     {item.name}
                   </Link>
                   <strong>{item.quantity}</strong>
+                  <PlannerCollectionState item={item} inventory={inventory} />
                 </li>
               ))}
             </ul>
@@ -609,6 +626,35 @@ export default async function Planner() {
         </section>
       )}
     </>
+  );
+}
+
+function PlannerCollectionState({
+  item,
+  inventory,
+}: {
+  item: { entityId: string; kind: string; quantity: number };
+  inventory: Map<string, PlayerInventoryEntry>;
+}) {
+  const recorded = inventory.get(item.entityId);
+  const values = recorded ?? {
+    kind: item.kind,
+    ownedCount: 0,
+    builtCount: 0,
+    wantedCount: 0,
+  };
+  return (
+    <CollectionStateIndicators
+      {...deriveCollectionState({
+        ...values,
+        goalRequiredCount: item.quantity,
+      })}
+      mastered={recorded?.mastered}
+      ownedCount={recorded?.ownedCount}
+      builtCount={recorded?.builtCount}
+      wantedCount={recorded?.wantedCount}
+      compact
+    />
   );
 }
 

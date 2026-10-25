@@ -7,6 +7,7 @@ import type {
   WeaponClass,
 } from "@ordis-prime/domain";
 import type Database from "better-sqlite3";
+import { deriveCollectionState } from "@ordis-prime/domain";
 import { listEntityCyclicRewards } from "./cyclic-rewards.ts";
 
 export interface CatalogSummary {
@@ -208,6 +209,7 @@ export interface CatalogNode {
       ownedCount: number;
       builtCount: number;
       wantedCount: number;
+      mastered?: boolean;
       needed: boolean;
     };
   }>;
@@ -221,6 +223,7 @@ export interface CatalogNode {
       ownedCount: number;
       builtCount: number;
       wantedCount: number;
+      mastered?: boolean;
       needed: boolean;
     };
   }>;
@@ -900,7 +903,7 @@ export function findCatalogNode(
     ? "left join player_inventory inventory on inventory.entity_id = reward.id and inventory.user_id = ?"
     : "";
   const inventoryColumns = userId
-    ? ", coalesce(inventory.owned_count, 0) as ownedCount, coalesce(inventory.built_count, 0) as builtCount, coalesce(inventory.wanted_count, 0) as wantedCount"
+    ? ", coalesce(inventory.owned_count, 0) as ownedCount, coalesce(inventory.built_count, 0) as builtCount, coalesce(inventory.wanted_count, 0) as wantedCount, inventory.mastered as mastered"
     : "";
   const rows = sqlite
     .prepare(
@@ -919,24 +922,42 @@ export function findCatalogNode(
       ownedCount?: number;
       builtCount?: number;
       wantedCount?: number;
+      mastered?: number | null;
     }
   >;
   const drops = rows.map(
-    ({ ownedCount, builtCount, wantedCount, ...drop }) => ({
-      ...drop,
-      ...(userId
-        ? {
-            inventory: {
-              ownedCount: ownedCount ?? 0,
-              builtCount: builtCount ?? 0,
-              wantedCount: wantedCount ?? 0,
-              needed:
-                (ownedCount ?? 0) + (builtCount ?? 0) === 0 ||
-                (wantedCount ?? 0) > 0,
-            },
-          }
-        : {}),
-    }),
+    ({
+      ownedCount = 0,
+      builtCount = 0,
+      wantedCount = 0,
+      mastered,
+      ...drop
+    }) => {
+      const masteredValue = mastered == null ? undefined : mastered === 1;
+      const state = deriveCollectionState({
+        kind: drop.kind,
+        ownedCount,
+        builtCount,
+        wantedCount,
+        mastered: masteredValue,
+      });
+      return {
+        ...drop,
+        ...(userId
+          ? {
+              inventory: {
+                ownedCount,
+                builtCount,
+                wantedCount,
+                ...(masteredValue === undefined
+                  ? {}
+                  : { mastered: masteredValue }),
+                needed: state.wanted,
+              },
+            }
+          : {}),
+      };
+    },
   );
   const details = loadNodeDetails(sqlite, [node.id]).get(node.id);
   const connections = loadNodeConnections(sqlite, [node.id]).get(node.id) ?? [];
@@ -1081,14 +1102,17 @@ export function listStarChartNodes(
   const inventoryColumns = userId
     ? `coalesce(inventory.owned_count, 0) as ownedCount,
       coalesce(inventory.built_count, 0) as builtCount,
-      coalesce(inventory.wanted_count, 0) as wantedCount`
-    : "0 as ownedCount, 0 as builtCount, 0 as wantedCount";
+      coalesce(inventory.wanted_count, 0) as wantedCount,
+      inventory.mastered as mastered`
+    : "0 as ownedCount, 0 as builtCount, 0 as wantedCount, null as mastered";
   const rewards = sqlite
     .prepare(
       `
     select distinct item_drop.node_id as nodeId, item_drop.reward_id as rewardId,
+      reward.kind,
       ${inventoryColumns}
     from drops item_drop join source_runs run on run.id = item_drop.source_run_id and run.status = 'active'
+    join entities reward on reward.id = item_drop.reward_id and reward.retired = 0
     ${userId ? "left join player_inventory inventory on inventory.entity_id = item_drop.reward_id and inventory.user_id = ?" : ""}
     where item_drop.node_id is not null
   `,
@@ -1096,9 +1120,11 @@ export function listStarChartNodes(
     .all(...(userId ? [userId] : [])) as Array<{
     nodeId: string;
     rewardId: string;
+    kind: string;
     ownedCount: number;
     builtCount: number;
     wantedCount: number;
+    mastered: number | null;
   }>;
   const counts = new Map<
     string,
@@ -1112,7 +1138,13 @@ export function listStarChartNodes(
     count.rewardCount += 1;
     if (
       userId &&
-      (reward.ownedCount + reward.builtCount === 0 || reward.wantedCount > 0)
+      deriveCollectionState({
+        kind: reward.kind,
+        ownedCount: reward.ownedCount,
+        builtCount: reward.builtCount,
+        wantedCount: reward.wantedCount,
+        mastered: reward.mastered === null ? undefined : reward.mastered === 1,
+      }).wanted
     )
       count.neededRewardCount += 1;
     counts.set(reward.nodeId, count);
@@ -1368,8 +1400,9 @@ function loadNodeRewards(
   const inventoryColumns = userId
     ? `coalesce(inventory.owned_count, 0) as ownedCount,
        coalesce(inventory.built_count, 0) as builtCount,
-       coalesce(inventory.wanted_count, 0) as wantedCount`
-    : "0 as ownedCount, 0 as builtCount, 0 as wantedCount";
+       coalesce(inventory.wanted_count, 0) as wantedCount,
+       inventory.mastered as mastered`
+    : "0 as ownedCount, 0 as builtCount, 0 as wantedCount, null as mastered";
   const rows = sqlite
     .prepare(
       `select reward.node_id as nodeId, reward.key, reward.label,
@@ -1412,6 +1445,7 @@ function loadNodeRewards(
     ownedCount: number;
     builtCount: number;
     wantedCount: number;
+    mastered: number | null;
   }>;
   for (const {
     nodeId,
@@ -1425,6 +1459,7 @@ function loadNodeRewards(
     ownedCount,
     builtCount,
     wantedCount,
+    mastered,
     ...reward
   } of rows) {
     const rewards = result.get(nodeId) ?? [];
@@ -1448,7 +1483,14 @@ function loadNodeRewards(
               ownedCount,
               builtCount,
               wantedCount,
-              needed: ownedCount + builtCount === 0 || wantedCount > 0,
+              ...(mastered === null ? {} : { mastered: mastered === 1 }),
+              needed: deriveCollectionState({
+                kind: entityKind,
+                ownedCount,
+                builtCount,
+                wantedCount,
+                mastered: mastered === null ? undefined : mastered === 1,
+              }).wanted,
             },
           }
         : {}),

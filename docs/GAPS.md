@@ -144,10 +144,18 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   Players can transactionally delete their own account and revoke its public
   build shares, with final-administrator protection and retained audit labels.
   Deletion requires the current local password and an exact confirmation
-  phrase. Password recovery is not implemented yet.
-- Validated inventory persistence, authenticated catalog editing, an inventory
-  summary, node reward ownership filtering, and portable profile import/export
-  with transfer UI exist. The Operator page accepts a bounded AlecaFrame
+  phrase. Portable private interface preferences cover collection layout,
+  density and accessible status emphasis; purpose-built visualizations do not
+  gain artificial table variants. Password recovery is not implemented yet.
+- Validated inventory persistence, authenticated catalog editing, and portable
+  profile import/export with transfer UI exist. The collection workspace
+  left-joins supported catalog kinds to private state, offers card/table
+  layouts, search, pagination, state/category filtering and sorting, and links
+  missing entries to documented acquisition paths. Shared derived labels expose
+  acquired, mastery, explicit-wanted, mastery-suggested, and goal-required state
+  across the catalog, entity pages, node rewards, planner, Circuit, and Index.
+  Raw resource/component stacks and exact mastery XP forecasts remain excluded
+  until their source and quantity semantics are reliable. The Operator page accepts a bounded AlecaFrame
   `lastData.dat` snapshot through a native TypeScript decoder. Preview and apply
   are hash-bound; allow-listed `ItemType` paths resolve exactly through WFCD
   identifiers, raw bytes and account fields are not retained, and players choose

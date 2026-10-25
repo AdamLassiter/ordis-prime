@@ -5,7 +5,7 @@ canonical entity IDs inside one installation, while exported profiles use
 provider identifiers so they can be restored into another installation whose
 canonical UUIDs differ.
 
-## Version 21 export
+## Version 22 export
 
 The player section carries an optional combined Mastery Rank used to evaluate
 sourced star-chart gates and build capacity. Values 0 through 30 are ordinary
@@ -19,6 +19,11 @@ has not recorded this state, not that no adversary is active.
 An optional highest currently available Warframe rank from 0 through 30 is used
 for equipment-rank node gates. It is deliberately independent of mastered
 history and build drafts.
+
+The preferences section carries the player's collection layout, display density
+and collection-state highlighting mode. These values are portable private UI
+state, not evidence about the game account. Missing local rows use the current
+card, comfortable-density and labeled-badge defaults.
 
 Each inventory entry includes:
 

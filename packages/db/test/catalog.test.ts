@@ -538,7 +538,7 @@ test("catalog read models join active recipes, drops, provenance, and rankings",
           ownedCount: 0,
           builtCount: 0,
           wantedCount: 0,
-          needed: true,
+          needed: false,
         },
       },
       { label: "Unlock the next planet", inventory: undefined },
@@ -613,7 +613,7 @@ test("catalog read models join active recipes, drops, provenance, and rankings",
         rewardCount: 1,
         oneTimeRewardCount: 2,
         neededRewardCount: 1,
-        neededOneTimeRewardCount: 1,
+        neededOneTimeRewardCount: 0,
         completionState: "completed",
       },
       {
@@ -639,7 +639,7 @@ test("catalog read models join active recipes, drops, provenance, and rankings",
   );
   assert.deepEqual(
     findCatalogNode(sqlite, "mercury-caloris", userId)?.drops[0]?.inventory,
-    { ownedCount: 1, builtCount: 0, wantedCount: 0, needed: false },
+    { ownedCount: 1, builtCount: 0, wantedCount: 0, needed: true },
   );
   setInventoryEntryByReference(
     sqlite,

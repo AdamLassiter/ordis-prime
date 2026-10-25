@@ -777,6 +777,21 @@ export const playerProfiles = sqliteTable("player_profiles", {
   activeAdversary: text("active_adversary", {
     enum: ["none", "kuva-lich", "sister-of-parvos", "technocyte-coda"],
   }),
+  collectionLayout: text("collection_layout", {
+    enum: ["cards", "table"],
+  })
+    .notNull()
+    .default("cards"),
+  displayDensity: text("display_density", {
+    enum: ["comfortable", "compact"],
+  })
+    .notNull()
+    .default("comfortable"),
+  collectionHighlighting: text("collection_highlighting", {
+    enum: ["badges", "emphasis", "minimal"],
+  })
+    .notNull()
+    .default("badges"),
   updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
 });
 export const playerImportPairings = sqliteTable(

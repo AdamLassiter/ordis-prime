@@ -10,7 +10,8 @@ import {
 } from "@ordis-prime/db";
 import { addCatalogTodo, addCatalogWatch } from "@/app/todos/actions";
 import { relationLabel } from "@/lib/relation-label";
-import { ADVERSARY_LABELS } from "@ordis-prime/domain";
+import { ADVERSARY_LABELS, deriveCollectionState } from "@ordis-prime/domain";
+import { CollectionStateIndicators } from "@/app/collection-state-indicators";
 import { NodeCompletionForm } from "../completion-form";
 import { updateNodeObjectiveCompletion } from "../actions";
 
@@ -534,10 +535,18 @@ export default async function NodePage({
                 {drop.rotation ? ` · Rotation ${drop.rotation}` : ""}
               </p>
               {drop.inventory && (
-                <p
-                  className={drop.inventory.needed ? "status-needed" : "muted"}
-                >
-                  {inventoryLabel(drop.inventory)}
+                <p>
+                  <CollectionStateIndicators
+                    {...deriveCollectionState({
+                      kind: drop.kind,
+                      ...drop.inventory,
+                    })}
+                    mastered={drop.inventory.mastered}
+                    ownedCount={drop.inventory.ownedCount}
+                    builtCount={drop.inventory.builtCount}
+                    wantedCount={drop.inventory.wantedCount}
+                    compact
+                  />
                 </p>
               )}
             </Link>
@@ -583,21 +592,17 @@ function RewardSource({ reward }: { reward: JunctionReward }) {
 }
 
 function RewardInventory({ reward }: { reward: JunctionReward }) {
-  return reward.inventory ? (
-    <span className={reward.inventory.needed ? "status-needed" : "muted"}>
-      {inventoryLabel(reward.inventory)}
-    </span>
+  return reward.inventory && reward.entity ? (
+    <CollectionStateIndicators
+      {...deriveCollectionState({
+        kind: reward.entity.kind,
+        ...reward.inventory,
+      })}
+      mastered={reward.inventory.mastered}
+      ownedCount={reward.inventory.ownedCount}
+      builtCount={reward.inventory.builtCount}
+      wantedCount={reward.inventory.wantedCount}
+      compact
+    />
   ) : null;
-}
-
-function inventoryLabel(inventory: {
-  ownedCount: number;
-  builtCount: number;
-  wantedCount: number;
-  needed: boolean;
-}) {
-  if (!inventory.needed)
-    return `${inventory.ownedCount} owned · ${inventory.builtCount} built`;
-  if (inventory.wantedCount) return `${inventory.wantedCount} still wanted`;
-  return "Not owned";
 }

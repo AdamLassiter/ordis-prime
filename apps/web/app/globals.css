@@ -267,6 +267,95 @@ h2 {
     transform 150ms ease,
     box-shadow 150ms ease;
 }
+
+.density-compact main {
+  --section-gap: 0.75rem;
+}
+
+.density-compact .card {
+  padding: 0.8rem;
+}
+
+.density-compact .grid {
+  gap: 0.65rem;
+}
+
+.highlighting-emphasis .collection-state {
+  border-width: 2px;
+  font-weight: 700;
+}
+
+.highlighting-minimal .collection-state {
+  background: transparent;
+  border-color: transparent;
+  padding-inline: 0;
+}
+.collection-states {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+.collection-states .tag {
+  margin: 0;
+}
+.state-acquired,
+.state-mastered {
+  border-color: #368474;
+}
+.state-explicit-wanted {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+.state-goal-required {
+  border-color: var(--gold);
+}
+.state-implicit-wanted,
+.state-mastery-unknown {
+  border-style: dashed;
+}
+.collection-summary {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  margin: 1rem 0;
+}
+.collection-summary .card {
+  display: grid;
+  gap: 0.25rem;
+}
+.collection-summary strong {
+  color: var(--cyan);
+  font-size: 1.55rem;
+}
+.collection-summary span {
+  color: var(--muted);
+}
+.collection-filters {
+  margin-top: 1.25rem;
+}
+.collection-grid {
+  align-items: stretch;
+}
+.collection-card {
+  display: flex;
+  flex-direction: column;
+}
+.collection-card h2 {
+  margin-block: 0.7rem;
+}
+.collection-card .text-link {
+  margin-top: auto;
+}
+.collection-quantities,
+.collection-acquisition {
+  color: var(--muted);
+}
+.collection-acquisition.compact {
+  margin: 0 0 0.4rem;
+}
+.inventory-secondary-controls {
+  margin-top: 2rem;
+}
 .card:hover {
   border-color: var(--line-hot);
   transform: translateY(-2px);
@@ -1081,6 +1170,19 @@ textarea:focus {
     animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+@media (prefers-contrast: more), (forced-colors: active) {
+  .collection-state {
+    background: Canvas;
+    border-color: currentColor;
+    color: CanvasText;
+    font-weight: 700;
+  }
+  .highlighting-minimal .collection-state {
+    border-color: currentColor;
+    padding-inline: 0.55rem;
   }
 }
 .todo-create {
