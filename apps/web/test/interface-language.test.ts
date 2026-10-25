@@ -21,6 +21,22 @@ test("primary feature labels use direct current terminology", async () => {
   assert.doesNotMatch(build, /Publish immutable snapshot/u);
 });
 
+test("account navigation ends with the requested operations group", async () => {
+  const [sessionNavigation, signOutButton] = await Promise.all([
+    readFile(new URL("../app/session-navigation.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/sign-out-button.tsx", import.meta.url), "utf8"),
+  ]);
+
+  const labels = ["Provenance", "Crew", "Operator"];
+  let previousPosition = -1;
+  for (const label of labels) {
+    const position = sessionNavigation.indexOf(label);
+    assert.ok(position > previousPosition, `${label} should follow the prior tab`);
+    previousPosition = position;
+  }
+  assert.match(signOutButton, /"Sign Out"/u);
+});
+
 test("Progression uses lozenges as its only kind picker", async () => {
   const progression = await readFile(
     new URL("../app/discovery/page.tsx", import.meta.url),
