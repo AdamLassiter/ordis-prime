@@ -41,3 +41,19 @@ test("page-level search fields consume the available filter width", async () => 
     assert.match(source, /className="search-field"/u, page);
   }
 });
+
+test("Market reuses the Star Chart view-tab treatment", async () => {
+  const [market, starChart] = await Promise.all([
+    readFile(new URL("../app/index/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/star-chart/page.tsx", import.meta.url), "utf8"),
+  ]);
+  assert.match(
+    market,
+    /<nav className="view-tabs" aria-label="Market views">/u,
+  );
+  assert.match(
+    starChart,
+    /<nav className="view-tabs" aria-label="Star Chart region">/u,
+  );
+  assert.doesNotMatch(css, /\.section-tabs/u);
+});

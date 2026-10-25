@@ -49,13 +49,14 @@ export default async function IndexPage({
           {status.failedCount ? ` · ${status.failedCount} unavailable` : ""}
         </span>
       </section>
-      <nav className="section-tabs" aria-label="Market views">
+      <nav className="view-tabs" aria-label="Market views">
         {[
           ["relics", "Relics"],
           ["mods", "Syndicate mods"],
           ["arcanes", "Arcanes"],
         ].map(([value, label]) => (
           <Link
+            aria-current={section === value ? "page" : undefined}
             className={section === value ? "active" : undefined}
             href={`/index?section=${value}&basis=${basis}`}
             key={value}

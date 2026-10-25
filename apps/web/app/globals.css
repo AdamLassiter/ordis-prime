@@ -1930,25 +1930,6 @@ textarea:focus {
   white-space: pre-wrap;
 }
 
-.section-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin: 1.25rem 0;
-}
-
-.section-tabs a {
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  padding: 0.55rem 0.9rem;
-  text-decoration: none;
-}
-
-.section-tabs a.active {
-  background: var(--cyan-soft);
-  border-color: var(--cyan);
-}
-
 .index-status {
   align-items: center;
   display: flex;

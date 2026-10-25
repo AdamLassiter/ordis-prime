@@ -17,7 +17,7 @@ Once completed, git commits should be written for each todo item.
 - [x] Codex > Query the Codex now sits below the four launch cards and immediately above catalog filters and results
 - [x] Catalog records now reports the authoritative matching total and provides bounded Previous/Next paging that preserves the query and kind filter
 - [x] Builds > Publish now redirects to the read-only version with explicit confirmation, and the public Builds workspace provides searchable, paginated browsing of every published version
-- [ ] star chart uses a tabs bar to switch between origin / railjack / sanctuary/duviri - this is nice and the same style should be used for Market > Relics / Syndicate mods / Arcanes
+- [x] Market > Relics / Syndicate mods / Arcanes now reuses the Star Chart view-tab styling and accessible current-page state
 - [ ] Market shows a count and updated time for prices - this should be just some simple text, maybe in the lede or maybe above the table, to describe this count and time.
 - [ ] Planner > Still required uses <li/> with indentation - it should be a proper table
 - [ ] Planner > candidate nodes > 'Nokko: Corporate Restructuring Rewards, Rotation B' doesn't link to anything - this suggests either the links here are broken, or more likely that there's a number of map nodes such as those in the deepmines that are missing (these only really come from vendor quests, they don't explicitly appear on the star chart)
