@@ -69,23 +69,35 @@ export default async function Home({
           </p>
         </div>
         <CephalonBriefing message={briefing} />
-        <form className="search-console">
-          <label htmlFor="codex-query">Query the Codex</label>
-          <div>
-            <input
-              id="codex-query"
-              name="q"
-              defaultValue={q}
-              placeholder="Warframe, weapon, mod, resource…"
-              aria-label="Search catalog"
-            />
-            <button className="button">Locate</button>
-          </div>
-          {selectedKind && (
-            <input name="kind" type="hidden" value={selectedKind} />
-          )}
-        </form>
       </section>
+      {!q && (
+        <section className="launch-grid" aria-label="Orbiter consoles">
+          {launchCards.map((card) => (
+            <Link className="launch-card" href={card.href} key={card.href}>
+              <span className="launch-code">{card.code}</span>
+              <h2>{card.title}</h2>
+              <p>{card.body}</p>
+              <span className="launch-link">Open console →</span>
+            </Link>
+          ))}
+        </section>
+      )}
+      <form className="search-console">
+        <label htmlFor="codex-query">Query the Codex</label>
+        <div>
+          <input
+            id="codex-query"
+            name="q"
+            defaultValue={q}
+            placeholder="Warframe, weapon, mod, resource…"
+            aria-label="Search catalog"
+          />
+          <button className="button">Locate</button>
+        </div>
+        {selectedKind && (
+          <input name="kind" type="hidden" value={selectedKind} />
+        )}
+      </form>
       <nav
         className="filters codex-kind-filters"
         aria-label="Codex record type"
@@ -108,18 +120,6 @@ export default async function Home({
           </Link>
         ))}
       </nav>
-      {!q && (
-        <section className="launch-grid" aria-label="Orbiter consoles">
-          {launchCards.map((card) => (
-            <Link className="launch-card" href={card.href} key={card.href}>
-              <span className="launch-code">{card.code}</span>
-              <h2>{card.title}</h2>
-              <p>{card.body}</p>
-              <span className="launch-link">Open console →</span>
-            </Link>
-          ))}
-        </section>
-      )}
       {items.length ? (
         <section className="search-results">
           <div className="section-heading">

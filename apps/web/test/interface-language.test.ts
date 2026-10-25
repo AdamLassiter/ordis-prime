@@ -34,3 +34,17 @@ test("Progression uses lozenges as its only kind picker", async () => {
   );
   assert.match(progression, /aria-current=\{selectedKind === entry/u);
 });
+
+test("Codex search follows its launch cards and precedes results", async () => {
+  const codex = await readFile(
+    new URL("../app/page.tsx", import.meta.url),
+    "utf8",
+  );
+  const launch = codex.indexOf('className="launch-grid"');
+  const search = codex.indexOf('className="search-console"');
+  const results = codex.indexOf('className="search-results"');
+
+  assert.ok(launch >= 0);
+  assert.ok(search > launch);
+  assert.ok(results > search);
+});

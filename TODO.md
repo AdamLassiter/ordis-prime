@@ -14,7 +14,7 @@ Once completed, git commits should be written for each todo item.
 - [x] Search fields now expand through available filter width in Progression, Inventory, Tier Lists, and Market, matching the full-width Codex search behavior
 - [x] Updated interface language to match current direct naming: Codex launch cards use Star Chart, Cycles, Builds, and Progression; Alerts uses Alarms; the Builds tab and page replace Arsenal; and the share action is simply Publish
 - [x] Progression > Removed the redundant Kind dropdown; the lozenges are the sole kind selector and search submissions preserve the selected lozenge
-- [ ] Codex > query the codex (search) should be below the four cards, above the catalog records results
+- [x] Codex > Query the Codex now sits below the four launch cards and immediately above catalog filters and results
 - [ ] Catalog records incorrectly claims '100 records' for an empty search and has no paging controls
 - [ ] Arsenal (or Builds) > <some build> > Publish doesn't give any confirmation or redirect to show it has been published
   - There's no way to browse all submitted builds, or search them etc.
