@@ -159,6 +159,10 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   rather than pretending to share one semantic column schema. Purpose-built
   maps, graphs, forms, and existing data tables retain their native structure.
   Password recovery is not implemented yet.
+- Published build snapshots are publicly searchable by title, category, and
+  notes with bounded pagination. Publishing confirms success on the read-only
+  destination; equipment-level search, ratings, comments, moderation, and
+  author profiles are not implemented.
 - Validated inventory persistence, authenticated catalog editing, and portable
   profile import/export with transfer UI exist. The collection workspace
   left-joins supported catalog kinds to private state, offers card/table

@@ -57,8 +57,8 @@ shares, but mod effects are not yet applied to derive modified stats.
 
 ## Share and portability semantics
 
-Sharing creates an immutable, unlisted snapshot with a random 144-bit key. The
-snapshot embeds displayed names, stats, abilities, Focus/Helminth selections,
+Sharing creates an immutable, publicly discoverable snapshot with a random
+144-bit key. The snapshot embeds displayed names, stats, abilities, Focus/Helminth selections,
 configuration and enhancements at that revision, so later draft or catalog
 changes cannot rewrite what a recipient saw. New publications create new URLs;
 individual snapshots may be revoked. Deleting the source draft does not delete
@@ -69,6 +69,11 @@ clone. Focus schools, Helminth replacements, modular parts, slots, mods and
 enhancements also survive private cloning and portable profile export/import.
 Published capability URLs are installation-local and are not included in the
 portable profile.
+
+The Builds workspace lists published versions newest-first and supports bounded
+search by title, category, or notes. Publishing redirects to the read-only
+version with a success confirmation. Author identity stays private; the public
+record contains only the authored build content already chosen for publication.
 
 An explicitly confirmed AlecaFrame preview may create a new private draft from
 the snapshot's current NORMAL and SENTINEL presets. Equipment, the active config,

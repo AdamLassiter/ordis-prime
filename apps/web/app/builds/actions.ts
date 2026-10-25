@@ -279,7 +279,7 @@ export async function clearEnhancement(
 export async function shareBuild(buildId: string) {
   const session = await requireCurrentSession();
   const shareKey = createBuildShare(getDatabase(), session.user.id, buildId);
-  redirect(`/builds/shared/${shareKey}`);
+  redirect(`/builds/shared/${shareKey}?published=1`);
 }
 
 export async function removeBuild(buildId: string) {

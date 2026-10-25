@@ -17,7 +17,7 @@ export default async function SharedBuildPage({
   searchParams,
 }: {
   params: Promise<{ shareKey: string }>;
-  searchParams: Promise<{ slot?: string }>;
+  searchParams: Promise<{ slot?: string; published?: string }>;
 }) {
   const { shareKey } = await params;
   const query = await searchParams;
@@ -30,6 +30,12 @@ export default async function SharedBuildPage({
       <p className="eyebrow">
         {build.title} · Shared build · Revision {build.revision}
       </p>
+      {query.published === "1" && (
+        <p className="notice" role="status">
+          Build published. This read-only version now appears in the public
+          Builds directory.
+        </p>
+      )}
       {build.category && <span className="tag">{build.category}</span>}
       {build.notes && <p className="lede build-notes">{build.notes}</p>}
       <p className="muted">

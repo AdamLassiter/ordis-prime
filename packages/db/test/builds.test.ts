@@ -27,6 +27,7 @@ import {
   migrateDatabase,
   openSqliteDatabase,
   revokeBuildShare,
+  searchPublishedBuilds,
   searchBuildCandidates,
   searchBuildEnhancementCandidates,
   searchBuildModularPartCandidates,
@@ -572,6 +573,21 @@ test("build drafts are private and share snapshots remain immutable", async (con
     ),
     [{ revision: shared.revision, createdAt: shared.sharedAt }],
   );
+  assert.deepEqual(searchPublishedBuilds(database, { query: "beginner" }), {
+    entries: [
+      {
+        shareKey,
+        revision: shared.revision,
+        title: "Starter setup",
+        category: "beginner",
+        createdAt: shared.sharedAt,
+      },
+    ],
+    total: 1,
+    page: 1,
+    pageSize: 24,
+    pageCount: 1,
+  });
   const publicCloneId = cloneSharedBuild(database, other, shareKey);
   const publicClone = getPlayerBuild(database, other, publicCloneId)!;
   assert.equal(publicClone.title, "Starter setup (copy)");

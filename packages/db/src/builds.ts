@@ -230,6 +230,17 @@ export interface BuildShareSummary {
   revision: number;
   createdAt: number;
 }
+export interface PublishedBuildSummary extends BuildShareSummary {
+  title: string;
+  category?: string;
+}
+export interface PublishedBuildSearchPage {
+  entries: PublishedBuildSummary[];
+  total: number;
+  page: number;
+  pageSize: number;
+  pageCount: number;
+}
 export type BuildCandidate = BuildEntityReference & {
   arcaneClass?: ArcaneClass;
   weaponClass?: WeaponClass;
@@ -1218,6 +1229,49 @@ export function listBuildShares(
       "select share_key as shareKey, revision, created_at as createdAt from build_share_snapshots where source_build_id = ? order by created_at desc",
     )
     .all(buildId) as BuildShareSummary[];
+}
+
+export function searchPublishedBuilds(
+  sqlite: Database.Database,
+  input: { query?: string; page?: number; pageSize?: number } = {},
+): PublishedBuildSearchPage {
+  const query = input.query?.trim() ?? "";
+  const pattern = `%${escapeLike(query)}%`;
+  const pageSize = Math.max(1, Math.min(100, Math.trunc(input.pageSize ?? 24)));
+  const requestedPage = Math.max(1, Math.trunc(input.page ?? 1));
+  const where = `title like ? escape '\\'
+    or coalesce(json_extract(snapshot_json, '$.category'), '') like ? escape '\\'
+    or coalesce(json_extract(snapshot_json, '$.notes'), '') like ? escape '\\'`;
+  const bindings = [pattern, pattern, pattern] as const;
+  const { total } = sqlite
+    .prepare(
+      `select count(*) as total from build_share_snapshots where ${where}`,
+    )
+    .get(...bindings) as { total: number };
+  const pageCount = Math.ceil(total / pageSize);
+  const page = pageCount > 0 ? Math.min(requestedPage, pageCount) : 1;
+  const rows = sqlite
+    .prepare(
+      `select share_key as shareKey, revision, title,
+        json_extract(snapshot_json, '$.category') as category,
+        created_at as createdAt
+       from build_share_snapshots where ${where}
+       order by created_at desc, title collate nocase
+       limit ? offset ?`,
+    )
+    .all(...bindings, pageSize, (page - 1) * pageSize) as Array<
+    PublishedBuildSummary & { category: string | null }
+  >;
+  return {
+    entries: rows.map(({ category, ...entry }) => ({
+      ...entry,
+      category: category ?? undefined,
+    })),
+    total,
+    page,
+    pageSize,
+    pageCount,
+  };
 }
 
 export function revokeBuildShare(
