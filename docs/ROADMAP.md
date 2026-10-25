@@ -76,10 +76,10 @@ those cited star-chart edges compose into node reads symmetrically. A shareable
 focus view supports direct traversal and a deterministic one-hop SVG topology
 without manufacturing domain coordinates. Stable global or multi-hop
 coordinates and richer quest-step progress remain.
-Private node completion tracking, chart filtering and portable profile transfer
-are implemented independently of sourced access evidence. A filtered-scope bulk
-editor supports initial and ongoing completion entry without changing hidden
-nodes.
+Private normal and Steel Path node completion, chart filtering, and portable
+profile transfer are implemented independently of sourced access evidence.
+Whole-chart and planet completion actions support initial entry, while the
+explicit planet editor supports corrections without changing other planets.
 Sourced Mastery Rank gates, including exact Wiki mission requirements, compose
 with portable private player progression; the Wiki mission source also
 contributes complete allow-listed quest and node-completion requirements.

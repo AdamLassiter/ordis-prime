@@ -153,6 +153,7 @@ test("profiles resolve stable source IDs across installations with different can
     "completed",
   );
   setNodeCompletion(first.sqlite, firstUser, "e-prime", true);
+  setNodeCompletion(first.sqlite, firstUser, "e-prime", true, "steel-path");
   setNodeObjectiveCompletion(
     first.sqlite,
     firstUser,
@@ -231,13 +232,19 @@ test("profiles resolve stable source IDs across installations with different can
     "ability-strength",
   );
   const profile = exportPlayerProfile(first.sqlite, firstUser);
-  assert.equal(profile.schemaVersion, 22);
+  assert.equal(profile.schemaVersion, 23);
   assert.deepEqual(profile.preferences, {
     collectionLayout: "table",
     displayDensity: "compact",
     collectionHighlighting: "emphasis",
   });
-  assert.equal(profile.nodeProgress[0]?.node.slug, "e-prime");
+  assert.deepEqual(
+    profile.nodeProgress.map(({ node, mode }) => ({ slug: node.slug, mode })),
+    [
+      { slug: "e-prime", mode: "normal" },
+      { slug: "e-prime", mode: "steel-path" },
+    ],
+  );
   assert.deepEqual(
     {
       slug: profile.objectiveProgress[0]?.node.slug,
@@ -260,7 +267,7 @@ test("profiles resolve stable source IDs across installations with different can
     goalsImported: 1,
     recipePreferencesImported: 1,
     discoveryProgressImported: 1,
-    nodeProgressImported: 1,
+    nodeProgressImported: 2,
     objectiveProgressImported: 1,
     todosImported: 2,
     watchesImported: 1,
@@ -315,6 +322,10 @@ test("profiles resolve stable source IDs across installations with different can
   );
   assert.equal(
     getNodeCompletion(second.sqlite, secondUser, "e-prime"),
+    "completed",
+  );
+  assert.equal(
+    getNodeCompletion(second.sqlite, secondUser, "e-prime", "steel-path"),
     "completed",
   );
   assert.equal(
@@ -484,7 +495,7 @@ test("profile replacement is transactional and reports missing entities", async 
     wantedCount: 0,
   });
   const missingProfile = {
-    schemaVersion: 22,
+    schemaVersion: 23,
     exportedAt: "2026-10-13T12:00:00.000Z",
     player: {},
     preferences: {
@@ -689,7 +700,7 @@ test("profile replacement is transactional and reports missing entities", async 
         ...missingProfile,
         schemaVersion: 10,
       }),
-    /schemaVersion 22/,
+    /schemaVersion 23/,
   );
   assert.throws(
     () =>

@@ -1,6 +1,6 @@
 # 0070: Bulk node completion replaces only the visible scope
 
-Status: accepted
+Status: accepted; mode-aware scope actions added by decision 0120
 
 ## Context
 
@@ -13,9 +13,11 @@ audit.
 
 ## Decision
 
-Make every node in the currently rendered, filtered chart an explicit member of
-the submitted scope. Checked members are completed and unchecked members are
-incomplete. Nodes outside that submitted scope are unchanged.
+Make every node in the currently rendered planet an explicit member of the
+submitted scope. Checked members are completed and unchecked members are
+incomplete independently for normal and Steel Path. Nodes outside that
+submitted planet are unchanged. Separate complete-only actions may resolve the
+entire active chart or one active planet on the server for either mode.
 
 Apply the complete submitted scope in one database transaction. Resolve every
 slug to an active canonical node before writing anything, reject duplicates and

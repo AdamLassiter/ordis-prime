@@ -11,6 +11,7 @@ import {
   openSqliteDatabase,
   promoteSource,
   searchDiscoveryCatalog,
+  setAllDiscoveryProgress,
   setDiscoveryProgress,
 } from "../src/index.ts";
 
@@ -114,6 +115,21 @@ test("discovery progress is private, filterable, and reset by unseen", async (co
         .get() as { count: number }
     ).count,
     0,
+  );
+  assert.equal(setAllDiscoveryProgress(sqlite, firstUser, "completed"), 2);
+  assert.deepEqual(
+    searchDiscoveryCatalog(sqlite, {
+      userId: firstUser,
+      progress: "completed",
+    }).map(({ name }) => name),
+    ["Hidden Quest", "Deep System"],
+  );
+  assert.deepEqual(
+    searchDiscoveryCatalog(sqlite, {
+      userId: secondUser,
+      progress: "unseen",
+    }).map(({ name }) => name),
+    ["Hidden Quest", "Deep System"],
   );
   assert.throws(
     () =>

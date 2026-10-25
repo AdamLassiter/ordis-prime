@@ -1,23 +1,34 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { setNodeCompletion, setNodeObjectiveCompletion } from "@ordis-prime/db";
+import {
+  setNodeCompletions,
+  setNodeObjectiveCompletion,
+} from "@ordis-prime/db";
 import { getDatabase } from "@/lib/database";
 import { requireCurrentSession } from "@/lib/session";
 
 export async function updateNodeCompletion(slug: string, form: FormData) {
   const session = await requireCurrentSession();
-  const state = String(form.get("state") ?? "");
-  if (state !== "incomplete" && state !== "completed")
+  const normalState = String(form.get("normalState") ?? "");
+  const steelPathState = String(form.get("steelPathState") ?? "");
+  if (
+    ![normalState, steelPathState].every(
+      (state) => state === "incomplete" || state === "completed",
+    )
+  )
     throw new Error("Node completion state is invalid");
-  setNodeCompletion(
-    getDatabase(),
-    session.user.id,
-    slug,
-    state === "completed",
-  );
+  setNodeCompletions(getDatabase(), session.user.id, [
+    { slug, mode: "normal", completed: normalState === "completed" },
+    {
+      slug,
+      mode: "steel-path",
+      completed: steelPathState === "completed",
+    },
+  ]);
   revalidatePath("/star-chart");
   revalidatePath(`/nodes/${slug}`);
+  revalidatePath("/planner");
 }
 
 export async function updateNodeObjectiveCompletion(

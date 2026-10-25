@@ -301,12 +301,13 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   default geometry is not a claim about exact in-game positions. The structured
   Wiki mission adapter supplies the attributed node and connection set;
   connectivity remains navigation evidence rather than proof of player
-  completion. Signed-in players can record portable private node completion,
-  and a planet-scoped bulk editor updates only its explicit submitted scope.
+  completion. Signed-in players can record portable private normal and Steel
+  Path completion, complete the entire chart or one planet per mode, and use a
+  planet-scoped editor that updates only its explicit submitted scope.
   Junction pages now supply four ordered, cited public objectives per
   Junction. Players can record portable private completion per current task and
   that state drives the shared access derivation, but there is no automatic
-  game-account import or node-variant completion model yet. Their current task
+  game-account import for node completion. Their current task
   and completion rewards are modeled as cited one-time grants. Safely resolved
   identities link to catalog entities; Chroma Neuroptics intentionally remains
   label-only because the current WFCD component identities are conflated.

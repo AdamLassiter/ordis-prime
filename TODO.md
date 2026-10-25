@@ -22,6 +22,5 @@ Once completed, git commits should be written for each todo item.
 - [x] Planner > Still required is now a responsive semantic table with item, type, quantity, and collection-state columns
 - [x] Planner > Nokko bounty candidates now retain their exact bounty/rotation labels while linking to the canonical Deepmines node; Nightcap names the three Deepmines bounties and links to the activity without creating synthetic Star Chart nodes for reward rotations
 - [x] Codex > Vendor locations now appear as a dedicated, linked, cited Location fact above generic relationships; Daughter has a sourced Necralisk mapping and the presentation applies to every vendor with an `occurs-at` node relation
-- [ ] For simplicity, there should be options for marking all progression complete, or at least a bulk multi-select in table view
-  - There should simlilarly be bulk actions for marking the whole star chart as visited (in normal difficulty and steel path difficulty separately), as well as marking a whole planet/area as visited
+- [x] Progression can be marked complete in one account-scoped action; Star Chart completion is tracked separately for normal and Steel Path and can be applied to the entire chart, one planet/area, or edited per node in an atomic planet form
 - [ ] Codex > <somethjng> has a lot of vertical layout space taken up bu Todo, World-state watch, Inventory etc. - some of these things could be tiles side-by-side or shown in a more compact manner.

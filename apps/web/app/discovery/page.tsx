@@ -13,6 +13,7 @@ import { relationLabel } from "@/lib/relation-label";
 import { buildDiscoveryTopology, entityKey } from "@/lib/discovery-topology";
 import { discoveryHref } from "@/lib/discovery-url";
 import { DiscoveryProgressForm } from "./progress-form";
+import { completeAllDiscoveryProgress } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -99,6 +100,21 @@ export default async function DiscoveryPage({
           </Link>
         ))}
       </div>
+      {session && (
+        <form
+          className="card bulk-progress-actions"
+          action={completeAllDiscoveryProgress}
+        >
+          <div>
+            <strong>Progression completion</strong>
+            <p className="muted">
+              Mark every quest, mechanic, secret, enemy, boss, and ability as
+              completed for this account.
+            </p>
+          </div>
+          <button className="button">Mark all complete</button>
+        </form>
+      )}
       {focus && !focusedItem && (
         <p className="notice">
           That archive focus is not available in the active catalog.

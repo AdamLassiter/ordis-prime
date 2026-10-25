@@ -1,6 +1,8 @@
 import type Database from "better-sqlite3";
 
 export type NodeCompletionState = "incomplete" | "completed";
+export const NODE_COMPLETION_MODES = ["normal", "steel-path"] as const;
+export type NodeCompletionMode = (typeof NODE_COMPLETION_MODES)[number];
 
 export interface NodeObjectiveReference {
   slug: string;
@@ -11,6 +13,7 @@ export interface NodeObjectiveReference {
 export interface NodeCompletionUpdate {
   slug: string;
   completed: boolean;
+  mode?: NodeCompletionMode;
 }
 
 export function setNodeCompletion(
@@ -18,8 +21,9 @@ export function setNodeCompletion(
   userId: string,
   slug: string,
   completed: boolean,
+  mode: NodeCompletionMode = "normal",
 ): void {
-  setNodeCompletions(sqlite, userId, [{ slug, completed }]);
+  setNodeCompletions(sqlite, userId, [{ slug, completed, mode }]);
 }
 
 export function setNodeCompletions(
@@ -28,10 +32,14 @@ export function setNodeCompletions(
   updates: readonly NodeCompletionUpdate[],
 ): void {
   const seen = new Set<string>();
-  for (const { slug } of updates) {
+  for (const { slug, mode = "normal" } of updates) {
     if (!slug) throw new Error("Node completion slug is required");
-    if (seen.has(slug)) throw new Error(`Duplicate node completion ${slug}`);
-    seen.add(slug);
+    if (!(NODE_COMPLETION_MODES as readonly string[]).includes(mode))
+      throw new Error(`Node completion mode is invalid`);
+    const key = `${mode}:${slug}`;
+    if (seen.has(key))
+      throw new Error(`Duplicate ${mode} node completion ${slug}`);
+    seen.add(key);
   }
 
   sqlite.transaction(() => {
@@ -40,23 +48,23 @@ export function setNodeCompletions(
     const findNode = sqlite.prepare(
       "select id from entities where kind = 'node' and slug = ? and retired = 0",
     );
-    const resolved = updates.map(({ slug, completed }) => {
+    const resolved = updates.map(({ slug, completed, mode = "normal" }) => {
       const node = findNode.get(slug) as { id: string } | undefined;
       if (!node) throw new Error(`Unknown active node ${slug}`);
-      return { nodeId: node.id, completed };
+      return { nodeId: node.id, completed, mode };
     });
     const remove = sqlite.prepare(
-      "delete from player_node_progress where user_id = ? and node_id = ?",
+      "delete from player_node_progress where user_id = ? and node_id = ? and mode = ?",
     );
     const complete = sqlite.prepare(
-      `insert into player_node_progress (user_id, node_id, completed_at, updated_at)
-       values (?, ?, ?, ?)
-       on conflict(user_id, node_id) do update set updated_at = excluded.updated_at`,
+      `insert into player_node_progress (user_id, node_id, mode, completed_at, updated_at)
+       values (?, ?, ?, ?, ?)
+       on conflict(user_id, node_id, mode) do update set updated_at = excluded.updated_at`,
     );
     const now = Date.now();
-    for (const { nodeId, completed } of resolved) {
-      if (completed) complete.run(userId, nodeId, now, now);
-      else remove.run(userId, nodeId);
+    for (const { nodeId, completed, mode } of resolved) {
+      if (completed) complete.run(userId, nodeId, mode, now, now);
+      else remove.run(userId, nodeId, mode);
     }
   })();
 }
@@ -65,16 +73,19 @@ export function getNodeCompletion(
   sqlite: Database.Database,
   userId: string,
   slug: string,
+  mode: NodeCompletionMode = "normal",
 ): NodeCompletionState {
+  if (!(NODE_COMPLETION_MODES as readonly string[]).includes(mode))
+    throw new Error("Node completion mode is invalid");
   const row = sqlite
     .prepare(
       `select progress.node_id as nodeId
        from entities node
        left join player_node_progress progress
-         on progress.node_id = node.id and progress.user_id = ?
+         on progress.node_id = node.id and progress.user_id = ? and progress.mode = ?
        where node.kind = 'node' and node.slug = ? and node.retired = 0`,
     )
-    .get(userId, slug) as { nodeId: string | null } | undefined;
+    .get(userId, mode, slug) as { nodeId: string | null } | undefined;
   if (!row) throw new Error(`Unknown active node ${slug}`);
   return row.nodeId ? "completed" : "incomplete";
 }

@@ -108,3 +108,25 @@ test("catalog locations are promoted above generic related discoveries", async (
   assert.match(catalog, /relation\.subject\.kind === "node"/u);
   assert.match(catalog, /relatedDiscoveries\.map/u);
 });
+
+test("bulk progress controls distinguish chart completion modes", async () => {
+  const [progression, starChart, nodeForm] = await Promise.all([
+    readFile(new URL("../app/discovery/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/star-chart/page.tsx", import.meta.url), "utf8"),
+    readFile(
+      new URL("../app/nodes/completion-form.tsx", import.meta.url),
+      "utf8",
+    ),
+  ]);
+
+  assert.match(progression, /action=\{completeAllDiscoveryProgress\}/u);
+  assert.match(progression, />Mark all complete</u);
+  assert.match(starChart, /<NodeScopeActions \/>/u);
+  assert.match(starChart, /<NodeScopeActions planet=\{planet\} \/>/u);
+  assert.match(starChart, /value="normal"/u);
+  assert.match(starChart, /value="steel-path"/u);
+  assert.match(starChart, /name="normal-completed"/u);
+  assert.match(starChart, /name="steel-path-completed"/u);
+  assert.match(nodeForm, /name="normalState"/u);
+  assert.match(nodeForm, /name="steelPathState"/u);
+});

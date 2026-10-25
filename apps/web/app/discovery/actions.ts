@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import {
+  setAllDiscoveryProgress,
   setDiscoveryProgress,
   type DiscoveryProgressState,
 } from "@ordis-prime/db";
@@ -18,4 +19,12 @@ export async function updateDiscoveryProgress(
   setDiscoveryProgress(getDatabase(), session.user.id, { kind, slug }, state);
   revalidatePath("/discovery");
   revalidatePath(`/catalog/${kind}/${slug}`);
+}
+
+export async function completeAllDiscoveryProgress() {
+  const session = await requireCurrentSession();
+  setAllDiscoveryProgress(getDatabase(), session.user.id, "completed");
+  revalidatePath("/discovery");
+  revalidatePath("/catalog/[kind]/[slug]", "page");
+  revalidatePath("/planner");
 }

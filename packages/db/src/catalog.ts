@@ -151,6 +151,7 @@ export interface CatalogNode {
   warframeRankRequirement?: number;
   activeAdversaryRequirement?: AdversaryKind;
   completionState?: "incomplete" | "completed";
+  steelPathCompletionState?: "incomplete" | "completed";
   detailEvidence: Array<{
     sourceName: string;
     version: string;
@@ -991,7 +992,12 @@ export function findCatalogNode(
   const oneTimeRewards =
     loadNodeRewards(sqlite, [node.id], userId).get(node.id) ?? [];
   const completionState = userId
-    ? loadNodeCompletionStates(sqlite, [node.id], userId).get(node.id)
+    ? loadNodeCompletionStates(sqlite, [node.id], userId, "normal").get(node.id)
+    : undefined;
+  const steelPathCompletionState = userId
+    ? loadNodeCompletionStates(sqlite, [node.id], userId, "steel-path").get(
+        node.id,
+      )
     : undefined;
   const { id: _id, ...summary } = node;
   return {
@@ -1005,6 +1011,7 @@ export function findCatalogNode(
     objectives,
     oneTimeRewards,
     ...(completionState ? { completionState } : {}),
+    ...(steelPathCompletionState ? { steelPathCompletionState } : {}),
     drops,
   };
 }
@@ -1117,6 +1124,15 @@ export function listStarChartNodes(
         sqlite,
         nodes.map(({ id }) => id),
         userId,
+        "normal",
+      )
+    : undefined;
+  const steelPathCompletionStates = userId
+    ? loadNodeCompletionStates(
+        sqlite,
+        nodes.map(({ id }) => id),
+        userId,
+        "steel-path",
       )
     : undefined;
   const inventoryColumns = userId
@@ -1182,6 +1198,12 @@ export function listStarChartNodes(
     ...(completionStates
       ? { completionState: completionStates.get(id) ?? "incomplete" }
       : {}),
+    ...(steelPathCompletionStates
+      ? {
+          steelPathCompletionState:
+            steelPathCompletionStates.get(id) ?? "incomplete",
+        }
+      : {}),
     connectionCount: connections.get(id)?.length ?? 0,
     rewardCount: counts.get(id)?.rewardCount ?? 0,
     oneTimeRewardCount: oneTimeRewards.get(id)?.length ?? 0,
@@ -1200,6 +1222,7 @@ function loadNodeCompletionStates(
   sqlite: Database.Database,
   nodeIds: string[],
   userId: string,
+  mode: "normal" | "steel-path",
 ): Map<string, "incomplete" | "completed"> {
   if (!nodeIds.length) return new Map();
   const placeholders = nodeIds.map(() => "?").join(", ");
@@ -1208,9 +1231,9 @@ function loadNodeCompletionStates(
       sqlite
         .prepare(
           `select node_id as nodeId from player_node_progress
-           where user_id = ? and node_id in (${placeholders})`,
+           where user_id = ? and mode = ? and node_id in (${placeholders})`,
         )
-        .all(userId, ...nodeIds) as Array<{ nodeId: string }>
+        .all(userId, mode, ...nodeIds) as Array<{ nodeId: string }>
     ).map(({ nodeId }) => nodeId),
   );
   return new Map(
@@ -1235,7 +1258,7 @@ function loadNodeAccessRequirements(
         and discovery_progress.user_id = ?
        left join player_node_progress node_progress
          on node_progress.node_id = prerequisite.id and prerequisite.kind = 'node'
-        and node_progress.user_id = ?`
+        and node_progress.user_id = ? and node_progress.mode = 'normal'`
     : "";
   const progressColumn = userId
     ? `, case when prerequisite.kind = 'node'

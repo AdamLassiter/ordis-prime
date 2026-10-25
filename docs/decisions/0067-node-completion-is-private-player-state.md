@@ -15,9 +15,10 @@ eventually evaluate requirements such as “complete the preceding node.”
 
 ## Decision
 
-Store completed nodes in a dedicated `player_node_progress` table keyed by user
-and canonical node. Absence means incomplete. Preserve the first completion
-time across repeated completed writes, while recording the latest update time.
+Store completed nodes in a dedicated `player_node_progress` table keyed by user,
+canonical node, and normal or Steel Path mode. Absence means incomplete for
+that mode. Preserve the first completion time across repeated completed writes,
+while recording the latest update time.
 
 Expose completion only on authenticated node reads and star-chart views. Allow
 players to edit it on node pages and filter the chart by completed or incomplete
@@ -36,5 +37,5 @@ derive it from sourced connections or access requirements.
   discovery progress, as specified by decision 0068.
 - Filtered bulk edits replace only their explicit visible scope, as specified by
   decision 0070.
-- The current UI records only completed versus incomplete; objective-level
-  Junction progress and mission variants need their own models.
+- Normal and Steel Path completion are independent, as expanded by ADR 0120;
+  objective-level Junction progress retains its own model.

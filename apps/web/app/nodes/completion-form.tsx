@@ -3,10 +3,12 @@ import { updateNodeCompletion } from "./actions";
 
 export function NodeCompletionForm({
   slug,
-  state,
+  normalState,
+  steelPathState,
 }: {
   slug: string;
-  state: NodeCompletionState;
+  normalState: NodeCompletionState;
+  steelPathState: NodeCompletionState;
 }) {
   return (
     <form
@@ -14,8 +16,15 @@ export function NodeCompletionForm({
       action={updateNodeCompletion.bind(null, slug)}
     >
       <label>
-        Your node progress
-        <select name="state" defaultValue={state}>
+        Normal
+        <select name="normalState" defaultValue={normalState}>
+          <option value="incomplete">Incomplete</option>
+          <option value="completed">Completed</option>
+        </select>
+      </label>
+      <label>
+        Steel Path
+        <select name="steelPathState" defaultValue={steelPathState}>
           <option value="incomplete">Incomplete</option>
           <option value="completed">Completed</option>
         </select>

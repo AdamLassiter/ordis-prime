@@ -942,7 +942,7 @@ function loadNodeAccess(
      and discovery_progress.user_id = ?
     left join player_node_progress node_progress
       on node_progress.node_id = prerequisite.id and prerequisite.kind = 'node'
-     and node_progress.user_id = ?
+     and node_progress.user_id = ? and node_progress.mode = 'normal'
     where relation.kind = 'requires' and relation.from_entity_id in (${placeholders})
       and prerequisite.kind in ('quest', 'mechanic', 'secret', 'enemy', 'boss', 'node')
     union all
@@ -960,7 +960,7 @@ function loadNodeAccess(
      and discovery_progress.user_id = ?
     left join player_node_progress node_progress
       on node_progress.node_id = prerequisite.id and prerequisite.kind = 'node'
-     and node_progress.user_id = ?
+     and node_progress.user_id = ? and node_progress.mode = 'normal'
     where relation.kind = 'unlocks' and relation.to_entity_id in (${placeholders})
       and prerequisite.kind in ('quest', 'mechanic', 'secret', 'enemy', 'boss', 'node')
     order by 1, 5, 2, 6, 7

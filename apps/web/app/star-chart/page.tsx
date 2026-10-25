@@ -20,7 +20,7 @@ import {
   starChartScope,
   type StarChartScope,
 } from "@/lib/star-chart-scope";
-import { updateVisibleNodeCompletions } from "./actions";
+import { completeNodeScope, updateVisibleNodeCompletions } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -184,6 +184,7 @@ export default async function StarChartPage({
           nodesBySlug={nodesBySlug}
           planetNames={planetNames}
           planets={planets}
+          session={Boolean(session)}
           todoNodeSlugs={todoNodeSlugs}
         />
       )}
@@ -197,6 +198,7 @@ function SystemOverview({
   nodesBySlug,
   planetNames,
   planets,
+  session,
   todoNodeSlugs,
 }: {
   eventNodeSlugs: Set<string>;
@@ -204,6 +206,7 @@ function SystemOverview({
   nodesBySlug: Map<string, StarNode>;
   planetNames: string[];
   planets: Map<string, StarNode[]>;
+  session: boolean;
   todoNodeSlugs: Set<string>;
 }) {
   const scope = planetNames[0] ? starChartScope(planetNames[0]) : "origin";
@@ -220,6 +223,7 @@ function SystemOverview({
           Trace a screenshot layout
         </Link>
       </div>
+      {session && <NodeScopeActions />}
       <section className="system-overview-card">
         <svg
           aria-label="Zoomed-out Origin System"
@@ -553,7 +557,8 @@ function PlanetView({
           </div>
         </section>
       )}
-      {session && nodes.length > 0 && (
+      {session && nodes.length > 0 && <NodeScopeActions planet={planet} />}
+      {session && details.has("completion") && nodes.length > 0 && (
         <form
           action={updateVisibleNodeCompletions}
           className="card star-chart-bulk"
@@ -562,7 +567,8 @@ function PlanetView({
           <div>
             <h2>Edit {planet} completion</h2>
             <p className="muted">
-              Check completed nodes below, then save this planet.
+              Check normal and Steel Path completion below, then save this
+              planet.
             </p>
           </div>
           <button className="button">Save completion</button>
@@ -613,26 +619,75 @@ function PlanetView({
               </span>
             )}
             {details.has("completion") && node.completionState && (
-              <span className={`tag progress-${node.completionState}`}>
-                {node.completionState}
-              </span>
+              <div className="node-completion-modes">
+                <span className={`tag progress-${node.completionState}`}>
+                  Normal: {node.completionState}
+                </span>
+                {node.steelPathCompletionState && (
+                  <span
+                    className={`tag progress-${node.steelPathCompletionState}`}
+                  >
+                    Steel Path: {node.steelPathCompletionState}
+                  </span>
+                )}
+              </div>
             )}
             {session && details.has("completion") && node.completionState && (
-              <label className="check-label node-completion-check">
-                <input
-                  defaultChecked={node.completionState === "completed"}
-                  form="star-chart-completion"
-                  name="completed"
-                  type="checkbox"
-                  value={node.slug}
-                />{" "}
-                Completed
-              </label>
+              <div className="node-completion-modes">
+                <label className="check-label node-completion-check">
+                  <input
+                    defaultChecked={node.completionState === "completed"}
+                    form="star-chart-completion"
+                    name="normal-completed"
+                    type="checkbox"
+                    value={node.slug}
+                  />{" "}
+                  Normal
+                </label>
+                <label className="check-label node-completion-check">
+                  <input
+                    defaultChecked={
+                      node.steelPathCompletionState === "completed"
+                    }
+                    form="star-chart-completion"
+                    name="steel-path-completed"
+                    type="checkbox"
+                    value={node.slug}
+                  />{" "}
+                  Steel Path
+                </label>
+              </div>
             )}
           </article>
         ))}
       </section>
     </>
+  );
+}
+
+function NodeScopeActions({ planet }: { planet?: string }) {
+  const label = planet ?? "entire chart";
+  return (
+    <section className="card star-chart-scope-actions">
+      <div>
+        <h2>Mark {label} visited</h2>
+        <p className="muted">
+          Normal and Steel Path completion are tracked separately.
+        </p>
+      </div>
+      <div className="filters">
+        <form action={completeNodeScope}>
+          {planet && <input name="planet" type="hidden" value={planet} />}
+          <input name="mode" type="hidden" value="normal" />
+          <button className="button">Complete normal</button>
+        </form>
+        <form action={completeNodeScope}>
+          {planet && <input name="planet" type="hidden" value={planet} />}
+          <input name="mode" type="hidden" value="steel-path" />
+          <button className="button secondary">Complete Steel Path</button>
+        </form>
+      </div>
+    </section>
   );
 }
 

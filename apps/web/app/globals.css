@@ -2065,20 +2065,36 @@ textarea:focus {
 .star-node:hover {
   border-color: var(--cyan);
 }
-.star-chart-bulk {
+.star-chart-bulk,
+.star-chart-scope-actions,
+.bulk-progress-actions {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1.5rem;
   margin-top: 2rem;
 }
-.star-chart-bulk:hover {
+.star-chart-bulk:hover,
+.star-chart-scope-actions:hover,
+.bulk-progress-actions:hover {
   transform: none;
   border-color: var(--line);
 }
 .star-chart-bulk h2,
-.star-chart-bulk p {
+.star-chart-bulk p,
+.star-chart-scope-actions h2,
+.star-chart-scope-actions p,
+.bulk-progress-actions p {
   margin: 0;
+}
+.star-chart-scope-actions,
+.bulk-progress-actions {
+  margin: 1rem 0;
+}
+.node-completion-modes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
 }
 .node-completion-check {
   gap: 0.4rem;
@@ -2184,7 +2200,9 @@ textarea:focus {
   border-color: var(--accent);
 }
 @media (max-width: 600px) {
-  .star-chart-bulk {
+  .star-chart-bulk,
+  .star-chart-scope-actions,
+  .bulk-progress-actions {
     align-items: flex-start;
     flex-direction: column;
   }

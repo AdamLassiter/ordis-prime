@@ -1322,12 +1322,17 @@ export const nodeProgress = sqliteTable(
     nodeId: text("node_id")
       .notNull()
       .references(() => entities.id),
+    mode: text({ enum: ["normal", "steel-path"] }).notNull(),
     completedAt: integer("completed_at", { mode: "timestamp_ms" }).notNull(),
     updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
   },
   (table) => [
-    primaryKey({ columns: [table.userId, table.nodeId] }),
-    index("player_node_progress_completed").on(table.userId, table.completedAt),
+    primaryKey({ columns: [table.userId, table.nodeId, table.mode] }),
+    index("player_node_progress_completed").on(
+      table.userId,
+      table.mode,
+      table.completedAt,
+    ),
   ],
 );
 export const nodeObjectiveProgress = sqliteTable(

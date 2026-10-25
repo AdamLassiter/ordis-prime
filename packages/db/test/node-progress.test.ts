@@ -275,9 +275,18 @@ test("bulk node completion is atomic and preserves existing completion time", as
   setNodeCompletions(sqlite, userId, [
     { slug: "e-prime", completed: true },
     { slug: "mantle", completed: true },
+    { slug: "mantle", mode: "steel-path", completed: true },
   ]);
   assert.equal(getNodeCompletion(sqlite, userId, "e-prime"), "completed");
   assert.equal(getNodeCompletion(sqlite, userId, "mantle"), "completed");
+  assert.equal(
+    getNodeCompletion(sqlite, userId, "e-prime", "steel-path"),
+    "incomplete",
+  );
+  assert.equal(
+    getNodeCompletion(sqlite, userId, "mantle", "steel-path"),
+    "completed",
+  );
   assert.equal(
     (
       sqlite
@@ -307,6 +316,15 @@ test("bulk node completion is atomic and preserves existing completion time", as
         { slug: "mantle", completed: false },
         { slug: "mantle", completed: true },
       ]),
-    /Duplicate node completion mantle/,
+    /Duplicate normal node completion mantle/,
+  );
+  setNodeCompletions(sqlite, userId, [
+    { slug: "mantle", mode: "normal", completed: false },
+    { slug: "mantle", mode: "steel-path", completed: true },
+  ]);
+  assert.equal(getNodeCompletion(sqlite, userId, "mantle"), "incomplete");
+  assert.equal(
+    getNodeCompletion(sqlite, userId, "mantle", "steel-path"),
+    "completed",
   );
 });

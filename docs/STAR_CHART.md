@@ -104,13 +104,16 @@ from graph connectivity. Guests therefore see private-input-dependent evidence
 as conditional rather than available.
 
 Signed-in players can separately record whether each canonical node is complete
-and filter the chart by completed or incomplete nodes. Absence of private state
-means incomplete. Completion is not used as a synonym for access: clearing a
-node does not rewrite sourced prerequisites, and a connection does not mark
-either endpoint complete. Completed nodes are part of portable player profiles.
-The chart also provides a bulk editor for the selected planet. Its explicit
-submitted scope means checked and unchecked nodes on that planet are updated
-atomically while nodes on other planets remain untouched.
+in normal mode and Steel Path. Absence of private state means incomplete in
+that mode. Completion is not used as a synonym for access: clearing a node does
+not rewrite sourced prerequisites, and a connection does not mark either
+endpoint complete. Only normal completion satisfies node-completion access
+requirements. Both modes are part of portable player profiles.
+
+The chart provides one-click completion for the entire chart or the selected
+planet in either mode. Its planet editor also submits every displayed node and
+both mode checkboxes as an explicit atomic scope, so checked and unchecked
+nodes on that planet are updated while nodes on other planets remain untouched.
 
 Junction node pages list the current four sourced objectives in Wiki order with
 their hints and revision citations. Signed-in players can mark each current

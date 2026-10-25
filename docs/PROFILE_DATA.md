@@ -5,7 +5,7 @@ canonical entity IDs inside one installation, while exported profiles use
 provider identifiers so they can be restored into another installation whose
 canonical UUIDs differ.
 
-## Version 22 export
+## Version 23 export
 
 The player section carries an optional combined Mastery Rank used to evaluate
 sourced star-chart gates and build capacity. Values 0 through 30 are ordinary
@@ -44,8 +44,9 @@ Discovery progress uses the same reference and records either `discovered` or
 section is validated and resolved before the transactional write begins.
 
 Node progress is separate from discovery progress. Each row identifies a
-canonical node through the same portable reference and records its ISO
-completion time; absent nodes are incomplete.
+canonical node through the same portable reference, records whether it applies
+to `normal` or `steel-path`, and carries its ISO completion time. A missing
+node-and-mode pair is incomplete.
 
 Junction objective progress is separate from whole-node completion. Each
 completed objective carries the portable node reference, source ID,

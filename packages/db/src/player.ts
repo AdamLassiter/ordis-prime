@@ -368,7 +368,7 @@ export interface PortableEntityReference {
 }
 
 export interface ProfileExport {
-  schemaVersion: 22;
+  schemaVersion: 23;
   exportedAt: string;
   player: PlayerSettings;
   preferences: PlayerPreferences;
@@ -385,6 +385,7 @@ export interface ProfileExport {
   }>;
   nodeProgress: Array<{
     node: PortableEntityReference;
+    mode: "normal" | "steel-path";
     completedAt: string;
   }>;
   objectiveProgress: Array<{
@@ -581,7 +582,7 @@ export function exportPlayerProfile(
              source_id, namespace, value
   `);
   return {
-    schemaVersion: 22,
+    schemaVersion: 23,
     exportedAt: new Date().toISOString(),
     player: getPlayerSettings(sqlite, userId),
     preferences: getPlayerPreferences(sqlite, userId),
@@ -684,20 +685,21 @@ export function exportPlayerProfile(
       sqlite
         .prepare(
           `select progress.node_id as entityId, node.kind, node.slug, node.name,
-                  progress.completed_at as completedAt
+                  progress.mode, progress.completed_at as completedAt
            from player_node_progress progress
            join entities node on node.id = progress.node_id
            where progress.user_id = ?
-           order by node.name collate nocase`,
+           order by node.name collate nocase, progress.mode`,
         )
         .all(userId) as Array<{
         entityId: string;
         kind: "node";
         slug: string;
         name: string;
+        mode: "normal" | "steel-path";
         completedAt: number;
       }>
-    ).map(({ entityId, kind, slug, name, completedAt }) => ({
+    ).map(({ entityId, kind, slug, name, mode, completedAt }) => ({
       node: {
         externalIds: identifiers.all(
           entityId,
@@ -706,6 +708,7 @@ export function exportPlayerProfile(
         slug,
         name,
       },
+      mode,
       completedAt: new Date(completedAt).toISOString(),
     })),
     objectiveProgress: (
@@ -902,6 +905,7 @@ export function importPlayerProfile(
   }> = [];
   const resolvedNodeProgress: Array<{
     nodeId: string;
+    mode: "normal" | "steel-path";
     completedAt: number;
   }> = [];
   const resolvedObjectiveProgress: Array<{
@@ -1065,6 +1069,7 @@ export function importPlayerProfile(
     }
     resolvedNodeProgress.push({
       nodeId: resolution.entityId!,
+      mode: progress.mode,
       completedAt: Date.parse(progress.completedAt),
     });
   }
@@ -1391,15 +1396,16 @@ export function importPlayerProfile(
     for (const progress of resolvedDiscoveryProgress)
       writeProgress.run(userId, progress.entityId, progress.state, Date.now());
     const writeNodeProgress = sqlite.prepare(`
-      insert into player_node_progress (user_id, node_id, completed_at, updated_at)
-      values (?, ?, ?, ?)
-      on conflict(user_id, node_id) do update set completed_at = excluded.completed_at,
+      insert into player_node_progress (user_id, node_id, mode, completed_at, updated_at)
+      values (?, ?, ?, ?, ?)
+      on conflict(user_id, node_id, mode) do update set completed_at = excluded.completed_at,
         updated_at = excluded.updated_at
     `);
     for (const progress of resolvedNodeProgress)
       writeNodeProgress.run(
         userId,
         progress.nodeId,
+        progress.mode,
         progress.completedAt,
         Date.now(),
       );
@@ -1542,7 +1548,7 @@ export function importPlayerProfile(
 function parseProfile(value: unknown): ProfileExport {
   if (
     !isRecord(value) ||
-    value.schemaVersion !== 22 ||
+    value.schemaVersion !== 23 ||
     !isRecord(value.player) ||
     !isRecord(value.preferences) ||
     !Array.isArray(value.inventory) ||
@@ -1556,7 +1562,7 @@ function parseProfile(value: unknown): ProfileExport {
     !Array.isArray(value.builds)
   )
     throw new Error(
-      "Profile must use schemaVersion 22 and contain player settings, preferences, plus every portable state array",
+      "Profile must use schemaVersion 23 and contain player settings, preferences, plus every portable state array",
     );
   const masteryRank = value.player.masteryRank;
   if (
@@ -1665,6 +1671,7 @@ function parseProfile(value: unknown): ProfileExport {
         : Number.NaN;
     if (
       !isRecord(entry) ||
+      (entry.mode !== "normal" && entry.mode !== "steel-path") ||
       typeof entry.completedAt !== "string" ||
       !Number.isFinite(parsedCompletedAt) ||
       new Date(parsedCompletedAt).toISOString() !== entry.completedAt
@@ -1676,7 +1683,11 @@ function parseProfile(value: unknown): ProfileExport {
     );
     if (node.kind !== "node")
       throw new Error(`Profile node progress entry ${index} is not a node`);
-    return { node, completedAt: entry.completedAt };
+    return {
+      node,
+      mode: entry.mode as "normal" | "steel-path",
+      completedAt: entry.completedAt,
+    };
   });
   const objectiveProgress = value.objectiveProgress.map((entry, index) => {
     const parsedCompletedAt =
@@ -1741,7 +1752,7 @@ function parseProfile(value: unknown): ProfileExport {
     parsePortableBuild(entry, index),
   );
   return {
-    schemaVersion: 22,
+    schemaVersion: 23,
     exportedAt: typeof value.exportedAt === "string" ? value.exportedAt : "",
     player: {
       masteryRank: masteryRank as number | undefined,

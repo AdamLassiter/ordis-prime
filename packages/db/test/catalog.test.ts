@@ -532,6 +532,11 @@ test("catalog read models join active recipes, drops, provenance, and rankings",
     findCatalogNode(sqlite, "mercury-caloris", userId)?.completionState,
     "incomplete",
   );
+  assert.equal(
+    findCatalogNode(sqlite, "mercury-caloris", userId)
+      ?.steelPathCompletionState,
+    "incomplete",
+  );
   assert.deepEqual(
     findCatalogNode(sqlite, "mercury-caloris", userId)?.itemRequirements,
     [
@@ -565,8 +570,15 @@ test("catalog read models join active recipes, drops, provenance, and rankings",
     ],
   );
   setNodeCompletion(sqlite, userId, "mercury-caloris", true);
+  setNodeCompletion(sqlite, userId, "mercury-caloris", true, "steel-path");
   assert.equal(
     findCatalogNode(sqlite, "mercury-caloris", userId)?.completionState,
+    "completed",
+  );
+  assert.equal(
+    listStarChartNodes(sqlite, userId).find(
+      ({ slug }) => slug === "mercury-caloris",
+    )?.steelPathCompletionState,
     "completed",
   );
   assert.deepEqual(

@@ -80,7 +80,11 @@ export default async function NodePage({
             Track whether you have cleared this node. This private state is
             independent of catalog access evidence.
           </p>
-          <NodeCompletionForm slug={slug} state={node.completionState} />
+          <NodeCompletionForm
+            normalState={node.completionState}
+            slug={slug}
+            steelPathState={node.steelPathCompletionState ?? "incomplete"}
+          />
         </section>
       )}
       {session && (
