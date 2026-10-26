@@ -1,20 +1,45 @@
 FROM debian:bookworm-slim AS updater-build
 WORKDIR /src
 RUN apt-get update \
-  && apt-get install --yes --no-install-recommends g++-mingw-w64-x86-64-posix \
+  && apt-get install --yes --no-install-recommends \
+    g++ g++-mingw-w64-x86-64-posix libayatana-appindicator3-dev \
+    libcurl4-openssl-dev pkg-config \
   && rm -rf /var/lib/apt/lists/*
 COPY tools/ordis-prime-updater ./tools/ordis-prime-updater
 RUN mkdir -p /dist \
   && x86_64-w64-mingw32-g++-posix -std=c++20 -O2 -static -static-libgcc -static-libstdc++ \
     -DUNICODE -D_UNICODE -DWIN32_LEAN_AND_MEAN -DNOMINMAX \
     tools/ordis-prime-updater/src/main.cpp \
+    tools/ordis-prime-updater/src/api.cpp \
+    tools/ordis-prime-updater/src/updater.cpp \
     tools/ordis-prime-updater/src/pairing.cpp \
     tools/ordis-prime-updater/src/scheduler.cpp \
+    tools/ordis-prime-updater/src/http_windows.cpp \
+    tools/ordis-prime-updater/src/platform_windows.cpp \
+    tools/ordis-prime-updater/src/process_windows.cpp \
+    tools/ordis-prime-updater/src/tray_windows.cpp \
+    -Itools/ordis-prime-updater/src \
     -lwinhttp -ladvapi32 -lbcrypt -lshell32 \
     -o /dist/ordis-prime-updater-windows-x64.exe \
   && sha256sum /dist/ordis-prime-updater-windows-x64.exe \
     | sed 's|  /dist/|  |' \
-    > /dist/ordis-prime-updater-windows-x64.exe.sha256
+    > /dist/ordis-prime-updater-windows-x64.exe.sha256 \
+  && g++ -std=c++20 -O2 \
+    tools/ordis-prime-updater/src/main.cpp \
+    tools/ordis-prime-updater/src/api.cpp \
+    tools/ordis-prime-updater/src/updater.cpp \
+    tools/ordis-prime-updater/src/pairing.cpp \
+    tools/ordis-prime-updater/src/scheduler.cpp \
+    tools/ordis-prime-updater/src/http_linux.cpp \
+    tools/ordis-prime-updater/src/platform_linux.cpp \
+    tools/ordis-prime-updater/src/process_linux.cpp \
+    tools/ordis-prime-updater/src/tray_linux.cpp \
+    -Itools/ordis-prime-updater/src \
+    $(pkg-config --cflags --libs ayatana-appindicator3-0.1 libcurl) -pthread \
+    -o /dist/ordis-prime-updater-linux-x64 \
+  && sha256sum /dist/ordis-prime-updater-linux-x64 \
+    | sed 's|  /dist/|  |' \
+    > /dist/ordis-prime-updater-linux-x64.sha256
 
 FROM node:24-bookworm-slim AS build
 WORKDIR /app
@@ -42,6 +67,8 @@ COPY --from=build --chown=ordis:ordis /app/apps/web/.next/static ./apps/web/.nex
 COPY --from=build --chown=ordis:ordis /app/apps/web/public ./apps/web/public
 COPY --from=updater-build --chown=ordis:ordis /dist/ordis-prime-updater-windows-x64.exe ./apps/web/public/downloads/ordis-prime-updater-windows-x64.exe
 COPY --from=updater-build --chown=ordis:ordis /dist/ordis-prime-updater-windows-x64.exe.sha256 ./apps/web/public/downloads/ordis-prime-updater-windows-x64.exe.sha256
+COPY --from=updater-build --chown=ordis:ordis /dist/ordis-prime-updater-linux-x64 ./apps/web/public/downloads/ordis-prime-updater-linux-x64
+COPY --from=updater-build --chown=ordis:ordis /dist/ordis-prime-updater-linux-x64.sha256 ./apps/web/public/downloads/ordis-prime-updater-linux-x64.sha256
 COPY --from=updater-build --chown=ordis:ordis /src/tools/ordis-prime-updater/THIRD_PARTY_NOTICES.md ./apps/web/public/downloads/THIRD_PARTY_NOTICES.md
 COPY --from=updater-build --chown=ordis:ordis /src/tools/ordis-prime-updater/licenses/warframe-api-helper-LICENSE ./apps/web/public/downloads/warframe-api-helper-LICENSE
 COPY --from=build --chown=ordis:ordis /app/packages/db/migrations ./migrations

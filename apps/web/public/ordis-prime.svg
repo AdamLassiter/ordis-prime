@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1000" viewBox="0 0 800 1000" role="img" aria-labelledby="title desc">
+<title id="title">Ordis Prime</title><desc id="desc">Ordis's floating black, ivory and gold shell, with two cyan circular lights and a tapered fractured lower body. Transparent background.</desc>
+<defs>
+<linearGradient id="ivory" x1="0" x2="1"><stop stop-color="#fffef2"/><stop offset=".38" stop-color="#e2dfca"/><stop offset=".7" stop-color="#9c997b"/><stop offset="1" stop-color="#e4e7cf"/></linearGradient>
+<linearGradient id="face" x1="0" y1="0" x2="1" y2=".7"><stop stop-color="#77735b"/><stop offset=".45" stop-color="#c2bfa1"/><stop offset="1" stop-color="#3e5147"/></linearGradient>
+<linearGradient id="black" x1="0" y1="0" x2="1" y2=".7"><stop stop-color="#030707"/><stop offset=".5" stop-color="#252927"/><stop offset=".75" stop-color="#0b100f"/><stop offset="1" stop-color="#34352d"/></linearGradient>
+<linearGradient id="gold" x1="0" y1="0" x2="1" y2=".6"><stop stop-color="#73602a"/><stop offset=".25" stop-color="#f9e69b"/><stop offset=".46" stop-color="#8b6922"/><stop offset=".65" stop-color="#dbbc57"/><stop offset="1" stop-color="#574015"/></linearGradient>
+<radialGradient id="lens"><stop stop-color="#092929"/><stop offset=".67" stop-color="#052021"/><stop offset=".8" stop-color="#34605a"/><stop offset="1" stop-color="#030909"/></radialGradient>
+<filter id="glow"><feGaussianBlur stdDeviation="5"/></filter>
+</defs>
+<!-- Crown and upper shell -->
+<path d="M365 60 367 48 466 50 475 57 419 58" fill="#66664c" stroke="#292f25" stroke-width="3"/>
+<path d="M361 112 373 80 450 79 467 108" fill="#101d1b" stroke="#565a43" stroke-width="3"/>
+<path d="M158 267 253 191 331 133Q392 98 471 115L548 147 657 236 678 270 653 316 416 364 178 322Z" fill="url(#face)" stroke="#1d2822" stroke-width="5"/>
+<path d="M191 245 283 181 334 147 362 144 311 186 300 221 340 245 294 260Z" fill="#d1c8a0" opacity=".52"/>
+<path d="M344 132 413 117 470 126 471 164 437 182 417 211 453 244 443 277 407 267 389 237 356 216 326 190Z" fill="#b5bcaa" stroke="#626f5e" stroke-width="3"/>
+<path d="M476 126 539 151 590 196 561 214 526 188 510 148Z" fill="#1b2d29"/>
+<!-- Two recessed optical ports -->
+<ellipse cx="392" cy="189" rx="65" ry="59" transform="rotate(-17 392 189)" fill="#182823" stroke="#797c5f" stroke-width="7"/>
+<ellipse cx="394" cy="190" rx="49" ry="47" fill="url(#lens)" stroke="#0c1513" stroke-width="5"/>
+<path d="M404 163Q442 181 418 210L401 215" fill="none" stroke="#8bffff" stroke-width="8" stroke-linecap="round"/>
+<path d="M405 164Q438 182 419 207" fill="none" stroke="#58ffff" stroke-width="16" opacity=".45" filter="url(#glow)"/>
+<ellipse cx="540" cy="177" rx="37" ry="48" transform="rotate(-36 540 177)" fill="#061715" stroke="#5b7364" stroke-width="5"/>
+<path d="M529 153Q519 182 555 193L563 184" fill="none" stroke="#96ffff" stroke-width="6" stroke-linecap="round"/>
+<!-- Layered brow -->
+<path d="M155 268Q242 292 350 270L400 276 434 302 458 305 465 276 486 251 478 223 494 240 505 277 486 305 528 297 566 277 657 251 679 269 668 318 591 339 540 359 498 391 458 387 438 355 350 351 170 333Z" fill="#080f0d" stroke="#4d513b" stroke-width="4"/>
+<path d="M160 281Q266 310 369 287L404 293 437 319 470 322 480 289M502 318 551 312 665 279" fill="none" stroke="url(#gold)" stroke-width="12"/>
+<path d="M160 308Q246 329 357 313L412 324 433 347M518 337 555 326 668 301" fill="none" stroke="#d2bb60" stroke-width="4"/>
+<!-- Hanging hull -->
+<path d="M174 340 353 352 423 370 429 412 401 445 368 494 352 575 321 665 316 748 345 831 369 895 385 952 346 918 301 849 256 765 220 666 201 562Z" fill="url(#ivory)" stroke="#302f24" stroke-width="5"/>
+<path d="M430 371 463 393 500 388 542 357 652 326 631 415 642 507 635 596 603 692 555 775 496 857 453 943 430 904 406 829 369 748 351 677 370 584 403 497 426 434Z" fill="url(#black)" stroke="#070d0c" stroke-width="6"/>
+<!-- Ivory folded facets -->
+<path d="M182 358 268 376 309 407 295 463 258 541 231 631 217 569Z" fill="#fffff9"/>
+<path d="M269 373 325 392 343 418 323 476 284 566 256 655 259 729 239 675 246 599 281 502 302 432Z" fill="#c9c8b5"/>
+<path d="M192 363 267 383 290 414 275 467 243 536M211 386 249 409 254 440 227 498M280 377 315 409 304 457 269 546" fill="none" stroke="#797c71" stroke-width="2"/>
+<!-- Gold seam tracing along the long shell -->
+<path d="M178 341 352 356 393 371 396 406 376 445 345 500 321 571 296 650Q276 728 309 801L350 879 381 946" fill="none" stroke="url(#gold)" stroke-width="12"/>
+<path d="M181 344 347 362 382 377 384 409 359 455 331 516 309 585 287 653Q272 728 304 799" fill="none" stroke="#f8edbc" stroke-width="3"/>
+<path d="M648 332 618 392 623 474 628 531 614 608 580 687 530 767 479 837 451 906" fill="none" stroke="url(#gold)" stroke-width="10"/>
+<path d="M637 344 608 394 613 477 616 537 602 611 570 683 519 762" fill="none" stroke="#fff1a3" stroke-width="2"/>
+<!-- Exposed central workings -->
+<path d="M442 391 465 405 463 444 436 459 449 485 429 509 407 507 401 535 380 541 371 577 399 589 429 570 449 575 455 552 478 542 486 515 478 494 491 470 480 449 493 426 488 397" fill="#070d0c" stroke="#343c31" stroke-width="4"/>
+<path d="M437 411 454 418 448 443 427 449M431 471 444 485 432 498M404 528 426 530 423 552 400 560M450 530 466 520 463 501" fill="none" stroke="#666746" stroke-width="3"/>
+<g fill="#70fff2"><path d="M462 430 480 427 479 433 464 437Z"/><path d="M459 473 477 470 473 476 457 479Z"/><path d="M418 495 434 490 433 497 419 501Z"/></g>
+<!-- Lower shell divisions -->
+<path d="M371 579 347 625 351 677 393 739 415 791 430 838 453 877M351 678 331 723 344 781 369 817M393 739 409 701 437 652M415 791 477 837 500 849M431 839 410 903" fill="none" stroke="#555747" stroke-width="4"/>
+<path d="M376 589 360 625 363 665 400 726M343 734 354 773 376 805M423 798 478 841" fill="none" stroke="#a3a18a" stroke-width="1.5" opacity=".65"/>
+<path d="M396 740 405 824 397 873 386 911 385 952 374 911 366 875 365 827Z" fill="#060c0b" stroke="#414735" stroke-width="2"/>
+<path d="M320 671 332 656 351 665 349 681 334 685Z" fill="#080e0d"/>
+<path d="M317 677 326 683 320 707" fill="none" stroke="#b5a24b" stroke-width="3"/>
+</svg>

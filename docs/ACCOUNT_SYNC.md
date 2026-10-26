@@ -34,7 +34,7 @@ partial ranks, capacity upgrades, adapters, Focus progress, Archon Shards and
 ambiguous identifiers remain visible omissions rather than inferred values.
 This is still import, not continuous sync.
 
-The second boundary is the optional Windows updater. It derives its
+The second boundary is the optional Windows/Linux updater. It derives its
 credential discovery from `warframe-api-helper`: while Warframe is running, the
 local executable reads the short-lived account identifier and nonce from game
 memory, fetches `inventory.php`, and sends only the returned inventory JSON to
@@ -45,10 +45,11 @@ not weaken the AlecaFrame path.
 The Operator page creates a random ten-minute pairing code. SQLite retains only
 its SHA-256 hash; the code is consumed atomically to register a named updater
 device. The client-generated device secret is stored in Windows Credential
-Manager and only its rotating hashes are stored by Ordis Prime. The Operator
-page lists creation and last-use status and can revoke the device before its
-next request. Live updater imports are deliberately narrower than snapshot imports: they always
-merge inventory and verified progression monotonically, never reduce state,
+Manager or a private XDG state file and only its rotating hashes are stored by
+Ordis Prime. The Operator page lists creation and last-use status and can revoke
+the device before its next request. Live updater imports are deliberately
+narrower than snapshot imports: they always merge inventory and verified
+progression monotonically, never reduce state,
 never create builds, and need no destructive confirmation. Raw API bytes are
 discarded after the request. A capped result remains for 24 hours so the page
 can report what happened; the worker removes old pairings. Device status and
@@ -66,11 +67,11 @@ process. Each successful request
 rotates to a client-generated replacement credential; a short exact-request
 grace recovers a lost response without reapplying the import.
 
-The production web container cross-compiles the updater as a static Windows x64
-executable and serves it, its checksum, and its redistribution notices from the
-same Ordis Prime instance. This keeps a self-hosted deployment independent of a
-GitHub Release. Tagged releases remain a second distribution channel and are
-built by the native Windows workflow.
+The production web container builds Windows and Linux x64 updater executables
+and serves them, their checksums, and redistribution notices from the same Ordis
+Prime instance. This keeps a self-hosted deployment independent of a GitHub
+Release. Tagged releases remain a second distribution channel and are built and
+tested natively for both platforms.
 
 Server-side or authoritative account sync becomes eligible only if Digital
 Extremes publishes a supported authorization contract with all of the following:

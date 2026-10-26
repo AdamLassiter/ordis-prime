@@ -59,14 +59,15 @@ runtime validation. Authentication and player authorization are checked in the
 server data-access layer, not just in UI or route redirects. Catalog pages are
 public; inventory, goals and progress are private to their owning account.
 
-The optional Windows updater is outside the durable web trust boundary. An
+The optional Windows/Linux updater is outside the durable web trust boundary. An
 authenticated player creates a ten-minute pairing code whose secret is stored
 only as a hash. The updater obtains temporary credentials from the running game
 locally, fetches the inventory itself, and sends only that inventory over HTTPS.
 Pairing registers a named, revocable device credential scoped only to monotonic
-inventory sync. The client stores its secret in Windows Credential Manager; the
-server stores rotating current/short-grace hashes plus bounded status and audit
-metadata. It never stores raw inventory or game credentials.
+inventory sync. Windows stores its secret in Credential Manager; Linux stores
+it in a user-owned `0600` XDG state file. The server stores rotating current/
+short-grace hashes plus bounded status and audit metadata. It never stores raw
+inventory or game credentials.
 
 There is no pre-release backwards-compatibility requirement. Before the first
 stable release, schemas, routes and stored data may be replaced outright when a

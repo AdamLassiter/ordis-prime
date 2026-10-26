@@ -111,7 +111,7 @@ test("cyclic rewards drive schedule, catalog, world-state, and watch read models
     "Seeking Shuriken",
   );
   assert.equal(
-    findCatalogItem(sqlite, "warframe", "ash")?.cyclicRewards[0]?.current,
+    findCatalogItem(sqlite, "warframe", "ash", now)?.cyclicRewards[0]?.current,
     true,
   );
 

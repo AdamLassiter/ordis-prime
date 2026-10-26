@@ -7,4 +7,4 @@ struct Pairing {
   std::string token;
 };
 
-Pairing parse_pairing_code(const std::string& value);
+Pairing parse_pairing_code(const std::string &value);

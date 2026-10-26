@@ -357,9 +357,9 @@ export function PlayerDataImport() {
           <>
             <div className="notice">
               <p>
-                The Windows updater reads temporary credentials from the running
-                game, fetches your current inventory, and sends only that
-                inventory to this Ordis Prime instance.
+                The Windows and Linux updaters read temporary credentials from
+                the running game, fetch your current inventory, and send only
+                that inventory to this Ordis Prime instance.
               </p>
               <p>
                 Imports only increase supported inventory and progression. They
@@ -367,7 +367,7 @@ export function PlayerDataImport() {
               </p>
               <p>
                 After pairing, you can optionally keep the updater in the system
-                tray and choose whether it launches at Windows sign-in.
+                tray and choose whether it launches when you sign in.
               </p>
             </div>
             <p>
@@ -376,6 +376,12 @@ export function PlayerDataImport() {
                 href="/downloads/ordis-prime-updater-windows-x64.exe"
               >
                 Download Windows updater
+              </a>{" "}
+              <a
+                className="nav-button"
+                href="/downloads/ordis-prime-updater-linux-x64"
+              >
+                Download Linux updater
               </a>
             </p>
             <p className="muted">
@@ -384,7 +390,12 @@ export function PlayerDataImport() {
               <a href="/downloads/ordis-prime-updater-windows-x64.exe.sha256">
                 SHA-256 checksum
               </a>{" "}
-              before running it. After pairing, the updater waits in the system
+              before running it. Linux users should also verify the{" "}
+              <a href="/downloads/ordis-prime-updater-linux-x64.sha256">
+                Linux checksum
+              </a>
+              , mark the download executable, and review the ptrace setup in the
+              updater README. After pairing, the updater waits in the system
               tray and detects Warframe whenever you next run it.
             </p>
             {!pairing ? (

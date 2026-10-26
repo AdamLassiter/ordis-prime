@@ -180,21 +180,24 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   NORMAL/SENTINEL loadout slots can be applied; loadouts become new drafts only
   on request. Other presets, partial equipment ranks, Focus progress,
   Catalyst/Reactor state, adapters, Archon Shards and star-chart completion are
-  not inferred. A separate unsigned Windows x64 updater exchanges a hashed,
+  not inferred. Separate Windows and Linux x64 updater builds exchange a hashed,
   ten-minute pairing code for a named revocable device credential whose secret
-  stays in Windows Credential Manager. Pairing completes before Warframe is
-  needed and the updater then waits in the tray, checking once per minute while
-  the game is absent. It syncs immediately on detection and then at most hourly,
-  survives transient errors, and offers manual sync, status, explicit sign-in
-  startup and clean exit. The production web
-  image contains a statically cross-compiled copy plus its checksum and licence
+  stays in Windows Credential Manager or a private XDG state file. Pairing
+  completes before Warframe is needed and the updater then waits in the tray,
+  checking once per minute while the game is absent. It syncs immediately on
+  detection and then at most hourly, survives transient errors, and offers
+  manual sync, status, explicit sign-in startup and clean exit. The production web
+  image contains both platform builds plus their checksums and licence
   notices, so the Operator page downloads it from the current instance rather
   than depending on GitHub Releases. It reads temporary
   game credentials locally, uploads only inventory JSON, and is restricted to
   an automatic monotonic inventory/progression merge. Device secrets rotate,
   server hashes and retry metadata are bounded, and revocation applies to the
-  next request. It has no Linux/Proton build, `getShip` support, build creation,
-  replacement mode, code signature, or stable provider contract. The app does
+  next request. Linux currently requires procfs memory permission and desktop
+  tray libraries, stores its scoped secret in a private file rather than a
+  keyring, and is not packaged as an AppImage. Neither build has `getShip`
+  support, build creation, replacement mode, a code signature, or a stable
+  provider contract. The app does
   not retain game credentials or raw inventory; it retains only capped device
   audit metadata.
   Authenticated goals feed a planner that

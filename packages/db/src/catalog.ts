@@ -443,6 +443,7 @@ export function findCatalogItem(
   sqlite: Database.Database,
   kind: string,
   slug: string,
+  now = Date.now(),
 ): CatalogItem | undefined {
   const item = sqlite
     .prepare(
@@ -466,7 +467,7 @@ export function findCatalogItem(
     sqlite,
     item.id,
   );
-  const cyclicRewards = listEntityCyclicRewards(sqlite, item.id);
+  const cyclicRewards = listEntityCyclicRewards(sqlite, item.id, now);
   const marketIds = sqlite
     .prepare(
       `select namespace, value from external_ids

@@ -23,24 +23,25 @@ std::string decode_base64url(std::string_view input) {
     bits += 6;
     if (bits >= 8) {
       bits -= 8;
-      output.push_back(
-          static_cast<char>((accumulator >> static_cast<unsigned int>(bits)) & 0xffU));
+      output.push_back(static_cast<char>(
+          (accumulator >> static_cast<unsigned int>(bits)) & 0xffU));
     }
   }
   return output;
 }
 
 bool valid_token(std::string_view token) {
-  if (token.size() != 43) return false;
+  if (token.size() != 43)
+    return false;
   for (const char character : token)
     if (!std::isalnum(static_cast<unsigned char>(character)) &&
         character != '-' && character != '_')
       return false;
   return true;
 }
-}  // namespace
+} // namespace
 
-Pairing parse_pairing_code(const std::string& value) {
+Pairing parse_pairing_code(const std::string &value) {
   static constexpr std::string_view prefix = "ordis-prime:v1:";
   if (!value.starts_with(prefix))
     throw std::runtime_error("Pairing code has an unsupported format");
@@ -56,6 +57,7 @@ Pairing parse_pairing_code(const std::string& value) {
   const auto authority_start = origin.find("://") + 3;
   if (origin.find_first_of("/?#", authority_start) != std::string::npos)
     throw std::runtime_error("Pairing server origin is invalid");
-  if (!valid_token(token)) throw std::runtime_error("Pairing token is invalid");
+  if (!valid_token(token))
+    throw std::runtime_error("Pairing token is invalid");
   return {std::move(origin), token};
 }

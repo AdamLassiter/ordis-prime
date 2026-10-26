@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
@@ -15,6 +16,10 @@ export const metadata: Metadata = {
   },
   description:
     "Your Orbiter console for Warframe collections, farms, builds and live cycles.",
+  icons: {
+    icon: [{ url: "/ordis-prime.svg", type: "image/svg+xml" }],
+    shortcut: "/ordis-prime.svg",
+  },
 };
 export default async function Layout({
   children,
@@ -30,9 +35,14 @@ export default async function Layout({
         <header className="orbiter-header">
           <nav>
             <Link className="nav-brand" href="/" aria-label="Ordis Prime home">
-              <span className="cephalon-mark" aria-hidden="true">
-                <span />
-              </span>
+              <Image
+                className="ordis-prime-mark"
+                src="/ordis-prime.svg"
+                alt=""
+                width={35}
+                height={44}
+                priority
+              />
               <span className="brand-copy">
                 <strong>ORDIS // PRIME</strong>
                 <small>Orbiter intelligence</small>

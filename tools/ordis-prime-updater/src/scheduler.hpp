@@ -3,7 +3,7 @@
 #include <chrono>
 
 class SyncSchedule {
- public:
+public:
   using Clock = std::chrono::steady_clock;
   explicit SyncSchedule(Clock::time_point now = Clock::now());
 
@@ -12,7 +12,7 @@ class SyncSchedule {
   void mark_sync_attempt(Clock::time_point now);
   bool game_running() const;
 
- private:
+private:
   static constexpr auto absent_interval = std::chrono::minutes(1);
   static constexpr auto present_interval = std::chrono::minutes(1);
   static constexpr auto sync_interval = std::chrono::hours(1);

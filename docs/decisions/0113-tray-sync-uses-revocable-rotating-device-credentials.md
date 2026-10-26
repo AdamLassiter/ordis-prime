@@ -15,10 +15,11 @@ must not move temporary game credentials or raw inventory into durable storage.
 
 ## Decision
 
-A successful pairing registers one named updater device. The Windows client
-generates the long-lived secret and stores it only in Windows Credential
-Manager; SQLite stores its SHA-256 hash. The credential authorizes only the
-monotonic inventory-sync route and is not an account/session API token.
+A successful pairing registers one named updater device. The client generates
+the long-lived secret; Windows stores it in Credential Manager and Linux uses a
+private XDG state file as decided in ADR 0114. SQLite stores its SHA-256 hash.
+The credential authorizes only the monotonic inventory-sync route and is not an
+account/session API token.
 
 Each successful request supplies a client-generated replacement credential and
 unique request ID. The server atomically applies the import, rotates hashes,
@@ -34,10 +35,10 @@ pairings, devices, and their audit events.
 
 Pairing registers and persists the device before attempting to discover
 Warframe, then the updater enters tray mode. Launch at sign-in is a separate
-opt-in stored in the current user's Windows Run key. While Warframe is absent,
-the schedule probes once per minute. It synchronizes immediately on the first
-detection of a running session and no more than hourly while the game remains
-running. It also probes a known-running session once per minute to notice exit,
+opt-in stored in the Windows Run key or an XDG autostart entry. While Warframe
+is absent, the schedule probes once per minute. It synchronizes immediately on
+the first detection of a running session and no more than hourly while the game
+remains running. It also probes a known-running session once per minute to notice exit,
 returns to the waiting state afterward, and keeps running after transient
 errors. Warframe being absent, including during a manual sync race, is not
 reported as an updater failure. The tray menu exposes status, last success,
@@ -52,7 +53,7 @@ bounded error, Sync now, startup choice, and Exit.
   rotated or revoked. It cannot read profile data or mutate other account state.
 - Losing the server response after rotation is recoverable without accepting a
   general duplicate request.
-- The unsigned Windows-only, undocumented-provider, and non-commercial
-  redistribution caveats from ADR 0109 remain.
-- Server-side polling, authoritative deletion reconciliation, and non-Windows
-  clients remain separate future decisions.
+- The unsigned, undocumented-provider, and non-commercial redistribution
+  caveats from ADR 0109 remain.
+- Server-side polling and authoritative deletion reconciliation remain separate
+  future decisions.

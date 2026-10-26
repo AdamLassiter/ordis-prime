@@ -6,4 +6,5 @@ coverage/
 data/*.sqlite*
 data/sources/
 data/cache/
+.vscode/
 !.gitkeep

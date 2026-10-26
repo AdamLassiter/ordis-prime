@@ -10,7 +10,8 @@ bool SyncSchedule::observe_process(bool running, Clock::time_point now) {
   const bool first_detection = running && !game_running_;
   game_running_ = running;
   next_probe_ = now + (running ? present_interval : absent_interval);
-  if (!running) return false;
+  if (!running)
+    return false;
   return first_detection || !has_sync_attempt_ ||
          now - last_sync_attempt_ >= sync_interval;
 }

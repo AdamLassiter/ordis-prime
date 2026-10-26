@@ -1,4 +1,4 @@
-name: Windows updater
+name: Cross-platform updater
 
 on:
   push:
@@ -11,7 +11,7 @@ permissions:
   contents: read
 
 jobs:
-  build:
+  windows:
     runs-on: windows-latest
     timeout-minutes: 15
     steps:
@@ -37,8 +37,34 @@ jobs:
           path: dist/updater/*
           if-no-files-found: error
 
+  linux:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install --yes libayatana-appindicator3-dev libcurl4-openssl-dev
+      - name: Configure
+        run: cmake -S tools/ordis-prime-updater -B build/updater -DCMAKE_BUILD_TYPE=Release
+      - name: Build
+        run: cmake --build build/updater --parallel
+      - name: Test
+        run: ctest --test-dir build/updater --output-on-failure
+      - name: Package
+        run: |
+          mkdir -p dist/updater
+          cp build/updater/ordis-prime-updater dist/updater/ordis-prime-updater-linux-x64
+          cp tools/ordis-prime-updater/THIRD_PARTY_NOTICES.md dist/updater/
+          cp tools/ordis-prime-updater/licenses/warframe-api-helper-LICENSE dist/updater/
+          sha256sum dist/updater/ordis-prime-updater-linux-x64 | sed 's|  dist/updater/|  |' > dist/updater/ordis-prime-updater-linux-x64.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ordis-prime-updater-linux-x64
+          path: dist/updater/*
+          if-no-files-found: error
+
   release:
-    needs: build
+    needs: [windows, linux]
     if: startsWith(github.ref, 'refs/tags/updater-v')
     runs-on: ubuntu-latest
     permissions:
@@ -46,8 +72,9 @@ jobs:
     steps:
       - uses: actions/download-artifact@v5
         with:
-          name: ordis-prime-updater-windows-x64
+          pattern: ordis-prime-updater-*
           path: dist/updater
+          merge-multiple: true
       - name: Publish updater release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
