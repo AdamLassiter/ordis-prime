@@ -71,6 +71,9 @@ export default async function Home({
             Find equipment and resources, follow their acquisition paths, and
             open the tools that use the same linked data.
           </p>
+          <Link className="editorial-link" href="/what-is-warframe">
+            What is Warframe, really? <span aria-hidden="true">→</span>
+          </Link>
         </div>
         <CephalonBriefing message={briefing} />
       </section>

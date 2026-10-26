@@ -818,6 +818,56 @@ textarea:focus {
 .hero-copy .lede {
   margin-bottom: 0;
 }
+.editorial-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 0.9rem;
+  color: var(--gold);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.editorial-link:hover {
+  color: var(--cyan);
+}
+.editorial-page {
+  max-width: 72rem;
+}
+.editorial-article {
+  max-width: 72ch;
+  margin-top: 1.4rem;
+  padding-top: 1.6rem;
+  border-top: 1px solid var(--line);
+}
+.editorial-title {
+  margin: 0 0 2rem;
+  color: var(--text);
+  font-size: clamp(2.3rem, 5vw, 4.8rem);
+  font-weight: 450;
+  letter-spacing: -0.045em;
+  line-height: 0.98;
+  text-wrap: balance;
+}
+.editorial-article p {
+  margin: 0 0 1.3rem;
+  color: #d3dfe1;
+  font-size: 1.02rem;
+  line-height: 1.82;
+}
+.editorial-article p:first-of-type {
+  color: var(--text);
+  font-size: 1.12rem;
+}
+.editorial-article a {
+  color: var(--cyan);
+  text-decoration: underline;
+  text-decoration-color: rgb(108 231 239 / 45%);
+  text-underline-offset: 0.2em;
+}
+.editorial-article a:hover {
+  text-decoration-color: var(--cyan);
+}
 .cephalon-briefing {
   position: fixed;
   z-index: 20;

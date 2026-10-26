@@ -1,10 +1,10 @@
 # What is Warframe, really?
 
 I like *Warframe*, possibly too much.
-The new player experience then was *fine*, but I never really got what the game's identity was supposed to be.
+When I was first convinced by friends to give the game a go, the new player experience was *fine*, but I never really got what the game's identity was supposed to be.
 Why did I want to complete map nodes,though?
 What was the story behind this warframe in a cryo-pod?
-How come that weird human settlement on Earth such a pain to navigate and actually find the tiny sample of interactive NPCs?
+How come that weird human settlement on Earth is such a pain to navigate and actually find the tiny sample of interactive NPCs?
 I first played in 2018, but it never really clicked for me.
 I picked up Frost Prime from the old Twitch x Amazon Prime rewards system a little later, and that became my main frame for a while because "He's *prime*, that must be better than everything else... right?"
 From what little I remember of the game back then, I can only recall these weird things called "Void Fissures" that seemed like a short-term event at the time, given the rate they were dropping these cool-looking Prime parts, but I quickly burned through my meager collection of relics.
@@ -16,9 +16,10 @@ My beloved Paris carried me for longer than it should have done as I wandered th
 The story takes a long time to get going, but I started to have this crashing realisation that this is far more than some generic sci-fi backdrop; all these loose story ends start to tie together.
 
 Then, much later, I discovered the wall that is "The Steel Path".
-You are *given* a flimsy combat suit, equip a handful of relics from a bygone feudal age, and carefully navigate a maze of sensors and alarms with enough cautious precision to make even a amateur burglar question your credentials.
-You *choose* a biomechanical space warrior, equip an implausible number of weapons, and pinball through missions with enough speed and spectacle to make gravity feel more like a polite suggestion.
-This machine of war-crimes and devestation is born out of this struggle against the relentless resilience that Steel Path throws at you, and only then does the game start to explain itself.
+At first, you are *given* a flimsy combat suit, equip a handful of artefacts from a bygone feudal age, and carefully navigate a maze of sensors and alarms with enough cautious precision to make even an amateur burglar question your credentials.
+Come Steel Path, you *choose* a biomechanical space warrior, equip an implausible number of weapons, and pinball through missions with enough speed and spectacle to make gravity feel more like a polite suggestion.
+This machine of war-crimes and devastation is born out of this struggle against the relentless resilience that Steel Path throws at you, and only then does the game start to explain itself.
+I was forced to learn the mechanics behind the spectacle, and only then did I stop asking what Warframe was supposed to be and started deciding what *I* wanted it to be.
 
 That is the surface answer, at least.
 It is also the least complete one.
@@ -61,14 +62,15 @@ Saving the Origin System is important, but it is no excuse for clashing metallic
 For many people it settles into the comfortable rhythm of *Old School RuneScape*: choose a distant personal goal, consult a wiki and make numbers rise while a podcast plays.
 The repetition can be the point, not an obstacle on the way to it.
 Friends use it as a hangout.
-Veterans make mentoring their endgame: teaching bewildered newcomers, generously trading their spare useful gear for a handful of fish and helping with the farm without simply playing the game for them.
+Some veterans make mentoring their endgame: teaching bewildered newcomers, generously trading their spare mods and Prime parts for a handful of fish and helping with the farm without simply playing the game for them.
 Absent Tenno come back after a year and discover that someone has installed another theme park behind the old one.
 The grind can be a satisfying ritual, or, when a desired part refuses to drop, a persuasive invitation to play something else for a while.
 
 There is a useful way to name this sprawl.
 In [*Why It's Rude to Suck at Warcraft*](https://www.youtube.com/watch?v=BKP1I7IocYU), Dan Olson contrasts free play, or *paidia*, where curiosity, expression and doing something because the doing is delightful are ends in themselves, with instrumental play, or *ludus*, where a player chooses a measurable goal, learns the machinery and pursues it efficiently.
-*Warframe* is full of both.
-The danger is not optimisation; it is allowing one style to declare itself the only respectable way to play.
+This video has lived rent-free in my mind for a long time and has served as a lens through which I've begun to examine game design with.
+Drawing on these theories of play, I know *Warframe* holds a special place in my heart as one of the rare few games that is full of both.
+The danger is not optimisation; the danger is allowing one style to declare itself the only respectable way to play.
 
 None of these players is misunderstanding the game.
 Games give us goals, but players decide which goals matter.
@@ -90,9 +92,4 @@ Progression-minded players want to turn a distant goal into a practical route th
 Some players crack Relics for treasure; others discover that they have accidentally become small-business owners with a spreadsheet.
 Traders and fashion-conscious Tenno have their own questions about value, availability and the exact name of that one piece they saw in a relay.
 
-Ordis Prime is for the curious: *What is this?*
-*How do I get it?*
-*What works with it?*
-*What should I do next?*
-It connects the game's items, systems and sources without prescribing one “correct” way to play.
-It helps you find a route through whichever version of *Warframe* you have chosen today.
+Ordis Prime is for both versions of me: the baby Tenno wondering why any of this mattered, and the present-day player deciding what should matter next.
