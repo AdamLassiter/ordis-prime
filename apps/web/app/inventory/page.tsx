@@ -212,7 +212,7 @@ function CollectionCard({ entry }: { entry: PlayerCollectionEntry }) {
       <CollectionStateIndicators {...entry} />
       <p className="collection-quantities">
         {entry.ownedCount} owned · {entry.builtCount} built ·{" "}
-        {entry.wantedCount} explicitly wanted
+        {entry.wantedCount} wanted
         {entry.subsumed !== undefined
           ? ` · ${entry.subsumed ? "subsumed" : "not subsumed"}`
           : ""}
