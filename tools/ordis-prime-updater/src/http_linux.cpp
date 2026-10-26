@@ -61,8 +61,13 @@ HttpResponse http_request(const std::string &method, const std::string &url,
   curl_easy_setopt(raw, CURLOPT_CONNECTTIMEOUT_MS, 10'000L);
   curl_easy_setopt(raw, CURLOPT_TIMEOUT_MS, 30'000L);
   curl_easy_setopt(raw, CURLOPT_FOLLOWLOCATION, 0L);
+#if LIBCURL_VERSION_NUM >= 0x075500
   curl_easy_setopt(raw, CURLOPT_PROTOCOLS_STR, "http,https");
   curl_easy_setopt(raw, CURLOPT_REDIR_PROTOCOLS_STR, "");
+#else
+  curl_easy_setopt(raw, CURLOPT_PROTOCOLS, CURLPROTO_HTTP | CURLPROTO_HTTPS);
+  curl_easy_setopt(raw, CURLOPT_REDIR_PROTOCOLS, 0L);
+#endif
   curl_easy_setopt(raw, CURLOPT_HTTPHEADER, header_list);
   curl_easy_setopt(raw, CURLOPT_WRITEFUNCTION, append_response);
   curl_easy_setopt(raw, CURLOPT_WRITEDATA, &response);
