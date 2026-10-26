@@ -832,7 +832,8 @@ textarea:focus {
   color: var(--cyan);
 }
 .editorial-page {
-  max-width: 72rem;
+  max-width: 120rem;
+  margin-inline: auto;
 }
 .editorial-article {
   max-width: 72ch;
