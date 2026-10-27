@@ -87,12 +87,14 @@ export async function runWorkerCycle(options: {
     payload,
     runAfter: now,
   });
-  for (const adapter of options.catalogAdapters ?? [])
+  for (const adapter of options.catalogAdapters ?? []) {
+    if (!sourceDependenciesActive(options.database, adapter)) continue;
     ensurePendingJob(options.database, {
       kind: CATALOG_SOURCE_REFRESH_JOB,
       payload: { source: adapter.source.id },
       runAfter: now,
     });
+  }
   const marketTarget = options.database
     .prepare(
       `select 1 from external_ids identifier join entities entity on entity.id = identifier.entity_id
@@ -236,4 +238,20 @@ export async function runWorkerCycle(options: {
     });
     return { status: "failed", sourceId, error: message };
   }
+}
+
+function sourceDependenciesActive(
+  database: WorkerDatabase,
+  adapter: SourceAdapter,
+): boolean {
+  const dependencies = [...new Set(adapter.dependsOnSourceIds ?? [])];
+  if (!dependencies.length) return true;
+  const placeholders = dependencies.map(() => "?").join(", ");
+  const row = database
+    .prepare(
+      `select count(distinct source_id) as count from source_runs
+       where status = 'active' and source_id in (${placeholders})`,
+    )
+    .get(...dependencies) as { count: number };
+  return row.count === dependencies.length;
 }

@@ -72,6 +72,7 @@ COPY --from=updater-build --chown=ordis:ordis /dist/ordis-prime-updater-linux-x6
 COPY --from=updater-build --chown=ordis:ordis /src/tools/ordis-prime-updater/THIRD_PARTY_NOTICES.md ./apps/web/public/downloads/THIRD_PARTY_NOTICES.md
 COPY --from=updater-build --chown=ordis:ordis /src/tools/ordis-prime-updater/licenses/warframe-api-helper-LICENSE ./apps/web/public/downloads/warframe-api-helper-LICENSE
 COPY --from=build --chown=ordis:ordis /app/packages/db/migrations ./migrations
+COPY --from=build --chown=ordis:ordis /app/data/manual ./data/manual
 USER ordis
 VOLUME ["/data"]
 EXPOSE 3000
@@ -84,6 +85,7 @@ RUN useradd --system --uid 10001 ordis && mkdir -p /data && chown ordis:ordis /d
 COPY --from=build --chown=ordis:ordis /app/package.json /app/pnpm-workspace.yaml ./
 COPY --from=build --chown=ordis:ordis /app/node_modules ./node_modules
 COPY --from=build --chown=ordis:ordis /app/packages ./packages
+COPY --from=build --chown=ordis:ordis /app/data/manual ./data/manual
 USER ordis
 VOLUME ["/data"]
 CMD ["./packages/ingestion/node_modules/.bin/tsx", "packages/ingestion/src/worker-cli.ts"]

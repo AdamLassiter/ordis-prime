@@ -59,6 +59,11 @@ after `wfcd-items`:
 pnpm data:rankings:overframe
 ```
 
+The production worker image bundles these files and the nine reviewed creator
+sets. It queues each bundled source only after the source named by its `subject`
+is active, so a fresh database cannot promote rankings before their identities
+exist. The commands remain useful for explicit local imports.
+
 These are manually curated snapshots, not an Overframe integration. Each file
 cites an immutable archived response, keeps only entries that had at least 40
 votes (the public list's ranked threshold at capture time), records the vote
@@ -68,9 +73,10 @@ subjects use exact WFCD `uniqueName` identifiers; Helminth subjects use exact
 WARFRAME Wiki ability-record identifiers.
 
 Snapshot dates differ because the latest preserved response differed by list.
-The application does not fetch, schedule, or refresh Overframe data. A future
-update requires a human to review a newly cited snapshot and replace the
-relevant YAML deliberately.
+The application does not fetch Overframe data. Its ordinary catalog schedule
+re-reads only the bundled YAML and therefore cannot discover upstream changes.
+A future update requires a human to review a newly cited snapshot, replace the
+relevant YAML deliberately, and deploy the new image.
 
 The public `/rankings` view shows each active source's declared scale, scope,
 game version and citation beside a matrix of its entries. Values remain verbatim

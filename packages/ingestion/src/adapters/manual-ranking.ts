@@ -38,6 +38,7 @@ interface ManualRankingDocument {
 
 export class ManualRankingAdapter implements SourceAdapter {
   readonly source: SourceDescriptor;
+  readonly dependsOnSourceIds: readonly string[];
   private readonly filePath?: string;
   private readonly providedBytes?: Uint8Array;
 
@@ -48,6 +49,7 @@ export class ManualRankingAdapter implements SourceAdapter {
   ) {
     this.filePath = filePath;
     this.providedBytes = providedBytes;
+    this.dependsOnSourceIds = [document.subject.sourceId];
     this.source = {
       id: document.source.id,
       name: document.source.title,

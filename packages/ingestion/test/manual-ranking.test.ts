@@ -4,7 +4,14 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 import { parse } from "yaml";
-import { collect, ManualRankingAdapter } from "../src/index.ts";
+import {
+  collect,
+  ManualRankingAdapter,
+} from "../src/index.ts";
+import {
+  BUNDLED_MANUAL_RANKING_FILES,
+  loadBundledManualRankingAdapters,
+} from "../src/bundled-manual-rankings.ts";
 
 test("manual ranking YAML retains citation context and stable WFCD links", async () => {
   const adapter = await ManualRankingAdapter.fromFile(
@@ -14,6 +21,7 @@ test("manual ranking YAML retains citation context and stable WFCD links", async
   const observations = await collect(adapter, snapshot);
 
   assert.equal(adapter.source.id, "example-video-ranking");
+  assert.deepEqual(adapter.dependsOnSourceIds, ["wfcd-items"]);
   assert.match(snapshot.contentHash, /^sha256:[a-f0-9]{64}$/);
   assert.equal(observations[0]?.type, "ranking-set");
   assert.equal(observations[1]?.type, "ranking");
@@ -110,6 +118,7 @@ test("checked-in Overframe snapshots remain complete, cited manual rankings", as
     const rankings = observations.slice(1);
 
     assert.equal(adapter.source.id, sourceId);
+    assert.deepEqual(adapter.dependsOnSourceIds, [subjectSourceId]);
     assert.equal(set?.type, "ranking-set");
     assert.equal(rankings.length, expectedRankings);
     assert.match(adapter.source.homepage, /^https:\/\/web\.archive\.org\//);
@@ -146,6 +155,18 @@ const creatorFiles = [
   ["creator-salt-prime-secondary-primes-2026.yaml", 29],
   ["creator-salt-prime-melee-primes-2026.yaml", 39],
 ] as const;
+
+test("the bundled ranking manifest includes every reviewed tier list", async () => {
+  assert.deepEqual(
+    [...BUNDLED_MANUAL_RANKING_FILES].sort(),
+    [...overframeFiles, ...creatorFiles].map(([file]) => file).sort(),
+  );
+  const adapters = await loadBundledManualRankingAdapters(
+    path.resolve("data/manual"),
+  );
+  assert.equal(adapters.length, 16);
+  assert.equal(new Set(adapters.map((adapter) => adapter.source.id)).size, 16);
+});
 
 test("creator transcript conversions remain complete and use stable WFCD identities", async () => {
   for (const [file, expectedRankings] of creatorFiles) {

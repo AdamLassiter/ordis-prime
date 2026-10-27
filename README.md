@@ -68,14 +68,17 @@ then warns administrators when due work has gone unclaimed. `data:worker` also
 runs the worker by itself. Docker Compose runs the same two services over one
 durable volume.
 
-`data:rankings:overframe` imports the six checked-in, dated Overframe community
-tier snapshots. It never fetches Overframe; refreshing those files is a manual
-editorial task.
+`data:rankings:overframe` imports the seven checked-in, dated Overframe community
+tier snapshots. Production worker images bundle these files and promote them
+automatically once their WFCD or Wiki identity source is active. The worker
+only reads the reviewed local snapshots; it never fetches Overframe, and
+refreshing their contents remains a manual editorial task.
 
 `data:rankings:creators` imports the nine reviewed ranking snapshots converted
-from the supplied creator transcripts. Their conversion index records all eight
-inputs, including one duplicate transcript that deliberately does not become a
-second opinion.
+from the supplied creator transcripts. Production workers bundle and promote
+these snapshots under the same dependency rule. Their conversion index records
+all eight inputs, including one duplicate transcript that deliberately does not
+become a second opinion.
 
 ## Data safety
 

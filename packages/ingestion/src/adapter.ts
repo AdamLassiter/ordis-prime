@@ -26,6 +26,8 @@ export interface FetchContext {
 }
 export interface SourceAdapter {
   readonly source: SourceDescriptor;
+  /** Sources whose active identities must exist before this source is queued. */
+  readonly dependsOnSourceIds?: readonly string[];
   readonly minimumRetainedObservationRatio?: number;
   fetch(context: FetchContext): Promise<Snapshot>;
   parse(snapshot: Snapshot): AsyncIterable<Observation>;

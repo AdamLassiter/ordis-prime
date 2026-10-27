@@ -282,9 +282,10 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   does not model source authority, recency, scope alignment or patch relevance.
   Seven bundled Overframe community sets provide a dated starter comparison for
   Warframes, primary, secondary and melee weapons, Archwing equipment, and
-  companions and Helminth abilities. They are manually transcribed snapshots with captured vote counts
-  and are never refreshed automatically, so their staleness is visible and
-  intentional. Creator transcript conversions add nine independently cited
+  companions and Helminth abilities. They are manually transcribed snapshots
+  with captured vote counts. Production workers promote the bundled files once
+  their identity sources are active, but never discover upstream changes, so
+  their staleness is visible and intentional. Creator transcript conversions add nine independently cited
   sets and a hash-based conversion index, including KnightmareFrame's separate
   average- and high-investment contexts. Rankings can be
   ordered by tier and a single source opens as a tier-grouped isolated list.

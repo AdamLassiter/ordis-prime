@@ -17,6 +17,7 @@ import { WarframeWikiEnemiesAdapter } from "./adapters/warframe-wiki-enemies.ts"
 import { WarframeWikiVendorsAdapter } from "./adapters/warframe-wiki-vendors.ts";
 import { WarframeWikiCircuitAdapter } from "./adapters/warframe-wiki-circuit.ts";
 import { WarframeMarketItemsAdapter } from "./adapters/warframe-market-items.ts";
+import { loadBundledManualRankingAdapters } from "./bundled-manual-rankings.ts";
 
 const dataDirectory =
   process.env.ORDIS_DATA_DIR ??
@@ -90,7 +91,7 @@ migrateDatabase(databasePath);
 const database = openSqliteDatabase(databasePath);
 const snapshotStore = new SnapshotStore(path.join(dataDirectory, "sources"));
 const adapter = new WfcdWorldStateAdapter();
-const catalogAdapters = [
+const automaticCatalogAdapters = [
   new WfcdItemsAdapter(),
   new WarframeMarketItemsAdapter(),
   new WfcdDropsAdapter(),
@@ -104,6 +105,12 @@ const catalogAdapters = [
   new WarframeWikiEnemiesAdapter(),
   new WarframeWikiVendorsAdapter(),
   new WarframeWikiCircuitAdapter(),
+];
+const manualDataDirectory =
+  process.env.ORDIS_MANUAL_DATA_DIR ?? path.join(process.cwd(), "data/manual");
+const catalogAdapters = [
+  ...automaticCatalogAdapters,
+  ...(await loadBundledManualRankingAdapters(manualDataDirectory)),
 ];
 process.stdout.write(
   `${JSON.stringify({ event: "worker-started", owner, databasePath, refreshInterval, catalogRefreshInterval, jobHistoryLimit, worldStateSnapshotHistoryLimit, notificationRetentionMilliseconds, catalogReleaseHistoryLimit, sourceRefreshHistoryLimit, snapshotPruneGraceMilliseconds })}\n`,

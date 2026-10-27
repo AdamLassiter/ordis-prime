@@ -136,6 +136,7 @@ test("worker schedules static catalog adapters independently of world state", as
     parse: (snapshot) => worldParser.parse(snapshot),
   };
   const catalogAdapter: SourceAdapter = {
+    dependsOnSourceIds: ["dependency-fixture"],
     source: {
       id: "catalog-fixture",
       name: "Catalog fixture",
@@ -167,11 +168,47 @@ test("worker schedules static catalog adapters independently of world state", as
       };
     },
   };
+  const dependencyAdapter: SourceAdapter = {
+    source: {
+      id: "dependency-fixture",
+      name: "Dependency fixture",
+      homepage: "https://example.test/dependency",
+      priority: 1,
+    },
+    fetch: async () =>
+      createSnapshot({
+        sourceId: "dependency-fixture",
+        version: "v1",
+        retrievedAt: "2026-10-14T00:00:00.000Z",
+        mediaType: "application/json",
+        bytes: new TextEncoder().encode("{}"),
+      }),
+    async *parse(snapshot) {
+      yield {
+        type: "entity",
+        kind: "resource",
+        externalIds: [
+          {
+            sourceId: "dependency-fixture",
+            namespace: "id",
+            value: "dependency",
+          },
+        ],
+        fields: { name: "Dependency", slug: "dependency" },
+        evidence: {
+          sourceId: "dependency-fixture",
+          sourceRecordKey: "dependency",
+          snapshotVersion: snapshot.version,
+          retrievedAt: snapshot.retrievedAt,
+        },
+      };
+    },
+  };
   const options = {
     database,
     snapshotStore: new SnapshotStore(path.join(root, "sources")),
     worldStateAdapter: worldAdapter,
-    catalogAdapters: [catalogAdapter],
+    catalogAdapters: [dependencyAdapter, catalogAdapter],
     owner: "catalog-worker",
     refreshIntervalMilliseconds: 300,
     catalogRefreshIntervalMilliseconds: 1_000,
@@ -203,6 +240,22 @@ test("worker schedules static catalog adapters independently of world state", as
       error: "Refresh process ended before completion",
     },
   );
+  assert.equal(
+    (
+      database
+        .prepare(
+          "select count(*) as count from jobs where status = 'queued' and payload_json = ?",
+        )
+        .get(JSON.stringify({ source: "catalog-fixture" })) as {
+        count: number;
+      }
+    ).count,
+    0,
+  );
+  assert.deepEqual(await runWorkerCycle({ ...options, now: 100 }), {
+    status: "succeeded",
+    sourceId: "dependency-fixture",
+  });
   assert.deepEqual(await runWorkerCycle({ ...options, now: 100 }), {
     status: "succeeded",
     sourceId: "catalog-fixture",
