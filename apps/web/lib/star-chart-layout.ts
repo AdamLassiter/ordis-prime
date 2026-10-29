@@ -64,6 +64,8 @@ export function parseStarChartLayout(source: string): StarChartLayout {
     throw new Error("Star-chart layout must use schemaVersion 1");
   const overview = value.overview;
   if (overview !== undefined) validateOverview(overview);
+  const sourceImages = value.sourceImages;
+  if (sourceImages !== undefined) validateSourceImages(sourceImages);
   const planets = value.planets;
   if (planets !== undefined) {
     if (!isRecord(planets)) throw new Error("Star-chart planets must be a map");
@@ -82,6 +84,25 @@ export function parseStarChartLayout(source: string): StarChartLayout {
     }
   }
   return value as unknown as StarChartLayout;
+}
+
+function validateSourceImages(value: unknown): void {
+  if (!isRecord(value))
+    throw new Error("Star-chart source images must be a map");
+  for (const [scope, image] of Object.entries(value)) {
+    if (
+      !isRecord(image) ||
+      typeof image.name !== "string" ||
+      !image.name ||
+      typeof image.width !== "number" ||
+      !Number.isInteger(image.width) ||
+      image.width <= 0 ||
+      typeof image.height !== "number" ||
+      !Number.isInteger(image.height) ||
+      image.height <= 0
+    )
+      throw new Error(`Star-chart source image ${scope} is invalid`);
+  }
 }
 
 function validateEdges(value: unknown, scope: string): void {

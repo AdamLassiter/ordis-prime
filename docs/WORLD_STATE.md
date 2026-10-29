@@ -67,6 +67,10 @@ pnpm data:refresh wfcd-worldstate
 When run through the root workspace script, the default database and snapshot
 store are under the repository `data/` directory. `ORDIS_DATA_DIR` can override
 both ingestion and web storage in deployments.
+Bundled manual rankings are immutable application input rather than mutable
+storage, so the worker resolves them from the root pnpm invocation directory.
+`ORDIS_MANUAL_DATA_DIR` overrides that location for packaged deployments;
+changing `ORDIS_DATA_DIR` does not move or hide bundled ranking files.
 
 World state has a separate recurring job because it needs a much shorter cadence.
 The Compose deployment runs a database-leased worker service that refreshes it

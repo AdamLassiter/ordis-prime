@@ -20,6 +20,16 @@ export const BUNDLED_MANUAL_RANKING_FILES = [
   "creator-salt-prime-melee-primes-2026.yaml",
 ] as const;
 
+export function resolveBundledManualDataDirectory(
+  environment: NodeJS.ProcessEnv = process.env,
+  workingDirectory = process.cwd(),
+): string {
+  return (
+    environment.ORDIS_MANUAL_DATA_DIR ??
+    path.join(environment.INIT_CWD ?? workingDirectory, "data/manual")
+  );
+}
+
 export async function loadBundledManualRankingAdapters(
   manualDataDirectory: string,
 ): Promise<ManualRankingAdapter[]> {

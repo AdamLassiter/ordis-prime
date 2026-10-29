@@ -11,6 +11,7 @@ import {
 import {
   BUNDLED_MANUAL_RANKING_FILES,
   loadBundledManualRankingAdapters,
+  resolveBundledManualDataDirectory,
 } from "../src/bundled-manual-rankings.ts";
 
 test("manual ranking YAML retains citation context and stable WFCD links", async () => {
@@ -166,6 +167,27 @@ test("the bundled ranking manifest includes every reviewed tier list", async () 
   );
   assert.equal(adapters.length, 16);
   assert.equal(new Set(adapters.map((adapter) => adapter.source.id)).size, 16);
+});
+
+test("the worker resolves bundled rankings from the pnpm invocation directory", () => {
+  assert.equal(
+    resolveBundledManualDataDirectory(
+      { INIT_CWD: "/workspace/ordis-prime" },
+      "/workspace/ordis-prime/packages/ingestion",
+    ),
+    path.join("/workspace/ordis-prime", "data/manual"),
+  );
+  assert.equal(
+    resolveBundledManualDataDirectory(
+      {
+        INIT_CWD: "/workspace/ordis-prime",
+        ORDIS_DATA_DIR: "/persistent-data",
+        ORDIS_MANUAL_DATA_DIR: "/app/data/manual",
+      },
+      "/workspace/ordis-prime/packages/ingestion",
+    ),
+    "/app/data/manual",
+  );
 });
 
 test("creator transcript conversions remain complete and use stable WFCD identities", async () => {

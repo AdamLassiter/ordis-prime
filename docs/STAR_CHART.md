@@ -76,6 +76,18 @@ browser, and is not stored in the exported file.
 Missing annotations fall back independently to deterministic derived geometry,
 so a partial trace remains usable.
 
+The checked-in layout is traced from the WARFRAME Wiki's late-game Star Chart
+overview and its Update 32 per-location gallery images. The JSON records the
+source filenames and dimensions, while the reference images themselves remain
+on the Wiki. Locations or catalog variants that do not appear in a reference
+image are placed left-to-right in a bottom-edge review queue rather than being
+given invented coordinates. This makes omissions obvious and keeps them
+available for later manual sorting. Kuva Fortress is the deliberate exception
+to literal overview placement: because it orbits the system in game, the
+overview pins it below centre-right in the open area between Pluto and Neptune.
+The reviewed annotations can be rebuilt against the current active catalog with
+`python3 tools/star-chart-layout/generate.py`.
+
 Connections are treated as undirected navigation edges: either endpoint lists
 the other, even though a source only needs to state the edge once. Geometry
 never creates a connection; traced and fallback positions only place cited
@@ -128,11 +140,14 @@ either category without pretending a grant has a drop chance.
 
 ## Current compromise
 
-No imported source supplies stable visual coordinates. Until a human traces and
-checks in screenshots through the local layout tool, overview and planet
-positions remain deterministic presentation state and do not claim exact
-in-game geometry. Screenshot pixels and their copyright are deliberately not
-stored; the JSON records only normalized annotations and source image metadata.
+The Wiki screenshots are a human-reviewed visual source, not a stable game API.
+They can lag newly introduced nodes and do not provide a single overview for
+the Railjack and other non-Origin scopes. OCR-assisted annotations still need
+human correction where labels overlap effects or UI chrome. Screenshot pixels
+and their copyright are deliberately not stored; the JSON records only
+normalized annotations and source image metadata. Unmatched catalog entries
+therefore remain in the bottom-edge review queue until a later reference image
+or manual pass can place them accurately.
 
 Enemy and quest identities are imported, but richer domain-specific facts and
 complete curated discovery links remain future work.

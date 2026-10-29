@@ -17,7 +17,10 @@ import { WarframeWikiEnemiesAdapter } from "./adapters/warframe-wiki-enemies.ts"
 import { WarframeWikiVendorsAdapter } from "./adapters/warframe-wiki-vendors.ts";
 import { WarframeWikiCircuitAdapter } from "./adapters/warframe-wiki-circuit.ts";
 import { WarframeMarketItemsAdapter } from "./adapters/warframe-market-items.ts";
-import { loadBundledManualRankingAdapters } from "./bundled-manual-rankings.ts";
+import {
+  loadBundledManualRankingAdapters,
+  resolveBundledManualDataDirectory,
+} from "./bundled-manual-rankings.ts";
 
 const dataDirectory =
   process.env.ORDIS_DATA_DIR ??
@@ -106,8 +109,7 @@ const automaticCatalogAdapters = [
   new WarframeWikiVendorsAdapter(),
   new WarframeWikiCircuitAdapter(),
 ];
-const manualDataDirectory =
-  process.env.ORDIS_MANUAL_DATA_DIR ?? path.join(process.cwd(), "data/manual");
+const manualDataDirectory = resolveBundledManualDataDirectory();
 const catalogAdapters = [
   ...automaticCatalogAdapters,
   ...(await loadBundledManualRankingAdapters(manualDataDirectory)),

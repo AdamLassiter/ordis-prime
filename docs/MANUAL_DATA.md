@@ -19,6 +19,15 @@ creates nodes or routes and cannot override cited topology. Screenshots stay in
 the browser and are not included in the JSON. Labels must match overview planet
 names; per-planet node labels are normalized to catalog slugs.
 
+The current checked-in annotations use the WARFRAME Wiki
+[Star Chart](https://wiki.warframe.com/w/Star_Chart#Media) late-game overview
+and Update 32 location gallery. `sourceImages` preserves the reviewed filename
+and pixel dimensions. Run `python3 tools/star-chart-layout/generate.py` after a
+catalog refresh to retain traced points and append unrepresented locations to
+the bottom-edge review queue. The generator intentionally does not fetch or
+store Wiki images. It also pins the moving Kuva Fortress below centre-right,
+between Pluto and Neptune, rather than pretending its sampled orbit is fixed.
+
 ## Editorial ranking format
 
 Version 2 YAML contains source metadata, an ordered tier scale, an explicit

@@ -6,5 +6,3 @@ not an authoritative fixture: some queued synchronization work was incomplete
 when the database was captured.
 
 Once completed, git commits should be written for each todo item.
-
-- [ ] use the ordis-prime.svg for a favicon, maybe in-app too

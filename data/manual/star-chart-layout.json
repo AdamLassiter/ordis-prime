@@ -1,0 +1,3231 @@
+{
+  "schemaVersion": 1,
+  "sourceImages": {
+    "overview": {
+      "name": "StarChartLateGameLabeled.jpg",
+      "width": 1280,
+      "height": 720
+    },
+    "Mercury": {
+      "name": "StarChartMercuryU32.jpg",
+      "width": 1920,
+      "height": 1080
+    },
+    "Venus": {
+      "name": "StarChartVenusU32.jpg",
+      "width": 1920,
+      "height": 1080
+    },
+    "Earth": {
+      "name": "StarChartEarthU32.jpg",
+      "width": 1920,
+      "height": 1080
+    },
+    "Lua": {
+      "name": "StarChartLuaU32.2.jpg",
+      "width": 1920,
+      "height": 1080
+    },
+    "Mars": {
+      "name": "StarChartMarsU32.jpg",
+      "width": 1920,
+      "height": 1080
+    },
+    "Phobos": {
+      "name": "StarChartPhobosU32.jpg",
+      "width": 1920,
+      "height": 1080
+    },
+    "Deimos": {
+      "name": "StarChartDeimosU32.jpg",
+      "width": 1920,
+      "height": 1080
+    },
+    "Ceres": {
+      "name": "StarChartCeresU32.jpg",
+      "width": 1920,
+      "height": 1080
+    },
+    "Jupiter": {
+      "name": "StarChartJupiterU32.jpg",
+      "width": 1920,
+      "height": 1080
+    },
+    "Europa": {
+      "name": "StarChartEuropaU32.jpg",
+      "width": 1920,
+      "height": 1080
+    },
+    "Saturn": {
+      "name": "StarChartSaturnU32.jpg",
+      "width": 1920,
+      "height": 1080
+    },
+    "Uranus": {
+      "name": "StarChartUranusU32.jpg",
+      "width": 1920,
+      "height": 1080
+    },
+    "Neptune": {
+      "name": "StarChartNeptuneU32.jpg",
+      "width": 1920,
+      "height": 1080
+    },
+    "Eris": {
+      "name": "StarChartErisU32.jpg",
+      "width": 1920,
+      "height": 1080
+    },
+    "Sedna": {
+      "name": "StarChartSednaU32.jpg",
+      "width": 1920,
+      "height": 1080
+    },
+    "Pluto": {
+      "name": "StarChartPlutoU32.jpg",
+      "width": 1920,
+      "height": 1080
+    },
+    "Void": {
+      "name": "StarChartVoidU32.jpg",
+      "width": 1920,
+      "height": 1080
+    },
+    "Kuva Fortress": {
+      "name": "StarChartKuvaFortressU32.jpg",
+      "width": 1920,
+      "height": 1080
+    },
+    "Zariman": {
+      "name": "StarChartZarimanU32.jpg",
+      "width": 1920,
+      "height": 1080
+    },
+    "Earth Proxima": {
+      "name": "StarChartEarthProximaU32.jpg",
+      "width": 1920,
+      "height": 1080
+    },
+    "Venus Proxima": {
+      "name": "StarChartVenusProximaU32.jpg",
+      "width": 1920,
+      "height": 1080
+    },
+    "Saturn Proxima": {
+      "name": "StarChartSaturnProximaU32.jpg",
+      "width": 1920,
+      "height": 1080
+    },
+    "Neptune Proxima": {
+      "name": "StarChartNeptuneProximaU32.jpg",
+      "width": 1920,
+      "height": 1080
+    },
+    "Pluto Proxima": {
+      "name": "StarChartPlutoProximaU32.jpg",
+      "width": 1920,
+      "height": 1080
+    },
+    "Veil Proxima": {
+      "name": "StarChartVeilProximaU32.jpg",
+      "width": 1920,
+      "height": 1080
+    }
+  },
+  "overview": {
+    "planets": {
+      "Sedna": {
+        "x": 0.5,
+        "y": 0.107,
+        "radius": 0.013
+      },
+      "Sanctuary": {
+        "x": 0.213,
+        "y": 0.24,
+        "radius": 0.017
+      },
+      "Zariman": {
+        "x": 0.12,
+        "y": 0.344,
+        "radius": 0.018
+      },
+      "Ceres": {
+        "x": 0.404,
+        "y": 0.289,
+        "radius": 0.014
+      },
+      "Deimos": {
+        "x": 0.541,
+        "y": 0.374,
+        "radius": 0.014
+      },
+      "Mars": {
+        "x": 0.602,
+        "y": 0.338,
+        "radius": 0.014
+      },
+      "Phobos": {
+        "x": 0.677,
+        "y": 0.249,
+        "radius": 0.011
+      },
+      "Eris": {
+        "x": 0.739,
+        "y": 0.322,
+        "radius": 0.013
+      },
+      "Void": {
+        "x": 0.127,
+        "y": 0.499,
+        "radius": 0.018
+      },
+      "Europa": {
+        "x": 0.225,
+        "y": 0.499,
+        "radius": 0.013
+      },
+      "Jupiter": {
+        "x": 0.302,
+        "y": 0.494,
+        "radius": 0.027
+      },
+      "Mercury": {
+        "x": 0.441,
+        "y": 0.59,
+        "radius": 0.012
+      },
+      "Venus": {
+        "x": 0.545,
+        "y": 0.665,
+        "radius": 0.014
+      },
+      "Earth": {
+        "x": 0.631,
+        "y": 0.499,
+        "radius": 0.016
+      },
+      "Lua": {
+        "x": 0.677,
+        "y": 0.499,
+        "radius": 0.012
+      },
+      "Pluto": {
+        "x": 0.836,
+        "y": 0.494,
+        "radius": 0.014
+      },
+      "Saturn": {
+        "x": 0.36,
+        "y": 0.739,
+        "radius": 0.019
+      },
+      "Uranus": {
+        "x": 0.5,
+        "y": 0.858,
+        "radius": 0.022
+      },
+      "Neptune": {
+        "x": 0.727,
+        "y": 0.775,
+        "radius": 0.018
+      },
+      "Kuva Fortress": {
+        "x": 0.705,
+        "y": 0.685,
+        "radius": 0.014
+      },
+      "Dark Refractory": {
+        "x": 0.25,
+        "y": 0.965,
+        "radius": 0.006
+      },
+      "Dark Refractory, Deimos": {
+        "x": 0.5,
+        "y": 0.965,
+        "radius": 0.006
+      },
+      "Duviri": {
+        "x": 0.75,
+        "y": 0.965,
+        "radius": 0.006
+      },
+      "Earth Proxima": {
+        "x": 0.166667,
+        "y": 0.965,
+        "radius": 0.006
+      },
+      "Neptune Proxima": {
+        "x": 0.333333,
+        "y": 0.965,
+        "radius": 0.006
+      },
+      "Saturn Proxima": {
+        "x": 0.5,
+        "y": 0.965,
+        "radius": 0.006
+      },
+      "Uranus Proxima": {
+        "x": 0.666667,
+        "y": 0.965,
+        "radius": 0.006
+      },
+      "Veil Proxima": {
+        "x": 0.833333,
+        "y": 0.965,
+        "radius": 0.006
+      },
+      "Höllvania": {
+        "x": 0.333333,
+        "y": 0.965,
+        "radius": 0.006
+      },
+      "Invasion": {
+        "x": 0.666667,
+        "y": 0.965,
+        "radius": 0.006
+      }
+    }
+  },
+  "planets": {
+    "Ceres": {
+      "nodes": {
+        "bode": {
+          "x": 0.470313,
+          "y": 0.590741,
+          "radius": 0.006
+        },
+        "casta": {
+          "x": 0.438021,
+          "y": 0.698148,
+          "radius": 0.006
+        },
+        "cinxia": {
+          "x": 0.460417,
+          "y": 0.361111,
+          "radius": 0.006
+        },
+        "exta": {
+          "x": 0.289062,
+          "y": 0.506481,
+          "radius": 0.006
+        },
+        "gabii": {
+          "x": 0.307292,
+          "y": 0.809259,
+          "radius": 0.006
+        },
+        "ker": {
+          "x": 0.267188,
+          "y": 0.387037,
+          "radius": 0.006
+        },
+        "ludi": {
+          "x": 0.257812,
+          "y": 0.612963,
+          "radius": 0.006
+        },
+        "nuovo": {
+          "x": 0.376042,
+          "y": 0.459259,
+          "radius": 0.006
+        },
+        "pallas": {
+          "x": 0.496875,
+          "y": 0.489815,
+          "radius": 0.006
+        },
+        "seimeni": {
+          "x": 0.366146,
+          "y": 0.638889,
+          "radius": 0.006
+        },
+        "thon": {
+          "x": 0.440104,
+          "y": 0.248148,
+          "radius": 0.006
+        },
+        "abyssal-zone": {
+          "x": 0.083333,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "draco": {
+          "x": 0.166667,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "ceres-egeria": {
+          "x": 0.25,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "ceres-exta-extra": {
+          "x": 0.333333,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "ceres-hapke": {
+          "x": 0.416667,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "ceres-ker-caches": {
+          "x": 0.5,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "kiste": {
+          "x": 0.583333,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "lex": {
+          "x": 0.666667,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "ceres-olla": {
+          "x": 0.75,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "ceres-thon-caches": {
+          "x": 0.833333,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "ceres-varro": {
+          "x": 0.916667,
+          "y": 0.965,
+          "radius": 0.006
+        }
+      }
+    },
+    "Dark Refractory": {
+      "nodes": {
+        "recall-prime-vanguard": {
+          "x": 0.333333,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "the-descendia": {
+          "x": 0.666667,
+          "y": 0.965,
+          "radius": 0.006
+        }
+      }
+    },
+    "Dark Refractory, Deimos": {
+      "nodes": {
+        "descend": {
+          "x": 0.111111,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "descend-from-lyon-s-sanctuary": {
+          "x": 0.222222,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "descend-from-marie-s-sanctuary": {
+          "x": 0.333333,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "recall-dactolyst": {
+          "x": 0.444444,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "recall-hunhullus": {
+          "x": 0.555556,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "recall-vanguard": {
+          "x": 0.666667,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "roathe-s-oblivion": {
+          "x": 0.777778,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "the-guilty": {
+          "x": 0.888889,
+          "y": 0.965,
+          "radius": 0.006
+        }
+      }
+    },
+    "Deimos": {
+      "nodes": {
+        "dirus": {
+          "x": 0.443229,
+          "y": 0.547222,
+          "radius": 0.006
+        },
+        "exequias": {
+          "x": 0.683333,
+          "y": 0.607407,
+          "radius": 0.006
+        },
+        "formido": {
+          "x": 0.311979,
+          "y": 0.466667,
+          "radius": 0.006
+        },
+        "hyf": {
+          "x": 0.381771,
+          "y": 0.598148,
+          "radius": 0.006
+        },
+        "magnacidium": {
+          "x": 0.497396,
+          "y": 0.7,
+          "radius": 0.006
+        },
+        "necralisk": {
+          "x": 0.508854,
+          "y": 0.372222,
+          "radius": 0.006
+        },
+        "phlegyas": {
+          "x": 0.355729,
+          "y": 0.32963,
+          "radius": 0.006
+        },
+        "terrorem": {
+          "x": 0.547917,
+          "y": 0.732407,
+          "radius": 0.006
+        },
+        "armatus": {
+          "x": 0.076923,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "cambion-drift": {
+          "x": 0.153846,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "cambire": {
+          "x": 0.230769,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "effervo": {
+          "x": 0.307692,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "deimos-formido-caches": {
+          "x": 0.384615,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "horend": {
+          "x": 0.461538,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "jupiter-junction": {
+          "x": 0.538462,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "munio": {
+          "x": 0.615385,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "nex": {
+          "x": 0.692308,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "persto": {
+          "x": 0.769231,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "sanctum-anatomica": {
+          "x": 0.846154,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "testudo": {
+          "x": 0.923077,
+          "y": 0.965,
+          "radius": 0.006
+        }
+      }
+    },
+    "Duviri": {
+      "nodes": {
+        "duviri-endless-repeated-rewards": {
+          "x": 0.047619,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "duviri-endless-repeated-rewards-hard": {
+          "x": 0.095238,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "duviri-endless-tier-1": {
+          "x": 0.142857,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "duviri-endless-tier-1-hard": {
+          "x": 0.190476,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "duviri-endless-tier-2": {
+          "x": 0.238095,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "duviri-endless-tier-3": {
+          "x": 0.285714,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "duviri-endless-tier-3-hard": {
+          "x": 0.333333,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "duviri-endless-tier-4": {
+          "x": 0.380952,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "duviri-endless-tier-4-hard": {
+          "x": 0.428571,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "duviri-endless-tier-6": {
+          "x": 0.47619,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "duviri-endless-tier-6-hard": {
+          "x": 0.52381,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "duviri-endless-tier-7": {
+          "x": 0.571429,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "duviri-endless-tier-8": {
+          "x": 0.619048,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "duviri-endless-tier-9": {
+          "x": 0.666667,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "duviri-endless-tier-9-hard": {
+          "x": 0.714286,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "isleweaver": {
+          "x": 0.761905,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "the-circuit": {
+          "x": 0.809524,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "the-duviri-experience": {
+          "x": 0.857143,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "the-lone-story": {
+          "x": 0.904762,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "the-lone-story-duviri": {
+          "x": 0.952381,
+          "y": 0.965,
+          "radius": 0.006
+        }
+      }
+    },
+    "Earth": {
+      "nodes": {
+        "cetus": {
+          "x": 0.566667,
+          "y": 0.368519,
+          "radius": 0.006
+        },
+        "coba": {
+          "x": 0.697917,
+          "y": 0.380556,
+          "radius": 0.006
+        },
+        "erpo": {
+          "x": 0.776563,
+          "y": 0.568519,
+          "radius": 0.006
+        },
+        "eurasia": {
+          "x": 0.632812,
+          "y": 0.272222,
+          "radius": 0.006
+        },
+        "everest": {
+          "x": 0.634375,
+          "y": 0.447222,
+          "radius": 0.006
+        },
+        "gaia": {
+          "x": 0.561458,
+          "y": 0.703704,
+          "radius": 0.006
+        },
+        "lith": {
+          "x": 0.467187,
+          "y": 0.618519,
+          "radius": 0.006
+        },
+        "mantle": {
+          "x": 0.501563,
+          "y": 0.514815,
+          "radius": 0.006
+        },
+        "mariana": {
+          "x": 0.472396,
+          "y": 0.417593,
+          "radius": 0.006
+        },
+        "mars-junction": {
+          "x": 0.620313,
+          "y": 0.183333,
+          "radius": 0.006
+        },
+        "pacific": {
+          "x": 0.701562,
+          "y": 0.79537,
+          "radius": 0.006
+        },
+        "plains-of-eidolon": {
+          "x": 0.604167,
+          "y": 0.337037,
+          "radius": 0.006
+        },
+        "strata-relay": {
+          "x": 0.403646,
+          "y": 0.207407,
+          "radius": 0.006
+        },
+        "tikal": {
+          "x": 0.653125,
+          "y": 0.572222,
+          "radius": 0.006
+        },
+        "venus-junction": {
+          "x": 0.538542,
+          "y": 0.834259,
+          "radius": 0.006
+        },
+        "earth-bendar-cluster": {
+          "x": 0.04,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "earth-bendar-cluster-caches": {
+          "x": 0.08,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "earth-bendar-cluster-extra": {
+          "x": 0.12,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "cambria": {
+          "x": 0.16,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "cervantes": {
+          "x": 0.2,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "earth-cervantes-caches": {
+          "x": 0.24,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "drifter-s-camp": {
+          "x": 0.28,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "e-prime": {
+          "x": 0.32,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "earth-iota-temple": {
+          "x": 0.36,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "earth-iota-temple-caches": {
+          "x": 0.4,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "earth-iota-temple-extra": {
+          "x": 0.44,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "iron-wake": {
+          "x": 0.48,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "earth-korm-s-belt": {
+          "x": 0.52,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "earth-korm-s-belt-caches": {
+          "x": 0.56,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "earth-korm-s-belt-extra": {
+          "x": 0.6,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "earth-ogal-cluster": {
+          "x": 0.64,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "earth-ogal-cluster-caches": {
+          "x": 0.68,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "earth-ogal-cluster-extra": {
+          "x": 0.72,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "oro": {
+          "x": 0.76,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "saya-s-visions": {
+          "x": 0.8,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "earth-sover-strait": {
+          "x": 0.84,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "earth-sover-strait-caches": {
+          "x": 0.88,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "earth-sover-strait-extra": {
+          "x": 0.92,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "the-orbiter": {
+          "x": 0.96,
+          "y": 0.965,
+          "radius": 0.006
+        }
+      }
+    },
+    "Earth Proxima": {
+      "nodes": {
+        "free-flight": {
+          "x": 0.780729,
+          "y": 0.528704,
+          "radius": 0.006
+        },
+        "technocyte-coda-concert": {
+          "x": 0.5,
+          "y": 0.965,
+          "radius": 0.006
+        }
+      }
+    },
+    "Eris": {
+      "nodes": {
+        "akkad": {
+          "x": 0.595833,
+          "y": 0.22963,
+          "radius": 0.006
+        },
+        "isos": {
+          "x": 0.689583,
+          "y": 0.632407,
+          "radius": 0.006
+        },
+        "jordas-golem-assassinate": {
+          "x": 0.719792,
+          "y": 0.235185,
+          "radius": 0.006
+        },
+        "naeglar": {
+          "x": 0.641667,
+          "y": 0.766667,
+          "radius": 0.006
+        },
+        "nimus": {
+          "x": 0.677604,
+          "y": 0.337963,
+          "radius": 0.006
+        },
+        "oestrus": {
+          "x": 0.64375,
+          "y": 0.451852,
+          "radius": 0.006
+        },
+        "solium": {
+          "x": 0.734896,
+          "y": 0.514815,
+          "radius": 0.006
+        },
+        "xini": {
+          "x": 0.364063,
+          "y": 0.538889,
+          "radius": 0.006
+        },
+        "zabala": {
+          "x": 0.359375,
+          "y": 0.350926,
+          "radius": 0.006
+        },
+        "brugia": {
+          "x": 0.05,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "eris-candiru-caches": {
+          "x": 0.1,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "eris-cosis": {
+          "x": 0.15,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "eris-cyath": {
+          "x": 0.2,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "eris-gnathos": {
+          "x": 0.25,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "eris-hymeno": {
+          "x": 0.3,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "eris-ixodes": {
+          "x": 0.35,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "kala-azar": {
+          "x": 0.4,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "eris-lepis-caches": {
+          "x": 0.45,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "mutalist-alad-v-assassinate": {
+          "x": 0.5,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "eris-naeglar-caches": {
+          "x": 0.55,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "eris-phalan": {
+          "x": 0.6,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "eris-psoro-caches": {
+          "x": 0.65,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "eris-ranova": {
+          "x": 0.7,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "saxis": {
+          "x": 0.75,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "sedna-junction": {
+          "x": 0.8,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "eris-sparga": {
+          "x": 0.85,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "eris-sporid": {
+          "x": 0.9,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "eris-viver-caches": {
+          "x": 0.95,
+          "y": 0.965,
+          "radius": 0.006
+        }
+      }
+    },
+    "Europa": {
+      "nodes": {
+        "abaddon": {
+          "x": 0.390625,
+          "y": 0.342593,
+          "radius": 0.006
+        },
+        "armaros": {
+          "x": 0.271875,
+          "y": 0.211111,
+          "radius": 0.006
+        },
+        "baal": {
+          "x": 0.120313,
+          "y": 0.524074,
+          "radius": 0.006
+        },
+        "cholistan": {
+          "x": 0.261979,
+          "y": 0.348148,
+          "radius": 0.006
+        },
+        "kokabiel": {
+          "x": 0.485938,
+          "y": 0.338889,
+          "radius": 0.006
+        },
+        "larzac": {
+          "x": 0.339583,
+          "y": 0.423148,
+          "radius": 0.006
+        },
+        "naamah": {
+          "x": 0.374479,
+          "y": 0.261111,
+          "radius": 0.006
+        },
+        "orias": {
+          "x": 0.501042,
+          "y": 0.498148,
+          "radius": 0.006
+        },
+        "paimon": {
+          "x": 0.301042,
+          "y": 0.593519,
+          "radius": 0.006
+        },
+        "sorath": {
+          "x": 0.30625,
+          "y": 0.715741,
+          "radius": 0.006
+        },
+        "valac": {
+          "x": 0.580729,
+          "y": 0.355556,
+          "radius": 0.006
+        },
+        "archaeo-freighter": {
+          "x": 0.071429,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "europa-beleth": {
+          "x": 0.142857,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "europa-cryotic-front": {
+          "x": 0.214286,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "europa-eligor": {
+          "x": 0.285714,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "europa-gamygyn": {
+          "x": 0.357143,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "icefields-of-riddah": {
+          "x": 0.428571,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "europa-lillith": {
+          "x": 0.5,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "mines-of-karishh": {
+          "x": 0.571429,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "morax": {
+          "x": 0.642857,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "ose": {
+          "x": 0.714286,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "europa-shax": {
+          "x": 0.785714,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "valefor": {
+          "x": 0.857143,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "europa-zagan": {
+          "x": 0.928571,
+          "y": 0.965,
+          "radius": 0.006
+        }
+      }
+    },
+    "Höllvania": {
+      "nodes": {
+        "ho-llvania-antivirus-bounty": {
+          "x": 0.043478,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "ho-llvania-antivirus-bounty-caches": {
+          "x": 0.086957,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "assassinate-h-09-tank": {
+          "x": 0.130435,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "exterminate-scaldra": {
+          "x": 0.173913,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "ho-llvania-exterminate-scaldra-caches": {
+          "x": 0.217391,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "exterminate-techrot": {
+          "x": 0.26087,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "ho-llvania-exterminate-techrot-caches": {
+          "x": 0.304348,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "faceoff-single-squad": {
+          "x": 0.347826,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "faceoff-squad-vs-squad": {
+          "x": 0.391304,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "hell-scrub-scaldra": {
+          "x": 0.434783,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "hell-scrub-techrot": {
+          "x": 0.478261,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "ho-llvania-central-mall": {
+          "x": 0.521739,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "ko-binn-west": {
+          "x": 0.565217,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "legacyte-harvest": {
+          "x": 0.608696,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "lower-vehrvod": {
+          "x": 0.652174,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "mausoleum-east": {
+          "x": 0.695652,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "mischta-ramparts": {
+          "x": 0.73913,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "old-konderuk": {
+          "x": 0.782609,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "rhu-manor": {
+          "x": 0.826087,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "solstice-square": {
+          "x": 0.869565,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "vehrvod-district": {
+          "x": 0.913043,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "victory-plaza": {
+          "x": 0.956522,
+          "y": 0.965,
+          "radius": 0.006
+        }
+      }
+    },
+    "Invasion": {
+      "nodes": {
+        "phorid-alert": {
+          "x": 0.5,
+          "y": 0.965,
+          "radius": 0.006
+        }
+      }
+    },
+    "Jupiter": {
+      "nodes": {
+        "adrastea": {
+          "x": 0.614062,
+          "y": 0.546296,
+          "radius": 0.006
+        },
+        "amalthea": {
+          "x": 0.338021,
+          "y": 0.484259,
+          "radius": 0.006
+        },
+        "ananke": {
+          "x": 0.344271,
+          "y": 0.282407,
+          "radius": 0.006
+        },
+        "callisto": {
+          "x": 0.411458,
+          "y": 0.385185,
+          "radius": 0.006
+        },
+        "cameria": {
+          "x": 0.473958,
+          "y": 0.373148,
+          "radius": 0.006
+        },
+        "carme": {
+          "x": 0.316667,
+          "y": 0.187963,
+          "radius": 0.006
+        },
+        "elara": {
+          "x": 0.569271,
+          "y": 0.380556,
+          "radius": 0.006
+        },
+        "europa-junction": {
+          "x": 0.238542,
+          "y": 0.450926,
+          "radius": 0.006
+        },
+        "galilea": {
+          "x": 0.209375,
+          "y": 0.775926,
+          "radius": 0.006
+        },
+        "ganymede": {
+          "x": 0.451562,
+          "y": 0.647222,
+          "radius": 0.006
+        },
+        "metis": {
+          "x": 0.494271,
+          "y": 0.212963,
+          "radius": 0.006
+        },
+        "saturn-junction": {
+          "x": 0.403646,
+          "y": 0.826852,
+          "radius": 0.006
+        },
+        "sinai": {
+          "x": 0.383333,
+          "y": 0.581481,
+          "radius": 0.006
+        },
+        "the-ropalolyst": {
+          "x": 0.473438,
+          "y": 0.516667,
+          "radius": 0.006
+        },
+        "thebe": {
+          "x": 0.259375,
+          "y": 0.639815,
+          "radius": 0.006
+        },
+        "jupiter-adrastea-caches": {
+          "x": 0.142857,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "carpo": {
+          "x": 0.285714,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "jupiter-carpo-caches": {
+          "x": 0.428571,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "io": {
+          "x": 0.571429,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "jupiter-the-ropalolyst-extra": {
+          "x": 0.714286,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "themisto": {
+          "x": 0.857143,
+          "y": 0.965,
+          "radius": 0.006
+        }
+      }
+    },
+    "Kuva Fortress": {
+      "nodes": {
+        "garus": {
+          "x": 0.372917,
+          "y": 0.405556,
+          "radius": 0.006
+        },
+        "koro": {
+          "x": 0.4625,
+          "y": 0.662037,
+          "radius": 0.006
+        },
+        "nabuk": {
+          "x": 0.468229,
+          "y": 0.525926,
+          "radius": 0.006
+        },
+        "pago": {
+          "x": 0.490625,
+          "y": 0.407407,
+          "radius": 0.006
+        },
+        "rotuma": {
+          "x": 0.369271,
+          "y": 0.535185,
+          "radius": 0.006
+        },
+        "tamu": {
+          "x": 0.325521,
+          "y": 0.289815,
+          "radius": 0.006
+        },
+        "taveuni": {
+          "x": 0.439063,
+          "y": 0.294444,
+          "radius": 0.006
+        },
+        "dakata": {
+          "x": 0.333333,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "kuva-fortress-dakata-caches": {
+          "x": 0.666667,
+          "y": 0.965,
+          "radius": 0.006
+        }
+      }
+    },
+    "Lua": {
+      "nodes": {
+        "copernicus": {
+          "x": 0.639062,
+          "y": 0.383333,
+          "radius": 0.006
+        },
+        "grimaldi": {
+          "x": 0.625,
+          "y": 0.491667,
+          "radius": 0.006
+        },
+        "pavlov": {
+          "x": 0.739062,
+          "y": 0.588889,
+          "radius": 0.006
+        },
+        "sto-fler": {
+          "x": 0.629687,
+          "y": 0.621296,
+          "radius": 0.006
+        },
+        "tycho": {
+          "x": 0.74375,
+          "y": 0.414815,
+          "radius": 0.006
+        },
+        "zeipel": {
+          "x": 0.659896,
+          "y": 0.291667,
+          "radius": 0.006
+        },
+        "apollo": {
+          "x": 0.125,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "circulus": {
+          "x": 0.25,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "lua-circulus-extra": {
+          "x": 0.375,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "plato": {
+          "x": 0.5,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "lua-plato-caches": {
+          "x": 0.625,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "yuvarium": {
+          "x": 0.75,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "lua-yuvarium-extra": {
+          "x": 0.875,
+          "y": 0.965,
+          "radius": 0.006
+        }
+      }
+    },
+    "Mars": {
+      "nodes": {
+        "alator": {
+          "x": 0.427083,
+          "y": 0.227778,
+          "radius": 0.006
+        },
+        "ara": {
+          "x": 0.436979,
+          "y": 0.355556,
+          "radius": 0.006
+        },
+        "ares": {
+          "x": 0.478125,
+          "y": 0.484259,
+          "radius": 0.006
+        },
+        "arval": {
+          "x": 0.547396,
+          "y": 0.511111,
+          "radius": 0.006
+        },
+        "augustus": {
+          "x": 0.561979,
+          "y": 0.328704,
+          "radius": 0.006
+        },
+        "ceres-junction": {
+          "x": 0.296354,
+          "y": 0.294444,
+          "radius": 0.006
+        },
+        "gradivus": {
+          "x": 0.654167,
+          "y": 0.272222,
+          "radius": 0.006
+        },
+        "kadesh": {
+          "x": 0.424479,
+          "y": 0.676852,
+          "radius": 0.006
+        },
+        "maroo-s-bazaar": {
+          "x": 0.7125,
+          "y": 0.508333,
+          "radius": 0.006
+        },
+        "olympus": {
+          "x": 0.627604,
+          "y": 0.442593,
+          "radius": 0.006
+        },
+        "phobos-junction": {
+          "x": 0.727604,
+          "y": 0.238889,
+          "radius": 0.006
+        },
+        "spear": {
+          "x": 0.525,
+          "y": 0.62037,
+          "radius": 0.006
+        },
+        "syrtis": {
+          "x": 0.371875,
+          "y": 0.172222,
+          "radius": 0.006
+        },
+        "tharsis": {
+          "x": 0.657813,
+          "y": 0.574074,
+          "radius": 0.006
+        },
+        "ultor": {
+          "x": 0.51875,
+          "y": 0.180556,
+          "radius": 0.006
+        },
+        "vallis": {
+          "x": 0.280729,
+          "y": 0.537037,
+          "radius": 0.006
+        },
+        "wahiba": {
+          "x": 0.572396,
+          "y": 0.140741,
+          "radius": 0.006
+        },
+        "war": {
+          "x": 0.378646,
+          "y": 0.57963,
+          "radius": 0.006
+        },
+        "mars-arcadia": {
+          "x": 0.142857,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "mars-gradivus-caches": {
+          "x": 0.285714,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "hellas": {
+          "x": 0.428571,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "martialis": {
+          "x": 0.571429,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "mars-quirinus": {
+          "x": 0.714286,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "tyana-pass": {
+          "x": 0.857143,
+          "y": 0.965,
+          "radius": 0.006
+        }
+      }
+    },
+    "Mercury": {
+      "nodes": {
+        "tolstoj": {
+          "x": 0.252083,
+          "y": 0.158333,
+          "radius": 0.006
+        },
+        "odin": {
+          "x": 0.146354,
+          "y": 0.234259,
+          "radius": 0.006
+        },
+        "suisei": {
+          "x": 0.149479,
+          "y": 0.374074,
+          "radius": 0.006
+        },
+        "elion": {
+          "x": 0.224479,
+          "y": 0.549074,
+          "radius": 0.006
+        },
+        "caloris": {
+          "x": 0.302083,
+          "y": 0.785185,
+          "radius": 0.006
+        },
+        "pantheon": {
+          "x": 0.479167,
+          "y": 0.853704,
+          "radius": 0.006
+        },
+        "apollodorus": {
+          "x": 0.449479,
+          "y": 0.182407,
+          "radius": 0.006
+        },
+        "boethius": {
+          "x": 0.488542,
+          "y": 0.45,
+          "radius": 0.006
+        },
+        "m-prime": {
+          "x": 0.450521,
+          "y": 0.662963,
+          "radius": 0.006
+        },
+        "lares": {
+          "x": 0.548438,
+          "y": 0.307407,
+          "radius": 0.006
+        },
+        "terminus": {
+          "x": 0.572396,
+          "y": 0.510185,
+          "radius": 0.006
+        },
+        "larunda-relay": {
+          "x": 0.58125,
+          "y": 0.725926,
+          "radius": 0.006
+        },
+        "mercury-caduceus": {
+          "x": 0.25,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "mercury-neruda-caches": {
+          "x": 0.5,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "mercury-terminus-caches": {
+          "x": 0.75,
+          "y": 0.965,
+          "radius": 0.006
+        }
+      }
+    },
+    "Neptune": {
+      "nodes": {
+        "despina": {
+          "x": 0.468229,
+          "y": 0.316667,
+          "radius": 0.006
+        },
+        "galatea": {
+          "x": 0.427604,
+          "y": 0.465741,
+          "radius": 0.006
+        },
+        "kelashin": {
+          "x": 0.722396,
+          "y": 0.17963,
+          "radius": 0.006
+        },
+        "laomedeia": {
+          "x": 0.620313,
+          "y": 0.428704,
+          "radius": 0.006
+        },
+        "larissa": {
+          "x": 0.403125,
+          "y": 0.781481,
+          "radius": 0.006
+        },
+        "nereid": {
+          "x": 0.630208,
+          "y": 0.662037,
+          "radius": 0.006
+        },
+        "neso": {
+          "x": 0.513021,
+          "y": 0.727778,
+          "radius": 0.006
+        },
+        "pluto-junction": {
+          "x": 0.767188,
+          "y": 0.296296,
+          "radius": 0.006
+        },
+        "proteus": {
+          "x": 0.673958,
+          "y": 0.171296,
+          "radius": 0.006
+        },
+        "psamathe": {
+          "x": 0.626042,
+          "y": 0.437963,
+          "radius": 0.006
+        },
+        "salacia": {
+          "x": 0.698958,
+          "y": 0.781481,
+          "radius": 0.006
+        },
+        "sao": {
+          "x": 0.570833,
+          "y": 0.274074,
+          "radius": 0.006
+        },
+        "triton": {
+          "x": 0.394792,
+          "y": 0.635185,
+          "radius": 0.006
+        },
+        "yursa": {
+          "x": 0.790625,
+          "y": 0.628704,
+          "radius": 0.006
+        },
+        "neptune-arva-vector": {
+          "x": 0.038462,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "neptune-arva-vector-caches": {
+          "x": 0.076923,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "neptune-arva-vector-extra": {
+          "x": 0.115385,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "neptune-brom-cluster": {
+          "x": 0.153846,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "neptune-brom-cluster-caches": {
+          "x": 0.192308,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "neptune-brom-cluster-extra": {
+          "x": 0.230769,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "neptune-cephalon-capture": {
+          "x": 0.269231,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "neptune-enkidu-ice-drifts": {
+          "x": 0.307692,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "neptune-enkidu-ice-drifts-caches": {
+          "x": 0.346154,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "neptune-enkidu-ice-drifts-extra": {
+          "x": 0.384615,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "neptune-halimede-caches": {
+          "x": 0.423077,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "neptune-mammon-s-prospect": {
+          "x": 0.461538,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "neptune-mammon-s-prospect-caches": {
+          "x": 0.5,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "neptune-mammon-s-prospect-extra": {
+          "x": 0.538462,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "neptune-nu-gua-mines": {
+          "x": 0.576923,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "neptune-nu-gua-mines-caches": {
+          "x": 0.615385,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "neptune-nu-gua-mines-extra": {
+          "x": 0.653846,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "neptune-sovereign-grasp": {
+          "x": 0.692308,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "neptune-sovereign-grasp-caches": {
+          "x": 0.730769,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "neptune-sovereign-grasp-extra": {
+          "x": 0.769231,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "neptune-thalassa-caches": {
+          "x": 0.807692,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "neptune-the-index-endurance": {
+          "x": 0.846154,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "neptune-the-index-endurance-high-risk": {
+          "x": 0.884615,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "neptune-the-index-endurance-low-risk": {
+          "x": 0.923077,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "neptune-the-index-endurance-medium-risk": {
+          "x": 0.961538,
+          "y": 0.965,
+          "radius": 0.006
+        }
+      }
+    },
+    "Neptune Proxima": {
+      "nodes": {
+        "sister-of-parvos-confrontation": {
+          "x": 0.5,
+          "y": 0.965,
+          "radius": 0.006
+        }
+      }
+    },
+    "Phobos": {
+      "nodes": {
+        "gulliver": {
+          "x": 0.747917,
+          "y": 0.600926,
+          "radius": 0.006
+        },
+        "kepler": {
+          "x": 0.744271,
+          "y": 0.399074,
+          "radius": 0.006
+        },
+        "monolith": {
+          "x": 0.508854,
+          "y": 0.186111,
+          "radius": 0.006
+        },
+        "sharpless": {
+          "x": 0.531771,
+          "y": 0.732407,
+          "radius": 0.006
+        },
+        "shklovsky": {
+          "x": 0.48125,
+          "y": 0.577778,
+          "radius": 0.006
+        },
+        "skyresh": {
+          "x": 0.467187,
+          "y": 0.347222,
+          "radius": 0.006
+        },
+        "stickney": {
+          "x": 0.418229,
+          "y": 0.252778,
+          "radius": 0.006
+        },
+        "zeugma": {
+          "x": 0.674479,
+          "y": 0.437037,
+          "radius": 0.006
+        },
+        "phobos-drunlo": {
+          "x": 0.090909,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "phobos-flimnap": {
+          "x": 0.181818,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "phobos-grildrig": {
+          "x": 0.272727,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "iliad": {
+          "x": 0.363636,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "phobos-limtoc": {
+          "x": 0.454545,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "memphis": {
+          "x": 0.545455,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "phobos-opik": {
+          "x": 0.636364,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "roche": {
+          "x": 0.727273,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "phobos-todd": {
+          "x": 0.818182,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "phobos-wendell": {
+          "x": 0.909091,
+          "y": 0.965,
+          "radius": 0.006
+        }
+      }
+    },
+    "Pluto": {
+      "nodes": {
+        "acheron": {
+          "x": 0.517188,
+          "y": 0.391667,
+          "radius": 0.006
+        },
+        "cerberus": {
+          "x": 0.75625,
+          "y": 0.510185,
+          "radius": 0.006
+        },
+        "cypress": {
+          "x": 0.788021,
+          "y": 0.628704,
+          "radius": 0.006
+        },
+        "eris-junction": {
+          "x": 0.441667,
+          "y": 0.309259,
+          "radius": 0.006
+        },
+        "hades": {
+          "x": 0.701042,
+          "y": 0.312037,
+          "radius": 0.006
+        },
+        "hieracon": {
+          "x": 0.613542,
+          "y": 0.267593,
+          "radius": 0.006
+        },
+        "hydra": {
+          "x": 0.640625,
+          "y": 0.790741,
+          "radius": 0.006
+        },
+        "minthe": {
+          "x": 0.548958,
+          "y": 0.667593,
+          "radius": 0.006
+        },
+        "narcissus": {
+          "x": 0.710938,
+          "y": 0.674074,
+          "radius": 0.006
+        },
+        "orcus-relay": {
+          "x": 0.4625,
+          "y": 0.587963,
+          "radius": 0.006
+        },
+        "outer-terminus": {
+          "x": 0.655729,
+          "y": 0.501852,
+          "radius": 0.006
+        },
+        "palus": {
+          "x": 0.788021,
+          "y": 0.402778,
+          "radius": 0.006
+        },
+        "sechura": {
+          "x": 0.701562,
+          "y": 0.432407,
+          "radius": 0.006
+        },
+        "pluto-charon-caches": {
+          "x": 0.041667,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "pluto-corb": {
+          "x": 0.083333,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "pluto-cypress-caches": {
+          "x": 0.125,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "pluto-fenton-s-field": {
+          "x": 0.166667,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "pluto-fenton-s-field-caches": {
+          "x": 0.208333,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "pluto-fenton-s-field-extra": {
+          "x": 0.25,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "pluto-khufu-envoy": {
+          "x": 0.291667,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "pluto-khufu-envoy-caches": {
+          "x": 0.333333,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "pluto-khufu-envoy-extra": {
+          "x": 0.375,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "pluto-obol-crossing": {
+          "x": 0.416667,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "pluto-obol-crossing-caches": {
+          "x": 0.458333,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "pluto-obol-crossing-extra": {
+          "x": 0.5,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "oceanum": {
+          "x": 0.541667,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "pluto-peregrine-axis": {
+          "x": 0.583333,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "pluto-peregrine-axis-caches": {
+          "x": 0.625,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "pluto-peregrine-axis-extra": {
+          "x": 0.666667,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "pluto-profit-margin": {
+          "x": 0.708333,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "pluto-profit-margin-caches": {
+          "x": 0.75,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "pluto-profit-margin-extra": {
+          "x": 0.791667,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "regna": {
+          "x": 0.833333,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "pluto-seven-sirens": {
+          "x": 0.875,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "pluto-seven-sirens-caches": {
+          "x": 0.916667,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "pluto-seven-sirens-extra": {
+          "x": 0.958333,
+          "y": 0.965,
+          "radius": 0.006
+        }
+      }
+    },
+    "Sanctuary": {
+      "nodes": {
+        "sanctuary-elite-sanctuary-onslaught": {
+          "x": 0.333333,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "sanctuary-sanctuary-onslaught": {
+          "x": 0.666667,
+          "y": 0.965,
+          "radius": 0.006
+        }
+      }
+    },
+    "Saturn": {
+      "nodes": {
+        "cassini": {
+          "x": 0.495833,
+          "y": 0.285185,
+          "radius": 0.006
+        },
+        "dione": {
+          "x": 0.275521,
+          "y": 0.331481,
+          "radius": 0.006
+        },
+        "enceladus": {
+          "x": 0.654167,
+          "y": 0.541667,
+          "radius": 0.006
+        },
+        "helene": {
+          "x": 0.595313,
+          "y": 0.659259,
+          "radius": 0.006
+        },
+        "keeler": {
+          "x": 0.140104,
+          "y": 0.588889,
+          "radius": 0.006
+        },
+        "kronia-relay": {
+          "x": 0.439583,
+          "y": 0.181481,
+          "radius": 0.006
+        },
+        "rhea": {
+          "x": 0.08125,
+          "y": 0.546296,
+          "radius": 0.006
+        },
+        "titan": {
+          "x": 0.724479,
+          "y": 0.577778,
+          "radius": 0.006
+        },
+        "uranus-junction": {
+          "x": 0.546354,
+          "y": 0.79537,
+          "radius": 0.006
+        },
+        "saturn-aegaeon": {
+          "x": 0.02381,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "saturn-annihilation": {
+          "x": 0.047619,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "saturn-annihilation-extra": {
+          "x": 0.071429,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "anthe": {
+          "x": 0.095238,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "calypso": {
+          "x": 0.119048,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "saturn-calypso-caches": {
+          "x": 0.142857,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "caracol": {
+          "x": 0.166667,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "saturn-cephalon-capture-extra": {
+          "x": 0.190476,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "saturn-kasio-s-rest": {
+          "x": 0.214286,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "saturn-kasio-s-rest-caches": {
+          "x": 0.238095,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "saturn-kasio-s-rest-extra": {
+          "x": 0.261905,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "saturn-lunaro-arena": {
+          "x": 0.285714,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "saturn-lunaro-arena-extra": {
+          "x": 0.309524,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "saturn-lupal-pass": {
+          "x": 0.333333,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "saturn-lupal-pass-caches": {
+          "x": 0.357143,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "saturn-lupal-pass-extra": {
+          "x": 0.380952,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "saturn-mimas": {
+          "x": 0.404762,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "saturn-mordo-cluster": {
+          "x": 0.428571,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "saturn-mordo-cluster-caches": {
+          "x": 0.452381,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "saturn-mordo-cluster-extra": {
+          "x": 0.47619,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "saturn-nodo-gap": {
+          "x": 0.5,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "saturn-nodo-gap-caches": {
+          "x": 0.52381,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "saturn-nodo-gap-extra": {
+          "x": 0.547619,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "numa": {
+          "x": 0.571429,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "saturn-pallene-caches": {
+          "x": 0.595238,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "pandora": {
+          "x": 0.619048,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "saturn-phoebe": {
+          "x": 0.642857,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "piscinas": {
+          "x": 0.666667,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "saturn-team-annihilation": {
+          "x": 0.690476,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "saturn-team-annihilation-extra": {
+          "x": 0.714286,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "telesto": {
+          "x": 0.738095,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "tethys": {
+          "x": 0.761905,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "saturn-vand-cluster": {
+          "x": 0.785714,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "saturn-vand-cluster-caches": {
+          "x": 0.809524,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "saturn-vand-cluster-extra": {
+          "x": 0.833333,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "saturn-variant-annihilation": {
+          "x": 0.857143,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "saturn-variant-annihilation-extra": {
+          "x": 0.880952,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "saturn-variant-cephalon-capture": {
+          "x": 0.904762,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "saturn-variant-cephalon-capture-extra": {
+          "x": 0.928571,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "saturn-variant-team-annihilation": {
+          "x": 0.952381,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "saturn-variant-team-annihilation-extra": {
+          "x": 0.97619,
+          "y": 0.965,
+          "radius": 0.006
+        }
+      }
+    },
+    "Saturn Proxima": {
+      "nodes": {
+        "kuva-lich-confrontation": {
+          "x": 0.5,
+          "y": 0.965,
+          "radius": 0.006
+        }
+      }
+    },
+    "Sedna": {
+      "nodes": {
+        "adaro": {
+          "x": 0.664062,
+          "y": 0.660185,
+          "radius": 0.006
+        },
+        "amarna": {
+          "x": 0.679167,
+          "y": 0.174074,
+          "radius": 0.006
+        },
+        "hydron": {
+          "x": 0.68125,
+          "y": 0.290741,
+          "radius": 0.006
+        },
+        "kappa": {
+          "x": 0.766667,
+          "y": 0.211111,
+          "radius": 0.006
+        },
+        "kelpie": {
+          "x": 0.392708,
+          "y": 0.666667,
+          "radius": 0.006
+        },
+        "marid": {
+          "x": 0.5,
+          "y": 0.64537,
+          "radius": 0.006
+        },
+        "merrow": {
+          "x": 0.556771,
+          "y": 0.32963,
+          "radius": 0.006
+        },
+        "naga": {
+          "x": 0.744792,
+          "y": 0.590741,
+          "radius": 0.006
+        },
+        "nakki": {
+          "x": 0.522917,
+          "y": 0.503704,
+          "radius": 0.006
+        },
+        "rusalka": {
+          "x": 0.729167,
+          "y": 0.464815,
+          "radius": 0.006
+        },
+        "sangeru": {
+          "x": 0.592708,
+          "y": 0.569444,
+          "radius": 0.006
+        },
+        "selkie": {
+          "x": 0.609896,
+          "y": 0.775,
+          "radius": 0.006
+        },
+        "vodyanoi": {
+          "x": 0.440104,
+          "y": 0.466667,
+          "radius": 0.006
+        },
+        "yam": {
+          "x": 0.489063,
+          "y": 0.390741,
+          "radius": 0.006
+        },
+        "berehynia": {
+          "x": 0.083333,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "sedna-camenae": {
+          "x": 0.166667,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "charybdis": {
+          "x": 0.25,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "sedna-jengu": {
+          "x": 0.333333,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "sedna-phithale-caches": {
+          "x": 0.416667,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "sedna-rusalka-caches": {
+          "x": 0.5,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "sedna-scylla": {
+          "x": 0.583333,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "sedna-tikoloshe": {
+          "x": 0.666667,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "sedna-undine": {
+          "x": 0.75,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "sedna-veles": {
+          "x": 0.833333,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "sedna-yemaja": {
+          "x": 0.916667,
+          "y": 0.965,
+          "radius": 0.006
+        }
+      }
+    },
+    "Uranus": {
+      "nodes": {
+        "ariel": {
+          "x": 0.326042,
+          "y": 0.441667,
+          "radius": 0.006
+        },
+        "assur": {
+          "x": 0.551042,
+          "y": 0.762037,
+          "radius": 0.006
+        },
+        "caelus": {
+          "x": 0.566146,
+          "y": 0.262037,
+          "radius": 0.006
+        },
+        "caliban": {
+          "x": 0.320312,
+          "y": 0.767593,
+          "radius": 0.006
+        },
+        "titania": {
+          "x": 0.576562,
+          "y": 0.521296,
+          "radius": 0.006
+        },
+        "sycorax": {
+          "x": 0.214583,
+          "y": 0.528704,
+          "radius": 0.006
+        },
+        "umbriel": {
+          "x": 0.461458,
+          "y": 0.818519,
+          "radius": 0.006
+        },
+        "ur": {
+          "x": 0.450521,
+          "y": 0.14537,
+          "radius": 0.006
+        },
+        "uranus-bianca": {
+          "x": 0.045455,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "uranus-brutus": {
+          "x": 0.090909,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "cressida": {
+          "x": 0.136364,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "uranus-cupid": {
+          "x": 0.181818,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "desdemona": {
+          "x": 0.227273,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "uranus-desdemona-caches": {
+          "x": 0.272727,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "uranus-mab": {
+          "x": 0.318182,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "uranus-miranda": {
+          "x": 0.363636,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "neptune-junction": {
+          "x": 0.409091,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "ophelia": {
+          "x": 0.454545,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "uranus-portia-caches": {
+          "x": 0.5,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "uranus-prospero-caches": {
+          "x": 0.545455,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "puck": {
+          "x": 0.590909,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "rosalind": {
+          "x": 0.636364,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "uranus-scoria-s-angel": {
+          "x": 0.681818,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "uranus-scoria-s-angel-extra": {
+          "x": 0.727273,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "uranus-setebos-caches": {
+          "x": 0.772727,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "stephano": {
+          "x": 0.818182,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "uranus-the-kuva-wytch": {
+          "x": 0.863636,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "uranus-the-kuva-wytch-extra": {
+          "x": 0.909091,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "uranus-trinculo": {
+          "x": 0.954545,
+          "y": 0.965,
+          "radius": 0.006
+        }
+      }
+    },
+    "Uranus Proxima": {
+      "nodes": {
+        "pontis-tower": {
+          "x": 0.5,
+          "y": 0.965,
+          "radius": 0.006
+        }
+      }
+    },
+    "Veil Proxima": {
+      "nodes": {
+        "veil-proxima-arc-silver": {
+          "x": 0.355729,
+          "y": 0.546296,
+          "radius": 0.006
+        },
+        "veil-proxima-calabash": {
+          "x": 0.202083,
+          "y": 0.783333,
+          "radius": 0.006
+        },
+        "veil-proxima-erato": {
+          "x": 0.269792,
+          "y": 0.360185,
+          "radius": 0.006
+        },
+        "veil-proxima-flexa": {
+          "x": 0.584896,
+          "y": 0.576852,
+          "radius": 0.006
+        },
+        "veil-proxima-h-2-cloud": {
+          "x": 0.695312,
+          "y": 0.757407,
+          "radius": 0.006
+        },
+        "veil-proxima-lu-yan": {
+          "x": 0.463021,
+          "y": 0.477778,
+          "radius": 0.006
+        },
+        "veil-proxima-nsu-grid": {
+          "x": 0.694792,
+          "y": 0.45463,
+          "radius": 0.006
+        },
+        "veil-proxima-numina": {
+          "x": 0.223958,
+          "y": 0.605556,
+          "radius": 0.006
+        },
+        "veil-proxima-r-9-cloud": {
+          "x": 0.498437,
+          "y": 0.842593,
+          "radius": 0.006
+        },
+        "veil-proxima-sabmir-cloud": {
+          "x": 0.50625,
+          "y": 0.397222,
+          "radius": 0.006
+        },
+        "veil-proxima-arc-silver-caches": {
+          "x": 0.047619,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "veil-proxima-arc-silver-extra": {
+          "x": 0.095238,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "veil-proxima-calabash-caches": {
+          "x": 0.142857,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "veil-proxima-calabash-extra": {
+          "x": 0.190476,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "veil-proxima-erato-caches": {
+          "x": 0.238095,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "veil-proxima-erato-extra": {
+          "x": 0.285714,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "veil-proxima-flexa-caches": {
+          "x": 0.333333,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "veil-proxima-flexa-extra": {
+          "x": 0.380952,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "veil-proxima-h-2-cloud-caches": {
+          "x": 0.428571,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "veil-proxima-h-2-cloud-extra": {
+          "x": 0.47619,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "veil-proxima-lu-yan-caches": {
+          "x": 0.52381,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "veil-proxima-lu-yan-extra": {
+          "x": 0.571429,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "veil-proxima-nsu-grid-caches": {
+          "x": 0.619048,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "veil-proxima-nsu-grid-extra": {
+          "x": 0.666667,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "veil-proxima-numina-caches": {
+          "x": 0.714286,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "veil-proxima-numina-extra": {
+          "x": 0.761905,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "veil-proxima-r-9-cloud-caches": {
+          "x": 0.809524,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "veil-proxima-r-9-cloud-extra": {
+          "x": 0.857143,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "veil-proxima-sabmir-cloud-caches": {
+          "x": 0.904762,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "veil-proxima-sabmir-cloud-extra": {
+          "x": 0.952381,
+          "y": 0.965,
+          "radius": 0.006
+        }
+      }
+    },
+    "Venus": {
+      "nodes": {
+        "cytherean": {
+          "x": 0.371354,
+          "y": 0.748148,
+          "radius": 0.006
+        },
+        "e-gate": {
+          "x": 0.708854,
+          "y": 0.518519,
+          "radius": 0.006
+        },
+        "fortuna": {
+          "x": 0.545833,
+          "y": 0.641667,
+          "radius": 0.006
+        },
+        "fossa": {
+          "x": 0.3125,
+          "y": 0.410185,
+          "radius": 0.006
+        },
+        "ishtar": {
+          "x": 0.422396,
+          "y": 0.235185,
+          "radius": 0.006
+        },
+        "malva": {
+          "x": 0.361979,
+          "y": 0.182407,
+          "radius": 0.006
+        },
+        "mercury-junction": {
+          "x": 0.313021,
+          "y": 0.55463,
+          "radius": 0.006
+        },
+        "montes": {
+          "x": 0.435417,
+          "y": 0.146296,
+          "radius": 0.006
+        },
+        "orb-vallis": {
+          "x": 0.531771,
+          "y": 0.708333,
+          "radius": 0.006
+        },
+        "romula": {
+          "x": 0.735417,
+          "y": 0.803704,
+          "radius": 0.006
+        },
+        "tessera": {
+          "x": 0.630729,
+          "y": 0.361111,
+          "radius": 0.006
+        },
+        "v-prime": {
+          "x": 0.690104,
+          "y": 0.67963,
+          "radius": 0.006
+        },
+        "vesper-relay": {
+          "x": 0.734375,
+          "y": 0.277778,
+          "radius": 0.006
+        },
+        "aphrodite": {
+          "x": 0.035714,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "venus-beacon-shield-ring": {
+          "x": 0.071429,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "venus-beacon-shield-ring-caches": {
+          "x": 0.107143,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "venus-beacon-shield-ring-extra": {
+          "x": 0.142857,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "venus-bifrost-echo": {
+          "x": 0.178571,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "venus-bifrost-echo-caches": {
+          "x": 0.214286,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "venus-bifrost-echo-extra": {
+          "x": 0.25,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "deepmines": {
+          "x": 0.285714,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "venus-falling-glory": {
+          "x": 0.321429,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "venus-falling-glory-caches": {
+          "x": 0.357143,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "venus-falling-glory-extra": {
+          "x": 0.392857,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "venus-ishtar-caches": {
+          "x": 0.428571,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "kiliken": {
+          "x": 0.464286,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "linea": {
+          "x": 0.5,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "venus-luckless-expanse": {
+          "x": 0.535714,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "venus-luckless-expanse-caches": {
+          "x": 0.571429,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "venus-luckless-expanse-extra": {
+          "x": 0.607143,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "venus-orvin-haarc": {
+          "x": 0.642857,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "venus-orvin-haarc-caches": {
+          "x": 0.678571,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "venus-orvin-haarc-extra": {
+          "x": 0.714286,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "unda": {
+          "x": 0.75,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "venera": {
+          "x": 0.785714,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "venus-vesper": {
+          "x": 0.821429,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "venus-vesper-relay-extra": {
+          "x": 0.857143,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "venus-vesper-strait": {
+          "x": 0.892857,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "venus-vesper-strait-caches": {
+          "x": 0.928571,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "venus-vesper-strait-extra": {
+          "x": 0.964286,
+          "y": 0.965,
+          "radius": 0.006
+        }
+      }
+    },
+    "Void": {
+      "nodes": {
+        "aten": {
+          "x": 0.202083,
+          "y": 0.237963,
+          "radius": 0.006
+        },
+        "belenus": {
+          "x": 0.285417,
+          "y": 0.588889,
+          "radius": 0.006
+        },
+        "hepit": {
+          "x": 0.478125,
+          "y": 0.369444,
+          "radius": 0.006
+        },
+        "marduk": {
+          "x": 0.211979,
+          "y": 0.388889,
+          "radius": 0.006
+        },
+        "mithra": {
+          "x": 0.288542,
+          "y": 0.437963,
+          "radius": 0.006
+        },
+        "oxomoco": {
+          "x": 0.20625,
+          "y": 0.65463,
+          "radius": 0.006
+        },
+        "stribog": {
+          "x": 0.629167,
+          "y": 0.687037,
+          "radius": 0.006
+        },
+        "taranis": {
+          "x": 0.394271,
+          "y": 0.380556,
+          "radius": 0.006
+        },
+        "tiwaz": {
+          "x": 0.608854,
+          "y": 0.562037,
+          "radius": 0.006
+        },
+        "ukko": {
+          "x": 0.372396,
+          "y": 0.70463,
+          "radius": 0.006
+        },
+        "ani": {
+          "x": 0.166667,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "void-marduk-caches": {
+          "x": 0.333333,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "mot": {
+          "x": 0.5,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "void-stribog-caches": {
+          "x": 0.666667,
+          "y": 0.965,
+          "radius": 0.006
+        },
+        "teshub": {
+          "x": 0.833333,
+          "y": 0.965,
+          "radius": 0.006
+        }
+      }
+    },
+    "Zariman": {
+      "nodes": {
+        "chrysalith": {
+          "x": 0.442188,
+          "y": 0.537037,
+          "radius": 0.006
+        },
+        "dormizone": {
+          "x": 0.472396,
+          "y": 0.600926,
+          "radius": 0.006
+        },
+        "everview-arc": {
+          "x": 0.465625,
+          "y": 0.274074,
+          "radius": 0.006
+        },
+        "halako-perimeter": {
+          "x": 0.494792,
+          "y": 0.439815,
+          "radius": 0.006
+        },
+        "oro-works": {
+          "x": 0.454167,
+          "y": 0.75,
+          "radius": 0.006
+        },
+        "the-greenway": {
+          "x": 0.394271,
+          "y": 0.649074,
+          "radius": 0.006
+        },
+        "tuvul-commons": {
+          "x": 0.5,
+          "y": 0.965,
+          "radius": 0.006
+        }
+      }
+    }
+  }
+}

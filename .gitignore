@@ -7,4 +7,5 @@ data/*.sqlite*
 data/sources/
 data/cache/
 .vscode/
+__pycache__/
 !.gitkeep
