@@ -13,11 +13,11 @@ const databasePath =
   path.join(dataDirectory, "ordis-prime.sqlite");
 const batchSize = positiveInteger(
   process.env.ORDIS_MARKET_PRICE_BATCH_SIZE,
-  60,
+  30,
 );
 const requestDelayMilliseconds = positiveInteger(
   process.env.ORDIS_MARKET_PRICE_REQUEST_DELAY_MS,
-  500,
+  1_000,
 );
 const abortController = new AbortController();
 for (const signal of ["SIGINT", "SIGTERM"] as const)

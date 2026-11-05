@@ -80,6 +80,17 @@ test("Market freshness is quiet explanatory copy", async () => {
   assert.doesNotMatch(market, /notice index-status/u);
 });
 
+test("Inventory exposes the cached-price mastery helper as a dedicated view", async () => {
+  const inventory = await readFile(
+    new URL("../app/inventory/page.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(inventory, /aria-label="Inventory views"/u);
+  assert.match(inventory, />\s*Mastery helper\s*<\/Link>/u);
+  assert.match(inventory, /opening this page never calls Warframe\.market/u);
+  assert.match(inventory, /pricedMissingComponents/u);
+});
+
 test("Planner renders outstanding requirements as a semantic table", async () => {
   const planner = await readFile(
     new URL("../app/planner/page.tsx", import.meta.url),

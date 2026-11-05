@@ -1,11 +1,15 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
+  getMarketIndexStatus,
   getPlayerPreferences,
   getPlayerSettings,
+  listMasteryHelper,
   listPlayerCollection,
   type CollectionFilter,
   type CollectionSort,
+  type MasteryHelperEntry,
+  type MarketIndexStatus,
   type PlayerCollectionEntry,
 } from "@ordis-prime/db";
 import { CollectionStateIndicators } from "@/app/collection-state-indicators";
@@ -26,6 +30,7 @@ export default async function InventoryPage({
   if (!session) redirect("/sign-in");
   const params = await searchParams;
   const database = getDatabase();
+  const view = one(params.view) === "mastery" ? "mastery" : "collection";
   const preferences = getPlayerPreferences(database, session.user.id);
   const collection = listPlayerCollection(database, session.user.id, {
     query: one(params.q),
@@ -36,6 +41,15 @@ export default async function InventoryPage({
     page: positiveInteger(one(params.page)),
     pageSize: 60,
   });
+  const mastery =
+    view === "mastery"
+      ? listMasteryHelper(database, session.user.id, {
+          query: one(params.q),
+          kind: one(params.kind),
+          page: positiveInteger(one(params.page)),
+          pageSize: 100,
+        })
+      : undefined;
   const settings = getPlayerSettings(database, session.user.id);
   return (
     <>
@@ -44,101 +58,131 @@ export default async function InventoryPage({
         Browse both recorded and missing catalog items. Mastery suggestions are
         derived and never alter your explicit wanted count.
       </p>
-      <section className="collection-summary" aria-label="Collection summary">
-        <Summary
-          label="Collection entries"
-          value={collection.summary.catalogItems}
+      <nav className="view-tabs" aria-label="Inventory views">
+        <Link
+          aria-current={view === "collection" ? "page" : undefined}
+          className={view === "collection" ? "active" : undefined}
+          href="/inventory"
+        >
+          Collection
+        </Link>
+        <Link
+          aria-current={view === "mastery" ? "page" : undefined}
+          className={view === "mastery" ? "active" : undefined}
+          href="/inventory?view=mastery"
+        >
+          Mastery helper
+        </Link>
+      </nav>
+      {view === "mastery" ? (
+        <MasteryHelper
+          helper={mastery!}
+          marketStatus={getMarketIndexStatus(database)}
+          params={params}
         />
-        <Summary label="Acquired" value={collection.summary.acquired} />
-        <Summary label="Mastered" value={collection.summary.mastered} />
-        <Summary
-          label="Confirmed unmastered"
-          value={collection.summary.confirmedUnmastered}
-        />
-        <Summary
-          label="Mastery unknown"
-          value={collection.summary.masteryUnknown}
-        />
-        <Summary
-          label="Explicitly wanted"
-          value={collection.summary.explicitlyWanted}
-        />
-      </section>
-      <p className="muted">
-        Mastery totals count eligible catalog entries, not Mastery Rank XP: item
-        XP values are not yet sourced consistently enough for an exact forecast.
-      </p>
-      <form className="index-filters collection-filters search-filter-form">
-        <label className="search-field">
-          Search
-          <input
-            name="q"
-            defaultValue={one(params.q)}
-            placeholder="Item name"
-          />
-        </label>
-        <label>
-          Category
-          <select name="kind" defaultValue={one(params.kind) ?? ""}>
-            <option value="">All collection categories</option>
-            {collection.kinds.map(({ kind, count }) => (
-              <option value={kind} key={kind}>
-                {kind} ({count})
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          State
-          <select name="state" defaultValue={one(params.state) ?? "all"}>
-            <option value="all">All states</option>
-            <option value="acquired">Acquired</option>
-            <option value="unowned">Unowned</option>
-            <option value="mastered">Mastered</option>
-            <option value="unmastered">Not confirmed mastered</option>
-            <option value="explicit-wanted">Explicitly wanted</option>
-            <option value="implicit-wanted">Suggested for mastery</option>
-          </select>
-        </label>
-        <label>
-          Sort
-          <select name="sort" defaultValue={one(params.sort) ?? "name"}>
-            <option value="name">Name</option>
-            <option value="kind">Category</option>
-            <option value="state">Collection state</option>
-          </select>
-        </label>
-        <label>
-          Direction
-          <select
-            name="dir"
-            defaultValue={one(params.dir) === "desc" ? "desc" : "asc"}
-          >
-            <option value="asc">Ascending</option>
-            <option value="desc">Descending</option>
-          </select>
-        </label>
-        <button className="button">Apply</button>
-      </form>
-      <p className="muted">
-        Showing {collection.entries.length} of {collection.total} matching
-        entries. Resources and components remain excluded until their stack and
-        crafting semantics are modeled.
-      </p>
-      {collection.entries.length ? (
-        preferences.collectionLayout === "table" ? (
-          <CollectionTable entries={collection.entries} />
-        ) : (
-          <section className="grid collection-grid">
-            {collection.entries.map((entry) => (
-              <CollectionCard entry={entry} key={entry.entityId} />
-            ))}
-          </section>
-        )
       ) : (
-        <p className="notice">No collection items match these filters.</p>
+        <>
+          <section
+            className="collection-summary"
+            aria-label="Collection summary"
+          >
+            <Summary
+              label="Collection entries"
+              value={collection.summary.catalogItems}
+            />
+            <Summary label="Acquired" value={collection.summary.acquired} />
+            <Summary label="Mastered" value={collection.summary.mastered} />
+            <Summary
+              label="Confirmed unmastered"
+              value={collection.summary.confirmedUnmastered}
+            />
+            <Summary
+              label="Mastery unknown"
+              value={collection.summary.masteryUnknown}
+            />
+            <Summary
+              label="Explicitly wanted"
+              value={collection.summary.explicitlyWanted}
+            />
+          </section>
+          <p className="muted">
+            Mastery totals count eligible catalog entries, not Mastery Rank XP:
+            item XP values are not yet sourced consistently enough for an exact
+            forecast.
+          </p>
+          <form className="index-filters collection-filters search-filter-form">
+            <label className="search-field">
+              Search
+              <input
+                name="q"
+                defaultValue={one(params.q)}
+                placeholder="Item name"
+              />
+            </label>
+            <label>
+              Category
+              <select name="kind" defaultValue={one(params.kind) ?? ""}>
+                <option value="">All collection categories</option>
+                {collection.kinds.map(({ kind, count }) => (
+                  <option value={kind} key={kind}>
+                    {kind} ({count})
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              State
+              <select name="state" defaultValue={one(params.state) ?? "all"}>
+                <option value="all">All states</option>
+                <option value="acquired">Acquired</option>
+                <option value="unowned">Unowned</option>
+                <option value="mastered">Mastered</option>
+                <option value="unmastered">Not confirmed mastered</option>
+                <option value="explicit-wanted">Explicitly wanted</option>
+                <option value="implicit-wanted">Suggested for mastery</option>
+              </select>
+            </label>
+            <label>
+              Sort
+              <select name="sort" defaultValue={one(params.sort) ?? "name"}>
+                <option value="name">Name</option>
+                <option value="kind">Category</option>
+                <option value="state">Collection state</option>
+              </select>
+            </label>
+            <label>
+              Direction
+              <select
+                name="dir"
+                defaultValue={one(params.dir) === "desc" ? "desc" : "asc"}
+              >
+                <option value="asc">Ascending</option>
+                <option value="desc">Descending</option>
+              </select>
+            </label>
+            <button className="button">Apply</button>
+          </form>
+          <p className="muted">
+            Showing {collection.entries.length} of {collection.total} matching
+            entries. Resources and components remain excluded until their stack
+            and crafting semantics are modeled.
+          </p>
+          {collection.entries.length ? (
+            preferences.collectionLayout === "table" ? (
+              <CollectionTable entries={collection.entries} />
+            ) : (
+              <section className="grid collection-grid">
+                {collection.entries.map((entry) => (
+                  <CollectionCard entry={entry} key={entry.entityId} />
+                ))}
+              </section>
+            )
+          ) : (
+            <p className="notice">No collection items match these filters.</p>
+          )}
+          <Pagination collection={collection} params={params} />
+        </>
       )}
-      <Pagination collection={collection} params={params} />
       <div className="control-deck inventory-secondary-controls">
         <section className="card">
           <h2>Progression</h2>
@@ -200,6 +244,165 @@ export default async function InventoryPage({
       </div>
     </>
   );
+}
+
+function MasteryHelper({
+  helper,
+  marketStatus,
+  params,
+}: {
+  helper: ReturnType<typeof listMasteryHelper>;
+  marketStatus: MarketIndexStatus;
+  params: Params;
+}) {
+  return (
+    <section className="index-section">
+      <h2>Closest items to mastery</h2>
+      <p className="muted">
+        Unmastered and mastery-unknown equipment is ordered by distinct missing
+        recipe components, then by total missing copies. Items you already own
+        appear first because they need no components.
+      </p>
+      <p className="muted market-status">
+        {masteryMarketStatus(marketStatus)} Prices are cached listing estimates;
+        opening this page never calls Warframe.market.
+      </p>
+      <form className="index-filters collection-filters search-filter-form">
+        <input name="view" type="hidden" value="mastery" />
+        <label className="search-field">
+          Search
+          <input
+            name="q"
+            defaultValue={one(params.q)}
+            placeholder="Item name"
+          />
+        </label>
+        <label>
+          Category
+          <select name="kind" defaultValue={one(params.kind) ?? ""}>
+            <option value="">All mastery categories</option>
+            {helper.kinds.map(({ kind, count }) => (
+              <option value={kind} key={kind}>
+                {kind} ({count})
+              </option>
+            ))}
+          </select>
+        </label>
+        <button className="button">Apply</button>
+      </form>
+      <p className="muted">
+        Showing {helper.entries.length} of {helper.total} unmastered or
+        unconfirmed items. A component count is unavailable when no active
+        recipe is documented.
+      </p>
+      {helper.entries.length ? (
+        <div className="index-table-wrap">
+          <table className="index-table mastery-helper-table">
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>Missing components</th>
+                <th>Market shortcut</th>
+              </tr>
+            </thead>
+            <tbody>
+              {helper.entries.map((entry) => (
+                <MasteryHelperRow entry={entry} key={entry.entityId} />
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <p className="notice">No mastery items match these filters.</p>
+      )}
+      <Pagination collection={helper} params={params} />
+    </section>
+  );
+}
+
+function MasteryHelperRow({ entry }: { entry: MasteryHelperEntry }) {
+  return (
+    <tr>
+      <th>
+        <Link href={`/catalog/${entry.kind}/${entry.slug}`}>{entry.name}</Link>
+        <small>
+          {entry.kind} ·{" "}
+          {entry.mastered === false ? "not mastered" : "mastery unknown"}
+          {entry.ownedCount + entry.builtCount > 0
+            ? ` · ${entry.ownedCount} owned · ${entry.builtCount} built`
+            : ""}
+        </small>
+      </th>
+      <td>
+        {entry.missingComponentCount === undefined ? (
+          "No active recipe documented"
+        ) : entry.missingComponentCount === 0 ? (
+          <span className="tag">Ready to master</span>
+        ) : (
+          <details>
+            <summary>
+              {entry.missingComponentCount} component
+              {entry.missingComponentCount === 1 ? "" : "s"} ·{" "}
+              {entry.missingComponentCopies} total copies
+            </summary>
+            <div className="index-rewards mastery-components">
+              {entry.components.map((component) => (
+                <p key={component.entityId}>
+                  <Link href={`/catalog/${component.kind}/${component.slug}`}>
+                    {component.name}
+                  </Link>{" "}
+                  · missing {component.missingCount} of{" "}
+                  {component.requiredCount}
+                  {component.availableCount
+                    ? ` · ${component.availableCount} available`
+                    : ""}
+                  {component.marketSlug ? (
+                    <>
+                      {" · "}
+                      <a
+                        href={`https://warframe.market/items/${component.marketSlug}`}
+                        rel="noreferrer"
+                        target="_blank"
+                      >
+                        Market
+                      </a>
+                      {component.unitPlatinum === undefined
+                        ? " · price pending"
+                        : ` · ${component.unitPlatinum.toFixed(1)}p each · ${component.totalPlatinum!.toFixed(1)}p total`}
+                      {component.priceStale ? " · stale" : ""}
+                    </>
+                  ) : (
+                    " · no market listing"
+                  )}
+                </p>
+              ))}
+            </div>
+          </details>
+        )}
+      </td>
+      <td>{masteryPriceSummary(entry)}</td>
+    </tr>
+  );
+}
+
+function masteryPriceSummary(entry: MasteryHelperEntry): string {
+  if (entry.missingComponentCount === 0) return "No component purchase needed";
+  if (!entry.tradeableMissingComponents)
+    return entry.missingComponentCount === undefined
+      ? "Recipe unavailable"
+      : "No missing market-linked components";
+  if (!entry.pricedMissingComponents)
+    return `${entry.tradeableMissingComponents} tradeable · prices pending`;
+  const coverage = `${entry.pricedMissingComponents}/${entry.tradeableMissingComponents} tradeable components priced`;
+  return `${entry.knownPlatinumCost!.toFixed(1)}p known · ${coverage}${entry.pricesStale ? " · stale" : ""}`;
+}
+
+function masteryMarketStatus(status: MarketIndexStatus): string {
+  if (!status.runId)
+    return "The background market-price worker has not completed a run yet.";
+  if (status.status === "running")
+    return `Background price refresh: ${status.completedCount}/${status.targetCount} complete.`;
+  return `Latest background price refresh: ${status.completedCount}/${status.targetCount} priced${status.failedCount ? `, ${status.failedCount} failed` : ""}.`;
 }
 
 function CollectionCard({ entry }: { entry: PlayerCollectionEntry }) {
@@ -314,7 +517,7 @@ function Pagination({
   collection,
   params,
 }: {
-  collection: ReturnType<typeof listPlayerCollection>;
+  collection: { page: number; pageCount: number };
   params: Params;
 }) {
   if (collection.pageCount <= 1) return null;

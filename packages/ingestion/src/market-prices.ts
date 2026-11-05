@@ -174,6 +174,15 @@ function ensurePriceRun(database: MarketDatabase, now: number): string {
            join source_runs run on run.id = offering.source_run_id and run.status = 'active'
            where offering.item_id = entity.id and offering.currency = 'Standing'
          ))
+         or exists (
+           select 1 from recipe_ingredients ingredient
+           join recipes recipe on recipe.id = ingredient.recipe_id
+           join source_runs run on run.id = recipe.source_run_id and run.status = 'active'
+           join entities output on output.id = recipe.output_id
+             and output.retired = 0
+             and output.kind in ('warframe', 'weapon', 'companion', 'archwing', 'vehicle')
+           where ingredient.entity_id = entity.id
+         )
        )
        group by entity.id having itemId is not null and slug is not null
        order by slug`,

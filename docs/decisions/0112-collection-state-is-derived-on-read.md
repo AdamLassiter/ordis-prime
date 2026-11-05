@@ -41,8 +41,8 @@ forced into equipment-style counts.
   the underlying states.
 - Explicit wanted counts remain portable player-authored data; mastery and goal
   suggestions are recomputed.
-- The current mastery helper reports confirmed, unconfirmed, and unknown item
-  counts. It does not invent XP totals or a rank forecast before sourced XP
-  values exist.
+- The collection summary reports confirmed, unconfirmed, and unknown item
+  counts. The dedicated mastery helper adds recipe proximity without inventing
+  XP totals or a rank forecast before sourced XP values exist.
 - Market presence is shown as an optional trade shortcut alongside normal
   acquisition evidence, never as a universal recommendation.

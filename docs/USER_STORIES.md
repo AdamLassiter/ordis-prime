@@ -9,6 +9,9 @@
   offers without giving Ordis Prime marketplace credentials.
 - As a player, I can record quantities, built and wanted copies, and optional
   mastered or subsumed state.
+- As a player, I can see unmastered equipment ordered by how many recipe
+  components I still lack, including a clearly partial cached platinum subtotal
+  for tradeable missing parts without causing market requests from the page.
 - As a player, I can preview an AlecaFrame snapshot, merge it without lowering
   manual collection values or explicitly replace supported collection state,
   without storing its account fields or raw bytes.

@@ -170,8 +170,12 @@ architecture. A feature appearing in the roadmap is not evidence that it exists.
   missing entries to documented acquisition paths. Shared derived labels expose
   acquired, mastery, explicit-wanted, mastery-suggested, and goal-required state
   across the catalog, entity pages, node rewards, planner, Circuit, and Index.
-  Raw resource/component stacks and exact mastery XP forecasts remain excluded
-  until their source and quantity semantics are reliable. The Operator page accepts a bounded AlecaFrame
+  The Inventory mastery helper orders unmastered and mastery-unknown equipment
+  by distinct missing ingredients in the selected active recipe. It reads
+  cached, slowly refreshed market listing estimates for tradeable ingredients
+  and exposes incomplete price coverage rather than presenting a partial value
+  as a total. Recursive ingredient expansion and exact mastery XP forecasts
+  remain excluded until their source and quantity semantics are reliable. The Operator page accepts a bounded AlecaFrame
   `lastData.dat` snapshot through a native TypeScript decoder. Preview and apply
   are hash-bound; allow-listed `ItemType` paths resolve exactly through WFCD
   identifiers, raw bytes and account fields are not retained, and players choose

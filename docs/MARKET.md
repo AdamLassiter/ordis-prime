@@ -7,6 +7,8 @@ not a listing manager. It answers three recurring questions:
 - Which syndicate mods return the most platinum per 1,000 Standing?
 - What are rank-zero and maximum-rank Arcanes currently worth, and which
   Standing vendors offer them?
+- What would the currently missing tradeable components for an unmastered item
+  cost at visible listing prices?
 
 ## Relic valuation
 
@@ -36,6 +38,11 @@ bounded batches, and the provenance console shows current and historical runs.
 Snapshots become visibly stale after 36 hours and expire from calculations after
 seven days. Thirty completed runs are retained by default.
 
+The Inventory mastery helper reads the same snapshots for active recipe
+ingredients. It shows a priced/tradeable coverage ratio beside every known
+subtotal, so an unavailable component price cannot silently reduce an apparent
+full-set cost. Loading Inventory never triggers a market request.
+
 ## Standing context
 
 Structured Wiki vendor data supplies numeric Standing costs and rank
@@ -57,4 +64,6 @@ pnpm data:prices
 
 `ORDIS_MARKET_PRICE_BATCH_SIZE` controls batch size and
 `ORDIS_MARKET_PRICE_REQUEST_DELAY_MS` controls the delay between public API
-requests. The default delay is 500 ms.
+requests. The defaults are 30 targets per batch and a 1,000 ms delay. The
+worker yields between batches through the normal leased-job loop and resumes
+the same price run rather than starting it again.

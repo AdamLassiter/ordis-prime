@@ -79,11 +79,11 @@ const marketPriceRefreshInterval = positiveInteger(
 );
 const marketPriceBatchSize = positiveInteger(
   process.env.ORDIS_MARKET_PRICE_BATCH_SIZE,
-  60,
+  30,
 );
 const marketPriceRequestDelayMilliseconds = positiveInteger(
   process.env.ORDIS_MARKET_PRICE_REQUEST_DELAY_MS,
-  500,
+  1_000,
 );
 const owner = `${hostname()}:${process.pid}`;
 const abortController = new AbortController();

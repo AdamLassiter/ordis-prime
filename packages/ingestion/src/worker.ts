@@ -73,9 +73,9 @@ export async function runWorkerCycle(options: {
     options.snapshotPruneGraceMilliseconds ?? 60 * 60_000;
   const marketPriceRefreshInterval =
     options.marketPriceRefreshIntervalMilliseconds ?? 24 * 60 * 60_000;
-  const marketPriceBatchSize = options.marketPriceBatchSize ?? 60;
+  const marketPriceBatchSize = options.marketPriceBatchSize ?? 30;
   const marketPriceRequestDelayMilliseconds =
-    options.marketPriceRequestDelayMilliseconds ?? 500;
+    options.marketPriceRequestDelayMilliseconds ?? 1_000;
   const leaseMilliseconds = Math.max(
     2 * catalogRequestTimeout,
     2 * requestTimeout,
